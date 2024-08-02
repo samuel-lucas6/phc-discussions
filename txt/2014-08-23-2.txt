@@ -1,0 +1,86 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <20140823191621.GA31344@openwall.com>
+Date: Sat, 23 Aug 2014 23:16:21 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Dmitry,
+
+Thank you for the helpful answers!
+
+On Sat, Aug 23, 2014 at 01:31:34AM +0400, Dmitry Khovratovich wrote:
+On Fri, Aug 22, 2014 at 6:31 PM, Solar Designer <solar@...nwall.comwrote:
+You appear to be focusing on relative slowdown at fractions of the full
+memory usage, as well as on finding optimal tradeoff points in terms of
+energy consumption per password tested.  While these results are highly
+desirable to have, maybe even more important is cost per password tested
+(e.g. also in terms of energy consumption) for the different PHC
+candidates being compared when they're tuned for the same defensive
+request rate capacity (on commodity server hardware)?  Indeed, you'd
+need to estimate such costs at the candidates' respective optimal
+tradeoff points.
+
+I somewhat agree. We would definitely make this next step if we had a
+reference platform where all candidates have been benchmarked. Then yes, we
+could set a bound of say 0.5 sec and choose the maximum memory parameter
+that allows to compute the hash securely within this time. Although I am
+not sure if all candidates support this way of choosing the memory
+parameter.
+
+On the other hand, in the cryptographic competitions the security analysis
+is not usually coupled with performance. If a designer suggests 40 rounds,
+claim it secure, and afterwards a 39-round version gets broken, then the
+scheme is dead even if it is so fast that the number of rounds can be
+doubled with no problem. The reason is that it is designer's job to choose
+secure-and-fast set of parameters, not of cryptanalyst. The same here: if a
+function is claimed to be memory-hard, and it is not (i.e. reducing the
+memory does not increase the cost), then it has problems no matter how fast
+it is.
+
+(I think per Colin's definition of sequential memory-hard function it
+is OK if "reducing the memory does not increase the cost", as long as
+the product of space and time does not decrease by more than a constant
+factor.  You appear to be using a stricter definition/requirement here.
+We might need a different name for tradeoff-resistant functions like
+that, or always mention that property separately.)
+
+I think PHC is quite different from usual cryptographic competitions in
+that providing excessive (which probably means any at all) safety
+margins e.g. against tradeoff attacks actually makes PHC candidates less
+secure, not merely less attractive in other (non-security) ways (as it
+would be the case with ciphers and regular crypto hashes).  To ensure
+e.g. yescrypt isn't broken in the sense you mention, I'd need to provide
+some safety margin in my recommended value for t, or to define yescrypt
+such that t=0 would correspond to a higher running time (e.g., to what
+is now requested with t=1 or higher).  However, I think doing so would
+be counter-productive for actual goals of PHC, because there's a
+security tradeoff here, not just a security vs. something else tradeoff.
+The value of t that is optimal for security should be barely adequate to
+withstand tradeoff attacks, with no safety margin.  As a result, I'm
+afraid we should go the other way around: from smaller t to higher if we
+have to as shown by attacks, and we should not be too surprised to find
+such attacks, nor should we throw babies out with the water merely
+because the initial proposed settings didn't have a safety margin and
+proved somewhat too weak against some attacks.  They shouldn't have had
+that safety margin, or the scheme would have been suboptimal
+security-wise in another way!  For example, I actually criticized Lyra
+and Lyra2 papers for recommending T higher than 1, which I feel would
+make these use less memory than they optimally would.
+
+Of course, in the above paragraph I am using "safety margin" only in
+context of non-fatal attacks like tradeoffs, rather than cryptographic
+attacks that would apply to regular crypto hashes.  We can easily have,
+and we must have, plenty of safety margin against the latter.
+
+I actually expect that yescrypt t=0 might be less resistant to TMTO than
+Lyra2 T=1, but I think this might be optimal anyway, so until shown
+otherwise I'd like to continue to give t=0 a try.  This being an
+externally supplied parameter, it can be updated to t=1 or higher (for
+newly hashed passwords) should we determine that to be optimal at a
+later time.  There are other recommended parameter values that may also
+need to be revised later anyway (for future defensive hardware).
+
+Alexander
+

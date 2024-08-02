@@ -1,0 +1,111 @@
+phc-discussions - Re: [PHC] Re: BlaMka loses entropy
+
+Message-ID: <CALW8-7JGRWxanK=VE+bXjcoNJheVW9_7vFxYDkReboOZTQFm2g@mail.gmail.com>
+Date: Mon, 19 Oct 2015 20:45:19 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: BlaMka loses entropy
+
+Even if you were right, this property would not be a problem thanks to the
+8192-bit width of permutation P. It would be highly unlikely that any of
+2^256 possible Argon2 executions collide due to such property.
+
+On Mon, Oct 19, 2015 at 8:39 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+D'oh!  I was wrong.  The BlaMka round preserves entropy.  Sorry about the
+mistake.  I've been doing mod p arithmetic so much I forgot this is mod
+2^64, not mod p.
+>
+Bill
+>
+On Mon, Oct 19, 2015 at 11:17 AM, Bill Cox <waywardgeek@...il.comwrote:
+>
+>This concerns me a great deal.  The Blake2 reduced round G is
+>invertible.  This proves there is zero entropy loss up to the point that we
+>do the compression.  The BlaMka round does lose entropy.
+>>
+>Basically, the regular Blake2 addition step looks like:
+>>
+>    a = (a + b) % p
+>>
+>After executing it, we know a+b, and b, and can invert it by subtracting
+>b from a+b.  The BlaMka multiplication step replaces the addition step, and
+>looks like:
+>>
+>    a = (a + b + 2*(a % 2^32)*(b % 2^32)) % p
+>>
+>The idea was to use something like a latin square defined by a + b +
+>2*ab, but that's now what we have here.  The following _is_ invertible:
+>>
+>    a = (a + b + 2*a*b) % p
+>>
+>By using only the low order words of a and b, we lost information.
+>Here's a simple Python script to prove it:
+>>
+>def BlaMka(a, b, p, mask):
+>    return (a + b + 2*((a*b) & mask)) % p
+>>
+>def printSquare(p, mask):
+>    for a in range(p):
+>        for b in range(p):
+>            print "%2d" % BlaMka(a, b, p, mask),
+>        print
+>>
+>p = 13
+>mask = 3
+>printSquare(p, mask)
+>>
+>When run, it produces:
+>>
+> 0  1  2  3  4  5  6  7  8  9 10 11 12
+> 1  4  7 10  5  8 11  1  9 12  2  5  0
+> 2  7  4  9  6 11  8  0 10  2 12  4  1
+> 3 10  9  8  7  1  0 12 11  5  4  3  2
+> 4  5  6  7  8  9 10 11 12  0  1  2  3
+> 5  8 11  1  9 12  2  5  0  3  6  9  4
+> 6 11  8  0 10  2 12  4  1  6  3  8  5
+> 7  1  0 12 11  5  4  3  2  9  8  7  6
+> 8  9 10 11 12  0  1  2  3  4  5  6  7
+> 9 12  2  5  0  3  6  9  4  7 10  0  8
+>10  2 12  4  1  6  3  8  5 10  7 12  9
+>11  5  4  3  2  9  8  7  6  0 12 11 10
+>12  0  1  2  3  4  5  6  7  8  9 10 11
+>>
+>Note that 1 and 5 appear twice in the second column, while 3 and 6 are
+>missing.  This 4-bit version of BlaMka is clearly not a quasi-group.
+>>
+>My recomendation: switch back to the reduced Blake2b round, and
+>incorporate something similar to MAXFORM that runs on the scalar unit.
+>This will ensure we do long leak entropy until a compression step.
+>Incorporating multiplication into the Blake2 reduced round was a poor
+>solution in any case, IMO, since there is 8X parallelism built into the
+>Argon2 block hash.  The whole point of multiplication chain compute-time
+>hardening is to force the attacker to run nearly as long as the defender.
+>A free factor of 8X speedup is too high.  My top 3 concerns at the moment
+>for Argon2 are:
+>>
+>- Entropy loos
+>- Too much parallelism
+>- Poor compute-time hardening (due to parallelism)
+>- Poor in-cache performance (about 3X slower than TwoCats)
+>- Somewhat poor GPU resistance.
+>>
+>Using MAXFORM on the scalar unit would solve 4 of my top 5 concerns.  The
+>poor in-cache performance is not easily fixed, since Argon2's state busts
+>out of the SIMD unit registers and lives in L1 cache.  For low-memory
+>in-cache memory hashing, I plan to replace the Argon2 block hash with most
+>likely either the one from TwoCats or preferably Yescrypt if it is fast
+>enough.
+>>
+>Bill
+>>
+>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

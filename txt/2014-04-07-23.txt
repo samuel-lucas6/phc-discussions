@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] Re: Mechanical tests
+
+Message-ID: <CAOLP8p5iekCZomC=CwSs-9yYAX+LcZUvQj+zVrrp_AEcjYsz2Q@mail.gmail.com>
+Date: Mon, 7 Apr 2014 19:19:23 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Mechanical tests
+
+Here's what I am working on at the moment for mechanical testing:
+
+- I'm manually creating a PHC/limits/<entry>-limits.c file, to specify
+input ranges.
+- The main.c wrapper now generates test vectors, automatically keeping
+runtime per PHS call to under about 0.1s.  The results will be in
+PHC/vectors/<entry>-vectors.
+
+Once this is done, I plan to time all the various calls to the PHS,
+and then rerun them using:
+
+valgrind --tool=massif phs-<entry>
+
+This creates a table of memory usage vs time.  I should be able to add
+them up and report time*average memory, and time*max memory.  Valgrind
+can also report cache stats.  Ideally I can get it to tell me total
+memory bandwidth to the various levels of memory hierarchy.
+
+Then there's dieharder runs to clean up, though I think we've already
+reported all the failures.  After that, there's doing dieharder tests
+on the PHS output that is fed into the final cryptographic hash, to
+see that there is no major loss of entropy going on during memory
+hashing.
+
+That's all I can think of for now.  It will likely take a couple of weeks.
+
+Bill
+

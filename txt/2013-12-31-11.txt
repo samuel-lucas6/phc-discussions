@@ -1,0 +1,254 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p7w_5W08SMf4xzGGoxZYUmJi6VBvJB_R4uc7OdTMi2pyg@mail.gmail.com>
+Date: Tue, 31 Dec 2013 08:46:08 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+Thanks for the excellent feedback!  I feel a lot better knowing you're
+entering the competition.  I don't really have time or the background to
+create a winning entry, but hopefully I can help try out some ideas.
+ Comments below.
+
+On Mon, Dec 30, 2013 at 8:42 PM, Solar Designer <solar@...nwall.comwrote:
+
+- On my Core i7 linux box, it's over 8X faster for a given memory size,
+single-threaded, no SSE
+>
+... but don't we mostly care about the performance _with_ SSE (or
+better), and depending on use case, also with concurrent use of all
+cores (for computation of one or of many separate hashes, also depending
+on use case and other factors)?
+>
+
+I think it depends on whether or not I want to be able to do the KDF on
+devices that don't have SSE or multiple cores.  I think filling the
+available memory bandwidth should be goal #1, and to meet that goal on
+mobile devices, we should have as simple a hashing function as possible.
+
+I haven't added this to keystretch, but should we have another work
+parameter for how hard to push the CPUs?
+
+I liked your comment about running Salsa20/2, rather than Sala20/8.  Why
+not make the /X a CPU work parameter?  I'm not sure that Sala20/20 is any
+more secure than Salsa20/1 in memory hard KDFs, but being able to match the
+CPU work to the use case would be cool.
+
+Without a CPU work parameter, I would lean towards using the fastest
+possible hashing algorithm with no SSE, since it needs to work on mobile
+devices.
+
+8x can easily be the difference between scrypt's -ref and -sse (once
+it's optimized like I did), although perhaps not between -nosse and
+-sse.  I guess your benchmark is for scrypt's -nosse.
+>
+
+I just used the default build on Arch Linux for scrypt. The
+files crypto_scrypt-nosse.c and crypto_scrypt-sse.c are identical, so I
+guess the only difference is compiler flags.  I assume SSE is on by
+default, but it doesn't look like there's been any hand optimization for
+SSE, but I'm not sure.
+
+
+In my testing (with optimized scrypt code using AVX or better) reducing
+Salsa20 rounds count from 8 to 2 (4x reduction in round count) results
+in less than 2x speedup, which suggests that replacing Salsa20/N with
+something way simpler is not going to make all that much difference
+either.  I guess you may be seeing much more of a difference in part
+because you're only benchmarking a single thread.
+
+
+True, but for low CPU power situations like a mobile phone, that's an
+important case.  I would be interested in seeing both single and multiple
+thread performance of Salsa20/N, and with/without SSE or better.
+
+
+- Memory is hashed as it's filled, rather than filling, then hashing.
+>
+This sounds similar to my changes to SMix first loop:
+>
+http://www.openwall.com/lists/crypt-dev/2013/11/25/3
+
+
+Not coincidentally!
+
+but extended to the second loop as well, replacing both of them with one
+combined loop.  I thought of this too, but a drawback I saw was that
+either I'd have to avoid random writes (which I had implemented as an
+optional anti-TMTO feature) or I'd have to be computing two hashes (two
+BlockMix'es in scrypt terms) per loop iteration (so that I write two
+different values: one to the newly allocated V element and another to
+the currently selected random element).  At that point, it is unclear if
+there's any benefit from continuing to expand the size of V after
+filling time/2 elements (if the price we pay is spending twice more time
+per element filled).
+>
+You might (or might not) have avoided this dilemma with careful design
+of your RNG (or whatever you call it), having it produce two distinct
+outputs in less than 2x time.
+>
+
+My intent was to do random writes to L1 cache only, and only sequential
+writes to external memory.  It seems to work in single-threaded mode, but
+I'm having trouble with multiple thread mode.
+
+One reason for keeping random writes in L1 cache, other than speed, is to
+reduce information leakage about the key, just in case someone is able to
+detect cache miss timing.
+
+On my system, memcpy can copy 2GB in .29s.  That's 4GB of data r/w.
+ Running keystretch on 2GB of memory does 2GB of random "page" reads, and
+2GB of sequential writes in about .91s on a single thread.  After reading
+your excellent links on cache timing, I suspect I could shave almost .3s
+off the runtime with temporal writes, which memcpy probably already does.
+ The other .3s seems like it will require better multithreading than what I
+do now, and maybe better use of SSE.
+
+
+Another drawback is the very low probability that the last few V
+elements written will ever be accessed.
+
+
+That worries me, too.  I like your described approach of having a sliding
+window.  It's probably just better.  Would an attacker be able to free
+memory that slides out of the window and reuse it?
+
+
+- 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+intermediate derived key.
+>
+I dislike this.  It's very wasteful in use cases where our total running
+time is very limited.  This may be all running time we can afford (if at
+all), not leaving any time for the memory-hard portion.
+- The derived key does not depend on the number of threads
+>
+
+I may be having some basic disconnect here.  On my system, running
+2,000,000 SHA-256 rounds using the code from scrypt takes 2.4s.  The worst
+performing desktop based Javascript benchmark I've read is 50,000
+rounds/second.  Even a low-end smartphone browser should be able to do 2048
+rounds in a small fraction of a second.
+
+Why do we care about the first few milliseconds?
+
+I made the number initial SHA-256 rounds a parameter, but made the minimum
+4096.  I'll set the default to 4096, and the minimum to 1024.  I can't see
+a rationale for going lower.  The fact that both OpenSSL and TrueCrypt
+hard-coded 2048 rounds with no options for better protection for my ssh
+private key or TrueCrypt volume is the reason I got involved in this
+password hashing in the first place.  We can buy BitCoin hardware that does
+1G-hash of SHA-25s/second for $10.  2048 rounds doesn't even begin to slow
+down an ASIC based password guesser.
+
+Am I missing something here?  I suspect I've dropped a couple orders of
+magnitude somewhere...
+
+... as long as the number of threads is not greater than a pre-specified
+maximum.  I can claim this too. ;-)  And scrypt can claim it too,
+although with scrypt there's a reduction in area-time from increasing p,
+so it better not be done unnecessarily.
+
+
+Good point!  For some reason I though scrypt's result changed with p.
+
+Looking at your code, you're resolving the higher area-time vs. number
+of thread synchronizations tradeoff differently than I did, though.
+I suggested having just one extra synchronization point (between the
+equivalent of SMix's two loops), whereas in your case the
+synchronization is continuous and the number of times a thread will have
+to wait for other threads' data to become available is not pre-specified.
+
+
+I'll have to rewrite that code anyway to keep the threads from writing to
+the same physical pages of memory, as you suggested.  I'll probably wind up
+using your scheme, more or less.
+
+
+I see the advantage of being able to wipe the password early on, though,
+and not fill lots of memory with data that is quickly derived from the
+password (so, if leaked, may provide for quick password cracking too).
+>
+
+I was shocked to see that the API we have to implement for the password
+hashing competition passes the password as a "const void *" eliminating the
+possibility of clearing the password.  I understand how people are freaked
+out about side-channel timing attacks, but back in the 80's one way I used
+to get coworker's passwords (because they dared me to and claimed I
+couldn't) by forcing a binary dump on their FTP program that they left
+running when they when to lunch.  You could literally run "strings" on the
+binary and the password came right after the string "password".
+
+Clearing the password shouldn't even be an option.  It should be mandatory.
+
+
+Also, for password hashing bcrypt is a better baseline, and you don't
+reach it - as it relates to attacks with GPUs - by 2048 iterations of
+PBKDF2-HMAC-SHA-256.
+>
+
+True, but we're following this with a memory-hard KDF.  I don't want to
+spend as much time as bcrypt takes.  I just want to start with good
+security and improve from there.
+
+
+You appear to use random 64-bit lookups within a page, and that's quite
+similar to how bcrypt happens to defeat GPUs now (with 32-bit lookups in
+4x1 KB S-boxes), so you might be lucky in that respect.
+>
+Unfortunately, the same property prevents a defensive implementation of
+your hash from using SIMD (without 64-bit gather loads).
+
+
+This is one reason someone with more experience at low-level parallelism
+should write the winning entry.  With a good CPU workload parameter, it
+makes sense to do as much SIMD as possible.  Without it, however, I'd
+probably try to hash in a way that doesn't do well with SIMD.  So far, I've
+been trying to do this.
+
+
+Having the hash result not depend on the number of threads, and also
+filling memory as we hash, allows me to have a stop pattern that I look
+for
+when decrypting.  Along with salt, I can store the final hash value,
+which
+also looks random.  When decrypting, I fill memory until this stop value
+is
+seen.  This allows better deniability for the encrypted file, as both the
+hash and stop value appear to be random.  This is important for
+TrueCrypt.
+>
+Nice.  I think this has a drawback, though: a TrueCrypt cracker, if
+aware of the settings that were used (or if can guess them fairly
+reliably), will be able to reject wrong keys right after the KDF,
+without proceeding with actual decryption of the user's data and
+checking its checksum.
+
+
+Good point.  I guess I prefer to know reliably whether I've typed the right
+password after about a second, and I'd rather not wait for the file to fail
+decrypting.  In any case, this is an option I'm planning for, but it need
+not be used in most applications.
+
+
+A weakness of the hashing function vs scrypt is that it is a simple
+non-cryptographic hash, rather than script's Salsa20/8.  This is the
+primary reason it runs faster.  If we do not need a strong cryptographic
+hash, there is significant opportunity for improving performance.
+>
+Is there any reason such a simple hash function should not be used?  I am
+particularly interested in feedback on this point.
+>
+This is a tough question.  I think the required properties of the hash
+you use on every iteration depend on how your loops are structured.
+>
+
+I would be interested in how fast Salsa20/1 runs.  If it is close to as
+fast as what I'm doing, I'd say it would be better to let the user run
+Salsa20/W, where W is a CPU work parameter he can select.
+
+Thanks for the detailed review!  I know that took you some time, and likely
+on your vacation.  I appreciate it.
+
+
+

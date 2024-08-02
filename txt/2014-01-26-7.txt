@@ -1,0 +1,38 @@
+phc-discussions - An argument for Catena-2
+
+Message-ID: <CAOLP8p5q8be_xQxLP2GbUSJO4CHOyB4QvBroEF3aQKszsgsimA@mail.gmail.com>
+Date: Sun, 26 Jan 2014 15:32:04 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: An argument for Catena-2
+
+I've done some more work on my pebbling program, and tested Catena-2
+against Catena-3.  Catena-3 does have a much higher penalty for
+attackers using a TMTO, however, I think Catena-2 may be good enough.
+
+When I save 1 memory location for Catena-2, I get a 50% recalculation
+penalty.  No one is going to try and save 1 memory location against
+Catena-2.  When I try something reasonable, like half, then I get a
+recomputation penalty of over 10X.  Compute cores are cheap compared
+to memory, so maybe I can run parallel cores and reduce the runtime
+penalty, but I doubt I can get that 10X to run enough in parallel to
+get the recomputation time to below 2X.  I should write some more code
+to determine how much parallelism is available in the recomputations.
+My guess is it is not enough to make it worthwhile.
+
+I benchmarked Catena-2, and it is running 3.4X faster than Scrypt,
+compared to 2.6X faster for Catena-3.  It's still 2.6X slower than
+NoelKDF for the same memory, which is right in the middle of the
+theoretical range of 2X to 3X.  It does 2 reads and 2 writes to every
+memory location, compared to 1 read and 1 write for NoelKDF, which is
+where the 2X lower bound comes from.  When memory bandwidth limited,
+we should see a 2X difference.  For compute limited situations,
+Catena-2 does 3X more computation than NoelKDF for the same memory
+size, which is where the 3X upper bound comes from.
+
+Performance does matter.  I'll do some more analysis on the chances of
+a parallel attack against Catena-2 succeeding, but for now I'm leaning
+towards Catena-2 for a cache-timing attack resistant algorithm.
+
+Bill
+

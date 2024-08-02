@@ -1,0 +1,67 @@
+phc-discussions - Another PHC candidates "mechanical" tests
+
+Message-ID: <546075BF.1070905@gmail.com>
+Date: Mon, 10 Nov 2014 09:22:23 +0100
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Another PHC candidates "mechanical" tests
+
+Hi all,
+
+I run some simple tests with almost all PHC candidates
+(plus Catena2 and RIG2 submitted here).
+
+Maybe it could be useful, it is in fact it is kind of an independent extension
+what Bill Cox sent here for reviews.
+
+The long description with pictures here
+  http://htmlpreview.github.io/?https://github.com/mbroz/PHCtest/blob/master/output/index.html
+
+Code and raw output is on github https://github.com/mbroz/PHCtest
+
+These are all just playing with PHS() as a black-box function with default parameters
+and usually using reference (not optimized) variant. (IOW performance comparison makes no sense.)
+
+Really mechanical tests here but better redundant tests than nothing (I hope).
+
+In short (more details in html above):
+
+- Trivial dieharder test - nothing new except known Tortuga fail
+(and Pufferfish if not fixed to produce raw output)
+(I run this mainly to find apparent mistakes like that Pufferfish hexa encoding.)
+
+- Simple portability test (I tried to compile it on big endian 32bit system
+and run vectors generated on x86_64)
+I know that in the first round the code quality is primary goal but...
+  - many makefiles support only Intel extensions
+    (I think at least some reference code should be portable)
+  - even if fixed, many algorithms fails test vectors generated on x86_64
+
+- I tried to visualize real used memory (measured by rusage()) and
+run time with variable mcost/tcost (and generate some fancy graphs:-)
+
+- I run variable input/output test to check if it influences run time (see graphs).
+(Seems that EARWORM and MCS_PHS have apparent run time dependence on length...)
+
+As a side-effect, there is a lot of input parameter validation problems.
+Most algorithms seems to be checked mainly for 32bytes hash output only.
+
+Again, not a big problem now but later validation of input parameters should probably improve.
+
+Just some of them:
+ - Argon implementation allows to produce non-random hash without error if requested length is 32 bytes,
+   similar problem for >255 input
+
+ - Catena/Catena2 implementations allows to produce hash of length >256 bytes, which is apparently wrong
+
+ - Yescrypt seems to produce different hash for 32bytes length than for other requested lengths
+   if it is intended (and not my mistake) then probably PHS() should fail for other req. output
+
+(Links to detailed test outputs are in html file above.)
+
+If there is at least some useful info or you have an idea which mechanical test could
+be added (I would like to do more testing for 2nd round candidates anyway), please let me know.
+
+Thanks,
+Milan
+

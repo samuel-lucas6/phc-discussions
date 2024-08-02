@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] Pufferfish
+
+Message-ID: <20150411065952.GA16790@openwall.com>
+Date: Sat, 11 Apr 2015 09:59:52 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Pufferfish
+
+Jeremi,
+
+On Sat, Apr 11, 2015 at 09:42:58AM +0300, Solar Designer wrote:
+In Pufferfish, the S-boxes can be made arbitrarily large.  With larger
+S-boxes, t_cost may reasonably be set lower - specifically to allow for
+filling larger amounts of memory.  Suppose t_cost is 0, or just one
+iteration of the main loop.  Rather than run that loop normally, the
+attacker runs only the first pf_expandkey() in it.  Then the attacker
+proceeds with the 64 iterations loop for the first output sub-block (32
+bytes from Blowfish in ECB mode, 64 bytes from SHA-512).  (It has to be
+the first one, since further ones depend on it via modified ctext.)  The
+attacker partially computes the second pf_expandkey() only as needed to
+provide the requires S-box elements.  Eventually, the computation
+terminates, while the highest required S-box index is potentially still
+somewhere below the maximum.  With very large S-boxes, this can
+effectively eliminate one of three calls to pf_expandkey() that are
+performed at t_cost = 0.  Thus, asymptotically the running time is
+reduced to 2/3 of what was intended.
+
+I'm sorry, I realized it's not that bad before sending the message, but
+I edited the above paragraph only partially.  The 2/3 worst case only
+felt realistic for very large Pufferfish KDF output sizes, and only
+before I realized that you have each 64-byte block of the output depend
+on the previous one, so the "compute the most optimal for attacker
+sub-block" attack doesn't work.  Only a relatively minor reduction in
+overall computation is possible from this.  In absolute terms, it may
+still be beneficial (in that it'd save more than it'd cost), but
+relative to the total processing it's negligible.  Sorry for the false
+alarm about this one.
+
+The rest of what I wrote still holds.
+
+Alexander
+

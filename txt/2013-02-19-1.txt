@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <20130219000625.GC21098@openwall.com>
+Date: Tue, 19 Feb 2013 04:06:25 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Any "large verifiers" on the panel?
+
+On Sun, Feb 17, 2013 at 07:25:33PM -0500, Daniel Franke wrote:
+Jeremi Gosney <epixoip@...dshell.nlwrites:
+
+You have to assume that if the passwords are compromised, the
+encryption key is as well.
+
+I'm with all those who say that we shouldn't be granting this
+assumption.
+
+I'd say it may be useful to grant or not grant this assumption in
+different contexts.  Of course, we have to assume that our encryption
+key or secret local parameter has been compromised when we design the
+rest of our password hashing scheme.  If we don't make that assumption,
+there's nothing else for us to do - "hey, the passwords are encrypted
+and the key is not compromised, why hash them, let alone spend much CPU
+and RAM on that?" - that's wrong, indeed.  We may want to have defense
+in depth.  Our last resort defense - the costly hashing - is non-perfect
+when we're dealing with low entropy passwords.  So we may reasonably use
+another non-perfect layer of security, and yes it's non-perfect in
+different ways.  In this context, we need to assume that the secret
+key/parameter may or may not have been compromised, and we should design
+our password hashing scheme (and the rest of the system, but that's not
+PHC material) such that it's reasonable in either case.
+
+An adversary who has completely compromised a web server
+doesn't have to bother cracking password hashes at all.
+
+This is not true.  Here are some good reasons why they may want to crack
+the hashes anyway:
+
+1. Persistence, without having to introduce changes into the system
+(which may be spotted and undone by the defender).  The initial
+vulnerability may be patched, and the backdoors may be removed or be
+unsuitable to be installed, so the intruder will use real users'
+passwords to continue getting into the system.
+
+2. The accounts may be of value (for resale, for direct use by the
+attacker, for indirect use of the information by the attacker).  In some
+cases, this is (more conveniently) available via the passworded logins
+(e.g., to sell 1 million accounts on a certain service to spammers).
+
+3. Password reuse on other systems or sites.  The cracked passwords may
+allow the attacker - or different attackers - to get into more accounts
+of the same people.
+
+4. Research (and not necessarily for sharing it with the "good guys"):
+building of common password lists, character frequency statistics, etc.,
+including specific to a target organization, a common password policy, a
+password generator, etc.  This can help compromise more systems that are
+in some way similar.
+
+He can just capture unhashed passwords as they arrive over the wire.
+
+With a complete compromise, yes, but only for the duration of the
+compromise.  That's a subset of all accounts.
+
+If we aren't
+completely wasting our time having this competition, then we should
+absolutely be thinking about what constitutes a realistic model of
+common partial-compromise scenarios, and what features we can add to a
+password-hashing scheme in order to make it more secure in that model.
+
+As we've just seen, there's some difference of opinion in what's common,
+so I suggest that we let PHC submission authors decide whether they want
+to include the optional extras or not (this will also depend on how
+difficult or easy it is for them to do that in a given case, which will
+vary).  We won't be wasting our time even if we only get basic password
+hashing schemes with no optional inputs, nor if we get password hashing
+schemes with optional inputs.  This is not the most important aspect.
+
+Of course, what's actually common is not a matter of opinion, but we
+lack the statistics.  Besides, until the use of local parameters to
+password hashing schemes becomes more common, we can't expect their
+compromises to be common (or not).  We're simply not there yet.
+
+Alexander
+

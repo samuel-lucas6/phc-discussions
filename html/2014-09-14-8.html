@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] About shortcuts and escrow</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140914141556.GA18821&#64;bolet.org&gt;
+Date: Sun, 14 Sep 2014 16:15:56 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] About shortcuts and escrow
+
+On Sun, Sep 14, 2014 at 05:12:43AM -0500, Steve Thomas wrote:
+&gt; I'm confused I thought escrow and fast path were different.
+
+I might have been unclear, so I will try again.
+
+&gt;From a _functional_ point of view, fast path and escrow are different.
+Fast path is about obtaining the hash output from the password in a
+short time. Escrow is about recovering the password from the hash
+output. If you were to implement both as functions, the two functions
+would not take the same parameters, so they are not, from that point of
+view, the same thing.
+
+
+&gt;From a _security_ point of view, the difference becomes blurred. The
+core assumption of password hashing is that dictionary attacks work: if
+given f(password) for a hash-like function f() which is fast to compute,
+then attackers will be able to try lots of potential passwords and, most
+of the time, hit the right one at some point. If a password hashing
+function offers a shortcut (that I call "fast path" in the case of
+Makwa), then the power to use that shortcut IS the power to run a fast
+dictionary attack, which, from a security point of view, equates to
+password recovery.
+
+Thus, when a password hashing function offers a shortcut, then the
+values needed to activate that shortcut MUST be handled like a very
+sensitive private key, since, in the hands of an attacker, they are
+almost as good as an escrow recovery key. In that sense, i.e. from the
+point of view of the attacker, shortcut and escrow are very similar.
+
+
+Up to that point, nothing here is specific to Makwa. However, since
+Makwa offers a shortcut, I told myself that I could go to the end of
+that logic: if there is a shortcut, and, in the hands of the attacker,
+that shortcut would be (almost) as devastating as an escrow recovery
+key, then I might just as well formalize the mechanism as an actual
+escrow, call it as such, and provide it as an optional feature for the
+few scenarios where it is actually helpful to the defender.
+
+
+&gt; That's the problem if you tell people it's secure and that you can
+&gt; have a high cost to attackers while having a low cost to you. People
+&gt; will keep p and q to do fast path. Basically you can't say "you can
+&gt; keep p and q" to users and tell critics "well just clear p and q and
+&gt; your issues go away [along with some features]".
+
+That's the reason I am calling it "escrow". This is a nasty word. In the
+mind of many readers, it conjures up notions of evilness, like
+governments spying on citizens (depending on the reader, this may
+encompass all past, present and future governments; for others, only
+"bad" governments are evil). Faced with the E-word, a substantial
+proportion of security researchers have an instinctive repulsion reflex,
+like an imam stumbling upon a pigsty.
+
+Yet I am still using that bad word, despite its poor potential for
+public relations, because I feel that my users (people who would
+consider using Makwa, e.g. for their servers) must be presented with the
+raw, if bleak, truth in that matter: a shortcut has significant
+consequences for security, and the "shortcut secret" must be handled
+with all the care that would be needed for an escrow private key. I am
+calling it a private key and I associate it with the escrow feature
+precisely to achieve that psychological effect.
+
+You cannot reproach me both my describing the "escrow" feature, and not
+doing it. In fact you are yourself the living example of what I mean: as
+you told in a previous email: "I guess the escrow should have tipped me
+off". That's intentional. The "escrow" word is there to tip you off that
+there is some private key to handle as a private key.
+
+
+A point which I might not have made clear enough, though, is that
+post-hashing is NOT a way to separate "shortcut" from "escrow". From a
+functional point of view (see the beginning of this email), the
+post-hashing indeed prevents any escrow feature from operating smoothly
+(if you want to recover a password, you have to run a dictionary
+attack). From a security point of view, post-hashing is only a minor
+bump on the attacker's road: since the shortcut allows for an efficient
+dictionary attack, it would be wrong to believe that enforcing
+post-hashing would really enhance security.
+
+In fact, by defining Makwa to always use post-hashing (as you suggest),
+not only would I artificially block some optional functionalities, but I
+would also send to my users the wrong message about the fundamental
+"private key" status of the shortcut. If I did that, then, in that case,
+you would be justified in calling me irresponsible.
+
+
+
+
+Now let's see the practical side of things. Imagine the very common
+situation of a Web server that authenticates incoming clients. The
+server uses SSL, and clients are Web browser who just send the password
+"as is" in an HTTP request. It is obvious that the SSL private key is a
+very valuable secret, since learning it would allow an attacker to
+decrypt past and future connections and thus obtain passwords (if the
+SSL server enforces DHE cipher suites, the attacker may "only"
+impersonate the server, which in many practical situations is almost as
+good: indeed, a low-power attacker is using a fake WiFi access point in
+a public place to lure users into sending him their precious bytes; for
+such an attacker, an active MitM is not harder than passive
+eavesdropping).
+
+A typical SSL-powered Web server will thus put the private key in some
+place where the SSL library can access it, but still kept "private" as
+much as possible. In a Microsoft implementation (with IIS), the private
+key would be entrusted to the cryptographic layers of the OS, i.e.
+CryptoAPI (or CNG) -- ultimately, stored somewhere on the hard disk
+(still in Windows, the relevant keyword is "DPAPI"), but not in the SQL
+database and thus not directly impacted by SQL injection attacks.
+
+All other things being equal, storing the private key for a password
+hashing shortcut in the same emplacement as the SSL private key would be
+a good idea. If an attacker learns these keys, the power he gets is not
+identical for both keys (with the SSL key he can run a fake server and
+learn passwords as they are used; with the shortcut key he can attack
+efficiently all stored passwords) but is still quite similar (in both
+cases, the attacker endangers passwords quite directly -- actually a bit
+more so with the SSL private key, since he can leverage it right away
+without needing access to the hashed passwords).
+
+So in the case where "people keep p and q to do fast path", in a
+properly integrated evironment, then chances are that it will turn out
+all fine: the p and q values will be kept in a store whose exposure
+would already have similar or even worse consequences.
+
+
+	--Thomas Pornin
+
+PS: "I got scared by the long message". Sorry, I tend to be verbose when
+I write (if you read the Makwa specification then you already know
+that). It is because of the words; I like them.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

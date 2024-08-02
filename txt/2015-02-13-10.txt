@@ -1,0 +1,83 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+Message-ID: <20150213224832.GA12836@openwall.com>
+Date: Sat, 14 Feb 2015 01:48:32 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+On Fri, Feb 13, 2015 at 07:43:50PM -0200, Marcos Simplicio wrote:
+Well, maybe we did something wrong in our benchmarks then, because our
+implementations are comparisons done in v2 are faster than Yescrypt with
+minimal parameters for both functions, both with 1 thread and with
+multiple threads...
+
+You have some impressive benchmarks in the current v3 submission!
+It's very helpful that you included multiple PHC finalists there.
+
+It may well be the case that Lyra2 is now faster than yescrypt, at
+yescrypt's current default PWXrounds = 6.  (yescrypt's use of
+PWXrounds = 6 may be justified in terms of ASIC area-time cost, though -
+in the special case that an ASIC would be compute latency rather than
+memory latency bound, which with yescrypt's use of integer
+multiplication may sometimes be the case.)
+
+Naturally, I would be interesting in adding yescrypt benchmarks for
+lower PWXrounds as well, down to 1.
+
+Also, unless I missed it, you don't appear to have ever benchmarked
+these at the maximum hardware thread count supported by your CPUs.
+You mention "12 cores" (is this 12 hardware threads? or 12 cores across
+two CPU chips, and 24 hardware threads total?), but somehow you only
+included benchmarks for up to p = 4?
+
+yescrypt is tuned to maximize resource usage (balanced between overall
+CPU instruction issue rate across all hardware threads, and total
+memory bandwidth) when running the maximum number of threads that are
+supported in hardware (this matches the case of an authentication server
+bumping into its request rate capacity during a spike).  It tries not to
+bump into memory bandwidth prematurely, which would mean that the CPU
+cores are not fully used to maximize latency in attack implementations.
+
+However, these benchmarks refer to yescrypt v0. Are your comments
+referring to v1?
+
+I'm not Bill, but I guess Bill was referring to older Lyra2 being
+unaware that you speed it up.
+
+As to yescrypt, its performance has not changed much.  Only the
+pre-hashing and S-box initialization have changed in performance, and
+these usually correspond to a very small part of the total run time.
+
+I agree that going below 1 round in Lyra2 is not a great option, but I'm
+not sure about the mixing ability of yescrypt's dedicated function when
+compared with Blake2. I mean, for a internal of 1024 bits, 1 round of
+Blake2 ensures that every bit of the internal and external states depend
+on every input bit. Does yescrypt's function do the same? (note: this is
+really a question, not a "provocation" of any sort). Because if it does
+not, then in theory Blake2 could be reduced even more to match
+yescrypt's diffusion capabilities (although personally I would not
+recommend it).
+
+yescrypt's BlockMix_pwxform has no diffusion between pwxform's 64-bit
+lanes until it reaches the final sub-block, where Salsa20/8 is used to
+mix the lanes.
+
+I don't know Lyra2 specifics to the same extent as I know yescrypt's,
+but it is quite possible that you could go below 1 round of BLAKE2 for
+all but the last sub-block as well.  Of course, you'd need to review
+this very carefully to ensure that sufficient data dependencies remain
+(to avoid attack shortcuts), etc.  I doubt it's a good idea to do this
+now, though.  (And it's too late for PHC.)  A Lyra2 successor like that
+would probably lose a lot of people's confidence in it if you did that.
+
+In yescrypt, the lanes are not mixed until sub-block end not so much to
+speed things up (this is lost by setting PWXrounds 1 anyway, as is now
+the default), but primarily to make yescrypt extremely scalable in
+terms of instruction-level, SIMD, and gather loads parallelism.  This is
+to allow for efficient implementations on architectures very different
+from current CPUs.  If in a Lyra2 successor your rationale would only be
+speed, it's probably not enough of a reason to go for that.
+
+Alexander
+

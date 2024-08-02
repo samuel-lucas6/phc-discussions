@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <c2cb4547f08d641451ccefc335c266d9.squirrel@www.bolet.org>
+Date: Thu, 27 Feb 2014 17:56:17 -0000
+From: pornin@...et.org
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+However, SHA-256, Blake2, and other hash
+functions have a lot of parallelism
+
+Actually they don't. Well, Blake2 has some "inner" parallelism (which
+helps in leveraging SIMD instruction sets like SIMD), but nothing close to
+the amount of parallelism in which GPU thrive. SHA-256 is very sequential.
+
+What works well with GPU is running several independent instances of
+SHA-256 simultanesouly; this works well because each instance will operate
+on its own set of registers (you'd need about 26 or 27 registers per
+instance, and that fits well into GPU resources) and there is no data
+dependent memory access (indeed memory accesses are so regular that the
+code can run in registers _only_). Such parallelism is nice for an
+attacker, because the attacker, by definition, has a lot of passwords to
+try. The time taken for each individual password hashing does not matter
+much to the attacker; it is the number of hashed passwords per time unit
+which conditions the attacker's success rate.
+
+
+If this is correct, wouldn't an effective strategy be to have a long
+chain of sequential operations that depend on the prior result, and to
+hash a lot of memory?
+
+A long chain of sequential operations does not make things harder for the
+attacker. Using memory, on the other hand, will harm the attacker, in two
+ways:
+-- If each instance uses some non-negligible amount of RAM, the attacker
+won't be able to maintain many simulatenous instance in its GPU RAM.
+-- If the memory is "real" memory (i.e. the access pattern is
+data-dependent, hence cannot be mapped to registers), then this will
+prevent most of the parallelism in the GPU.
+
+To state things in simple (simplistic ?) words, GPU are good at
+parallelizing jobs which fits in registers, but bad at parallelizing jobs
+which do not (i.e., which use RAM).
+
+
+        --Thomas Pornin
+
+
+

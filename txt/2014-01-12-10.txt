@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+Message-ID: <CAOLP8p5E67_JqmCgYfBpwksNTmoOa7PkPBPL3K=psq2DTM0STw@mail.gmail.com>
+Date: Sun, 12 Jan 2014 10:44:41 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On Sun, Jan 12, 2014 at 5:02 AM, Solar Designer <solar@...nwall.comwrote:
+On Sat, Jan 11, 2014 at 04:42:10PM -0500, Bill Cox wrote:
+Having less work per pipeline stage
+helps keep all logic busy: by the time the signal has propagated, we
+take it to the next stage and reuse the current stage's logic for the
+next set of inputs.  Now, I admit we can't benefit from a pipeline when
+all we have is one instance of Salsa20/N and our (attacker's) goal is
+solely to minimize latency.  But even then, I don't see why having a
+large number of rounds in one clock cycle would substantially reduce the
+total latency, as compared to having only a few rounds per cycle.
+I think the latency in ns should be similar regardless of how this is
+structured - well, perhaps only slightly lower (like by 10%) with more
+rounds per clock cycle.  Am I wrong?
+>
+I think the added latency from having (reasonably) more computation may
+increase the AT cost, by tying up the memory for longer.  This reduces
+our reliance on attackers' memory bandwidth being limited.
+>
+Alexander
+
+I haven't looked carefully enough at SHA-256 to know how fast it could
+be in hardware.  Actually, I'm more of a place and route guy than a
+digital synthesis guy, so my opinions are ball-park.
+
+However, I have looked at Salsa/8.  I know you know it by heart, but
+it helps for me to see it:
+
+        for (i = 0; i < 8; i += 2) {
+#define R(a,b) (((a) << (b)) | ((a) >(32 - (b))))
+                /* Operate on columns. */
+                x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
+                x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
+
+                x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
+                x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);
+
+                x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);
+                x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);
+
+                x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);
+                x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);
+
+                /* Operate on rows. */
+                x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);
+                x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);
+
+                x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);
+                x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);
+
+                x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);
+                x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
+
+                x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
+                x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+#undef R
+        }
+
+This look is executed 4 times for Sasla20/8.  Tracing the data path
+for x[0], I see a depth of 4 32-bit additions and 4 32-bit XORs, per
+loop, and there are 4 loops for a total depth of 16 add/xor stages.
+
+This does not look as challenging to compute as a 32x32 multiply.  An
+Intel CPU does a 64x64 multiply in 3 clocks.  This should be doable as
+fast, I think.
+
+So, hand-optimized Salsa20/8 in 20nm is maybe is 3 clocks at 3.5GHz.
+That's my best guess.  A multiplier designer could probably be more
+accurate.
+
+Bill
+

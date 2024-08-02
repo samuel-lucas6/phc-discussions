@@ -1,0 +1,96 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+Message-ID: <CAOLP8p7+muK9i7FJtk+LQ1nfuDU2zfFEm4YsJMmg=FhVAV7gBQ@mail.gmail.com>
+Date: Thu, 30 Apr 2015 08:51:27 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+On Thu, Apr 30, 2015 at 5:43 AM, <Stefan.Lucks@...-weimar.dewrote:
+
+Dear all,
+>
+As an example, let the password hashing function H1 be ten times faster
+than H2, i.e., if Mallory's costs for H1 are be ten times higher than his
+costs for H2 (for the same budget on the defender's side). Ten times faster
+sounds like a big deal, doesn't it?
+>
+
+Mallory's cost will be 100X higher in this case.  Memory*time defense goes
+as the square of the runtime.  So, that's 6.64 additional bits of strength,
+not 3.32.
+
+
+Well, the H1 would provide log_2(10)=3.32 bit more pseudo-entropy than H2.
+To compensate for using H2, the defender could choose passwords, with 3.32
+bit of additional entropy. Just appending one single random digit to the
+password would suffice.
+>
+
+Given the low entropy per character in most passwords, 6.4 bits will
+require an additional 2 characters.
+
+
+Even if the defender does not really understand how Mallory might mount a
+side-channel attack against H1, choosing H1 for the marginal gain of a ten
+times better performance could be a fatal move, if H2 is resistant to
+side-channel attacks. The most serious issue are cache-timing attacks, but
+one should also consider garbage collector attacks, and possibly other
+attacks as well.
+>
+
+I consider garbage collector attacks to be a more common side-channel than
+cache-timing.  Yescrypt does a good job overwriting early memory fast, so
+that there's less chance of a devistating garbage collector attack.  I
+prefer what I did in TwoCats, which minimizes early garbage collector
+attacks by using a Catena-style increasing garlic, up to some reasonable
+size.
+
+As for side-channel resistance, Lyra2 (especially if we enhance it's early
+walk pattern) has a cache-timing resistant first loop, significantly
+reducing the damage from a successful cache-timing attack.  Alexander has
+considered adding such a loop to Yescrypt, and I have it in TwoCats (not a
+finalist).  I find this to be the most acceptable compromise between
+reduced time*memory defense and having any resistance to a cache timing
+attack.  If we could improve Lyra2's performance a bit, it would look
+really good, IMO.
+
+
+(Note that the situation for password-based key derivation, is different.
+There, can hardly exclude Mallory from performing off-line attacks. Except
+when Mallory doesn't have the ciphertext -- but then, why should Mallory
+care for the key or the password at all?)
+>
+>
+The consequence for PHC?
+>
+If PHC selects a single winner from one of the finalists, it should either
+be Argon2i or Catena. If PHC selects more than one winner, the set of
+winners should include at least one of Argon2i and Catena. (Or, if we don't
+care about forcing Mallory to allocate a large amount of memory, Makwa and
+Parallel would be alternatives.
+>
+
+I strongly disagree.  Cache timing attacks remain a laboratory experiment,
+while millions of passwords are being leaked through off-line attacks.
+Argon2i or Catena as a sole winner would be much worse for defense against
+these real-world off-line attacks than Scrypt.  If there is only one
+winner, it _must_ at least provide better off-line attack resistance than
+Scrypt.  Otherwise, we'll just continue using Scrypt.  I would prefer
+having some cache-timing resistance if there were just one winner, which is
+a point in Lyra2's favor.  We could either add a hybrid archtecture to
+Argon2d or Yescrypt, or speed up Lyra2 a bit, and we'd be fine with a
+single winner, IMO.
+
+However, I would prefer to have two winners, one from the fast large-memory
+multi-threaded group (Argon2d, Lyra2, and Yescrypt), and one that is
+cache-timing attack resistant (either Catena or Argon2i).  We could
+recommend the cache-timing resistant algorithm for algorithms running on
+VMs which may also be running an attacker's code, and the unpredictable
+algorithm for full-disk encryption, dedicated authentication servers, and
+other cases where cache-timing attacks are not likely.
+
+Bill
+
+
+

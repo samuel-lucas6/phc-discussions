@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150926181101.GA14598@openwall.com>
+Date: Sat, 26 Sep 2015 21:11:01 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+The hash output size for password verification should be fixed
+(otherwise, if people have to choose that length, it is unavoidable that
+some will do something stupid).
+
+Unfortunately yes, but OTOH for attack (e.g. in JtR) or non-initial uses
+(where someone else has already made the determination on output length
+anyway), it is desirable to have a canonical encoding to which such
+weird hashes could be converted.  e.g. JtR will have to encode those
+hashes in john.pot somehow, and preferably in a deterministic way.
+
+So maybe the output length limits should be relaxed to apply to new
+hashes only.
+
+A concern, though, is that outlen is yet another risky parameter in
+terms of DoS attacks e.g. on httpd via .htpasswd files, if it is
+encoded, along with m_cost and t_cost (and whatever hashing scheme
+specific parameters those correspond to).  That's not just "new hashes",
+but also processing of existing untrusted hashes.  (Similar attacks on
+JtR are also possible.  This issue was brought up a few times between
+JtR jumbo developers, but we made no decision on how to deal with it yet.)
+
+Since it's "yet another" risky parameter rather than the only one, I
+think the concern above might not be a sufficient reason not to have
+(encode/decode) that parameter.  We need a workaround or a solution for
+all of them anyway (e.g., some API to determine would-be memory and time
+costs of computing a hash, in units that e.g. httpd or JtR could check
+against configured limits).
+
+Static buffers e.g. for crypt(3) return value may limit what outlen
+values a given implementation would support, and it may be fine for many
+to support only 256-bit.
+
+Encoding outlen if it's a non-optional parameter is easy - just encode
+another number.  The smallest supported value can be way below 256-bit
+then (with unreasonably low values being to have a canonical encoding
+for attacks on existing weird hashes).
+
+However, encoding outlen if it's optional, yet having the encoding
+deterministic by definition, is not so easy.  With my proposal for
+omitting default values, we can only omit a default if it's the smallest
+valid value.  Omitting a default in the middle of valid range is
+error-prone.  So if we make 256-bit the default (I agree that we
+should), then we only have a straightforward way to encode values of
+256-bit or higher, and we have no canonical encodings for shorter
+hashes for attack use.  This is a dilemma I don't yet have a good
+proposal for.  Any ideas?
+
+While collisions are not a concern, it
+would probably be a good marketing move to use an output size which is
+"naturally" immune to collisions, i.e. 256 bits. This is what SHA-256
+outputs, and is larger than the 192 bits of bcrypt. A 32-byte output is
+not too huge with regards to the rest of the string, and also with
+regards to existing hash strings that rely on SHA-256 crypt or, even
+more so, SHA-512 crypt. While a 128-bit output would save some resources
+and make more sense (cryptographically speaking), a 256-bit output
+should ensure wider acceptance by the user base.
+
+I agree with this reasoning.
+
+I limit the salt length for Argon2 to a maximum of 48 bytes (64
+characters after B64 encoding) so as to help decoders (stack buffers
+again...). Argon2 can process much longer salts, but that does not make
+a lot of sense for password verification, where a 16-byte salt (say, an
+encoded UUID) is already fine.
+
+We may stipulate some limits on salt length for defensive
+implementations, but we should also define canonical encodings for
+arbitrary salt lengths for attack use.  Luckily, this is trivial.
+
+Alexander
+

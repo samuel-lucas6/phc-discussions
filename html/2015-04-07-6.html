@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="../../../2015/04/08/1">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="../../../2015/05/03/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5523E8CF.5050708&#64;larc.usp.br&gt;
+Date: Tue, 07 Apr 2015 11:25:19 -0300
+From: Marcos Simplicio &lt;mjunior&#64;...c.usp.br&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi, Alexander.
+
+I'm trying to keep it short this time :)
+
+On 06-Apr-15 21:12, Solar Designer wrote:
+&gt; Hi Marcos,
+&gt;
+&gt; On Mon, Apr 06, 2015 at 01:09:36PM -0300, Marcos Simplicio wrote:
+&gt;
+&gt;&gt; On 03-Apr-15 08:12, Solar Designer wrote:
+&gt;&gt;&gt; There's a difference, though: I guess yescrypt's pwxform S-box lookups
+&gt;&gt;&gt; are much more frequent than Lyra2's equivalent (is there one?)
+&gt;&gt;
+&gt;&gt; No, there is no table look-up or anything of the sort in any Blake
+&gt;&gt; variant I'm aware of.
+&gt;
+&gt; Of course not in Blake2, but does Lyra2 itself perform anything like it?
+&gt;
+
+The most similar feature I can see in Lyra2 is on the line of Gregory
+Maxwell's point on "making more use of the total available hardware",
+referring to caches: right after we write on a given row, in the next
+iteration we pseudorandomly read from its columns (taking advantage of
+the fact that it should still be in cache, so attackers are motivated to
+do have a similar-sized cache line). This is similar to having a LUT of
+the size of a row.
+
+&gt;
+&gt;&gt; There is, however, another situation that involves only small amounts of
+&gt;&gt; memory and, thus, in which attackers can benefit from faster memory
+&gt;&gt; technology: recomputations during a TMTO attack. After all, whether the
+&gt;&gt; scheme/pass is deterministic or password dependent, recomputations
+&gt;&gt; become password-independent as long as the attacker stores the sequence
+&gt;&gt; of rows required after seeing them in original computation; those rows
+&gt;&gt; can, thus, be prefetched and stored in cache-like memory. As a result,
+&gt;&gt; while the original computation of a block V_i (discarded) from a set of
+&gt;&gt; blocks \phi{V_i} took, say, 20\sigma (where \sigma accounts both for
+&gt;&gt; memory- and processing-related costs), a hardware acceleration of 10x
+&gt;&gt; combined with a 10x faster memory could bring the cost of recomputations
+&gt;&gt; to approximately 1 if \sigma is 50% memory and 50% processing;
+&gt;&gt; parallelism and pipelining, if possible, may allow recomputations to
+&gt;&gt; occur even faster. The lesson here is that, even though at first sight
+&gt;&gt; the time*memory cost would appear to the around 20, in practice it might
+&gt;&gt; be much lower than that. That is why computing the actual time*memory
+&gt;&gt; cost is tricky, especially without experiments to verify them, and why I
+&gt;&gt; believe TMTO resistance should involve a reasonable security margin
+&gt;&gt; (something that Argon and Lyra2, for example, try to achieve with their
+&gt;&gt; minimum settings).
+&gt;
+&gt; Basically, you're saying that TMTO reduces not only the memory
+&gt; component, but also a time component - specifically, memory latency - so
+&gt; the theoretical memory*time calculations that assume same time per round
+&gt; of a primitive, etc. do not reflect the reality.  OK, this is finally a
+&gt; well-reasoned argument in favor of a TMTO security margin.  (It's also
+&gt; an argument in favor of compute time hardening, which makes having a
+&gt; TMTO security margin less important.)
+
+Actually, since we are talking about "security margins", I believe it is
+an argument in favor of both approaches: they clearly have value in
+combination, so if an attacker can somehow explore one but not the
+other, then we are still safe.
+
+&gt;
+&gt;&gt;&gt;&gt; - For 1 thread ("p1") with different passes through memory: say,
+&gt;&gt;&gt;&gt; yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+&gt;&gt;&gt;&gt; while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+&gt;&gt;&gt;&gt; MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+&gt;&gt;&gt;&gt; = 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+&gt;&gt;&gt;&gt; difference, the reason is probably related to bandwidth usage, because
+&gt;&gt;&gt;&gt; Lyra2 purposely uses more bandwidth in this scenario: namely, it
+makes 2
+&gt;&gt;&gt;&gt; writes per call of the underlying hash instead of 1, and 4 reads (2
+from
+&gt;&gt;&gt;&gt; cache and 2 from memory) instead of 2. I'm not sure if that is good or
+&gt;&gt;&gt;&gt; bad, but improvements on memory bandwidth are usually slower than on
+&gt;&gt;&gt;&gt; computation power, so I would rather say it is good in terms of attack
+&gt;&gt;&gt;&gt; resistance, as it limits an attacker's parallelism ability.
+&gt;&gt;&gt;
+&gt;&gt;&gt; This makes sense, but you also need to factor in yescrypt's S-box
+lookups.
+&gt;&gt;
+&gt;&gt; I agree this factor is likely to play a role. However, Bill reported a
+&gt;&gt; long time ago speed-ups of ~20% if Lyra2 reduced its number of memory
+&gt;&gt; writes when no parallelism is employed. We preferred not do so in the
+&gt;&gt; 1-threaded version, however, because we _wanted_ attackers to run into
+&gt;&gt; memory bounds as soon as possible (again, because users and attackers
+&gt;&gt; are likely to have access to the same memory technology).
+&gt;
+&gt; I didn't mean that yescrypt's S-box lookups slow it down a lot - I think
+&gt; they slow it down just a bit.  This is a measurable slowdown, though.
+&gt; (I designed and re-designed pwxform until the performance impact of
+&gt; S-box lookups was low, while their frequency was bcrypt-like.)
+&gt;
+&gt; I primarily meant that they add to defense too, so same speed of Lyra2
+&gt; and yescrypt on a given benchmark may actually mean that yescrypt wins
+&gt; in terms of the compute hardening against various platforms.
+
+That is possible, but I prefer to discuss such issues after performing
+actual experiments (not exactly to "defend Lyra2" or any other scheme,
+but rather to understand their limits: the topic is very interesting for
+further research :) ).
+
+&gt;&gt; BTW, we have not yet used the suggestion by Samuel Neves regarding NORX
+&gt;&gt; tricks ("We used this trick (replacing + with ^, * with &amp;) in NORX (pg.
+&gt;&gt; 23 of <a href="https://norx.io/data/norx.pdf" rel="nofollow">https://norx.io/data/norx.pdf</a>); it does noticeably
+&gt;&gt; improve latency."). We will try and see what happens.
+&gt;
+&gt; I think Samuel was referring to the operation re-ordering trick I had
+&gt; mentioned, not to "replacing + with ^, * with &amp;".  Replacing * with &amp;
+&gt; would obviously remove the multiply latency hardening.
+&gt;
+
+Yes, I understood that: I was just quoting his exact phrase to remind
+the context. I meant that we will try a similar trick with ADDs and MULs.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

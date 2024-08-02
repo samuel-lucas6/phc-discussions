@@ -1,0 +1,51 @@
+phc-discussions - RE: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <001801cf3a54$6a4f00a0$3eed01e0$@acm.org>
+Date: Fri, 7 Mar 2014 14:27:22 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Are password trailing 0's a problem?
+
+In place of a c == 1 PBKDF2, I would say HKDF, which does not use an iteration count, is preferable in place of PBKDF2 in TigerKDF.  The key advantage is that HKDF-Extract uses the salt as the key, the password as the message for the pre-hashing.  Trailing 0 bytes in the salt are not so much of an issue.  <http://www.ietf.org/rfc/rfc5869.txt>.
+
+In the CodesInChaos case, I see no reason to add in a PBKDF2 with c == 1, although you could use "purpose" in place of the PBKDF2 salt parameter (or use a combination of purpose and salt).
+
+I think HKDF-Expand has attractive characteristics for expanding keys without compounding the offered iteration count, and that would be particularly apt if you ran a non-trivial iterative PBKDF2 with the same HMAC as the HKDF parts and the required output size to have a PRK for HKDF-Extract. 
+
+ - Dennis
+
+Aside: I think it would be useful for the HKDF "info"/"purpose" parameter to be part of HKDF-Extract too.  Something like HKDF-Extract(salt, IKM || info) -PRK.
+
+PS: Bill, I still think you have the password-length condition backwards.  When the password is LONGER than think hash-function's block size, it is pre-hashed in HMAC.  It is not pre-hashed for password text not larger than a hash-function block.  But this is solved in HKDF since it is pointless for a salt to be larger than a hash-function block and when the salts used are all the same length anyhow.  I also think that practical but generously-large values of an iteration count will successfully hide the timing of HKDF-Extract in any case.
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Friday, March 7, 2014 13:21
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 6:23 AM, CodesInChaos <codesinchaos@...il.comwrote:
+I like putting PBKDF2 in between the two parts of HKDF:
+>
+hash1 = HKDF-Extract(salt, password)
+hash2 = PBKDF2(hash1)
+hash3 = HKDF-Expand(hash2, purpose, length)
+>
+Using HKDF-Expand avoids the large cost increase for larger outputs
+and supports a purpose string.
+Using HKDF-Extract avoid the collisions (both the >64 and the 0
+padding variants) because it uses the salt not the password as HMAC
+key.
+
+This is cool.  Thanks for the pointer to HKDF.
+
+[ ... ]
+
+It does still potentially leak the password length, and there's zero
+effort in HKDF_Extract to avoid it, and in fact it bypasses HMAC's
+attempt to at least hide the length of a password shorter than 64
+bytes.  Grr...
+
+[ ... ]
+
+

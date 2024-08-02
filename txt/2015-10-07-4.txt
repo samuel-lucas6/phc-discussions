@@ -1,0 +1,37 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20151007113814.GA23226@bolet.org>
+Date: Wed, 7 Oct 2015 13:38:14 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Cc: Solar Designer <solar@...nwall.com>
+Subject: Re: [PHC] yescrypt on GPU
+
+On Wed, Oct 07, 2015 at 09:29:09AM +0200, Massimo Del Zotto wrote:
+I have been told on the AMD CL forum (by 'realhet', who appears very
+proficient and up to date with GCN ASM) that GCN has no instruction
+latencies (i.e. it can consume a result in the instruction immediately
+following), probably a nice implication of the instructions being processed
+in 4-clock 'ticks'.
+This is mildly contrasting with my experience but since I go through the CL
+compiler, I'm inclined to believe him/her.
+
+If you invoke the CL compiler with the '-save-temps' option (e.g. in the
+clBuildProgram() call), then you will get a dump of the intermediate
+representations, one in IL (the AMD "intermediate language") and one in
+ISA (the actual assembly for the GCN device). I recommend having a look
+at the latter, which is what the GPU will really work on.
+
+In my experience, the "no latency" rule is _mostly_ true, but there are
+a few instructions with a higher latency (especially multiplications on
+32-bit operands and on double-width floating-point values). Memory
+accesses can also incur extra latency if there is contention; and the
+compiler may emit extra instructions in some cases, in particular when
+it decides that it has run out of registers and needs to spill some of
+them to RAM (and that's _global_ RAM, so spilling is a big performance
+killer). You have to look at the ISA to know whether spilling occured or
+not.
+
+
+	--Thomas
+

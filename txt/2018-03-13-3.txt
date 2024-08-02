@@ -1,0 +1,109 @@
+phc-discussions - Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Message-ID: <alpine.DEB.2.21.1803130946480.6218@hexenstieg>
+Date: Tue, 13 Mar 2018 10:31:22 +0100 (CET)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Hey Denis,
+
+you have a nice idea, but it won't work for information-theoretical 
+reasons. I'll explain below.
+
+[...] the best measure for password safety is probably to prevent users 
+from using any of billions of known revealed passwords, but the 
+compressed database is 5 GB in size:
+>
+https://github.com/berzerk0/Probable-Wordlists/blob/master/Downloads.md
+
+Let us denote this list of bad passwords as "L", and the universe of 
+passwords not in L (up to a fixed length) as "U".
+
+Now. I sort of have this intuition that it’s possible to compress this crap
+into 20 bytes. That's not a typo – 20 bytes, not megabytes or something.
+But I don’t know how.
+>
+If we have an infinitely fast computer, then we can simply find X such 
+that:
+>
+TruncateTo32Bits ( SHA256 ( X | P1 ) ) == 0x00000000
+TruncateTo32Bits ( SHA256 ( X | P2 ) ) == 0x00000000
+TruncateTo32Bits ( SHA256 ( X | anything else ) ) == whatever
+
+What you mean is
+
+   (1)  Trunc32 ( SHA256 ( X | P ) ) == 0x00000000
+        for all P in L
+
+and ideally
+
+   (2)  Trunc32 ( SHA256 ( X | Q ) ) != 0x00000000
+        for all Q in U
+
+or, for a
+
+   (2') Pr [Trunc32 ( SHA256 ( X  | Q ) ) == 0x00000000] < 0.01
+        for Q in U chosen at random
+
+If we crank the infinitely fast computer long enough, we should be able to
+find this X,
+
+If we consider SHA256 as a "random oracle", such an X exists, and, 
+assuming an unlimited amount of computer power, we can find it.
+
+and it should be small in size.
+
+Why do you think it would be small in size? That is the whole point: X 
+will be HUGE! If we want to meet both (1) and (2), then we can 
+statistically expect X to be as big as L. The reason is simple: Whenever 
+we change L, we need another X.
+
+Changing from (2) to (2') doesn't safe the day: X can be slightly smaller, 
+but only by a few bits.
+
+The only reason we should not be able to find this X is if SHA256 has 
+some structural issue that prohibits an X like that from existing.
+
+Yes, the iterated structure of SHA256 (and essentially all other hash 
+functions ever published) makes the existence of X extremely unlikely.
+Neither SHA512 nor SHA3 will do, nor Blake, JH, Groestl, Skein, ...
+
+BTW, if X where actually small in size, the iterated structure would not 
+pose a problem, and even SHA256 would do.
+
+In that case we use a better hash function.
+
+Good luck with designing an entirely new type of cryptographic hash 
+function!
+
+Now, the reason we can’t do that is, the way SHA256 is designed, it
+requires us to have an infinitely fast computer.
+
+There are three obstacles to doing that:
+
+1. The way SHA256 and essentially all other hash functions are designed, 
+such an X is unlikely to exist.
+
+2. Given an ideal hash function (a "random oracle") X should exist, but we 
+would need an absurdly fast computer to find X.
+
+3. Given an ideal hash function and an absurdly fast computer, X would 
+still be about as large as L. So even then, there is not much of an 
+advantage over using L directly.
+
+Finally, you asked about a quantum computer. If s is the expected size of 
+X (in bits), the search for X will take about 2^(2^s) steps on a classical 
+computer. Using a quantum computer, we can apply Grover's algorithm to 
+reduce this value to its square-root: 2^((2^s)-1). If L is a few 
+Gigabytes, then s is 30 or larger. Even using a quantum computer, the sun 
+will long be cold before your quantum computer can output X.
+
+
+Stefan
+
+--------  I  love  the  taste  of  Cryptanalysis  in  the morning!  --------
+www.uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+----Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany----
+
+

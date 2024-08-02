@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <531550CE.9080005@dei.uc.pt>
+Date: Tue, 04 Mar 2014 04:04:30 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On 04-03-2014 02:36, Solar Designer wrote:
+On Mon, Mar 03, 2014 at 06:23:32PM -0800, Andy Lutomirski wrote:
+>On Mon, Mar 3, 2014 at 6:13 PM, Solar Designer <solar@...nwall.comwrote:
+>>I think 4 instructions, including the loads and stores, for a 63x63->63
+>>multiply is rather good.  Without this trick, it'd take 4 _multiplies_
+>>to implement the equivalent via 32x32->32 (or perhaps 3 multiplies if we
+>>also use the 32x32->64).  Some bigint library could use this trick,
+>>perhaps for some nice speedup on those older CPUs/builds (does any use
+>>it already?)
+>I think that Poly1305 and related things use a similar trick, at least
+>on some architectures.
+I thought Poly1305 used IEEE double, so up to 53-bit only, and it's not
+a bigint library.  But yes, it's similar.
+
+Poly1305 used the full x86 64-bit mantissa [1, Section 4]. So did
+curve25519 [2]. According to Agner Fog, the floating-point and integer
+multipliers in the Pentium III share the same circuitry (and the
+floating-point multiplication has one extra cycle of latency), so the
+only advantage here would appear to be register usage. Register renaming
+does help there.
+
+By the way, in the 63x63 -63 case the floating-point unit would
+actually be computing the most-significant bits of the product, not the
+least-significant. This could be used to compute the xor of both product
+halves relatively quickly, with the integer multiplier computing the
+lower part, while the floating-point multiplier would compute the higher
+part. Like so (warning: not thoroughly tested, but seems to work):
+
+    // Compute 63x63 product, xor high half with low half
+    static inline uint64_t fp_mul_hilo(uint64_t a, uint64_t b)
+    {
+        static const long double twom63 =
+1.08420217248550443400745280087E-19;
+        static const uint16_t ctrl = 0x1f7f; // 64-bit mantissa, round to 0
+        uint64_t high;
+        __asm__ __volatile__
+        (
+            "fldcw   %4\n\t" // Only needed for setup, really
+            "fildll  %1\n\t"
+            "fildll  %2\n\t"
+            "fmulp     \n\t"
+            "fldt    %3\n\t"
+            "fmulp     \n\t"
+            "fistpll %0\n\t"
+            : "=m" (high)
+            : "m" (a), "m" (b), "m" (twom63), "m" (ctrl)
+        );
+        return high ^ ((a * b) & 0x7FFFFFFFFFFFFFFFULL);
+    }
+
+To be honest, though, I don't think using floating-point is worth it.
+The only chip where floating-point convincingly beat integer was the AMD
+K7, where you could dispatch a floating-point multiplication every
+cycle, but an integer one only once every 3 cycles.
+
+[1] http://cr.yp.to/mac/poly1305-20050329.pdf
+[2] http://cr.yp.to/ecdh/curve25519-20060209.pdf
+
+

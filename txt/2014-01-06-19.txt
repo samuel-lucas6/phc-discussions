@@ -1,0 +1,123 @@
+phc-discussions - RE: [PHC] Submission deadline extension (March 31)
+
+Message-ID: <008d01cf0b33$cbf03b30$63d0b190$@cfl.rr.com>
+Date: Mon, 6 Jan 2014 18:05:30 -0500
+From: "Gary W. Hvizdak" <gary.hvizdak@....rr.com>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Submission deadline extension (March 31)
+
+Hi JP,
+ 
+    Thank you, thank you, thank you!  This is the wonderful news.
+ 
+    And while I'm writing . currently I am debating the addition of yet
+another formal parameter, but for the moment here's my public function's
+prototype .
+ 
+int PHC (
+       void         * out,
+       size_t         outlen,
+       const void   * in,
+       size_t         inlen,
+       const void   * salt,
+       size_t         saltlen,
+       unsigned int   t_cost,
+       unsigned int   m_cost,
+       unsigned int * cost_t,   //  "effective" time-cost (optional)
+       unsigned int * cost_m,   //  "effective" memory-cost (optional)
+       unsigned int   lo_seed,  //  32-bit seed used to minimize
+memory-cost's "time impact"
+       unsigned int   hi_seed,  //  top half of 64-bit seed (as described
+above)
+       unsigned int   flags)    //  currently four flags are supported
+(described below <)
+ 
+    The parameter I'm currently debating adding is "max_inlen".  Its purpose
+would be to minimize time wasted in environments where the maximum password
+length "ever expected" is considerably .LT. 128.  Thus allowing a
+substantially higher time-cost parameter value - i.e. doing additional
+calculating as opposed to just spinning our wheels - and thereby stronger
+hashing.
+ 
+Thanks,
+Gary
+ 
+P.S.  My "baby" is maturing nicely; below is a brief update feature list of
+the current product ...
+ 
+  _____  
+
+ 
+*        Cost parameters are fairly independent, although memory costs above
+1 MB have a rapidly increasing time-cost side effect, no doubt due to cache
+misses.
+o   Memory costs have been demonstrated up to 256 MB, at which point I get a
+malloc() error.
+*        Digest length can be any positive number.  (I have tested with all
+lengths in the range 1 to 8192 bytes, i.e. from 8 to 65536 bits in 8-bit
+increments!)
+*        Favorable "avalanche effect" behavior.
+*        Easy to comprehend algorithm based on just two primitives . . .
+o   Arithmetic modulo.
+o   Fisher-Yates shuffle.
+*        A single (.c) source file supports 32- and 64-bit builds (via
+conditionally included header files).
+*        Build-time "force" and "prohibit" flag-overrides.  (Not yet
+implemented!)
+*        Flags . . .
+o   RUN IN NEAR CONSTANT TIME
+*  Thwarts timing side-channel attacks.  (See the preliminary plot below <>
+.)
+o   OBLITERATE WORKING MEMORY
+*  Thwarts memory sniffer attacks.
+o   INJECT REMAINDER FEEDBACK
+*  Thwarts calculating all of the "password+salt" modulos in parallel via
+GPUs, or custom hardware, i.e. ASIC, FPGA, etc.
+*  Causes the calculation to run slightly slower.
+*  May leak slightly more info to timing side-channel attackers.
+*  Alters the digest.
+o   RUN IN DEVELOPMENT MODE
+*  Enables input validation and detailed "error" return codes.
+ 
+:
+:
+ 
+(Note that the flag "designations" in the plot legend below, do not match
+the flag names in the description above.)
+ 
+X-axis is password + salt = total data length, Y-axis is time in mS
+Test Case Parameters : 1X memory-cost; 5X time-cost; 32-byte digest
+Title: Execution Time in mS vs. Password + Salt Length
+ 
+  _____  
+
+ 
+-----Original Message-----
+From: Jean-Philippe Aumasson [mailto:jeanphilippe.aumasson@...il.com] 
+Sent: Monday 06 Jan 2014 1124
+To: discussions@...sword-hashing.net
+Subject: [PHC] Submission deadline extension (March 31)
+ 
+The submission deadline extension of PHC is extended to March 31.
+ 
+This has been announced
+ 
+* on the website  <https://password-hashing.net/call.html>
+https://password-hashing.net/call.html
+ <https://password-hashing.net/timeline.html>
+https://password-hashing.net/timeline.html
+ 
+* on Twitter  <https://twitter.com/veorq/status/420225439710212097>
+https://twitter.com/veorq/status/420225439710212097
+ 
+* in my Dagstuhl talk of today
+ <https://131002.net/data/talks/norxphc_dagstuhl14.pdf>
+https://131002.net/data/talks/norxphc_dagstuhl14.pdf
+ 
+We hope this will increase the quality and quantity of submissions to
+PHC, and that it will eventually benefit the project.
+
+
+
+Download attachment "image002.png" of type "image/png" (121969 bytes)
+

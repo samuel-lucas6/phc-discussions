@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Q: Reference t_cost and m_cost parameters</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="22">[&lt;prev]</a> <a href="24">[next&gt;]</a> <a href="18">[&lt;thread-prev]</a> <a href="../../../2013/02/19/20">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20130218214819.GA20645&#64;openwall.com&gt;
+Date: Tue, 19 Feb 2013 01:48:19 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Q: Reference t_cost and m_cost parameters
+
+On Mon, Feb 18, 2013 at 11:23:16AM -0800, Dennis E. Hamilton wrote:
+&gt; For the candidate reference-implementation API, the t_cost and m_cost
+&gt; parameters are apparently unitless values related to time cost and space
+&gt; (memory cost).
+&gt; 
+&gt; Is there some standard definition for these, so that one can substitute
+&gt; implementations but not need to know the implementation to know the
+&gt; consequences?  
+&gt; 
+&gt; Or is it presumed that a candidate specify how these are interpreted
+
+I think it's the latter.
+
+I expect PHC submissions to differ in their abilities a lot, including
+what ranges of cost settings they work for, and with what granularity.
+In some cases, the two cost settings might not be entirely independent -
+e.g., in scrypt both N*r and p contribute to its running time.
+
+I actually tried bringing 3 different underlying password hashing
+schemes to the same cost scale, in terms of CPU time, in phpass.  I did
+so by adopting bcrypt's costs as the input values, and translating them
+to cost settings resulting in comparable CPU time usage on current CPUs
+and with current code for BSDI's extended DES-based hashes and for
+phpass' own "portable" hashes.  This works fine, but I think in PHC
+context it should be left for a higher level, if we like.
+
+If we try to insist that e.g. t_cost is expressed in microseconds on a
+specific CPU when using a specific compiler/version and m_cost e.g. in
+kilobytes, this means that PHS() will be a wrapper function doing the
+necessary translation (and returning an error code for value
+combinations that its underlying code can't get sufficiently close to?)
+I'm not sure whether we want that.
+
+&gt; and once a particular function is "standardized" as *the* PHS, the
+&gt; interpretation of the parameters will be fixed?
+
+I guess the PHS() interface might end up being for PHC use only, not for
+actual use of the winning password hashing scheme(s).  (Chances are
+that there will be more than one as I do not expect that a single one
+will meet all of our wishes at once.  Maybe two.)  I think each password
+hashing scheme, besides the PHC-mandatory PHS() interface, will also
+provide its own APIs and indicate which one (or several) are recommended
+for use.
+
+&gt; By fixed I mean that the salt and the cost parameters would be either stored
+&gt; or otherwise preserved between creation of a hash and recomputation of the
+&gt; hash for authentication of a password.  
+
+Oh, that's a different aspect from what you wrote in the previous few
+paragraphs.  Yes, it is expected that the parameter values, except for
+secrets, will be stored along with the hashes or with the encrypted
+data (if the scheme is used as a KDF).  This is beyond scope of PHC,
+although we may discuss it in here.
+
+I expect that once we get closer to the end of first year, we'll need to
+have crypt(3) encoding syntax defined for the finalists, although this
+is not mandated by PHC terms.  This implies storage of non-secret
+parameters along with the hashes (inside those strings).
+
+&gt; I am thinking of the case where the authentication may be done by different
+&gt; systems than the one that originally derived the hash, as when using
+&gt; password-based encryption of documents in an interchange situation or in a
+&gt; long-lived personal archive, longer-lived than the computer used to create
+&gt; the password hash originally.  In this case it may be necessary to
+&gt; communicate the salt and the cost parameters along with the derived hash
+&gt; value.
+
+Of course.  This is how it's being done already.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

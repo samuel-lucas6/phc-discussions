@@ -1,0 +1,31 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <20150905134009.GA28887@openwall.com>
+Date: Sat, 5 Sep 2015 16:40:09 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Sat, Sep 05, 2015 at 05:07:39AM -0700, Bill Cox wrote:
+On Fri, Sep 4, 2015 at 5:11 PM, Solar Designer <solar@...nwall.comwrote:
+What is it that makes Argon2d so much slower?  Is it needing to perform
+two BLAKE2b rounds per sub-block, and the intermediate writes to state?
+
+Mostly 2 things: Too many Blake2 rounds, and having state that does not fit
+into the mmx registers.  Cutting the Blake2 rounds in half looks fairly
+simple, but I don't know what to do about the state variables.
+
+To me, the sequence of two groups of BLAKE2b rounds and thus needing the
+intermediate state is an integral part of Argon2's anti-TMTO approach.
+Yes, you don't agree those time*depth attacks are important, yet Argon2's
+resistance to them is one of its strong sides.
+
+So I don't see a simple way to halve the number of rounds, or it would
+be a very different scheme.
+
+What can be done is reusing those intermediate state writes for MAXFORM
+S-box updates.  This won't increase the memory filling speed, but it
+will improve other properties.
+
+Alexander
+

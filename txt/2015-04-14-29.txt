@@ -1,0 +1,49 @@
+phc-discussions - "Attack on the iterative compression function"
+
+Message-ID: <20150414222930.GA7015@openwall.com>
+Date: Wed, 15 Apr 2015 01:29:30 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: "Attack on the iterative compression function"
+
+This is another great contribution by the Argon team, which I think
+hasn't received its due attention in here yet.
+
+Please see the Argon2 paper, page 13 (in current revision).
+
+Of PHC finalists, this might be relevant to battcrypt, Catena, Lyra2,
+yescrypt.  (And to original Argon?  But I hope we'll accept Argon2, and
+won't need to consider the original Argon anymore.)
+
+I had thought of such attacks on scrypt and yescrypt before (such as
+when trying to come up with a reason for scrypt's sub-block shuffling,
+which didn't appear to help against such attacks anyway), but I think
+it's the first time this is written down and the first time it's
+combined with Argon team's other TMTO analysis.  This was much needed.
+
+Dmitry - you claim that "[...] it allows to reduce the memory by the
+factor of 12 or even higher while still reducing the area-time product."
+Since table 2.1 only goes to 1/11, for depth 32.8, and you say that "In
+concrete proposals, s can be 64, 128, 256 and even larger", I guess this
+"factor of 12" applies to the next column in the table (not shown),
+where depth would presumably be in the 32.8 to 64 range?  Do I interpret
+this correctly?
+
+yescrypt's currently recommended r is 8 (for 1 KB blocks), and the
+sub-block size is 64 bytes.  So in the terms of your paper, it's s = 16.
+However, the attack would appear to rely not only on the last
+sub-blocks, but also on occasional full blocks, so I don't see how it'd
+improve upon the higher-level TMTO attack alone.  The last sub-block of
+output of each BlockMix_pwxform depends on the entire input block, and
+if you never store entire blocks then you'd need to restart computation
+from block 0 in order to reach a block's last sub-block.
+
+Does yescrypt fit your model for this attack, and why or why not?
+
+We'll need to similarly check other PHC finalists for this.  Hopefully,
+none of them fit.
+
+Thanks!
+
+Alexander
+

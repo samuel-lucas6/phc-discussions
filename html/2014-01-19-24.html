@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: Native server relief support for password hashing in browsers</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="23">[&lt;prev]</a> <a href="25">[next&gt;]</a> <a href="23">[&lt;thread-prev]</a> <a href="25">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;lbhi56$1dj$1&#64;ger.gmane.org&gt;
+Date: Sun, 19 Jan 2014 14:04:32 -0800
+From: Alex Elsayed &lt;eternaleye&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: Native server relief support for password hashing in browsers
+
+Poul-Henning Kamp wrote:
+
+&gt; In message
+&gt; &lt;3E7F59A0-A69C-45EF-9D39-68622DA14C7D&#64;....com&gt;, Larry
+&gt; Bugbee writes:
+&gt; 
+&gt;&gt;Will the submissions be designed so client-side assistance will be
+&gt;&gt;practical?
+&gt; 
+&gt; Is client-side assistance without a secure tunnel ever practical ?
+&gt; 
+&gt; I spent a lot of time researching this some years back, and concluded
+&gt; that it wasn't worth it.
+&gt; 
+&gt; It may be my lack of imagination, but every scheme I came up with,
+&gt; required strong privacy for the connection, or the NSA[1] would be able
+&gt; to deduce the password given a small-ish number of session taps.
+&gt; 
+&gt; Without going into too much detail, I don't think the salt should
+&gt; be revealed to the client and the eavesdroppers, so we cannot involve
+&gt; the client in anything from the point in the algorithm where the
+&gt; salt is mixed in.
+
+I think detail may well be warranted here - salt is a public parameter.
+
+&gt; Any algorithm along the general scheme:
+&gt; 
+&gt; a = password
+&gt; for i in N:
+&gt; a = crypto_graphic_hash(a)
+&gt; [...]
+&gt; 
+&gt; Would allow some fraction of N to be offloaded to the client, but this
+&gt; is a lot less useful than you'd think.
+&gt; 
+&gt; If the number of rounds we ask the client to perform is constant,
+&gt; a trivial replay is possible.
+&gt; 
+&gt; If we ask for a variable number of rounds, you can always use a
+&gt; recorded session with a lower round-count to replay into a higher
+&gt; asked-for round-count (hint: OPIE and S/KEY)
+&gt; 
+&gt; To work around that, we could ask the client to throw half the
+&gt; entropy away:
+&gt; 
+&gt; a = password
+&gt; for i in N:
+&gt; a = crypto_graphic_hash(first_half_of(a))
+&gt; [...]
+&gt; 
+&gt; If the hash were wide, something like SHA512, that *may* be defensible
+&gt; behaviour:  Given the lack of entropy in real-world passwords, the
+&gt; actual loss of entropy is limited, but it makes me feel very, very
+&gt; uncomfortable doing so.
+&gt; 
+&gt; It should not be overlooked that the client and server do in fact
+&gt; have a shared secret, even though the server does not keep it around
+&gt; in readble form.
+
+I think this is a key insight, but which isn't sufficiently leveraged by 
+what you suggest. In particular, this is basically the same assumption an 
+augmented PAKE makes - as I posted in another mail, SRP is a particularly 
+instructive example of that, by providing a trivial construction that 
+permits nearly-full server offload (you still have to do the SRP modular 
+arithmentic) without requiring a secure channel (at least, it does if salt 
+is considered a public parameter).
+
+&gt; It would be possible to modify the above algorithm to something
+&gt; like:
+&gt; 
+&gt; a = password
+&gt; b = make_integer_from(cryptographic_hash(a)):
+&gt; for i N + b:
+&gt; a = cryptographic_hash(a)
+&gt; [...]
+&gt; 
+&gt; And hand the client a random number X, and have it perform a
+&gt; hardly predictable number of rounds, maybe ((X * b) mod (N + b)) or
+&gt; similar.
+&gt; 
+&gt; The server would have to store b along with the password for this
+&gt; to work.  The parameters can probably be tuned so that it only
+&gt; leaves a real replay opening, if the server happens to ask for the
+&gt; same X again.
+
+&gt; But would it be worth the extra complexity ?
+&gt; 
+&gt; Only if you can *always* mandate client-assist, will there be any
+&gt; benefit of the "make botnets work for it" type, and I think what
+&gt; little benefit that might give is better handled by ratelimiting
+&gt; attempts at the server side.
+
+I disagree - this isn't an either/or proposition. In particular, I can see a 
+good deal of value in having server-relief by optional under normal 
+circumstances, but under high load (slashdotting, attempted DOS via 
+expensive password verification) or situations that normally would trigger 
+ratelimiting (multiple failed attempts in a short period of time) server-
+relief could be made mandatory _on demand_.
+
+That provides a very useful type of flexibility - under normal 
+circumstances, even legacy clients which do BASIC auth with JS disabled will 
+work; but when push comes to shove clients who are willing to share the load 
+get priority.
+
+&gt; If you need to enter passwords over a non-private channel, you
+&gt; want to use *real* one-time-passwords (S/KEY or OPIE) you don't
+&gt; want some "ersatz" which gives you security "most of the time",
+&gt; but which fails fatally without any indication, if some bonehead
+&gt; somewhere f**ks up the implementation.
+
+Or use an augmented/verifier-based PAKE, which as I noted above is very 
+similar in its problem domain.
+
+&gt; So my conclusion was that client-assist is not worth it.
+&gt; 
+&gt; I'm willing to be convinced otherwise, but it wont be easy.
+&gt; 
+&gt; Poul-Henning
+&gt; 
+&gt; [1] We now know that's where Eve works.
+Eve's a pretty common name, I think she works in more places than just the 
+NSA...
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150927221515.GA22981@openwall.com>
+Date: Mon, 28 Sep 2015 01:15:15 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Sun, Sep 27, 2015 at 04:46:48PM -0400, Anthony Ferrara wrote:
+On Sep 27, 2015 2:52 PM, "Solar Designer" <solar@...nwall.comwrote:
+On Sun, Sep 27, 2015 at 09:40:50AM -0400, Anthony Ferrara wrote:
+Going with one-off encodings does look elegant,
+>
+What do you mean by one-off here?  That no other hashing scheme would
+use the same encoding?  Ideally, we'd come up with an encoding, whether
+human-readable or not, that multiple schemes would adopt.
+
+Unless I misread, it seemed like there was a suggestion to change the
+encoding per parameter. Parameters that have no valid 0 would be encoded
+where the first representable value is 1.
+
+Oh, so by one-off you meant off-by-one.
+
+Yes, that was one of my suggestions to be considered on top of the
+compact B64 encoding for numeric parameters and especially if we allow
+for defaults.  However, this isn't exactly changing the encoding per
+parameter - this is having per parameter minimums that must be passed
+into the encoding and decoding functions for individual numeric
+parameters.  Robust implementations need such minimums anyway: for
+checking that parameters are valid.  With this proposal, the minimums
+happen to be enforced automatically, since there would simply be no way
+to encode a value below the minimum for each given parameter.  Also,
+deterministic encoding is achieved despite of allowing for defaults.
+
+So you say this "makes the implementation significantly more error
+prone".  Can you explain?  A possible error could be using an incorrect
+minimum on a parameter, but this would fail the very first test (except
+if the parameter is omitted and default value used in a given case)
+since none of the possible values would be interpreted correctly.
+Doesn't sound error prone to me, unless testing isn't performed at all.
+
+I am not suggesting this for a human-readable encoding, as it goes
+against the human-readable goal.  I am only suggesting this for use
+along with a compact encoding.
+
+So my overall suggestion is make it easier on the developer using the
+API, rather than the one writing it. After all, there are going to be
+FAR more people writing a salt string then there will be writing the
+backend implementation. Optimize for the greater use-case...
+>
+This makes sense to me.  We will need to provide an API for generating
+salt strings (or "setting strings", as they're called for bsdicrypt and
+on) anyway, but you have a valid point that, especially if the encoding
+is simple for an application developer to understand, many developers
+will be generating such strings on their own.
+>
+For PHP and such, I think this pretty much implies the encoding will
+also need to use RFC Base64.  Then it's just sprintf of some decimal
+numbers and some base64()'s.  So my point remains that Thomas' proposed
+encoding is neither here nor there.
+
+Completely fair. I am less concerned around the encoding of the salt than
+the encoding and specification of the parameters. If a high level api is
+provided for generating the salt, then awesome. That helps a lot. Though I
+would still suggest keeping it readable.
+
+Regarding crypt B64 vs. RFC Base64, Alexander Cherepanov has just
+pointed out to me that there are in fact major issues with common
+base64 decoders.  Thomas had hinted at that, but I didn't realize just
+how bad things actually were.  So I withdraw that suggestion for now.
+
+Alexander
+

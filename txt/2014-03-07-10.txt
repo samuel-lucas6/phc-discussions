@@ -1,0 +1,46 @@
+phc-discussions - RE: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <006001cf3a28$ac111fe0$04335fa0$@acm.org>
+Date: Fri, 7 Mar 2014 09:14:15 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Are password trailing 0's a problem?
+
+Bill,
+
+I think you have a defective implementation of PBKDF2.
+
+For long passwords, there is supposed to be a pre-hash prior to the normal PBKDF2 PRF setup and cycling.  It certainly allows some timing determination, but it should be very gross (in terms of hash blocks, not password bytes, and the cycle count should swamp even that).  I do think using PBKDF2 with c == 1 is a strange act.
+
+Also, it seems that padding of the key is being done incorrectly if adding 0 bytes to the key makes no difference.  Could it be that the PBKDF2 implementation is assuming that the key is a C language character string and length is being determined by the occurrence of the first null byte?  How is key length communicated to the PBKDF2 implementation?  PBKDF2 should be implemented to accept any sequence of binary octets of specified length for key values.
+
+The maximum entropy obtainable with PBKDF2 is essentially that of the block size of the PRF. That's not real of course, since the password will generally be far weaker than that. Key stretching still has its place, although the PBKDF2 work factor increase only works well if the stretched key fits into a single PRF block.  A multi-block PBKDF2 key-stretch can be run in parallel. 
+
+There are variations on PBKDF2 to force serialization and require that all blocks be produced regardless of the amount of stretched key finally used.  Based on how many incorrect PBKDF2s appear to be in the wild, such customization might actually be a good idea.  (PS: Do not use the PBKDF2 that is part of the standard Java API.)
+
+ - Dennis
+ 
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Friday, March 7, 2014 02:35
+To: discussions@...sword-hashing.net
+Subject: [PHC] Are password trailing 0's a problem?
+
+I noticed that any password used in PBKDF2 gives the same result as
+that password with 0's appended any number of times up to a total
+length of 64 bytes.  Is this a problem?  A way around this would be to
+add the password length to the data hashed.  Since I always call
+PBKDF2 with c ==1 (1 repetition), this is the only input parameter
+which can change without changing the output.
+
+Another concern about PBKDF2 is that it calls HMAC_Init with the
+password, and if for some reason the password is 64 bytes, it is
+passed to the PRF directly, resulting in a very early call with
+runtime proportional to the password length.  Of course, the length is
+64, which is insanely long, so perhaps that's a secure enough
+password, but an attacker might gain useful information such as
+whether the long-password guy has logged in lately.
+
+[ ... ]
+
+

@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+Message-ID: <CAHEojpGRzoOT3QHdFYJPAuN=bZC_1bSVQScnkxyRSfbA5K8cfg@mail.gmail.com>
+Date: Thu, 20 Mar 2014 23:59:05 -0500
+From: Andrew M <liquidsun@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+CPU feature detection is only part the battle! How you then implement the
+accelerated versions is the real headache. Do you
+
+a) Use intrinsics only. Lets you do write-once-run-everywhere, but unless
+the code is trivially optimized, different compilers can produce wildly
+varying performance profiles. Non-Visual Studio compilers will also have to
+compile each version with the appropriate extension flags set.
+
+b) Drop to inline asm for the important stuff. This requires separate
+32bit/64bit versions, but with .intel_syntax and some macros you can use a
+single 32 bit version across all compilers (Crypto++ does this).
+Unfortunately, Visual Studio doesn't allow 64 bit inline asm, so you have
+to fall back to intrinsics on it. Also, clang switched to their own
+assembler, which doesn't/didn't yet support .intel_syntax, requiring a
+compiler flag to switch back to the system assembler.
+
+c) Use external asm. It's possible to support both windows and *nix with
+only gcc, using MinGW/MinGW64, but you do need some kind of stub on Win64
+because it uses a different calling convention than System V, so register
+saving/parameter translation has to be done.
+
+d) Use external asm with a separate assembler (Nasm/Tasm/Fasm). Complicates
+the build process, but frees you from gcc, so alternate compilers (Visual
+Studio) are now possible. Yasm has an AT&T syntax parser, and I've been
+toying with an abomination (supported with a few macros) which allows a
+file to be assembled with either gcc or Yasm, avoiding the need for a
+separate assembler when gcc is available, while still letting Visual Studio
+use the same file.
+
+Further complications:
+
+Figuring out what CPU extensions the compiler supports if using intrinsics,
+or what the assembler supports if using assembler (they aren't the same!).
+Yasm/Nasm simplify this as you just require the latest version, or have
+macro checks based on the version. I don't know how to do this with gas
+outside of just seeing which instructions compile.
+
+Bundling extension support in the OS/executable format is potentially not a
+useful idea. It may be desirable to have access to all underlying
+implementations and manually select one in cases such as old AMDs where
+SSE2 can be slower than straight x86 depending, or
+https://www.imperialviolet.org/2014/02/27/tlssymmetriccrypto.html
+
+"Future releases will need to run a self-test to gather data about which
+revisions have the problem and then we can selectively disable the
+fast-path code on those devices."
+
+I have a headache now.
+
+
+

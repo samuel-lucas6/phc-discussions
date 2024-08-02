@@ -1,0 +1,118 @@
+phc-discussions - Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs
+
+Message-ID: <CAOLP8p5TbOgo-BT4QzTD7_U3O0ZLyzp-XLh9NLPXuevt8wTx9Q@mail.gmail.com>
+Date: Wed, 12 Feb 2014 15:27:11 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs
+
+On Wed, Feb 12, 2014 at 12:14 PM, Solar Designer <solar@...nwall.comwrote:
+On Tue, Feb 11, 2014 at 05:13:20PM -0500, Bill Cox wrote:
+>It is far
+>more important to hammer the memory bandwidth, so a fast hash
+>function, and running hash functions in parallel are the important
+>things, as these increase memory bandwidth.
+>
+These are important, yes.  Sequential multiplies are also important.
+Ideally, a defensive implementation would use both memory bandwidth and
+multiplies at nearly the maximum speed the machine can support.
+
+Good point, memory is tied up longer if the computation loop cannot be
+accelerated.  On an FPGA, multiplication is *much* slower than on my
+PC or an advanced ASIC.  For example, this guy is pretty frustrated,
+and he's just trying to get the multiply to run at 125MHz:
+
+http://www.fpgarelated.com/comp.arch.fpga/thread/82968/32x32-64-multiplier-in-virtex-5.php
+
+and this guy only gets 179 MHz.  I'd be surprised to see a 32x32-->32
+multiply on an FPGA in under 4X longer than the fastest CPUs.  If an
+password cracker adds cores to fill his bandwidth, this slower speed
+will mean he has to have a lot more memory.
+
+I feel better now :-)   Multiplication compute time hardening is
+clearly useful against FPGAs.
+
+So... I happen to be one of the best people on the planet for
+architecting a low cost SRAM based FPGA-like thingys with one high
+speed GDDR5 port and a bunch of 32-bit ALUs (including a fast
+multiplier) for cheaply guessing NeolKDF, Scrypt, or other memory-hard
+password hashes.  Configurable logic architectures and software for
+configuring them is sort of my thing.  Regardless of who wins the PHC,
+do you think I could get the NSA to pay me a lot of money to build
+them low-cost, high-speed guessing chips?  :-p
+
+At a cost of around $100 to generate one guess per second, I don't
+know if even the NSA will bother.
+
+>Consider the case of a KDF that has a slow but cryptographically
+>secure hashing function in its inner loop, which generally runs in
+>cache rather than out of external DRAM.  The thinking is that
+>read/writes of small 64-byte hashes randomly is inefficient for
+>external cheap DRAM, but quite efficient for cache.  Instead of having
+>several MiB of expensive on-chip cache for every guessing core, an
+>attacker simply interleaves the memory for many guesses in parallel.
+>For example, if the KDF does 64 bytes of memory read/write at a time
+>to 10MiB of on-chip cache, then an attacker can instead interleave
+>memory for 256 guesses in parallel into 16KiB blocks of memory and
+>store them in cheap external DRAM.  There would be 16KiB read from
+>external DRAM every time the KDF would normally read a 64-byte hash
+>from cache, so we stream memory in/out efficiently at near max speed.
+>
+Right.
+>
+However, note that we know from Litecoin that 128-byte lookups from
+external RAM on GPU are actually quite efficient - as long as you can
+have lots of them pending (like a GPU can), to hide the latency.
+64-byte is not that much smaller.
+
+That's good to know.  This is yet another reason to go for high memory
+bandwidth with a Catena-style KDF.
+
+Of course, Litecoin's 128 KB (and it's 64 KB with 2x TMTO, which the
+miners use on GPU) is very little, which is what permits a lot of
+instances to fit in GPU card's RAM and, in turn, permits for a lot of
+pending lookups.  At YACoin's current 4 MB, the speed ends up being
+CPU-like, and we'll see what it'll be with 8 MB soon.
+
+Only 64KB!  Well, I guess I can't argue with success.  Litecoin seems
+to be going well, but that choice seems almost designed for graphics
+cards.
+
+So tying up significant amounts of memory per instance is important, for
+multiple reasons.
+>
+>This means cache-timing-attach immune KDFs need as simple a hash
+>function as possible, and maybe they should do some hashing in
+>parallel, with SIMD and/or multiple threads to get their memory
+>bandwidth higher.  This is the best way to defend against brute-force
+>guessing attacks.
+
+We need a better phrase than "cache-timing-attack immune" KDFs.
+That's a mouthful.  In my docs, I'm using "pure" KDF to mean no
+password dependent addressing, "dirty" to mean just do what you want
+with addressing, and "hybrid" to describe KDFs like Scrypt which do
+"pure" hashing followed by "dirty" hashing.  My terms kind of suck,
+but it would be nice to agree on some simple terms for these different
+kinds of memory-hard KDFs.
+
+I agree, but throwing in some sequential multiplies is also helpful, as
+long as this doesn't reduce defender's memory bandwidth usage.
+>
+Alexander
+
+The original version of NoelKDF that had massive parallelism hashes
+2GB in .305 seconds using 2 threads, with a memory bandwidth of
+13GB/s.  I looked at the generated code, and its making nice use of
+SSE automatically.  With the serial multiplications, it's taking 0.42
+seconds with 2 threads, and the generated code has no SSE in the inner
+loop.  That's 9.5GB/s.  This is a significant memory bandwidth
+penalty, though it may hurt an attacker as much or more than me.  They
+can always add more cores to fill their memory bandwidth, but they'll
+have to keep buying more RAM to make that math work.
+
+Thanks for pointing out the error in my logic.  I simply had forgotten
+to multiply the external memory by the number of parallel guessing
+cores.  So... the NoelKDF hash function survives one more day,..
+
+Bill
+

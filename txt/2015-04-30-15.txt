@@ -1,0 +1,164 @@
+phc-discussions - Re: [PHC] Fastest algorithm shootout with threads...
+
+Message-ID: <CAOLP8p4ZMdEC0H3RZBz-E-kYNMK4jQx9HKDbjyenPJ5p=rg5rQ@mail.gmail.com>
+Date: Thu, 30 Apr 2015 08:29:41 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Fastest algorithm shootout with threads...
+
+On Thu, Apr 30, 2015 at 7:44 AM, Solar Designer <solar@...nwall.comwrote:
+
+16 KiB block size is problematic wrt the Argon team's attack on iterated
+block functions.  I guess Catena suffers from this badly, too?  1 KiB is
+about the maximum that's sort of safe without sub-block shuffling (and
+I'll likely experiment with sub-block order reversal, either if further
+tweaks are permitted in PHC, or if yescrypt isn't selected).
+
+
+Why is it not safe?  I did not see any real TMTO threat in the Argon team's
+paper, just some useful computations for C (recomputations) and D (operator
+tree depth), and then a table where we imagine an attacker doesn't care
+about power, has infinitely fast memory, and infinite CPU cores.  It's an
+interesting imaginary case, but not a real attack.  I certainly didn't see
+anything that makes me want to see changes in Yescrypt or Lyra2, and I
+doubt I'd want to change TwoCats.
+
+In contrast, there are simple and useful real TMTO attacks against Argon2d,
+though nothing very bad.  Just keep 1/2 of the 3rd 1/4 of memory, and 1/4 o
+fthe last 1/4 of memory.  You save 5/16ths of memory, with a much lower
+recomputation penalty.  This is one reason they should consider a
+distance-cubed distribution.
+
+There is no such simple attack against Yescrypt, with t_cost == 0 that
+results in a time*memory benefit to the attacker.  There is one agaist
+TwoCats, but not as bad as the one against Argon2d.
+
+>
+The problem is most apps and users won't run additional benchmarks to
+choose the optimal number of threads, and even if they do they'd likely
+need to be computing the same derived key on an upgraded machine later,
+where the old thread count would no longer be the most optimal one.
+>
+This depends on the use case, I think.   For FDE or volume encryption, an
+automt datic parameter generator should run, just like Scrypt does today.
+>
+Fair enough.
+>
+For authentication servers, these would also be well tuned.
+>
+No.  That's uncommon.
+>
+With authentication servers, it's usually one thread per hash, and the
+number of concurrent threads is equal to the number of concurrently
+processed requests from the clients.  It's just higher-level threads or
+even separate processes, not those we could have spawned from PHS().
+>
+
+I think it's like that for generic data center machines, but those are not
+dedicated authentication servers.  For a dedicated server, I would want
+improved physical security, and a large ROM.  Low latency remains critical,
+so I would prefer a multi-threaded algorithm, but not to the point that it
+significantly reduces the number of hashes per second.
+
+
+And with non-dedicated servers and especially with VMs we have no
+control over the number of threads+processes at all: we don't even know
+how many might be running in adjacent VMs.
+>
+
+These hashing algorithms are problematic on many levels, which is why I
+personally like the dedicated authentication server concept.  However, I
+seem to be in a minority there.
+
+
+So we should plan that in the worst circumstances - and that's when high
+performance from our code is needed the most - the maximum number of
+threads supported in hardware will actually be running concurrently
+(perhaps with more waiting to be scheduled by the kernel).
+
+
+I assume you mean the single-thread case here.  For multi-threaded hashes,
+I'd want to use no more threads than cores, because that gives an attacker
+parallelism that benefits him more than the defender.  In the
+single-threaded case with N hashes running in parallel in seperate
+processes, it's best if each thread uses no more than L3 size / N.
+Otherwise, they'll stomp on each other pretty hard.
+
+
+Unless I misunderstand something, Argon2d at lowest t_cost only goes
+through memory once (when filling it), without the extra 33% you
+mentioned for yescrypt.  So it could have reached TwoCats' speed, but
+somehow did not.  I guess the intermediate writes to state[] between
+the
+two groups of 8 BLAKE2b rounds might hurt even with write-back caches.
+Are those writes occasionally getting to higher-level caches or RAM?
+>
+I did a few manual tests to see if I could get Argon2d and
+Yescrypt-2pw-sse
+to run at TwoCat's speed.  I succeeded for the single-thread case, but
+for
+multiple threads, the 1KiB block size used by Argon2d and Yescrypt slows
+them down.  I was able to slow TwoCats down similarly by useing a 1KiB
+block size.
+>
+OK.  Somehow I haven't found larger block sizes to be much faster for
+yescrypt.  IIRC, it was a bit faster at 2 KiB, and slower at 4 KiB and
+more.  I guess that's because I'm already using 8 KiB for the S-boxes.
+>
+
+If the first block is initialized with a slow cryptographically strong
+hashing function, then large block sizes can slow you down when doing small
+memory hashing.  I found that with less strong hashing on the first block,
+performance improves up to the size of L1 cache.  I picked 16KiB because
+that's a common ARM cache size, and it's 1/2 of common Intel/AMD L1 cache
+sizes.
+
+
+Anyway, larger block sizes would be problematic for TMTO and memory
+latency dependency.
+
+
+How does it hurt TMTO?  There are fewer blocks, which reduces the
+computation tree depth, but only by a small added constant (not multiplier).
+
+>
+To get Yescrypt there, I commented out the multiplies in the PWX
+transform.  The fact that this runs as fast as TwoCats is impressive,
+given
+that Yescrypt was doing 33% more I/O operations.  It looks like even
+with 2
+rounds instead of 6, Yescrypt-2pw-sse is still computation time bound.
+>
+I think there are times when it's computation time bound, and there are
+times when it's memory bound, depending on prefetch and such.
+
+
+I'm sure it's very hardware dependent, but I think for PHC benchmarking
+purposes, the 2-round version is a fairer comparison.  It's probablyi how I
+would run it as well, at least on this machine.
+
+>
+To get Argon2d-sse there, I commented out half of their 16 reduced
+Blake2b
+rounds.  It seems Argon2d is also computation time bound on this machine.
+>
+I guess it's similar to what I said above: it varies over time.
+>
+Also, when you commented out half of Argon2d's BLAKE2b rounds, I guess you
+removed the temporary writes to state[].  If these were wasting any
+memory bandwidth before, they no longer would after your changes.
+>
+Obviously, it's not a change that could be acceptable outside of an
+experiment like this.
+
+
+Argon2d writes to each state[] register twice with it's 16 reduced Blake2b
+rounds, so I reduced it to writing once.  Commenting out half reduces
+mixing, probably creating lanes like in Lyra2, Yescrypt, and TwoCats, but
+if they did a cryptographically strong mix now and then, that should make
+it secure enough, shouldn't it?
+
+Bill
+
+
+

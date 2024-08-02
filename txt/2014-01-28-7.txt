@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] catena.c
+
+Message-ID: <CAOLP8p61G9SHcuvS6PZF6GZLh4Spx+m7-zxmX29J7gbNW0oDcQ@mail.gmail.com>
+Date: Mon, 27 Jan 2014 22:44:30 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] catena.c
+
+That's fun!  The Catena master branch has 128, and my waywardgeek
+branch has H_LEN*2, which is my prefered ordering and spacing compared
+to 2 * H_LEN.  However, it should be twice H_LEN regardless.  There
+were some hard-coded 64's as well, and a few places that assumed H_LEN
+<= 64, and placed where constants were passed rather than GARLIC and
+MIN_GARLIC.  I think I got them all... To replace the hard-coded 64's,
+I added MAX_HASHLEN.
+
+I also replaced all the __HashX with __FastHashX in the row data
+computations, which resulted in the expected speed-up.  __FastHash is
+just the NoelKDF multiply hash.
+
+My more radical change for today was to factor out the mid-row
+computations so that I could easily embed a Catena-7 sub-DAG in the
+first row.  You've got to love git... it let's me make all the changes
+I want without messing with master.
+
+Bill
+
+On Mon, Jan 27, 2014 at 10:17 PM, Solar Designer <solar@...nwall.comwrote:
+Christian,
+>
+I guess the 128 constant in the snippet below was meant to be H_LEN,
+since otherwise behavior will differ for H_LEN != 64, and it could even
+be over-read beyond the malloc()'ed memory.
+>
+For the current H_LEN == 64, which is valid for both BLAKE2b and
+SHA-512, this change is obviously a no-op.
+>
+diff --git a/src/catena.c b/src/catena.c
+index 5486709..8c84f82 100644
+--- a/src/catena.c
++++ b/src/catena.c
+@@ -66,7 +66,7 @@ void LBRH(const uint8_t x[H_LEN], const uint8_t lambda,
+     __Hash2(r + (c-1)*H_LEN, H_LEN, r, H_LEN, r);
+     p = r + H_LEN;
+     for (i = 1; i < c; i++, p += H_LEN) {
+-      __Hash1(p - H_LEN, 128, p);
++      __Hash1(p - H_LEN, 2 * H_LEN, p);
+     }
+   }
+>
+Alexander
+

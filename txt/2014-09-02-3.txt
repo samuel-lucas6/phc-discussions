@@ -1,0 +1,174 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <CAOow+k-_CKKveqHfKbKi2N7Zb20dCP0yY1spJup_DunrWWKhAg@mail.gmail.com>
+Date: Tue, 2 Sep 2014 02:28:32 -0400
+From: Peregrine <peregrinebf@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+On Mon, Sep 1, 2014 at 11:25 PM, Rade Vuckovac <rade.vuckovac@...il.com>
+wrote:
+
+>
+>
+On Sat, Aug 30, 2014 at 7:10 AM, Bill Cox <waywardgeek@...hershed.org>
+wrote:
+>
+>-----BEGIN PGP SIGNED MESSAGE-----
+>Hash: SHA1
+>>
+>Since I do not expect a lot of Tortuga discussion, I'm moving on to
+>Schvrch.  Here's a link to the April discussion:
+>>
+>http://comments.gmane.org/gmane.comp.security.phc/1330
+>>
+>Here's my notes on Schvrch:
+>>
+>- - Weak paper and code.  I do not believe much effort went into Schvrch.
+>- - The time cost has weak average memory*time because only one 2KiB
+>block is used while applying time cost.
+>- - No cryptographic primitives are applied, yet the mixing function
+>seems weak.
+>- - The evolve function at end just XORs states together and complements
+>them, leaving each as a simple linear combination of the original.
+>- - The author seems to have the mistaken impresion that just XORing
+>data over and over will mix it well.
+>>
+>I don't think there's much reason to spend a lot of time discussing
+>this version of Schvrch.  So... I'll post one more today...
+>>
+>Bill
+>-----BEGIN PGP SIGNATURE-----
+>Version: GnuPG v1
+>>
+>iQIcBAEBAgAGBQJUAOw4AAoJEAcQZQdOpZUZ0B0P/RIqxqQHHPXpo7Z69yUP+5y9
+>C3vKgifAA30SELrKOaZgMMGUZeXfnWCTrFI5e/pHydpUkLHZ24vL5qKe7+yUc+ic
+>gkxkl/V88lNk9szLhNfErdbfh56UgaQtWD12S+lMCpMpl5q0G39ebiqTF2B+jaMX
+>mAVoFiFEZC6Zs7128QZYo16Mof8/9SNaucPcFAsOxhuF8ox8KYIVYlhuRukbIkCy
+>A0wQ4m5u5OqFMARqz9663tENpGrrZ8dZiVoEJZiYjoFQuHOI42qYqRHyXjPqRlrM
+>WHTQVanz/Qs7XEUeoTEZx9uyMrwWP9M+kdiHWrFutJ8m0hiOPXkr8HICvbAqM4Io
+>46j7Yfj0ZS5ReR65rlaGBgcXIXIp4OBv5WboQQhBJFKA9qfeuRbUr2bD9LvmsxG9
+>JmYXtbwW+LfyJug9uJKfkPVxb5k+THSy701KVaAklpOFylTycqrssSzHJ3eto78U
+>BzYR4ieZY92yeljeQCOMGbZvUPLUWscWuPBMsFm/r4BNsAaEXreuciIBJI0Cd0fS
+>diR3wT/NZr/+zijIPfh8dLI2LfFQcR+eIsBcfSGvJDANOPCqma/K0dUOb6Np3JdP
+>DCOk6gneSRvCef+NnyP0P7kT8UBdsOww/sgsMU5pkdGF99fZ6GI4qJ+VefXdaT3M
+>Y7/IZyJmHml3mGVJEdeA
+>=yJe+
+>-----END PGP SIGNATURE-----
+>>
+“Weak paper and code. I do not believe much effort went into Schvrch.”
+>
+The paper in question is published here
+http://iaeng.org/publication/WCE2014/WCE2014_pp134-139.pdf (peer reviewed
+conference paper).
+>
+“The time cost has weak average memory*time because only one 2KiB block is
+used while applying time cost.”
+>
+The time cost argument is as it should be, for the time algorithm
+hardening only. The memory cost argument is independent on the time cost
+argument and deals with memory hardening as it is expected.
+>
+“No cryptographic primitives are applied, yet the mixing function seems
+weak.”
+>
+Could not be more wrong. It was tried in the April discussion to point
+some crypto analysis relevant to the Schvrch submission. One of them is
+here http://dakhilalian.iut.ac.ir/pdff/C26.pdf
+>
+Here is the paper abstract
+>
+MAG is a synchronous stream cipher designed by Vuckovac submitted to the
+eSTREAM project. Vuckovac also proposed two modified versions of MAG to
+avoid the distinguishing attack on the first version of MAG presented by
+Fischer. In this paper we show that, changing the Fischer’s attack we can
+apply it to one of the modified versions of MAG. The modified attack
+requires only 514 successive bytes of known keystream and 5 xor and 2
+comparison operations between 16 bit words. In addition, we show that
+distinguishing and key recovery attack proposed by Simpson and Henricksen
+on all versions of MAG is feasible just by considering an assumption on
+initialization of MAG that simplifies this step so much. Therefore, their
+attack cannot be performed in general.
+>
+From there it is obvious that only the Fischer’s attack is relevant to MAG
+scheme and it cannot be applied to the every proposed modification.
+>
+It should be noted that MAG and Schvrch share the same primitives and it
+is believed that only relevant attack so far (the Fischer’s attack above)
+is irrelevant to the Schvrch.
+>
+“The evolve function at end just XORs states together and complements
+them, leaving each as a simple linear combination of the original. The
+author seems to have the mistaken impresion that just XORing data over and
+over will mix it well.”
+>
+The very last program listing in Appendix (Schvrch submission) is a random
+number generator which just “XORs states together and complements them” and
+just do “XORing data over and over” and still produces descent random
+streams.
+>
+However that does not mean it is secure. If the submission paper is read /
+understood, then it will be clear that the branching programing structure
+is a force behind “mix it well”. The toy password hash scheme using the
+same security paradigm as Schvrch may serve as an example.
+>
+Let n be a 512 bit string (salt and password combo). Treat n as a positive
+integer. Apply (3n+1)/2 if n is odd else do n/2. The result is new n.
+Repeat step above 256 times to the every new n created to acquire a 256 bit
+parity string (recording 1 when new n is odd and 0 when new n is even).
+Discard first 128 bits and use the remaining 128 bits as the hash of n
+(arguably the tiniest secure password hashing scheme around).
+>
+The paper has 2 lines of argumentation of why above is perfectly secure:
+>
+1.      While toy algorithm is sort of described that does not mean that
+function description (in theoretical sense) is there. Without knowledge of
+the input the toy function can be composed in 2^256 ways and the
+composition depends entirely on the input. There is the case mentioned in
+random oracle theory when input complexity is on the par with function
+description complexity. While this case guaranties non-correlation between
+function instances (the randomness) it is considered as impractical
+exercise (requires gigantic table with records of fair coin flips).The toy
+algorithm is practical when input (or output) is known. But with partial
+output (the toy case) the only way to match input is exhaustive search
+because only complete input or output can define function composition.
+>
+2.      If there is possibility of finding some pattern / correlation
+between instances when above algorithm is run, then that possibility is a
+reduction of 2^256 complexity mentioned above. In effect it will mean that
+branching can be reduced by combination of the sequence and the looping
+algorithm structures. That runs against structural programming theorem
+claiming branching as a basic structure. Simply put, it is impossible to
+make program for checking inputs of 3n+1 problem without using the
+branching structure or some sort of exhaustive search.
+>
+“I don't think there's much reason to spend a lot of time discussing this
+version of Schvrch.”
+>
+The last statement and entire Mr Cox’s post is maybe fine as a blog
+material where expressing opinions without substantiating them is a norm.
+The frequency of that kind of posting, here, is not helpful either.
+>
+Rade
+>
+The last statement and entire Mr Cox’s post is maybe fine as a blog
+material where expressing opinions without substantiating them is a norm.
+The frequency of that kind of posting, here, is not helpful either.
+
+I'm just an undergrad computer engineering student focusing on security, so
+I can't weigh in on any of the the actual crypto with much authority. I'll
+only catch the most blatant of errors. That said, seeing these analyses and
+defenses is quite educational. Even if a system is quite weak there is
+educational value in showing why it is weak. That's not the primary purpose
+of this list, or of this competition, but getting programmers and engineers
+to code more securely is a goal of many people here. There are many
+"gotchas" that must be learned, and it's hard to learn what they are by
+looking only at secure code. Seeing where others made mistakes (including
+mistakes in analysis) will surely help me avoid them in the future. Keeping
+the style professional will surely reflect better upon the contest in the
+future.
+
+Carl 'Sai' Mitchell
+
+
+

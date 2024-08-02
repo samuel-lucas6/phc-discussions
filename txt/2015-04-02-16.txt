@@ -1,0 +1,125 @@
+phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Message-ID: <551DB31E.4000604@larc.usp.br>
+Date: Thu, 02 Apr 2015 18:22:38 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi, there.
+
+I renamed the thread because it started to ramify since yesterday.
+
+See inline.
+
+BR,
+
+Marcos.
+
+
+On 01-Apr-15 16:49, Solar Designer wrote:
+On Wed, Apr 01, 2015 at 03:25:49PM -0300, Marcos Antonio Simplicio Junior wrote:
+>>De: "Solar Designer" <solar@...nwall.com>
+[...]
+>>What are the comparable numbers for Lyra2, POMELO, and Catena? I
+>>guess for Lyra2 and Catena it's 8 ADDs + 8 XORs per 128 bytes, right?
+>>
+>If the underlying sponge is Blake2b, I think that number is correct.
+
+And this applies to Lyra2 as benchmarked e.g. by Milan so far, correct?
+
+Yes: this corresponds to Milan's benchmarks. We have additional benchs
+on Lyra2's reference guide, although they correspond to the pre-tweak
+phase for every finalist other than Lyra2 (so, they are probably of
+little use except to compare different Lyra2 parameters).
+
+
+>With BlaMka, which replaces simple ADDs in the G function (e.g., a \gets a + b) by Latin Squares (a \gets a+b+2ab), that would be 8 MUL + 16 ADDs + 8 XORs (as usual, ignoring the shifts, and multiplication by 2, which is also a shift) per 128 bytes. 
+>>
+>Well, that assuming I understood the question correctly ... 
+
+I think you did.  Thank you!
+
+I assume you mean the case SPONGE == 1, where Lyra2 would use
+ROUND_LYRA_BLAMKA, not SPONGE == 2 where it'd use HALF_ROUND_LYRA_BLAMKA?
+
+Exactly. "HALF_ROUND_LYRA_BLAMKA" is kind of a test code that we did not
+remove... we were trying to see how many rounds of BlaMKa would have
+approximately the same speed as Blake2b, and 0.5 was the answer (but it
+provides only intra-column diffusion, while 1-round BlaMka gives full
+diffusion just like 1-round Blake).
+
+BTW, does pwxform provide full diffusion (i.e., one bit ends up being
+dependent on all other bits) in an unbiased manner? It may not be
+critical here, but it is usually a "good to have" requirement.
+
+
+A minor detail: a+b+2ab can be written as (a+b)+2ab, giving a latency
+of MUL + just one ADD, not two ADDs (a+b is computed in parallel with
+2ab).  So it'd be 8 MUL + 8 ADD + 8 XOR.  Right?
+
+We are discussing latency, so you are absolutely right!
+
+
+That's 8 MULs per 128 bytes, vs. current yescrypt's default of 6 MULs
+per 64 bytes.  So it's 1.5 times weaker.  Does Lyra2 with BlaMka run
+faster or slower than yescrypt (with pwxform settings as currently
+specified) in terms of memory processed per second?  It needs to run 1.5
+times faster to win this game. ;-)
+
+That is the part I wanted to have experimental results before giving an
+answer. They are in the attached images:
+
+- For 1 thread ("p1"), when both yescrypt and Lyra2 have the exact same
+number of passes through memory (Lyra2 with T=1 and yescrypt with T=2)
+and use an underlying hash with similar compute-time hardening (12 MULs,
+12 ADDs and 12 XORs given by 1.5 BlaMka and pwxform) , then the lines
+almost overlap;  so I believe we are near to a draw.
+
+- For 1 thread ("p1") with different passes through memory: say,
+yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+= 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+difference, the reason is probably related to bandwidth usage, because
+Lyra2 purposely uses more bandwidth in this scenario: namely, it makes 2
+writes per call of the underlying hash instead of 1, and 4 reads (2 from
+cache and 2 from memory) instead of 2. I'm not sure if that is good or
+bad, but improvements on memory bandwidth are usually slower than on
+computation power, so I would rather say it is good in terms of attack
+resistance, as it limits an attacker's parallelism ability.
+
+- For 2 threads ("p2"), Lyra2 is faster for similar compute-time
+hardening and also for higher compute-time hardening. That (and a very
+old e-mail by Bill) is why we think bandwidth is likely to be at play
+for p=1: we reduce the number of writes to 1 per thread during the
+Wandering phase when more threads are active.
+
+- For 4 threads ("p4"), Lyra2 is again faster for similar compute-time
+hardening, and also faster for higher compute-time hardening.
+
+
+
+BTW, you can take advantage of the (a+b)+2ab latency optimization in
+your defensive code as well.  It might cost an extra register and a move
+instruction, though, so it isn't universally an improvement.  It might
+improve the latency on new CPUs (Ivy Bridge and Bulldozer, and newer)
+and make it worse on older CPUs (Sandy Bridge and older when running
+non-AVX builds).
+
+That seems worth trying (actually, we need to find someone with better
+implementation skills than ourselves: most of Lyra2's code tricks come
+from Blake2b's original implementation...). Thanks!
+
+
+Thanks,
+
+Alexander
+
+
+Download attachment "Lyra2xYescrypt_p4.png" of type "image/png" (261353 bytes)
+
+Download attachment "Lyra2xYescrypt_p2.png" of type "image/png" (296018 bytes)
+
+Download attachment "Lyra2xYescrypt_p1.png" of type "image/png" (327616 bytes)
+

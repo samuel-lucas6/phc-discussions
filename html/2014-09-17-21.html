@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] omegacrypt and timing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="20">[&lt;prev]</a> <a href="22">[next&gt;]</a> <a href="20">[&lt;thread-prev]</a> <a href="22">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5419D877.2080001&#64;ciphershed.org&gt;
+Date: Wed, 17 Sep 2014 14:52:39 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 09/17/2014 02:12 PM, Brandon Enright wrote:
+&gt; On Wed, 17 Sep 2014 12:14:57 -0500 (CDT) Steve Thomas
+&gt; &lt;steve&#64;...tu.com&gt; wrote:
+&gt; 
+&gt;&gt;&gt; For the very first round of branching the GPU could run all 4
+&gt;&gt;&gt; in parallel and select the correct one. But, for the second
+&gt;&gt;&gt; round, the GPU would have to run branch 1 for each of the
+&gt;&gt;&gt; possible previous branches, and branch 2 for each of the
+&gt;&gt;&gt; possible branches, and so forth.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; The carry value is modified from start to finish through each 
+&gt;&gt;&gt; branch. There is no realistic way to perform the attack you
+&gt;&gt;&gt; describe because the previous branch path possibilities grows
+&gt;&gt;&gt; exponentially. After just a few rounds you'd be doing an
+&gt;&gt;&gt; exponential amount of work.
+&gt; 
+&gt;&gt; When you run out of the ChaCha block data you conditionally
+&gt;&gt; generate another. There is no exponential cost increase for
+&gt;&gt; GPUs.
+&gt; 
+&gt; Hi Steve, have you looked carefully at how the branching is done? 
+&gt; ChaCha is used for more than just choosing the branches.  It also 
+&gt; chooses which memory gets read and written.  Generating the ChaCha 
+&gt; stream is a non-issue.  You could pre-generate a few MB of it if
+&gt; you wanted.
+&gt; 
+&gt; The issue is that after a round is run, depending on which branch
+&gt; was taken a different amount of the ChaCha stream is consumed which
+&gt; makes both the branch and the the memory locations of the next
+&gt; round depend how much ChaCha stream has been consumed.
+&gt; 
+&gt; So it's not just a matter of running the next 4 branches in
+&gt; parallel and picking one because each branch has multiple different
+&gt; memory locations depending on where that branch falls in the
+&gt; stream.  The carry value would also be unpredictable.
+&gt; 
+&gt; To avoid misalignment, if you ran all 4 for round 1, and then
+&gt; selected the right one, then all 4 for round 2, then selected the
+&gt; right one, etc., you'd be doing 4x as many memory operations and
+&gt; you'd need a way of discarding the memory changes made by the 3
+&gt; wrong branches.  Is this the attack you're suggesting?
+&gt; 
+&gt; Brandon
+&gt; 
+&gt; 
+
+Hi, Brandon.  Yes, I think his is exactly the attack Steve and I are
+thinking of.  If you have 4 cases, that could result in 4X more
+computation per GPU core, because they have to do each case.
+
+GPU instructions all have a condition on them that say things like
+"only execute me if the zero flag is set".  It's used to do
+if-then-else statements, where the branch depends on the zero flag,
+for example.  It enables all the cores to execute all the instructions
+in both branches, and for each core to get the result they need.  It
+is very naturally applied, I think to case statements.
+
+This is why I like the AntCrypt solution of having many hash functions
+and selecting unpredictably between them.  If the GPU has to execute
+them all, and you have 1000 of them, then you just slowed down his
+attack by 1000X.
+
+I don't know enough about GPUs to know just how hard it is for them to
+effectively become MIMD units by interpreting data as instructions.
+However, whatever slow-down that results in is about the most that
+multiple cases can do to slow down GPUs, I'm guessing.  I keep
+thinking of how my 13,000 functions I just generated would be run, and
+it's a *lot* faster than I was hoping.
+
+The only instructions I'm using for hashing are permutations for
+mixing: +, -, ^, with either other values in memory or constants,
+rotations, and non-linear operations that cannot be reversed: AND and
+OR, but where the result is mixed in as a permutation to another
+value.  It's not a lot of different assembly code instructions, maybe
+only 15 or so.  No matter what I build with these, a GPU will be able
+to run an interpreter for my small set of instructions, and I doubt it
+will run more than 100X slower.
+
+I haven't been able to figure out a good solution, yet.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGdh0AAoJEAcQZQdOpZUZDTIP/2+mYBo9Nsxfrx4Dg79TloFx
+PRdsyB9rDj+emHZnlZu6SgYd3QNxXIgKJIxI1BppE5+Uz3TLf8QFtykecsVd0/IK
+j4gZM1AGy+s9MoC34EZT+NJDEN6rvVbgS9QY6EwpoAx747S/zLbsd5nopRaJbNFE
+UCUi/1yX/3UO9G44MI5CLLDRtf5OfG2UN9h9RKOVp143ezkmCAU4t4k2dAwQ4Yl2
+ZCd0ekooc6VXlUY68m7QS8N6RtgQKsPUhyiSx3oz0it+kL4bBDMYXeqDof0ooBNT
+Nhyy+ugzknkxYu3+zn10d4Oq5WzQ/dMMnK8G82VhfxaVBRrd+16qxqUZyABpSTxA
+UyFTwLqJeBVSkSf/mDsUNob1IVKl3m9mzIdqFfa6gtnbR0er7p4tqfpEWNHIrJex
+N21XEz0ODd/ZVE/qAFsgXxJRtEVgGlX9gdEhRAKRlUGZCIsOZvM704rQbIGdiHQw
+Mbu0ctMiwYJoq2bjWG0//JTaKpVnpEEJK94Ww64N8L6yMfFwrr4Zgq5lNS9U/XRM
+pUmfPBh6XRgYjN7knK6038PAZEDQdJ1Mm8qDLKcs6CQ5xPTbaHplvWuHGu2u3sOk
+zkMAV9YL80QIuyfo/lmf0u4tkbIOuLyYMEjZXsCV9tvqFwR9NJFFi31Ky7RMtCVC
+cjqtiYFzyoCy2/LPPIwa
+=JOlw
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

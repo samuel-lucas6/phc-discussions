@@ -1,0 +1,124 @@
+phc-discussions - Re: [PHC] A review per day, starting with Yarn
+
+Message-ID: <CANU1oZ6bopPmg2H57H_qxGO2mmAoRSpkv3XZS9qev6ybD1T02A@mail.gmail.com>
+Date: Tue, 26 Aug 2014 22:13:17 -0700
+From: Raullen Chai <raullenchai@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day, starting with Yarn
+
+Thanks for bringing up this, Bill. I definitely vote for the idea of
+"one-review-per-day". Maybe after the first round of the review, we
+could focus on fewer candidates and do another round of
+"one-review-per-week" and so on.
+
+Yearn has aroused my interest too.
+
+I agree that m_step should be reasonably small to maximize the memory
+access rate, or t_cost should be reasonably large, e.g., t_cost  >
+(2^m_cost) * (m_step), to ensure that every entry of memory can be
+accessed at least once. In addition, I feel like the memory should be
+involved in blake2b_process too; otherwise, the attacker can focus on,
+e.g., exhaustive search, the state before blake2b_process if it is
+significantly smaller than memory.
+
+Besides, I think "par" is an interesting parameter in this algorithm
+that is tricky to choose because of the rotate_state function below
+which transforms "state[0 .. N]" to "state[1 .. par - 1] || state[0]
+|| state[par .. N]". Basically we should avoid to choose all small
+values of par.
+
+static void rotate_state(uint8_t (*state)[16], size_t par) {
+  uint8_t tmp[16];
+  memcpy(tmp, state[0], 16);
+  memmove(state[0], state[1], 16 * (par - 1));
+  memcpy(state[par - 1], tmp, 16);
+}
+
+
+-Raullen Chai
+
+
+
+On Tue, Aug 26, 2014 at 6:22 PM, Bill Cox <waywardgeek@...hershed.orgwrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+>
+I have some notes on all of the entries, and I am thinking of going
+through them one at a time for discussion, one per day.  I was
+thinking reverse alphabetical order would be more fair, since we tend
+to pick on candidates starting with A more than those starting with T,
+for example.
+>
+So, if anyone is interested in this idea, I'll carry it forward.  For
+the next 24 hours, I'd like to discuss Yarn.
+>
+The author of Yarn is clearly a genius.  We have a lot of those around
+here.  The code is awesome.  In 280 lines he encoded both AES and
+blake2b, in addition to his algorithm!  I was blown away when I read it.
+>
+However, I'm not sure the Yarn author understands the password hashing
+problem in as much detail as he should.  The biggest problem I have
+with Yarn is this loop:
+>
+        for (i = 0; i < t_cost; i++) {
+                if (i % m_step == m_step - 1) {
+                        size_t idx = integerify(addr, m_cost);
+                        for (j = 0; j < 16; j++) {
+                                addr[j] = memory[idx][j] ^ state[1 %
+par][j];
+                        }
+                        memcpy(memory[idx], state[1 % par], 16);
+                        aesenc(state[0], addr);
+                } else {
+                        uint8_t tmp[16];
+                        memcpy(tmp, state[1 % par], 16);
+                        aesenc(state[0], tmp);
+                }
+                rotate_state(state, par);
+        }
+>
+In short, it says to do AES encryption steps, but only write to memory
+once every m_step steps.  IIRC, m_step is 72 by default, meaning Yarn
+trickles out data at a pathetic pace, which is totally contrary to
+memory hard security.
+>
+Other gripes I have are:
+>
+- - it has to have a very high t_cost to avoid TMTO.  With t_cost < 72,
+no memory is over-written at all.  On the other 71, no memory is read
+either.
+- - with small memory reads pseudo-randomly through memory, it will run
+slowly in external memory, at least once the m_step being 72 problem
+is fixed.
+>
+The guy who posted Yarn showed up for a couple emails and left.  Maybe
+he's just onto his next gig, but I feel like this guy has amazing
+coding skills, and could knock security algorithms out of the park, if
+he would just engage and learn a bit about what we need.
+>
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+>
+iQIcBAEBAgAGBQJT/TLSAAoJEAcQZQdOpZUZpDEQAIwvh35Wdu4aYRgTDaBNc3hF
+lu1iZKOm5DQro5tnr3+WBe16wO27/TWoYpKWhgCmiviWY7T8R6ACsKpL8n2LE9wV
+D39qlQAN/JKKtblmD+ebFIxcerHineTBYf2NM4BlvsEf1gwto4i7vEZVgecSFoWe
+ARzqDOGACPDkW6w1iTp6FUqQXkZjuhzkZ9aVPnUgSlUaco+y6Ov4jOuG5YcGdud/
+GI1o9xa7lzyJtg1alx65HjakAVFUd4XTmMspPShkfXBowzTSo8CpOaKCBglWmzGq
+/skDh5M85LGp4+S+QVIUlHIfG8/htH4loQzXR7/Rit40PPJ062Yi1qMXa+Sv+OMg
+HK3DPuurztd1Js8U1DrSH1dGoSkXRtyfTvh0J+QI1zj7RWD5Enwh9GFGfEHO4sqD
+K25Uc30+YsuDNBlj7kYBoD3TEoqtTE5Vv9zbiJkzQDs/flpk3rqLYqG/+NJh7xQf
+c4O/YtG57Oif+j1rM5PXjt7Fztnc3amq/Oo0/d49xrl+F235sLjbXfH1UzgXmmi4
+cnZ7J2XzoEsM10IWnsZkTbdsJS5RGrSJtKtzg3/yHVpi3VulJyMI0DEG+cMcbZtJ
+4NzjJkFQrDue2e/v5e7kLmNQrt/oh8gVki6LYcwRFf1Na9j3rYlayP+OKexd1lfm
+38wa8uxtVBhNHVlYzxxq
+=8ihR
+-----END PGP SIGNATURE-----
+
+
+
+-- 
+--
+Best Regards
+(Raullen) Qi Chai
+

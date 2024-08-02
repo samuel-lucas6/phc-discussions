@@ -1,0 +1,63 @@
+phc-discussions - Re: EARWORM review
+
+Message-ID: <CAOLP8p6=jurqWZvhUqow-wf7c3S=UK33axZObt1x0fHcqKqfdA@mail.gmail.com>
+Date: Fri, 4 Apr 2014 13:26:48 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: EARWORM review
+
+I got some sleep, and woke up with a crazy ASIC architecture to attack
+EARWORM.  I think it would be pretty devastating, though AES seems to
+be difficult to implement in FPGAs very well, so it's more of an AISC
+thing.  However, it requires a copy of the ROM, which may be difficult
+for an attacker to obtain.  This attack assumes the attacker has both
+a copy of the ROM and many millions of password hashes he wishes to
+brute-force guess.  This is not exactly a banana attack, IMO, but
+requiring the ROM, password database, and a budget to build the ASIC
+and this wild machine are going to limit this attack dramatically.
+
+To attack EARWORM hashes which are run on a 1TiB ROM authentication
+server, do the following:
+
+- Break up the 1TiB ROM into 256 4GiB ROMs.
+- Distribute these ROMs to 256 ASICs
+- Also give each ASIC 4GiB of scratchpad memory
+- Connect the ASICs in an 8-dimensional hypercube
+
+The idea is that each ASIC is streaming in data from it's ROM over and
+over, while computing workunits for many password guesses in parallel.
+ As the 512-bit scratchpads for each password guess are updated with
+their workunits, they are transmitted over the hypercube network to
+the ASIC that owns the next needed workunit.
+
+In this case, each ASIC would split up it's portion of the ROM into
+4096 1MiB "chunk areas" in external DRAM.  It would also store up to
+4GiB/64 = 64Mi password scratchpads, each representing a password
+guess in progress.  As it loads it's 4096 chunk areas sequentially,
+over and over, it computes all the workunit updates with as much
+parallelism as the ASIC can support, maybe 100-ish or even 1000-ish
+AESENC cores, pipelined maybe 6 deep.  That would be 600-ish to
+6000-ish AESENC executed in parallel per ASIC, or around 150K to 1.5M
+in total, applying AES-128 hashing to all of it's 512-bit scratchpads
+that are waiting on that specific chunk area to be applied.
+
+There would be thousands of such password scratchpads queued up for
+each chuck area scratchpad memory.  The ASIC would most likely be
+limited in how many AES-128 computations it could compute in parallel,
+which is a very large number.  There would have to be some extra bytes
+for each scratchpad indicating which password guess it belongs to, and
+how many workunits have been applied.  Maybe it's expected final hash
+should be included as well, so the ASICs could detect
+correct/incorrect guesses.  Just details...
+
+One reasonable defense against this attack would be to do memory-hard
+writes as well as reads, to maybe a few MiB per password hash.  This
+would cause my evil machine to need maybe 1000X more memory than I
+described, memory bandwidth would likely become the bottleneck, and
+the hypercube communication network might get overloaded.
+
+What do you think?  I had fun dreaming this one up!  I hope it's not
+too harsh... EARWORM looks like an easy finalist to me.
+
+Bill
+

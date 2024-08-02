@@ -1,0 +1,72 @@
+phc-discussions - Re: [PHC] Gambit review
+
+Message-ID: <CAOLP8p4xYz80XC2-qCUPsk4c1gBDeiJp82Zv4DxRBHRdh5c0JA@mail.gmail.com>
+Date: Fri, 4 Apr 2014 16:37:43 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Gambit review
+
+On Fri, Apr 4, 2014 at 3:36 PM, Krisztián Pintér <pinterkr@...il.comwrote:
+>
+>
+Bill Cox (at Friday, April 4, 2014, 12:55:41 PM):
+>
+>Overall, its a nice little Catena inspired PHS.
+>
+thanks for taking the time to write some analysis about gambit. a
+remark to the above quote: i advertised this method as early as
+2013-aug-11:
+>
+http://article.gmane.org/gmane.comp.security.phc/221
+
+No problem.  I'm enjoying reading everyone's code.  Sorry about being
+a jerk sometimes.
+
+catena is 23 Aug 2013:
+>
+http://eprint.iacr.org/2013/525
+>
+>
+as a fun fact: in an even earlier version, i used bit reversal
+indexing. but i changed it to the current approach, which is simpler.
+
+It is simpler.  Did you use bit reversal before reading Catena?  I
+thought it was novel when I read it, but I'm new to this stuff.  In
+reality, I don't think it makes a huge difference either way.  If you
+like, I could add your memory pattern to my pebbling algorithm to see
+how it does.  I am still trying to figure out what the impact is of
+XORing over memory rather than overwriting it.  Some others did a lot
+of XORing (including me), leaving themselves open to some attacks, but
+since you only write the output of SHA3, I don't see how XORing can
+hurt you.  In recomputations, it may give me some options for deriving
+the value of a node based on the nodes it drives, which will be
+difficult to add to my pebbling code.  It also increases the input
+degree, meaning I may have to do more recomputations.  Evaluating it
+carefully would be tricky.
+
+I see two mistakes I made above (I was very sleepy): I was multiplying
+speedup from faster memory access times how much faster SHA3 would run
+in an FPGA or ASIC; and I was over-estimating RAM bandwidth in ASICs
+and FPGAs for predictable addressing.  One or the other limits how
+fast it can run, not the multiplication of both.  Also, I checked some
+memory access speeds, and the best case I can see doing in an ASIC
+today is about 0.2 PiB/s (16MiB of cache built out of parallel 16KiB
+caches, with 512 bit outputs), and more realistically 0.1 PiB/s.  That
+ratio to our cache speed is the potential memory speedup factor.
+
+I still think there is maybe a 100X to 1000X potential cache access
+speedup in an ASIC for predictable addressing, but for Blake2b, I'm
+guessing only on the order of 30X speedup is possible in an advanced
+ASIC.  I've heard SHA3 will be more than 100X.  In either case, it's
+probably computation speed limited on the ASIC.
+
+Now that I've seen a couple entries that use the new AESENC
+instruction, I'm more of a fan.  It has a 2 cycle latency, and the CPU
+can queue a sick number of them per core, like 8.  I suspect we would
+have trouble speeding it up more than 2X on a custom ASIC.  I tried
+estimating how far I could get with an FPGA attack on EARWORM, and the
+FPGA just can't do AES any faster than an Intel CPU, even with all
+it's parallelism - at least not enough faster to make it worthwhile.
+
+Bill
+

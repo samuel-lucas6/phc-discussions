@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Best use of ROM in password hashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="9">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140421200245.GA29056&#64;openwall.com&gt;
+Date: Tue, 22 Apr 2014 00:02:45 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Mon, Apr 21, 2014 at 01:58:49PM -0400, Bill Cox wrote:
+&gt; Here's another N-way ROM splitting attack, and this one should work for
+&gt; *any* PHS using ROM, regardless of how much RAM is hashed.  The goal is to
+&gt; decrease the cost of the ROM to the attacker per guessing node while
+&gt; maintaining good ROM bandwidth per node.  An attacker simply splits the ROM
+&gt; into N pieces, and builds a fast permutation network to route from the N
+&gt; pieces to say N/2 computation nodes.  During any block read loop, most of
+&gt; the N/2 cores could have lone access to the ROM data they need.  The cost
+&gt; of the permutation network is O(N*log(N)), so N should be chosen to keep
+&gt; the permutation network's cost well under the cost of N ROMs.
+
+Sure.  This is why I call this ROM-port-hardness.  The attacker's cost
+is in number of ROM ports (and routing, and the remaining ROM size per
+compute core).  You use N ports and you incur the expected cost.
+
+<a href="http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00008.html">http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00008.html</a>
+
+"Moreover, those don't have to be ports to the same large ROM - instead,
+separate smaller ROM banks may be used as long as bank conflicts are
+fairly rare" as that slide says.  You have just that, and you reduce the
+frequency of "bank conflicts" by using N/2 attack nodes for N ROMs.
+
+The slide also explains why the ROM is beneficial anyway (just not in
+the same way and not to the same extent as scrypt's RAM):
+
+"Yet at below ~1000 cores sharing a ROM the attack speed per die area
+will be lower than for scrypt, whereas with more cores the attacker will
+have to provide more interconnect and ROM ports, which will have a cost
+of its own"
+
+The ~1000 cores threshold comes from numbers given on the previous
+slide, comparing ROM and RAM sizes that are currently practical for mass
+user authentication:
+
+<a href="http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00007.html">http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00007.html</a>
+
+Also note that the defender benefits from the same property too, just to
+a smaller extent.  The ROM is shared between defender's threads too.
+For currently practical hardware, we share a 112 GiB ROM (can be made 2
+or 4 times larger than that on the same hardware platform, if desired)
+between 32 hardware threads on 16 physical cores.  scrypt-like memory
+usage during mass user authentication is many orders of magnitude lower,
+so we're comparing the die area of those ~1000 crypto cores and/or ~1000+
+ROM ports + routing vs. that of just ~128 MiB of RAM (e.g., 4 MiB times
+32 threads).  If our ~1000 crypto cores and/or ~1000+ ROM ports +
+routing add to that die area significantly, the use of ROM is
+worthwhile, even against ASIC attackers.
+
+&gt; I really don't see any good way to prevent an attacker from making use of
+&gt; parallel small ROMs and some data routing hardware, so counting on the cost
+&gt; of the ROM and it's bandwidth limitations as primary deterrents may not
+&gt; work out well.
+
+Yes, many of the costs associated with ROMs are not per attack node.
+Yes, they fundamentally differ from e.g. scrypt's area-time costs.  They
+don't buy us as much defense, by far.  But for intended use cases,
+there's a huge constant factor in our favor, estimated at around 1000
+for current needs on currently practical defenders' hardware.  I think
+this constant factor makes all the difference, making those otherwise
+relatively small costs of crypto cores, ROM ports, routing stand out
+(likely exceed scrypt-like RAM cost that we can afford).
+
+&gt; It doesn't hurt to add those to a defender's array of
+&gt; defenses, but the primary time*cost is likely to be due to the memory
+&gt; hashing algorithm.
+
+It is unclear to me where the primary cost for attackers will be.  We're
+comparing very different things here.  My guesstimate is that for the
+numbers given above, the area-time cost associated with ROMs will exceed
+that associated with RAMs.
+
+&gt; I think Alexander enjoys adding more spikes in his
+&gt; defense wall, and ROM cost and bandwidth are just two more the attacker
+&gt; will have to overcome.  If I were an attacker looking at a full blown
+&gt; Yescript (with the enhancements Alexander has mentioned), I'd just throw up
+&gt; my hands and go hack accounts somewhere else :-)
+
+Oh, actually I think you'd treat this as a challenge. :-)
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

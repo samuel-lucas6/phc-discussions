@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+Message-ID: <CALCETrVEMv1FgfsAYK7mwb5-gsoDqkzsc8iCW+41e7d_KtPQNA@mail.gmail.com>
+Date: Wed, 19 Mar 2014 18:09:56 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+On Wed, Mar 19, 2014 at 5:54 PM, Bill Cox <waywardgeek@...il.comwrote:
+One reason I think we see applications running without SSE/AVX2
+support is that operating systems don't want to support two versions
+of a binary, and they have to support older machines.  The Blake2 code
+I've read does not provide for a single binary that supports both - I
+have to link either to the blake2-ref code or the blake2-sse code.  My
+TwoCats code has inherited this limitation, since I used the Blake2
+code as a roadmap for figuring out how SSE2 works.  These guys over on
+StackOverflow think they've got code to detect SIMD support and allow
+a single binary to support both:
+>
+http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
+
+That answer is crap.  You cannot detect whether AVX is usable using
+just cpuid -- you need to use (IIRC) xgetbv as well.
+
+On gcc 4.8 and up, function multiversioning [1] is probably the way to
+go.  On Windows (if you want to support MSVC), you'll need to do
+something different.  Of course, function multiversioning has the same
+bug [2] and no one has fixed it yet.
+
+[1] http://gcc.gnu.org/wiki/FunctionMultiVersioning
+[2] http://gcc.gnu.org/bugzilla/show_bug.cgi?id=55307
+
+>
+How cool is StackOverflow?  So, is this the right way to build
+high-speed crypto binaries now days?
+>
+Bill
+
+
+
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
+

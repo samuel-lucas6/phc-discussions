@@ -1,0 +1,82 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CALW8-7KkVMLSno0f5Kg5REzuKWrnWo_w79B4NKc77kPQ3bXxFg@mail.gmail.com>
+Date: Fri, 24 Jul 2015 16:00:50 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, 
+	Dmitry Khovratovich <khovratovich@...il.com>, Alex Biryukov - UNI <alex.biryukov@....lu>
+Subject: Re: [PHC] Argon2 improvement thread
+
+Dear community,
+
+So far we support most of the API and minor corrections to the scheme that
+do not change its functionality and do not make it more complex.
+Complexity, as we see it, is one of the greatest enemies of security.
+
+=============MAXFORM============
+
+The proposed MAXFORM modification as in
+http://article.gmane.org/gmane.comp.security.phc/2838 adds a  64-bit
+transformation with a large number of S-box lookups that runs in parallel
+to the primary 8192-bit transformation P.
+
+The motivations behind this new transformation are to reduce the
+parallelism and that certain number of sequential S-box lookups slows down
+the brute-force on GPU on some settings.
+
+The negative effect of this addition is fourfold:
+ - new transformation, conceptually different from the other blocks in the
+scheme
+ - scheme becomes more complex and more difficult to analyze
+ - increased exposure to side-channel attacks
+ - wider gap between Argon2d and Argon2i, getting two schemes rather than
+one.
+
+Clearly, adding this type of structure requires careful analysis and clear
+benefits. We would like to evaluate the effect of this update on the actual
+GPU performance with various memory requirements. Thanks to Alexander, we
+already know that the performance impact on CPU is not so large.
+
+If there is anyone volunteering to code and benchmark Argon2d with and
+without this update on some GPU likely to be used by a cracker, we would be
+happy to assist. For instance, the GPU performance should be compared for
+Argon2d with and without this update using 4 KB, 64 KB, 1 MB, 64 MB, and 1
+GB of RAM.
+
+Given the significance of the change, we consider it premature to integrate
+without proper evaluation.
+
+=========================Hybrid scheme===
+
+It has been proposed to add another version of Argon2, which is a
+combination of Argon2d and Argon2i. In more details, the first half (or so)
+of the memory should be filled with data-independent addressing, and the
+rest with data-dependent addressing. The motivation is to reduce the
+side-channel leakage for 1-pass Argon2d  at the cost of reduced tradeoff
+resilience and the overall latency. The drawback of this proposal is
+threefold: 1) yet another primitive 2) the side-channel leakage is reduced
+but not removed, which still restricts the use case. 3) the tradeoff
+becomes more favourable to the attacker.
+
+Clearly, such update would make sense only for 1- or 2-pass Argon2d, since
+for 3 passes and more Argon2i comes into play. We think that the drawbacks
+currently outweigh the positive effect, in particular we are concerned of
+the fact that the scheme is weaker than both existing variants in some
+scenarios. Still, it can be possible to include it as a possible extension,
+though not recommended by the designers but available to those who
+desperately want such a scheme.
+
+===================================
+
+We would be happy to see more discussion on these topics, in particular
+from the panel members who have not expressed their opinion yet.
+
+Kind regards,
+the Argon team.
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

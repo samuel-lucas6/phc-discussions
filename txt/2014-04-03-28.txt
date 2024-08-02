@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] Tortuga issues
+
+Message-ID: <533D3FFB.7080000@bindshell.nl>
+Date: Thu, 03 Apr 2014 04:03:23 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tortuga issues
+
+On 4/2/2014 9:26 PM, Bill Cox wrote:
+Tortuga fails on both windows and Linux for 1MiB m_cost, due to
+allocating hashing memory on the stack.  
+
+
+Just a heads-up, the optimized implementation of Pufferfish has this
+`issue' as well, as it calls alloca() to dynamically allocate the sbox
+buffers on the stack. The reference implementation allocates memory on
+the heap with calloc() so this is not a problem there, but you'll blow
+out the stack on the optimized implementation if using an m_cost 10
+(it doesn't "go to 11.")
+
+And yes, this was done intentionally. Since it is unlikely that anyone
+will be using an m_cost 10, it's a mostly-safe optimization
+(especially for attackers, which is largely what the optimized
+implementation was, rewriting the algorithm from an attacker's perspective.)
+
+For optimized defender code, where one might just be crazy enough to use
+an m_cost of 11, there might be some benefit in writing a custom malloc
+implementation that can quickly allocate heap memory without the
+unnecessary overhead, not unlike JTR's mem_calloc_tiny(). But I think
+this is implementation-specific detail that is outside the scope of the
+PHC. Ideally implementers should be coding to the reference
+implementation and making their own optimizations, using the optimized
+code only as, erm, a reference.
+

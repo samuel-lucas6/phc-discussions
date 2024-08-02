@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Some updates on EARWORM</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;87mwl4m8zr.fsf&#64;wolfjaw.dfranke.us&gt;
+Date: Sat, 16 Nov 2013 14:39:36 -0500
+From: Daniel Franke &lt;dfoxfranke&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Some updates on EARWORM
+
+Solar Designer &lt;solar&#64;...nwall.com&gt; writes:
+
+&gt; On Fri, Aug 23, 2013 at 09:44:18PM -0400, Daniel Franke wrote:
+
+&gt;&gt; * I've cut CHUNK_WIDTH from 4 to 2, leaving CHUNK_LENGTH at 128. Testing
+&gt;&gt;   on my workstation seems to indicate that neither the reduction in
+&gt;&gt;   internal parallelism nor the increased frequency of random memory
+&gt;&gt;   accesses results in any performance penalty.
+
+I've actually changed my mind again since I wrote this: I'm going with
+CHUNK_WIDTH=4, CHUNK_LENGTH=64. The wider internal state makes certain
+proofs simpler.
+
+&gt; This means that your memory accesses are to 4 KB regions (with
+&gt; sequential access within those regions), correct?  2*128*16 = 4096.
+
+Either way, yes.
+
+&gt; Is there a performance penalty with lower CHUNK_WIDTH or/and
+&gt; CHUNK_LENGTH?  If so, how bad is it e.g. for 2 KB, 1 KB, 512 bytes?
+
+There is. I don't have the figures handy. I'll retest this later today
+once I've gotten my code pushed.
+
+&gt;&gt; * I wrote a GPU implementation of EARWORM today. It computes batches of
+&gt;&gt;   256 workunits of a single hash computation, doing the initial and
+&gt;&gt;   final PRF computations sequentially on the host, while farming out the
+&gt;&gt;   expensive main loops to the GPU for parallel execution.  A 25600
+&gt;&gt;   workunit computation over a 256MiB arena takes about 3.05 seconds on
+&gt;&gt;   my Radeon 7850. The same computation on two CPU threads takes about
+&gt;&gt;   2.25 seconds. I was struck by how similar these numbers are.
+
+My GPU code had a couple stupid bugs (no surprise at this point) that
+make these numbers completely bogus. The 7850 actually takes about 3x
+the time that the CPU does. It suffers from the same sort of bottlenecks
+that bcrypt does.
+
+&gt; Is this a defensive or offensive kind of implementation (if it were
+&gt; finished, optimized, cleaned up, etc.)?  It sounds like you're computing
+&gt; just one instance of EARWORM, but with some parallelism in it (albeit by
+&gt; far not enough parallelism to use a GPU optimally), so I assume
+&gt; defensive?  Anyhow, this doesn't tell us much about GPU attack speeds on
+&gt; EARWORM.
+
+Actually, this seems to be enough parallelism to use my (not very
+high-end) GPU optimially; though at this phase of experimentation you
+should take that claim with a grain of salt. Remember that each workunit
+already has considerable internal parallelism.
+
+It's a design goal of EARWORM that if the defender has GPUs available,
+he can use them just as effectively as the attacker can (even if they're
+not very effective for either side).
+
+&gt;&gt; * I'll be posting reference and AES-NI-optimized implementations of
+&gt;&gt;   EARWORM to GitHub this weekend, as soon as I'm done with some
+&gt;&gt;   finishing touches on the test harness.  Note that these
+&gt;&gt;   implementations are designed for benchmarking and validation only, and
+&gt;&gt;   lack the user-level API that I plan to include in later
+&gt;&gt;   implementations (Obviously, nobody should be using EARWORM in
+&gt;&gt;   production right now anyway!).
+&gt;
+&gt; Of course.  And I guess "this weekend" will be now. ;-)
+
+Yes. Thanks for giving me the necessary kick in the rear to get working
+on this again :-)
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

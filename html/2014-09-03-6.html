@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A review per day - Parallela</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;540673E7.8010109&#64;ciphershed.org&gt;
+Date: Tue, 02 Sep 2014 21:50:31 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A review per day - Parallela
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+The basic idea of Parallela: use your GPU for defensive purposes.
+
+Basically, my notes were not very accurate.  First, this is primarily
+an algorithm designed to make defensive use of your GPU, and maybe
+FPGAs.  It runs a very large number of parallel SHA512 hashes
+(3*5*128*loopCount), and then does as many of these in series as you
+like.  I am a fan of defensive use of GPUs.  Against GPU farms, it
+puts you basically on par with them.
+
+The code is bigger than I'd thought, but mostly due to portability
+issues.  It includes hundreds of lines of stdint.h and inttypes.h to
+port between GNU and Visual C++.  On the positive side, it looks like
+a lot of porting work has already been done.  On the down side, for a
+primarily GPU algorithm I'd really like to see some CUDA code (or the
+other one).
+
+The main function is in a file only 150 lines long, and it was easy to
+read.  Here's a simple dump of my notes:
+
+- - Minor grip: why not use m_cost for the serial parameter?  Encoding
+two time values in t_cost is a pain.
+- - Deals with practical details, like zeroing out before returning an
+error code.  This might help inform a user that there is something
+that needs attention
+- - Feeds salt into SHA512 first rather than salt.  Someone was saying
+that's preferred, but I don't know why, when our crypto-hash
+primitives are solid little mega-scrambling machines.
+- - line 145: "// TODO: find a secure wipe function" - I use blake2's:
+
+/* prevents compiler optimizing out memset() */
+static inline void secure_zero_memory( void *v, size_t n )
+{
+  volatile uint8_t *p = ( volatile uint8_t * )v;
+
+  while( n-- ) *p++ = 0;
+}
+
+- - No threads or openmp support, because it's designed for GPUs.
+Where's the CUDA?  No point benchmarking yet.
+
+I take issue with one statement in the paper:
+
+"The attacker-defender ratio is 1. Any advancements in cracking are
+advancements for the defender. If ASICs come out that can crack this
+hash they more than likely can be used by the defender."
+
+I doubt the NSA is going to sell you their ASICs!  This is OK defense
+for a system with a GPU, where we worry that SHA512 hashing by the
+attacker is also done with GPUs.  However, we have SHA256 BitCoin
+ASICs that blow away GPUs.  SHA512 hashing is just twice the
+transistors per core.  ASICs will rule here, and we still can't buy
+defensive SHA256 ASICs.  There's probably some secret law about that.
+
+There is also a paralleKDF function that is capable of outputting
+variable length data.  I am not sure that there need to be two
+functions here.  It seems like they could be combined into one.
+
+That's pretty much all I found to talk about in Parallela.  The idea
+is a good one.  I'm not sure I can really do a lot more.  There's
+really no point in running Dieharder checks on SHA512 output, and
+without CUDA code and a GPU, I can't really benchmark it, SFAIK.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBnPjAAoJEAcQZQdOpZUZZK8P/ioozmLWMkfGeReqVufwBGK9
+6EyqH+OUR0Z7j/OCeYSKHsb5c7tIgY4divOd0OCcbzci3AigzHURL5DSJO7GTtXm
+1qI0KycLmTqAMjCANnAhiMhhq8KJFy2MdedNc2Z2QqEIIAeyso14o0Hu9J3QoeAB
+c6oK0GM/t9gwYPagq1g/LXghaULL84xX5rgfZpjr+F9K6pXC09+2ODpCZO2hk5uo
+NSIBy+mUFkkPM0Pa9djE7/q957jUEmvIFDaTLvWaZN4c502pQOrFGYkAGCy/2rMx
+mD0cTzH2HY3n8aDiT7mxZojIQF0Vk9HlSSXTxLxnk3PN8JG+vfkWMa6Wn42WlP8t
+VVjHXP9D90cxCEuwnWZFeb9R3lwOg31cKNMpWJOEAbL4Sb7N/P86mou67Y7qyPc6
+mo4VQSGOhL/pdbDWTSZz/kxV/pKgqQO3ZOaOKWnoG7H7ya1sQcjzZQU1XwDwlIVH
+JZgxy8wkBCmlBI5TFvl9v8NErr5k3fKCAjApUd6s8NdTh2DV61EroXV7uC1ihXa/
+icvBBJ7lmrF4hiTjuVCMuIVTenMZF4EqjOtW6kEJy2yG0nfxNXkR8jw81sDf+iTn
+x6MDH+A7mswXnnG5fgA+w5I9Dre52fYoAOhB+xxRbTLcu59QKCEB+PPANGVCQjED
+E9MvpEKf7A2FYLXA3fyt
+=WJqv
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

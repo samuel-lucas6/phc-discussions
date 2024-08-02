@@ -1,0 +1,118 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+Message-ID: <20150504163939.GA19304@openwall.com>
+Date: Mon, 4 May 2015 19:39:39 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+On Mon, May 04, 2015 at 02:37:48PM +0200, Stefan.Lucks@...-weimar.de wrote:
+On Thu, 30 Apr 2015, Solar Designer wrote:
+>While you're mostly correct, you're somehow omitting important detail.
+>As discussed before, salting may defeat side-channel attacks on password
+>hashes, as long as the salts are not known/predictable by the attacker.
+>In your example, "without knowing the password file, Mallory would"
+>typically also not know the salts, so would not be able to mount a
+>side-channel attack.
+
+Agreed. I should have been more precise here.
+
+Having spent much of my academic life on performing cryptanalysis, i.e., 
+on attacking schemes, the idea to rely on the randomness of the salt 
+doesn't quite convince me, though. I understand the "random" salt mostly 
+as a nonce, i.e., a value that is supposed to never repeat. You can safely 
+use a low-quality entropy source, such as your system clock, to derive 
+your "random" values. You can even use a counter, together with (a hash 
+of) your sever ID.
+
+That's the traditional understanding, yes.  A decade ago or so I would
+have been mostly with you on it.  Now I'm not so sure.
+
+As the security community eventually started to recognize timing attacks
+including on password hash comparisons as something to actually consider
+and deal with, it became just too convenient to realize that
+cryptographically random salts may prevent those.  The same applies to
+cache-timing attacks on password hashes themselves.  And these
+maybe-vulnerabilities are not new: bcrypt has been around since 1997,
+and strcmp() is being used to compare crypt() hashes since 1970s.  As it
+happens, some systems have already been using cryptographically random
+salts for a while now (IIRC, OpenBSD has been since the introduction of
+bcrypt in 1997), preventing these attacks in that way (even if the
+attack were possibly not understood back then).  This is why I said
+"maybe-vulnerabilities".
+
+Now our options are: use solely hashes and comparison functions that are
+side-channel safe(*) even without cryptographically random salts, or/and
+require cryptographically random salts.  The latter hardens existing
+software too - such as uses of strcmp() on password hashes in lots of
+existing software.
+
+(*) Not only constant-time, but also including approaches such as
+https://www.isecpartners.com/blog/2011/february/double-hmac-verification.aspx
+http://openwall.info/wiki/people/solar/algorithms/challenge-response-authentication#Timing-attacks
+which can be easily applied to hash comparisons.
+
+Another aspect is precomputation.  When salts are predictable, like in
+your examples, an attacker may pre-hash a wordlist (or whatever) to the
+expected salt(s) before actually obtaining a copy of the target system's
+hashes.  Then they get usable cracked passwords sooner.  This is
+probably not happening in practice yet(*), but it might be of comparable
+likelihood to having a cache-timing attack mounted in practice.
+
+(*) The situation with WPA-PSK SSIDs is similar, with rainbow tables
+having been pre-generated for likely SSIDs, but it's not quite it yet.
+
+As long as the salt does not repeat, your password hashing scheme should 
+be OK. (And even very rare exceptions of the same salt for two independent 
+passwords would not harm too much.) But to defeat the kind of side-channel 
+attacks we talk about, the salt would now have to be unpredictable for the 
+adversary. I.e., you would need a high-quality random source for to 
+generate your salts -- pretty much the same thing you would use for 
+generating secret keys.
+
+(Well, not quite. But close. You might be happy with, say, a 80-bit enropy 
+salt, where you would expect your 128-bit key to have full 128-bit 
+entropy.)
+
+Yes, something like that.  Here's Marsh Ray's attack on 12-bit salts:
+
+http://lists.randombit.net/pipermail/cryptography/2011-December/001866.html
+http://lists.randombit.net/pipermail/cryptography/2011-December/001874.html
+
+>However, a relevant question is: are we focusing on avoiding unlikely 
+>yet potentially fatal special cases, or are we trying to reduce the 
+>percentage of passwords that will get cracked in a more likely case?  I 
+>expect that answers will vary.
+
+Agreed. The tradeoff, potentially a few more bits of pseudo-entropy for 
+
+Yes, and we definitely should realize that potential in order for use of
+a cache-timing unsafe scheme to make sense.  This is a reason why e.g.
+original Argon isn't a good choice.
+
+all cases versus an almost total loss for some cases. This is precisely my 
+reason I wanted to discuss this.
+
+It might be useful to keep in mind that there's always some risk of an
+attacker just hitting the right password in a few tries. ;-)  Unlikely,
+sure.  Possible, yes.
+
+I am not taking sides.  Rather, I am being pragmatic, and since I am
+replying to you I am emphasizing a point of view different from yours,
+to make this discussion useful.
+
+At this time, going from bcrypt to Catena for password hashing is
+usually a downgrade.  Things might or might not be substantially
+different in 5+ years from now, as faster attacks on bcrypt become
+generally available and higher cost settings become usable by more
+systems (this will play in favor of Catena and other schemes well suited
+only for higher memory usage).  Right now, the target performance
+figures are often in the thousands of requests/second/machine(*), and
+side-channel attacks are by far not a top threat.
+
+(*) Facebook's use of scrypt at 16 MB (so probably only around 1000/s
+per 16-core machine) is a notable exception here.  I think their running
+of scrypt on "frontends" (whatever this means) is key to this.
+
+Alexander
+

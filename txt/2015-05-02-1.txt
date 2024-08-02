@@ -1,0 +1,61 @@
+phc-discussions - yescrypt on GPU
+
+Message-ID: <20150502023427.GA2485@openwall.com>
+Date: Sat, 2 May 2015 05:34:27 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: yescrypt on GPU
+
+Hi,
+
+The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+(with tiny bits of inline PTX assembly, even - for things such as the
+pwxform MULs):
+
+https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741
+
+The code is still very dirty.  I expect it won't build or work for most
+people as-is, yet.  However, it looks reasonably well optimized, and
+specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+are precomputed and hard-coded, etc.)
+
+My own experience with it so far is this: the modified sgminer built
+fine on Linux.  When trying to build the yescrypt OpenCL kernel with an
+older AMD Catalyst I had installed on that machine, the OpenCL compiler
+segfaulted.  Telling it to use another OpenCL platform number, to target
+an NVIDIA card in the same machine, it sort of worked - the kernel built
+and started mining, but instead of accepted shares only the HW error
+counter increased slowly - roughly at the pace I would have expected
+valid shares to be generated at the reported hashes per second rate.
+Speaking of which, it was 198 h/s on a GTX TITAN.  (Indeed, this doesn't
+mean much until the code starts to actually work correctly on that
+system.)  For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+
+The modified sgminer includes a copy of yescrypt-opt.c to validate the
+shares found on GPU.  I guess this is how the "HW errors" were detected.
+
+The CUDA code is present only in the "windows" branch of djm34's fork of
+ccminer-tpsp.  With a few easy changes here and there, it mostly built
+for me on Linux - however, cuda_yescrypt.cu has been compiling for 1.5
+hours already as I am typing this message.  (No idea if that build will
+finish or not.  The compiler's memory usage is slowly growing, which
+might be a good sign.)
+
+bsty     27511 99.7  0.1 242304 216548 pts/1   R+   04:47 100:23 cicc -arch compute_35 -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 -maxreg 128 -nvvmir-library /usr/local/cuda/bin/../nvvm/libdevice/libdevice.compute_35.10.bc --orig_src_file_name yescrypt/cuda_yescrypt.cu /tmp/tmpxft_00006af6_00000000-9_cuda_yescrypt.cpp3.i -o /tmp/tmpxft_00006af6_00000000-5_cuda_yescrypt.ptx
+
+So I have no performance numbers from actually running it yet.
+
+Unfortunately, neither djm34 nor anyone else has posted any specific
+performance numbers yet.  djm34 only made this comment: "It is difficult
+to go higher in intensity due to the high mem requirement. (also current
+speed is rather low... for the same reasons)".  Obviously.
+
+To remind, BSTY uses yescrypt v0 (with an unimportant high-level bug
+introduced when merging into BSTY wallet, and now preserved as part of
+BSTY-specific yescrypt) at 2 MB, with 1 KB blocks (r=8).  yescrypt v1
+should be almost same speed (no changes to the performance critical
+parts were made between v0 and v1).
+
+Alexander
+

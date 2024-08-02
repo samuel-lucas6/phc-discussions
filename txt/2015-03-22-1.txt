@@ -1,0 +1,41 @@
+phc-discussions - battcrypt: minor bug in reference implementation
+
+
+Message-ID: <550F38A5.20008@riseup.net>
+Date: Sun, 22 Mar 2015 22:48:21 +0100
+From: Axel von dem Bruch <axel-vdb@...eup.net>
+To: discussions@...sword-hashing.net
+Subject: battcrypt: minor bug in reference implementation
+
+
+I'm working on a Java implementation of battcrypt. I want to use it
+later as an optional key derivation function for a password encryption
+program, which is currently under construction.
+For comparison I called the C++ reference implementation with several
+parameters.
+
+I found a minor bug in the function battcryptKdf().
+The bug occurs only if the requested key size is larger than 64 byte and
+has the result that the function fails.
+The function battcryptKdf() is an additional function to the PHC
+standard function.
+This bug does not affect the function PHC().
+
+More detailed description:
+When I use the key derivation mode with output size 64, the function
+battcryptKdf(...) returns 1.
+This is because of line 165 or 171:
+if (m_cost 50 || (t_cost & 0xffff) 62 || (t_cost >16) 63 ||
+outlen HASH_LENGTH)
+For the function battcryptKdf the last "outlen HASH_LENGTH" should
+be deleted, otherwise the key streching will not work.
+
+Steve has suggested to report the bug here on the list.
+
+I had also noted (a negligible topic) that the function others than the
+function PHC uses the password again in the last loop and therefore the
+password must remain in RAM.
+
+Regards
+Axel
+

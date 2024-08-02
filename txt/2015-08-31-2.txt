@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] RE: [FORGED] [PHC] Argon2 using memset still
+
+Message-ID: <CALW8-7JJLJ9q2VCbPf1Fq5vqkh3HG_NdJ=cjGYkaqVJPXf6zxQ@mail.gmail.com>
+Date: Mon, 31 Aug 2015 14:53:52 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] RE: [FORGED] [PHC] Argon2 using memset still
+
+Yes, it almost like that now, but as Samuel Neves pointed out, it seems
+there are few compilers (if any) that support memset_s. Visual Studio 2013
+does not know about it, for example.
+
+On Mon, Aug 31, 2015 at 1:53 PM, Peter Gutmann <pgut001@...auckland.ac.nz>
+wrote:
+
+Bill Cox <waywardgeek@...il.comwrites:
+>
+>g++ has a habit of optimizing calls to memset away.  I doubt that Argon2
+>succeed in it's attempts to clear memory.  I copied this function from
+Blake2:
+>
+You could also use environment-specific functions to do this:
+>
+#if defined( _MSC_VER ) && VC_GE_2005( _MSC_VER )
+  /* This is just a mapping to RtlSecureZeroMemory() (via WinBase.h) which
+     is implemented as inline code implementing a loop on a pointer
+declared
+         volatile, but unlike the corresponding RtlZeroMemory() there's a
+         contract that this will always zeroise memory even in the face of
+         compiler changes that would otherwise optimise away the access */
+  #define zeroise( memory, size )       SecureZeroMemory( memory, size )
+#elif defined( __STDC_LIB_EXT1__ )
+  /* C11 defines a function memset_s() that guarantees that it won't be
+         optimised away, although this is quite well obfuscated in the
+spec,
+         "the memory indicated by [the memset parameters] may be
+accessible in
+         the future and therefore must contain the values indicated by [the
+         value to set]", hopefully the implementers will know that this
+equates
+         to "the memset_s() call can't be optimised away" */
+  #define zeroise( memory, size )       memset_s( memory, size, 0, size )
+#elif defined( __OpenBSD__ )
+  /* The OpenBSD folks defined their own won't-be-optimised-away bzero()
+         function */
+  #define zeroise( memory, size )       explicit_bzero( memory, size )
+#else
+  #define zeroise( memory, size )       memset( memory, 0, size )
+#endif /* Systems with distinct zeroise functions */
+>
+Peter.
+>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

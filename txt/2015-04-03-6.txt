@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Message-ID: <CALW8-7+1NPtBtHy4HP37mdARpHzVXeu8_4UrkHmnD6sUiLAiRg@mail.gmail.com>
+Date: Fri, 3 Apr 2015 12:59:53 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+On Fri, Apr 3, 2015 at 3:17 AM, Bill Cox <waywardgeek@...il.comwrote:
+>
+>
+I like this approach, though I think for benchmarking we can just have the
+authors choose the parameters.  I agree with Dmitry that parameters should
+typically not be chosen by the end-user, though I think the number of
+rounds, number of lanes, and other tunable parameters could be selected
+based on the number of threads the user allows, and the total memory to be
+hashed.  For benchmarking, authors should pick minimum t_cost they feel is
+secure, and a number of rounds that give the best memory*time defense with
+good compute time hardness.
+
+We could try to develop several typical scenarios for benchmarking.
+Maybe people from industry could contribute with usecases.
+
+For example:
+Scenario 1 (cryptocurrency mining on x86 desktop):
+  maximum time: 1 second
+  maximum memory: 4 GB
+  maximum threads: unlimited
+
+Scenario 2 (password-based key derivation on x86 desktop):
+  maximum time: 5 seconds
+  maximum memory: 2 GB
+  maximum threads: unlimited
+
+Scenario 3 (password hashing on an authentication server):
+ maximum time: 0.1 seconds
+  maximum memory: 500 MB
+  maximum threads: 2
+
+The measurements are done on the following metrics (the more the better)
+  metric 1: amount of memory filled
+  metric 2 to maximize: total bandwidth
+  metric 3 to maximize: total amount of computations, excluding memory
+access (e.g., total count of MUL/ADD/XOR operations, or taken with
+weights equal to their Haswell (for example) latencies)
+  metric 4 to maximize: computational latency (hardening), i.e. the
+length of the longest chain of computations expressed as above.
+
+
+The designers then select 1 or more instances  (parameter sets) of
+their scheme, which compete in all scenarios. Then we look at the
+rankings. It'd be great to have a single instance that perform well in
+all scenarios (not necessarily being the winner in any).
+
+Of course, we are looking for more metrics and more scenarios.
+
+Dmitry Khovratovich
+

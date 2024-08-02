@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <CALCETrUC33G2zCC1kwm9adzbp2vOLykxDFROj-F=UbdOhw6v5w@mail.gmail.com>
+Date: Wed, 23 Mar 2016 09:18:41 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] hash encryption
+
+On Tue, Mar 22, 2016 at 9:38 PM, Solar Designer <solar@...nwall.comwrote:
+On Tue, Mar 22, 2016 at 09:08:41PM -0700, Andy Lutomirski wrote:
+>My recollection of the different security properties of different numbers
+>of Luby-Rackoff rounds is a bit vague, but they have nothing to do with
+>bits of security or work factor.  Can you justify them?
+>
+I found Thomas Pornin's answer here helpful:
+>
+http://crypto.stackexchange.com/questions/1352/are-there-any-specific-requirements-for-the-function-f-in-a-feistel-cipher
+>
+Regarding 7 rounds for 256-bit security:
+>
+https://www.iacr.org/archive/crypto2003/27290510/27290510.pdf
+>
+In other words, 128-bit security for a 256-bit block is what
+Luby-Rackoff's usual 3 or 4 rounds provide (it's 4 for chosen ciphertext
+attacks, which might or might not be relevant here).
+>
+Almost 256-bit security for a 256-bit block is achieved at 7 rounds, as
+shown in that other paper above.  I did not verify their results.
+
+It seems like it would be simpler to pick a round count and stick with
+it regardless of key length, especially if performance doesn't really
+matter.
+
+>
+>IMO the error case should not result in the identity function.  Abort or
+>memset-to-zero would be better.
+>
+For an error case, sure.  But this isn't meant to be an error case: it
+is how we typically use password hashes now, without encryption.
+
+I guess that makes sense.  If the key is blank, you don't expect any security.
+
+>Hashing the key length in before the key would avoid needing to think about
+>related-key attacks that might lose you one round or so of security under
+>some circumstances.  Using a short-key variant as an oracle against a
+>long-key variant would be nasty
+>
+That's an interesting thought.  SHA-256 already hashes in the full
+message length in bits, and with only the key being of variable length
+here this feels sufficient.  Do you think it might not be, and why?
+
+Suppose we ignore the round count variability and further weaken the
+scheme by forcing either one or two rounds (obviously insecure).  Then
+imagine we have two related keys k1 and k2.  k2 = k1 || padding1 || a
+few more bits.  That is, k2 is what you get when you extend k1 by the
+Merkle-Damgard padding you'd have if you fed k1 into your cipher
+followed by some more bits.  (IOW this is a classic length-extension
+setup, assuming I did it right.)
+
+Now an attacker can use the block cipher under k1 as an oracle to
+learn hash values under k1, which gives the attacker the entire
+internal state of the round function prior to hashing in the extra
+bits in k2.
+
+This is obviously a useless attack as is (weird related key assumption
+and only works directly on one or two rounds), but I can imagine
+adaptive chosen plaintext/ciphertext variants extending to an extra
+round or two.
+
+The possibility of this type of attack would go away completely if you
+used a wide-pipe hash or if you hashed in the key length.
+
+>
+Hashing in the full key length may be tricky to implement because it'd
+require converting it to an endianness-independent layout first.  I am
+trying to avoid cluttering the code with unneeded(?) stuff like this.
+>
+Round number was much easier since those numbers are definitely small
+enough to fit in 1 byte, and this is a requirement for the Luby-Rackoff
+proof (independent functions for each round).
+>
+BTW, I am considering changing:
+>
+                SHA256_Update(&ctx, &round, 1);
+>
+to:
+>
+                {
+                        uint8_t round_bytes[4] = {round};
+                        SHA256_Update(&ctx, round_bytes, sizeof(round_bytes));
+                }
+
+Off-topic, but I recently learned the distressing fact that uint8_t is
+not specified as a "character" type and is therefore not special wrt
+aliasing :(
+
+--Andy
+

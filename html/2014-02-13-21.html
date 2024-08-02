@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="20">[&lt;prev]</a> <a href="22">[next&gt;]</a> <a href="19">[&lt;thread-prev]</a> <a href="22">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140213185457.GA6905&#64;openwall.com&gt;
+Date: Thu, 13 Feb 2014 22:54:57 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 01:02:49PM -0500, Bill Cox wrote:
+&gt; Running the scalar unit in parallel with the SIMD unit, and having
+&gt; both doing what they are best at (multiply in scalar unit, memory r/w
+&gt; and parallel ADD/XOR/SHIFT/AND/OR in SIMD unit) seems like the best
+&gt; solution for processors that support it.
+
+That's not exactly what I meant.  It sounds like you're suggesting
+moving data between scalar and vector registers, which is overhead.
+
+What I meant is that you could do all sorts of operations, including
+multiply, on both scalar and vector registers, in separate chains.
+The scalar chain would be optimized for optimal latency - doing the
+multiplies as frequently as you can.  It will provide the latency
+hardening, not letting ASICs compute a block quicker even if it has a
+higher memory bandwidth.  The vector chain would be optimized for high
+throughput - doing as many multiplies per real time as you can - and for
+high memory bandwidth.  You don't even have to access memory from the
+scalar chain, nor mix its computation with the vector chain's more
+frequently than before and after each block.
+
+&gt; How can we add parallel SIMD computation to the scalar processing
+&gt; without having trouble on processors with weak SIMD?
+
+I think we need to have tunable SIMD and instruction-level parallelism
+settings.  For ancient CPUs, we can set both to 1.  Yes, this means that
+hashes initially computed on newer CPUs and with these settings tuned
+for newer CPUs will be slower to compute on older CPUs - more so than
+e.g. bcrypt, which leaves most execution units idle on modern CPUs.
+
+&gt; Are they an
+&gt; important case, and if so, are they already so slow that
+&gt; multiplication hardening is not useful?
+
+Yes, I was also thinking that requiring multiplies at all may hurt
+ancient machines too much, making it difficult/unreasonable to come up
+with OS distro default cost settings for password hashing that would be
+usable on machines ranging from VAX to modern x86-64 and beyond.  With
+bcrypt's use of only 32-bit ADDs and XORs, older machines are not that
+much slower than modern ones; with multiplies, the gap will be wider.
+
+This is why you see non-multiply "round function" examples for SN=4 and
+SN=2 in sim-mix.c.  Maybe we should support something like that as a
+tunable setting, to make the hash function potentially usable as default
+on a *BSD distro (even if with significantly weakened settings), but we
+need to make sure it'd be strictly more attack resistant than bcrypt.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

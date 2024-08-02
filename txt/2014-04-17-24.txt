@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <CAOLP8p66svqu2WTtOS1RVQn0+ZeGXRd73d_W5ervAUwpGZ-C-g@mail.gmail.com>
+Date: Thu, 17 Apr 2014 17:10:49 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 4:40 PM, Marcos Antonio Simplicio Junior <
+mjunior@...c.usp.brwrote:
+
+Things are getting clearer. Thank you :-)
+>
+*De: *"Solar Designer" <solar@...nwall.com>
+*Para: *discussions@...sword-hashing.net
+*Enviadas: *Quinta-feira, 17 de Abril de 2014 15:53:15
+>
+*Assunto: *Re: [PHC] Lyra2 initial review
+>
+On Thu, Apr 17, 2014 at 01:42:01PM -0300, Marcos Antonio Simplicio Junior
+wrote:
+Actually an explanation would be really good, because I confess that,
+except for "memory bandwidth", I'm not sure I understand what those numbers
+mean or how to computed them...
+>
+Does the "memory bandwidth" figure for Lyra2 look correct to you, given
+the "time" output Bill posted?
+>
+Well, the "time" seems OK, although it is quite worse than what we got in
+our machine. The number "7" being multiplied by "Peak memory/second" eludes
+me, though. Each hashing operation in Lyra2 takes as input two memory
+locations ("prev" and "row*")  and then its output is written to two memory
+locations ("row" and "row*). During Setup, "row" is just written over,
+while "row*" is XORed with the output (which may count as a "read"?);
+during the Wandering phase, both "row" and "row*" are XORed with the output.
+>
+Am I missing something? The r/w on the "state" variable, maybe?
+>
+
+I'm not sure where the disconnect is.  I measured Lyra2 hashes 2
+
+>From the v1 version of the Lyra2 paper I just downloaded from the PHC site,
+I see that the fastest hashing time reported is for T=1, the same as I ran.
+ From the chart on the top of page 40, it looks like it hashes 1600 MiB in
+about 1.5 seconds, or about 1.04 GiB/s.  I reported Lyra2 running on my
+machine at 1.52 GiB/s.  It seems my machine is faster :-)
+
+Converting from MiB in 1.5 seconds to GiB/s assumes that the runtime is
+proportional to the amount of memory hashed, which is a reasonable
+approximation at this size of memory.  However, it may be simpler to
+compute the GiB/s of DRAM bandwidth directly from the measured data.
+
+Lyra2 hashed 2 GiB of memory in 1.32 seconds on my machine.  On average,
+every location in external DRAM was accessed (read or written) about 7
+times.  Lyra2 does 9 total memory accesses, but 2 of them are to read the
+previously written row, which I expect to still be in cache, so I don't
+count them.  To get the average memory bandwidth for the whole run, I just
+multiply the memory size by 7 and divide by the runtime:
+
+bandwidth = 2GiB*7/1.32 = 10.6 GiB/s
+
+This matches up well with the speed record, set by EARWORM, of a bit more
+than 12 GiB/s.  At this bandwidth, Lyra2 is clearly memory speed limited on
+my machine.
+
+nCols is set to 64 by default, which means that each row has 64*768 bits =
+6144 bytes = 6 KiB. In our machine we got better results with nCols = 128
+(12 KiB), though. Those are the figures we put in the specification.
+>
+I found that 16 KiB block size for TwoCats is quite a bit faster than
+smaller sizes.  Dropping to 4KiB slows it down by 16%.  I think this is the
+main remaining difference in memory bandwidth between TwoCats and Yescript.
+ Alexander uses 1KiB block sizes.  That's better for GPU defense, and I'm
+not surprised Alexander prefers this trade-off.  Being mostly unfamiliar
+with GPUs, I cringe at weakening defense against ASIC attacks, and prefer
+the 16KiB size for its speed.
+
+Bill
+
+
+

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Makwa parameter generation</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="14">[&lt;prev]</a> <a href="16">[next&gt;]</a> <a href="14">[&lt;thread-prev]</a> <a href="17">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAK9dnSxsz61RHsH65UNvjvEg4Q=FZN8n2ummc9bpZ+53=EgcNA&#64;mail.gmail.com&gt;
+Date: Thu, 11 Sep 2014 16:47:25 +0200
+From: CodesInChaos &lt;codesinchaos&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Makwa parameter generation
+
+On Thu, Sep 11, 2014 at 3:54 PM,  &lt;pornin&#64;...et.org&gt; wrote:
+&gt; To keep on with security levels as recommended in 2014, we would
+&gt; prefer prime factors of at least 1024 bits
+
+It's not that simple. We need a modulus of at least 2048 bits which
+contains no primes smaller than 550 or so bits.
+NFS has cost based on the modulus size, but ECM which can take
+advantage of smaller factors is less efficient, so a 550 bit factor
+should match a 2048 bit modulus.
+We also can use trial division, ECM etc. to eliminate all moduli with
+factors smaller than 250 or so bits.
+
+&gt; Now a raw Makwa could run with a huge modulus;
+
+There isn't really a reason to actually use that huge modulus. You can
+use several of those 3000 bit moduli chaining or combining them such
+that the result is secure if at least one of them is secure. It still
+gives an attacker who factors some of them an advantage, but you can't
+avoid that with this generation method.
+
+&gt;  - When the modulus is large, classic implementations of the squaring
+&gt;    operation (Montgomery multiplication) are no longer optimal; to
+&gt;    get the fastest code (and you want to get it, because that's what
+&gt;    the attacker will do), you have to switch to more advanced
+&gt;    algorithms such as FFT-based multiplication, and that entails
+&gt;    considerable development effort. When Makwa uses a 2048-bit RSA
+&gt;    modulus, then existing optimized code for RSA can be reused, and
+&gt;    that is a good thing; huge moduli deprive us of that advantage.
+
+If you'd use a big modulus, you should be able to optimize it with CRT.
+While you don't know individual primes, you know smaller composite factors.
+
+&gt;  - Delegation cost raises with the modulus size (quadratically, if you
+&gt;    use Montgomery multiplication).
+
+Why does montgomery multiplication have larger asymptotic cost
+compared to multiplication modulo a power of two?
+I admit that I'm not familiar with the details of montgomery
+multiplication, but doesn't it just double the number of
+multiplication and add some conversion overhead?
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Password hashing by itself is not enough
+
+Message-ID: <CAAS2fgQy-GXHYaVxffGx2Qjg7wg7vdLgeBpLXeD1HtNWCG0rmQ@mail.gmail.com>
+Date: Fri, 13 Mar 2015 19:57:34 +0000
+From: Gregory Maxwell <gmaxwell@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Password hashing by itself is not enough
+
+On Fri, Mar 13, 2015 at 4:19 AM, Bill Cox <waywardgeek@...il.comwrote:
+If the recent 10-million-combos.zip file that was posted with 10 million
+user/password combinations is representative of user behavior, then a 5
+million entry dictionary will contain over half of all user's passwords.
+The first half of this file has over half of the passwords repeated in the
+second half.
+>
+A solid upgrade to Scrypt will not be enough to secure the weaker half of
+these passwords.  Should the PHC recommend that master secrets of some sort
+be added to the key material, so that if the password database is stolen,
+but not the master secret, no harm is done?  There is no parameter for
+additional secret key material in the PHS function.  Would it make sense to
+add one?  Secret key rotation is another issue.  Instead of hashing in the
+secret key as additional key material, the secret key could be used to
+encrypt the resulting password hash before storing it.  The official hash
+result would be the encrypted value, but the master secret could be updated.
+
+
+Any scheme can have a "master key" by simply encrypting the
+authentication record in the database with that master key.
+
+This provides _very_ narrow security, unless you put the master key
+decryption function (and ideally, comparison) inside a HSM (hardware
+security module) which acts as a rate limiter for checking; since most
+attacks that would allow the attacker to get the database also allow
+them to get the master key.
+
+Another way of putting the argument is "If you have a place to store
+data where an attacker can't get it... why not just put your whole
+authentication database there?".   Sure, that argument isn't
+complete-- examples like the HSM which doesn't have enough internal
+storage show that there can be use cases.
+
+I've seen this master key thing contribute to breaches multiple times,
+due to magical thinking along these lines (esp where operators
+replaced the 'salt' in their strengthening system with a constant key
+on the rationale that this was somehow stronger).
+

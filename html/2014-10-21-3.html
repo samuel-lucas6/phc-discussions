@@ -1,0 +1,348 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] simplifying yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5445D743.4030506&#64;ciphershed.org&gt;
+Date: Mon, 20 Oct 2014 23:47:15 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 10/20/2014 09:58 PM, Solar Designer wrote:
+&gt; Hi,
+&gt; 
+&gt; As I recognize that complexity is yescrypt's worst drawback, I've
+&gt; been thinking of how to simplify it.  There's not a lot that can be
+&gt; removed without making it substantially worse in some way.
+
+A low-complexity memory-hard algorithm could be useful, and maybe some
+such algorithm should be promoted by the PHC.  However, no entry that
+has decent potential to replace Scrypt as a better memory-hard
+solution is simple.  Most of the memory-hard entries don't even deal
+with the cache-miss penalty problem.  That makes them simpler, but
+kills their chance of supplanting Scrypt.
+
+Of the three I feel succeeded, how well they succeeded is in
+proportion to their complexity.  Yescrypt is the most complex, but as
+anyone can see from my comparison chart, it is the best Scrypt
+successor of the strong contenders.  Yescrypt wins or comes in a close
+second whether the use case is authentication servers, tiny L1 cache
+hashes, or several GiB memory hashes for FDE.  It wins or comes in a
+close second in GPU, ASIC, and FPGA defense.  On top of that, it is
+Scrypt upward compatible.
+
+The other two entries I feel succeeded are my own TwoCats and Lyra2.
+Not coincidentally, the Lyra2 team and I realized you had some great
+advice on the forum, and acted on it.  I was somewhat rabid about it,
+and succeeded in making TwoCats the second most complex entry, and in
+my biased opinion, TwoCats comes in second on those same measures.
+
+Lyra2 is simpler, but when it has multi-threading, some TMTO defense
+for it, better compute-time hardening, and maybe improved GPU defense,
+it will increase from it's moderate complexity to high complexity.
+You simply can't compete in all those security dimensions at the same
+time otherwise.
+
+Let me put it this way.  You're not going to see a Lyra2-coin based on
+the current code :-)  It's GPU defense isn't there.  That said, I have
+high confidence the Lyra2 team can get there if needed.
+
+Honestly, the Lyra2 team and I have been eating up your ideas you've
+posted on this forum, and upgrading our entries.  However, IMO, we did
+not succeed in beating your entry.  Our entries are less complex,
+primarily because we haven't addressed as many different security needs.
+
+&gt; I think the same applies to scrypt, so I don't find scrypt exactly 
+&gt; over-engineered.  It's just complex - more so than we would have
+&gt; liked it to be.  The only likely-unjustified thing in scrypt is
+&gt; BlockMix's block shuffling.  Everything else is justified in some
+&gt; way - e.g., the use of PBKDF2-HMAC-SHA256 on the outer layer lets
+&gt; us say that scrypt's basic crypto properties rely solely on
+&gt; NIST-approved crypto, which may be crucial for adoption by some
+&gt; users.  (Of Open Source projects, at least glibc and Drupal have
+&gt; stipulated such requirements, although scrypt in particular would
+&gt; not be suitable for them for other reasons.)
+&gt; 
+&gt; As long as yescrypt supports computing not only its native, but
+&gt; also classic scrypt hashes, it obviously can't be made simpler than
+&gt; scrypt. However, I am planning on introducing yescrypt-lite
+&gt; supporting a subset of yescrypt's full functionality, and
+&gt; yescrypt-lite would not be a superset of the full scrypt either.
+&gt; Here's what I'd change in -lite:
+&gt; 
+&gt; - Drop support for (ye)scrypt's p parameter. (Only p=1 will be
+&gt; supported in -lite, and hence -lite will not include the different
+&gt; handling of p that now exists between classic scrypt and native
+&gt; yescrypt hashes.)
+
+Sounds good.
+
+&gt; - Maybe: drop support for classic scrypt hashes. (Have only native
+&gt; yescrypt hashes supported in -lite.)
+
+Yes, in Yescrypt-lite, please drop backwards compatibility with Scrypt.
+
+&gt; - Maybe: drop support for a ROM.
+
+Yes, in Yescrypt-lite, please drop ROM support.  I feel this is
+important for authentication servers, but not most other applications.
+ Let authentication servers run the full Yescrypt, while having a
+simpler version that regular coders like me can port to various languages.
+
+&gt; I'd appreciate arguments for/against the two "maybes" above,
+&gt; considering that I intend -lite to be usable in Unix crypt(3) and
+&gt; PHP crypt(), etc.
+&gt; 
+&gt; Overall, I don't expect this to make yescrypt-lite simpler than
+&gt; scrypt (it will have pwxform, which isn't in scrypt), but it'd
+&gt; certainly be simpler than full yescrypt.
+
+I am tempted to suggest also aproviding an Yescrypt-anorexic.  In my
+"SkinnyCat" algorithm, I deleted multiplication chain hardening,
+multi-threading for taking advantage of all those CPU cores,
+small-memory reads for GPU defense, the t_cost parameter (of which I
+remain not much of a fan), variable lanes, long input parameters, the
+init-update-finalize API, variable block sizes for cache tuning, and
+the early memory overwriting TwoCats does to provide basic protection
+in case memory gets written to swap or hibernated to disk.
+
+The result, in my biased opinion, is simple, elegant, and fast.
+However, there's no way I'd use it in an application like TrueCrypt!
+
+However, there are *many* applications where I feel something that
+simple is warranted.
+
+&gt; In PHC context, I am willing to offer replacing full yescrypt with 
+&gt; yescrypt-lite, and keeping the full yescrypt (a strict superset of 
+&gt; yescrypt-lite, re-adding full classic scrypt support and the rest
+&gt; of full yescrypt features) as a non-PHC extra.  That is, if the PHC
+&gt; panel prefers so, yescrypt-lite and not full yescrypt would be the
+&gt; PHC candidate, although of course it can/should be kept in
+&gt; consideration that there exists this sort of superset (which would
+&gt; remain a reason for yescrypt-lite to be defined the way it would
+&gt; be).  I don't actually recommend doing things in this way (I'd
+&gt; rather keep full yescrypt in PHC, with -lite being a subset of it,
+&gt; much like how TwoCats/SkinnyCat is currently in PHC), but this is a
+&gt; valid option.
+
+I prefer the full Yescrypt as the main entry with a Yescript-lite
+option for some users.  Even better - a Yescrypt-anorexic.
+
+I am not sure I would use a middle complexity Yescrypt-lite.  When I
+tried coding something half way between the core idea of the TwoCats
+algorithm and the full implementation, I failed to come up with
+anything satisfying.  Cutting complexity in half while making the
+algorithm worse for defense overall did not sit well with me.  I did
+not feel I had succeeded until SkinnyCat was as bare-bones as Bcrypt,
+yet still provided it's basic features: hogging bandwidth and filling
+memory fast, with a hybrid cache-resistant/unpredictable architecture.
+ Those are the things I enjoy most about TwoCats, and I was able to
+highlight them in SkinnyCat, at least to me when I read it.
+
+I think my need to create SkinnyCat, which is *not* a worthy Scrypt
+replacement, comes from my desire to port it everywhere.  Good
+algorithms should be so appealing to geeks that they can't help but
+write an implementation of their own.  They need to be so simple, that
+most of these versions actually work.  A decent coder should get it
+done in an afternoon.  Porting the full TwoCats or Yescrypt to Go, for
+example, sounds like tedious work.  I'd never do it just for fun, but
+it'd be awesome as an actual project at work.  However, porting
+SkinnyCat would be fun for me.
+
+I am sure that this principle can be applied to Yescrypt.  All you
+have to do is eliminate everything but the part you love so much about
+the algorithm, you'd be sad to see it go.  What would you keep if you
+had to keep it under 200 lines of code?  I personally would like to
+see the parallel-wide-transform in a simple piece of code that
+highlights it.  That t_cost == 0 behavior is what I'd personally keep.
+ The hybrid architecture with the partial second loop is cool.  I'd
+also keep the PBKDF2-SHA256 fix you invented.  It might bust a bit
+beyond 200 lines :-)
+
+&gt; Regardless of what exactly goes into yescrypt-lite (and what's
+&gt; excluded from it), and regardless of whether/which yescrypt remains
+&gt; in PHC, here are some other changes I am considering to simplify
+&gt; yescrypt (the full thing, not only -lite):
+&gt; 
+&gt; - Drop support for ROM access frequency mask.  In practice, this
+&gt; will mean no ROM-on-SSD support (only ROM-in-RAM will be
+&gt; supported).  The reason why I am considering dropping this is that
+&gt; in most cases where I would have recommended use of ROM-on-SSD I
+&gt; would _also_ recommend simultaneous use of ROM-in-RAM, and then it
+&gt; would need to be two ROMs, with different access frequency,
+&gt; resulting in even greater complexity. Perhaps just one mask (only
+&gt; for the ROM-on-SSD) would be enough even in that two-ROMs case,
+&gt; though.
+
+ROM in memory seems like the way I'd want to use Yescrypt, if I were
+doing an authentication server.  ROM on SSD is cool, but I think you
+can drop the frequency mask.
+
+&gt; - Merge the various yescrypt flags into one - to choose native
+&gt; yescrypt mode or classic scrypt mode.  This doesn't simplify the
+&gt; reference code much, but it will simplify documentation, analysis,
+&gt; testing, benchmarking, and it may simplify optimized
+&gt; implementations.  A drawback is that there will no longer be any
+&gt; deliberately-TMTO-friendly native yescrypt mode (for which I think
+&gt; some use cases exist), requiring that people use the classic scrypt
+&gt; mode if they require that.
+
+I think providing a simple "classic" API, and a simple Yescrypt basic
+API would be good.  I saw Catena had a simple API (the one I'd most
+likely use in real life), and called it the "naive" API.  It is naive,
+but we can't expect our users to be knowledgeable about all the issues
+involved in password hashing.  Even providing both a t_cost and m_cost
+parameter is asking too much from users.  We need a "don't make me
+think too hard" API.
+
+At the same time, is there any reason not to reveal more interesting
+parameters in an "extended" API?
+
+&gt; (On the other hand, I need to add a new flag for enabling cache
+&gt; timing resistance.  So get rid of separation between the existing
+&gt; flags, and add that new flag.)
+
+If you are adding a cache timing resistant loop, I'd like to see it in
+the first loop (or some portion of it) in Yescrypt mode by default.
+If it weakens password security when an attacker does not have
+cache-timing data by too much, then I'd say just drop the feature
+entirely.  There is a reason we do unpredictable password derived
+addressing.  It makes password hashes more secure.  How much
+complexity to add and how much weakening vs traditional GPU farm
+attacks you can tolerate is a tough trade-off.
+
+&gt; - Without scrypt compatibility (as in -lite) and when in native
+&gt; mode, I can replace Salsa with ChaCha.  If a given build lacks
+&gt; scrypt compatibility (would be true for -lite), this would probably
+&gt; make it slightly simpler by eliminating the need for 32-bit word
+&gt; shuffling associated with interfacing with Salsa.  The drawback is
+&gt; that full yescrypt would become more complicated, requiring both
+&gt; Salsa (for scrypt compatibility) and ChaCha.  This is why I stayed
+&gt; with Salsa only so far.
+&gt; 
+&gt; Any comments?
+&gt; 
+&gt; Thanks,
+&gt; 
+&gt; Alexander
+
+Doesn't the PWX loop dominate runtime?  Assuming this is the case, I'd
+say keep Salsa.  I do wish that could be in a library, the way Bcrypt
+calls Blowfish.  There's no point complicating a memory-hard password
+hashing algorithm by dumping code for a cryptographic hashing
+primitive into the heart of it.  Was it the 8-rounds that required a
+custom implementation?
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJURddAAAoJEAcQZQdOpZUZvg0P/jfuASR25AIoz34jgGHWXF9G
+eQq0Xcvoy/w7jPq1v2xe0UfAaOYg6tGRhFkP42tnnY9hEfwIP1A44ZGP9ZwuW9jY
+VsG3jVJVYJdTSe2K+AkW/oAmDzeYPVpnJXhcpuVRPLAaE2JfwzrKROo9auIlMqXa
+q9IKSIa9pzm7Jy9v4iufZUxm1RsqhifEwwbqik6KUmquQ46+40JqI70MCirosS3G
+OjfrDY+WfPorKYC41/QZAqzqAT4R6xFNG7FNA/RE0rwQh23rU1NVj9ctYhSpyUIC
+VbCntyUnId4bQSIHCiYEug7qSw396g7S9FpFtfNN89tzz3Zho6v2K5EeKbywEvHF
+DAEib14IQyvAhYQhMzbW0cYPlzqKounGC+WTl1lT9tck/ULRXYh4V49U10AhzohV
+R/LX4UZX9Z9DJ5OucX+y2QaM7I+amx46Cx7C+L9OQWWHcQ9TijRZbBhi88hwjS17
+zGoVBJapIwv2TRA4vilmUVQ2EJOhyZAeZOudn/FXJZdLxQDR3wyDi6O1uYZXT75r
+0FYd/Uehoh7BD0gMmk7UW5dJ10opzjtcTfO+9WxJILMOLL0j+qDmNquMX0VLrty2
+I+zoauBvlZ0knzsrgsLSXr88Vc8W87V7ixkb9Gr2CLoB7lUF+sydSwUxsOi5Rji2
+s+naOdkxWJ6C8WDrNlni
+=TWM/
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

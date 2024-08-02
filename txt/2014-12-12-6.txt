@@ -1,0 +1,72 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <548A4593.80509@bindshell.nl>
+Date: Thu, 11 Dec 2014 17:32:03 -0800
+From: epixoip <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+(Top posting because you did.)
+
+Sorry, but that's not correct.. No one is using salts now, and we still
+don't use rainbow tables.
+
+Rainbow tables are massive, slow, and don't scale worth crap. GPUs are
+the reason rainbow tables are considered deprecated.
+
+Bitweasil is correct -- the primary advantage to salting today is the
+factor of N slowdown in cracking. If you have 1M unique salts, then your
+effective speed is 1/1000000 of your total speed. 30 GH/s becomes 30
+KH/s. It limits the types and variety of attacks we can run.
+
+But salting alone is insufficient. For each hash we crack a salt is
+eliminated and never checked again. Therefore our attacks speed up with
+each hash we crack. Using the example above, if our effective speed is
+30 KH/s then that means it would take ~20 seconds to run through the top
+10k passwords.  If 40% of the people are using a top 10k password, then
+we only have 600k salts left and our effective speed has increased to 50
+KH/s after just one dictionary.
+
+
+On 12/11/2014 5:10 PM, Ben Harris wrote:
+"Dictionaries and candidate generation algorithms" are the main
+attacks precisely because we use salts. If nobody used salts the
+prevalent attack would still be rainbow tables.
+>
+On 12 December 2014 at 08:58, Bitweasil . <bitweasil@...ptohaze.com
+<mailto:bitweasil@...ptohaze.com>wrote:
+>
+    A factor of N slowdown in cracking, where N is the number of
+    unique salts in the uncracked list of hashes.
+>
+    On Dec 11, 2014 4:57 PM, "Marsh Ray" <maray@...rosoft.com
+    <mailto:maray@...rosoft.com>wrote:
+>
+        Password security researchers learn more and more from data
+        breaches seemingly every week. Dictionaries and candidate
+        generation algorithms get better all the time. So here’s a
+        question. Maybe the answer has changed over the last few years
+        and we should revisit our assumptions.
+>
+         
+>
+        Two different people independently choose this same password.
+        It could be “ilovecats” or it could be something less obvious.
+>
+         
+>
+        What is the probability that this password will not be in
+        attackers’ dictionaries or it will be hard to crack?
+>
+         
+>
+        (If this chance is small, then what do we gain by salting?)
+>
+         
+>
+        -          Marsh
+>
+         
+>
+
+

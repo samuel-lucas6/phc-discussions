@@ -1,0 +1,205 @@
+phc-discussions - Re: [PHC] Comments from Argon2 and Catena co-designers
+
+Message-ID: <CAOLP8p7MvVOn0+3bTzG_1FHPy7gvXM12pYNFz44nkj0aoAEeaQ@mail.gmail.com>
+Date: Tue, 23 Jun 2015 09:21:43 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Comments from Argon2 and Catena co-designers
+
+Summary of my comments below:  I am glad to see the A1 choices listed by
+these authors as Argon2d, Lyra2, and Yescript.  This is the right set.  Any
+selection from these three for the A1 category will make me happy.  Also,
+Argon2i and Catena also seem like the right choice for the A2 category, and
+again, I'd be happy with either.  I prefer having a separate
+"deletation-capable" category, which would just include Makwa.  Given the
+graphics accelerators built into all our smart-phones and PCs, I'm tempted
+to have a "massively-parallel-friendly" category, which would just include
+Parallel.
+
+On Tue, Jun 23, 2015 at 2:52 AM, Jean-Philippe Aumasson <
+jeanphilippe.aumasson@...il.comwrote:
+
+While you *can* rewrite Argon2 in a similar fashion, this would appear a
+lot more intrusive. As I wrote before:
+>
+   Argon2 propes a compression function G, build upon the Blake2b round
+   function. G compresses two 8192-bit values into a single 8192-bit value.
+   The authors claim an improved performance for their compression
+function,
+   compared to approaches using the Blake2b round function more directly.
+>
+   It is not clear under which circumstances one could change from the
+   Blake2b round function to the round function of another primitive.
+>
+
+A simple upgrade to allow the initial and final hashing to be done by
+another algorithm such as SHA-512 would fix this.  The actual memory
+hashing function has a much lower security threshold than a general purpose
+crypto hash function, and it is unlikely we would have to swap out the
+Blake2b-derived memory-hashing primitive.  However, Argon2 does continue to
+be in a state that seems some additional work, such as having a pluggable
+pre/post hash function.
+
+
+      3. As "honorable mentions" (or whatever phrase for the alternative
+winners
+      will be), I propose the winners in the A1 and A3 scenarios: Lyra2
+and
+      Makwa.
+>
+
+I think Makwa deserves a special category.  It is low memory, but it is the
+delegation capability that makes it useful.  Also, Yescrypt shines in the
+low-memory area.  I do not feel there needs to be a special "low-memory"
+category, but I do think there should be a "delegation" capable category.
+There is another slightly simpler algorithm that could be used instead of
+Makwa, but Makwa is more efficient on the client device, and that wins, IMO.
+
+>
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+>
+>
+Given the novelity of G -- Argon2 has been propsed on January, 31st -- this approach would need much more scrutinity than it has seen so far.
+>
+>
+I continue to hope that the Catena, Lyra2, and Yescrypt authors might work
+with the Argon2 team to create the final winner.  I think it has the best
+base platform to start from, if one algorithm were to be the starting point
+for such collaboration.  Lyra2 is good, but too slow stil due to it's
+overly-agressive TMTO resistance built on too many I/O operations per
+memory location.  Yescrypt is awesome, and clearly the best tuned
+implementation in the competition, but it carries forward Scrypt cruft.
+
+The outer loop of Argon2d is not very new.  I used the single-pass
+algorithm in my first version in January of 2014, and refined it in
+successive versions until the submission deadline, with lots of help from
+this community.  The single-pass algorithm has one major advantage: speed.
+You simply wont beat this architecture for the best memory*time defense in
+any algorithm with decent TMTO resistance.  Yescript added a partial second
+pass for the t_cost == 0 case, which gives it most of the benefits of the
+single-pass algorithm's speed with addtional TMTO resistance.  Argon2d has
+a simple 10-15% computation*memory trad-off attack (which the world
+continues to call a TMTO attack - as opposed to the Argon team's less
+useful definition) that might benefit attackers - Yescrypt has no such
+attack.
+
+The main disadvantage of the single-pass algorithm may be that it is newer
+than Scrypt's 2-pass algorithm, which has been well studied.  Yescrypt
+opted for a compromise that retains the second pass, but at a reduced
+runtime.  If the single-pass algorithm is unpalatable, then I strongly
+recommend the Yescrypt compromise.  Lyra2 is awesome, but cannot compete
+speed-wise with a single-pass algorithm.
+
+Lyra2 targets for the A2 scenario.
+>
+>
+I assume that is a typo.  Lyra2 targets the A1 scenario, but has a hybrid
+architecture that provides some resistance to cache-timing attacks.
+
+
+Lyra2 is secure against garbage collector attacks. LYRA2 runs in two phases. The first phase accesses the memory in a password-independent manner, the second phase is password dependent. Thus, it provides *some* resistance to cache-timing attacks, without victimising resistance to low-memory attacks. This is in contrast to unlike Argon2i and Catena, which provide full cache-timing resistance at the cost of reduced resistance to low-memory attacks.
+>
+To be precise, Lyra2 is vulnerable to the following form of cache-timing attacks: Given some cache-timings, the adversary is able to crack low-entropy passwords, even without knowing the password hash. Thus, if there is a chance to keep the password hashes secret, or to encrypt them, and there is a chance that cache timings might leak, then using a highly advanced password hash function, such as Lyra2, may be worse than using md5crypt, or even storing the password unencrypted.
+>
+>
+Your attack fails.  There is no way to recover even one bit of the password
+without knowing the salt, even with detailed timing information well beyond
+cache-timing.
+
+Lyra2's hybrid architecture provides solid password security in the case of
+cache-timing attacks (at least with an improved first loop).  The main
+benefit of Catena/Argon2i over Lyra2 is that Lyra2 leaks meta-data in
+cache-timing, which could be used for example to detect that a user has
+logged in again (but not which user it is).  No information about the
+secret key material and salt can be recovered, even if an attacker has an
+oscilloscope probe on the power rails, at least once we complete the
+initial meta-data leaking functions like memcpy.  By the time Lyra2 starts
+password-dependent memory access, the key material has been hashed beyond
+anyone's ability to recover any of it.  Not even one bit is leaked.  All an
+attacker will ever learn is that the same cache timing he saw before is
+occurring again.
+
+Protecting this meta-data on a machine running a user application that was
+not designed to defend against cache-timing attacks seems very difficult to
+me.  This level of meta-data will leak anyway.  Maybe there are currently
+good use cases for cache-timing resistant algorithms, but I have not found
+one.  I would prefer Lyra2 for any VM hosted in a data center.
+
+Makwa:
+>
+Makwa targets for the A3 scenario. It is based on the unique (in the PHC candidate field) idea of employing a primitive from asymmetric cryptography, namely an operation similar to the RSA encryption. This idea allows to support the unique "delegation" feature.
+>
+>
+I think Makwa is in a category of it's own.  I would not consider it for an
+instant if it were not for the delegation capability.  The world may need
+this, so I think the PHC should recognize it for it's particular use case.
+
+
+Parallel:
+>
+Parallelal employ SHA512 and also targets for the A3 scenario. Its inner loop can be performed in parallel, i.e., not just the attacker can benefit from parallelism, but also the defender. It is supported by a brief security analysis.
+>
+At the first look, this is a cool idea. The chance to benefit from parallelism may be a significant benefit for the defender, compared to established password hashing functions, such as md5crypt. But by "peppering", i.e., by keeping some bits of the salt secret, parallelism is also applicable to established password hashing functions. The benefit of the explicit parallelism in Parallel is negligible.
+>
+>
+I'm on the fence with Parallel, because I am already advocating for a
+category for Makwa.  However, GPU-friendly is an important category by
+itself.  If I were the sole judge of the competition, I would announce a
+main winner (a hybrid architecture based on Lyra2, Yescrypt, or Argon2d),
+and also announce technology-specific winners: a cache-timing resistant
+algorithm, a delegation-capable algorithm, and a GPU-friendly algorithm.
+The "main" winner would be the hybrid algorithm, one that is good for
+hashing a few KiB to many GiB, with solid GPU/FPGA/ASIC defense.  Yescrypt
+needs a hybrid loop and simplification.  Lyra2 needs better speed and
+better GPU defense at low memory.  Argon2d needs both a hybrid defence and
+better low-memory GPU defense.
+
+
+yescrypt:
+>
+Another candidate for the A1 scenario is yescrypt, based on the SALSA round function and SHA-256. Both an advantage and a disadvantage is the huge number of optional features and tunable parameters. One such optional feature is, e.g., the novel idea of performing random (i.e., password-dependent) reads from a huge read-only memory. Activating this feature does clearly kill resistance to cache timing attacks -- but it is optional, as so many other yescrypt features.
+>
+While yescrypt is an interesting candidate, the number of tunable parameters and optional features appears to be a severe barrier to deployment (at least for mere cryptographers, like myself). If yescrypt is considered to be selected for PHC, a yescrypt-subset should fix most of the tunable parameters and options.
+>
+>
+Agreed.  However, since Yescrypt has the best default mix of defenses, I'd
+love to see a trimmed down version, and then select Yescrypt as the winner,
+possibly after a hybrid architecture upgrade.  No one in the competition is
+as good at password defense as Solar Designer, and I hope the eventual
+winner will work with him.
+
+
+6. Comparison of Candidates for A1 scenario:
+============================================
+>
+There is a big field of good candidates in this field. I would vote for Argon2d and Lyra2. If only one of them is to be promoted, I would have a small preference for Lyra2.
+>
+A great candidate would be a well-chosen subset of yescrypt. But yescrypt is too complex, and my understanding of all the features and parameters is insufficient to propose an appropriate subset.
+>
+Scores:	       Technical	 Deployment 	Features  	 Confidence
+>
+Argon2d	       4		4		3		 2
+battcrypt      1		5		0		 3
+Lyra2	       5		4		3		 3
+POMELO	       3		3		0		 1
+Pufferfish     1		4		0		 3
+yescrypt       4		0		1		 3
+>
+>
+One problem with this chart is that it does not show defense
+capabilities.  Yescrypt really shines once you list GPU/ASIC/FPGA defense,
+and large/small memory situations.  I think the authentication-server is
+also a valid case, where Yescrypt is far ahead.  Yescrypt and Argon2d do
+lose to Lyra2 on not having a cache-timing-independent first loop.
+
+Also, where is speed?  Basic time*memory defense is typically proportional
+to the square of speed.
+
+All that said, you've done a very nice analysis.  Thanks for this work!
+
+Bill
+
+
+

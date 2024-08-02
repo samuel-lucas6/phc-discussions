@@ -1,0 +1,42 @@
+phc-discussions - Representing cost in a formated hash
+
+Message-ID: <1825661358.20140106141645@karatnet.hu>
+Date: Mon, 6 Jan 2014 14:16:45 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: steve@...tu.com
+CC: discussions@...sword-hashing.net
+Subject: Representing cost in a formated hash
+
+
+The question is how to represent the cost parameters in the formated
+hash.
+
+here is what i think. representing the hash is the task of the
+platform, and not the hash function. regular hash functions don't have
+default representation either, they are just bits. it is not even sure
+that we want to include the cost or other parameters at all. it can be
+the case that some platforms (especially embedded or hw
+implementations) will have fixed parametrization, thus there is no
+need to store them at all.
+
+i also see no reason why sould the parametrization be standardized.
+for most implementations, a simple 32 bit parameter must suffice, it
+is unlikely that we want 4 billion or even 2 billion rounds. the
+problem is more apparent on 16 bit platforms.
+
+but if we are adamant on giving finer grained exponentially growing
+tuning ability, using constants like sqrt(2) seems to be unnecessarily
+taxing for hw implementations (not very taxing, but unnecessarily
+taxing). so my minimalist recommendation is the following:
+
+(0b1000 + m) << e
+
+where m is a 3 bit number, and e is a 5 bit number. the cost parameter
+thus becomes 8 bits, in eeeeemmm order. the range is from 8 to
+15*2^31, and the increment is below 12.5%. naturally expandable to 13
+bit e, which covers ranges up to unbelievable. also, the number itself
+can be treated as an integer, can be increased, behaves as one would
+expect, etc.
+
+
+

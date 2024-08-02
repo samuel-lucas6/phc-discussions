@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - optimizing memory access speed</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20131231074331.GA21335&#64;openwall.com&gt;
+Date: Tue, 31 Dec 2013 11:43:32 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: optimizing memory access speed
+
+Hi,
+
+Here are a few things I bookmarked while working on escrypt:
+
+Software prefetching, non-temporal hints, and line fill buffers:
+
+<a href="http://www.roguewave.com/portals/0/products/threadspotter/docs/2010.4/manual/ch05s03.html" rel="nofollow">http://www.roguewave.com/portals/0/products/threadspotter/docs/2010.4/manual/ch05s03.html</a>
+<a href="http://stackoverflow.com/questions/19472036/does-software-prefetching-allocate-a-line-fill-buffer-lfb" rel="nofollow">http://stackoverflow.com/questions/19472036/does-software-prefetching-allocate-a-line-fill-buffer-lfb</a>
+
+False aliasing:
+
+<a href="http://stackoverflow.com/questions/8547778/why-is-one-loop-so-much-slower-than-two-loops?lq=1" rel="nofollow">http://stackoverflow.com/questions/8547778/why-is-one-loop-so-much-slower-than-two-loops?lq=1</a>
+<a href="http://stackoverflow.com/questions/9515482/performance-advantages-of-powers-of-2-sized-data" rel="nofollow">http://stackoverflow.com/questions/9515482/performance-advantages-of-powers-of-2-sized-data</a>
+
+False aliasing may be triggered by scrypt's alignment of the buffers.
+A comment in crypto_scrypt-sse.c says:
+
+/**
+ * smix(B, r, N, V, XY):
+ * Compute B = SMix_r(B, N).  The input B must be 128r bytes in length;
+ * the temporary storage V must be 128rN bytes in length; the temporary
+ * storage XY must be 256r + 64 bytes in length.  The value N must be a
+ * power of 2 greater than 1.  The arrays B, V, and XY must be aligned to a
+ * multiple of 64 bytes.
+ */
+
+So all of B, V, and XY are cache line aligned, which ensures individual
+accesses don't cross cache line boundaries (and thus don't bring in
+extra cache lines unnecessarily, except possibly via a hardware
+prefetcher), let alone page boundaries (although V elements, being 128*r
+in size, may cross page boundaries, depending on the value of r).
+
+Unfortunately, this also means that nearly simultaneous accesses to the
+same cache bank are likely.  Besides cache bank conflicts, also possible
+is false aliasing in store buffers.  I've briefly tried deliberately
+misaligning B and/or XY, while keeping V aligned, but this did not make
+a difference on the few builds and systems I tested this on.  Maybe we
+got lucky and the problem does not show up for this code on current
+systems, or maybe more testing is needed - or maybe we need to avoid
+such alignment of multiple buffers being accessed by the same code, just
+in case (if we deliberately misalign B and XY, the price for that is
+just 2 cache lines).
+
+I first learned of cache bank conflicts from Roman Rusakov when
+optimizing DES for the original Pentium in 1996.  Roman brought to my
+attention that Pentium could dual-issue two loads only if they were to
+different cache banks, meaning different 32-bit word addresses modulo
+cache line width (32 bytes for original Pentium; nowadays it's 64).
+Indeed, moving half of the SPE tables by 4 bytes (leaving a 4 byte gap
+between tables corresponding to lower and upper 32 bits) improved the
+speed by ~10% (IIRC).  It was that simple at the time, with the in-order
+CPU and a well-defined and easily described rule.  I think things are
+much trickier for today's CPUs, yet the issue may still be seen and may
+manifest itself in even worse ways (see those StackOverflow Q/As).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

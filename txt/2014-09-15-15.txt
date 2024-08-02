@@ -1,0 +1,107 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <54172CBF.8000105@ciphershed.org>
+Date: Mon, 15 Sep 2014 14:15:27 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/15/2014 01:21 PM, Solar Designer wrote:
+On Wed, Sep 10, 2014 at 08:06:53AM -0400, Bill Cox wrote:
+>On 09/09/2014 11:15 PM, Solar Designer wrote:
+>>On Tue, Sep 09, 2014 at 03:45:28PM -0400, Bill Cox wrote:
+>>>On 09/09/2014 01:36 PM, Bill Cox wrote:
+>>>>I just started it up on my testing server (yes, my son's 
+>>>>MineCraft server).  With your patch it does up to 3,100-ish
+>>>> hashes/second, slightly below what your processor does.
+>>>>It has mined 1,388 BSTY so far.  I'm rich! :-P
+>>
+>>Sorry to disappoint you, but it appears they have another
+>>nasty bug in there (and probably more).  It looks like some
+>>systems (all 64-bit?) mine a different blockchain from 32-bit
+>>ones (which are apparently the majority, due to Windows binary
+>>wallet).  I reported it and provided some detail, so I hope
+>>they'll figure this out and deal with it somehow.
+>
+>Haha!  That's pretty funny.  I let my son's MineCraft server
+>keep running, and it's happily mining away on the wrong block
+>chain.
+
+My initial guess is not confirmed: I've just pulled the revised
+wallet code with some unrelated(?) changes made to it (including my
+changes to enable the SIMD code), and its 64-bit build works just
+fine on the same system where a 64-bit build previously failed for
+me.  So I guess the bug was different (and I guess it's still in
+there and might show up again in some builds or after some more
+changes).  I've e-mailed the developer with these observations.
+
+They have another bug where if you start mining before syncing, you
+wind up creating an alternate chain where people get stuck forever.
+Some people are even trying to trade the coins on the wrong branch :-p
+
+They had trouble syncing people initially, so many of us just started
+mining anyway, and that didn't work out.  I've switched to the main
+chain, which required deleting my copy of everything and starting
+over.  I've won 6 blocks so far with my son's MineCraft server, so
+it's still fun.  He wants half :-)
+
+>I'll leave it running for the entertainment value :-)
+
+Actually, it is possible that you mined those 1,388 BSTY just fine,
+if your build was luckier than mine.  I only have 0.01 BSTY from a
+faucet now (in the new wallet), as well as tens of thousands of
+fake BSTY in the unlucky-build old wallet (which only some other
+nodes were willing to confirm - perhaps the similarly unlucky
+ones).
+
+Perhaps it's some out-of-bounds memory access problem, or maybe
+it's padding of fields in a struct (whereas other portions of code
+use the struct as if it were packed, with no field alignments), or
+similar.
+
+I am not willing to spend time debugging the wallet.  Someone else
+may.
+
+Meanwhile, there's standalone minerd:
+
+https://github.com/noncepool/cpuminer-yescrypt 
+http://forum.globalboost.org/index.php?topic=197.0
+
+which works fine for me (and the rebuilt new wallet happens to
+work, too).  It does 11.03 kh/s on 2x E5-2670, and 3.47 kh/s on
+i7-4770K. (I built it with "-O2 -fomit-frame-pointer -march=native"
+on each.)
+
+There are also several pools (3 of them so far?)  This one works
+for me, along with minerd above:
+
+http://bsty.altpooler.com
+
+Alexander
+
+Thanks for the pointers!  I had to start over, but I'm just letting it
+run constantly at about 3,200 h/s.  I'm kind of enjoying letting it
+run without a pool for now.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFyy7AAoJEAcQZQdOpZUZZcQP/iv9KYpSoWuarmw7hjB3dFPI
+mxcXfQxRtx8uVOZFi9MFwv1+d9HC8fCqByximkaj2iaBtQ7A+Oaqa5M+O9SQk/tw
+0r0whCwZ+i9fcPeoElHR4X2/ByOnLF69AUv5SlU4bF5zjQMB5T3qzTsVe6NeHxe+
+3dnSN8hLkiX1pIgc6Rn8LHwrJhTMEgS+O/56vAqYiwaF1cv5x+1DI2wCM20zUMXH
+lbpYkAw7KyYGexGOgPgSSq2lSqAL5Q9IRI4M07qiQNLkmttT+FzK52D8SWxcP8r/
+9q6oY0bu57Unm5hZZIk/GCKNusog48PdBNWqveZHBKGVULy8Ww/a4JriZE8DpRcX
+XpguoltyEhw0qxhOAhboEqo1d4KM6C3z1ZO2ItLHUIK6AzOwe9rxBLcq0f1JhibT
+tECPEq1if2NMMStAnwEjkbZrglRZ2vwIz6QeqNfcKfKe4erVX2XuukrNILiEyYgg
+HllU25fxUTNGDXWGeYIK332FI5/QEtvLll6CjdWxYfVXZzL6+X+0BS0z8g4Yrtkn
+LiMma/dFdATiLPiQZ+seJw31j4+TSNewCEsnzekIaDEfkc78dWXrcnXqfAE/KN/X
+vodndONxTmQNT4VA3/p/b9Pp6oNTJ+pIklv33tjhPTEvT2BV1p4wFf/7nTAaIgu0
+AyRpq2BMHrcPIg8B7k63
+=he2k
+-----END PGP SIGNATURE-----
+

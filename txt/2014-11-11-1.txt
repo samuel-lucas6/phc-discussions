@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests
+
+Message-ID: <CA+hr98Eg48hCgy=40RY1ixQ0eQDPKCg8EjrcbA9ZbK7xgLgvdQ@mail.gmail.com>
+Date: Tue, 11 Nov 2014 10:00:21 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests
+
+On Mon, Nov 10, 2014 at 7:50 PM, Milan Broz <gmazyland@...il.comwrote:
+(It printed a lot of assert messages about supported parameters,
+not much user friendly and I did not study it in detail.
+
+i know it is highly off topic here, but can't resist. i don't think
+that such low level functions should do any more error reporting. if
+you call them with wrong parameters, the situation is unrecoverable,
+an exception or an error code won't help it. on the contrary, it just
+makes the system that much more vulnerable. (consider attacker somehow
+corrupt the parameters, causing the caller to skip encryption or
+hashing altogether, or dump sensitive information to unsafe places,
+due to a bug in the error handling. we've seen this before.)
+
+if i was rewriting my code, i would probably move the memory
+allocation out of the core function as well.
+reason 1: the complexity of a heap memory allocation is way greater
+than the complexity of the hash itself. good bye KISS design!
+reason 2: the caller might want some control over the allocation of
+memory. like it wants to skip the heap manager, and allocate memory
+directly from the OS.
+the correct way is to take a pointer to the memory block to use. it
+might also help zeroing the array (lessen the risk of the compiler
+optimizing the zeroing away).
+

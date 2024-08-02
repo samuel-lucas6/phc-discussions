@@ -1,0 +1,89 @@
+phc-discussions - Re: [PHC] Best use of ROM in password hashing
+
+Message-ID: <20140421200245.GA29056@openwall.com>
+Date: Tue, 22 Apr 2014 00:02:45 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Mon, Apr 21, 2014 at 01:58:49PM -0400, Bill Cox wrote:
+Here's another N-way ROM splitting attack, and this one should work for
+*any* PHS using ROM, regardless of how much RAM is hashed.  The goal is to
+decrease the cost of the ROM to the attacker per guessing node while
+maintaining good ROM bandwidth per node.  An attacker simply splits the ROM
+into N pieces, and builds a fast permutation network to route from the N
+pieces to say N/2 computation nodes.  During any block read loop, most of
+the N/2 cores could have lone access to the ROM data they need.  The cost
+of the permutation network is O(N*log(N)), so N should be chosen to keep
+the permutation network's cost well under the cost of N ROMs.
+
+Sure.  This is why I call this ROM-port-hardness.  The attacker's cost
+is in number of ROM ports (and routing, and the remaining ROM size per
+compute core).  You use N ports and you incur the expected cost.
+
+http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00008.html
+
+"Moreover, those don't have to be ports to the same large ROM - instead,
+separate smaller ROM banks may be used as long as bank conflicts are
+fairly rare" as that slide says.  You have just that, and you reduce the
+frequency of "bank conflicts" by using N/2 attack nodes for N ROMs.
+
+The slide also explains why the ROM is beneficial anyway (just not in
+the same way and not to the same extent as scrypt's RAM):
+
+"Yet at below ~1000 cores sharing a ROM the attack speed per die area
+will be lower than for scrypt, whereas with more cores the attacker will
+have to provide more interconnect and ROM ports, which will have a cost
+of its own"
+
+The ~1000 cores threshold comes from numbers given on the previous
+slide, comparing ROM and RAM sizes that are currently practical for mass
+user authentication:
+
+http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00007.html
+
+Also note that the defender benefits from the same property too, just to
+a smaller extent.  The ROM is shared between defender's threads too.
+For currently practical hardware, we share a 112 GiB ROM (can be made 2
+or 4 times larger than that on the same hardware platform, if desired)
+between 32 hardware threads on 16 physical cores.  scrypt-like memory
+usage during mass user authentication is many orders of magnitude lower,
+so we're comparing the die area of those ~1000 crypto cores and/or ~1000+
+ROM ports + routing vs. that of just ~128 MiB of RAM (e.g., 4 MiB times
+32 threads).  If our ~1000 crypto cores and/or ~1000+ ROM ports +
+routing add to that die area significantly, the use of ROM is
+worthwhile, even against ASIC attackers.
+
+I really don't see any good way to prevent an attacker from making use of
+parallel small ROMs and some data routing hardware, so counting on the cost
+of the ROM and it's bandwidth limitations as primary deterrents may not
+work out well.
+
+Yes, many of the costs associated with ROMs are not per attack node.
+Yes, they fundamentally differ from e.g. scrypt's area-time costs.  They
+don't buy us as much defense, by far.  But for intended use cases,
+there's a huge constant factor in our favor, estimated at around 1000
+for current needs on currently practical defenders' hardware.  I think
+this constant factor makes all the difference, making those otherwise
+relatively small costs of crypto cores, ROM ports, routing stand out
+(likely exceed scrypt-like RAM cost that we can afford).
+
+It doesn't hurt to add those to a defender's array of
+defenses, but the primary time*cost is likely to be due to the memory
+hashing algorithm.
+
+It is unclear to me where the primary cost for attackers will be.  We're
+comparing very different things here.  My guesstimate is that for the
+numbers given above, the area-time cost associated with ROMs will exceed
+that associated with RAMs.
+
+I think Alexander enjoys adding more spikes in his
+defense wall, and ROM cost and bandwidth are just two more the attacker
+will have to overcome.  If I were an attacker looking at a full blown
+Yescript (with the enhancements Alexander has mentioned), I'd just throw up
+my hands and go hack accounts somewhere else :-)
+
+Oh, actually I think you'd treat this as a challenge. :-)
+
+Alexander
+

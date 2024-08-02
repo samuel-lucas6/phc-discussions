@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="11">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5yekA-VJP87LW_ADTzcT5LUYaR5OBxHNsKzpO8F-mKeg&#64;mail.gmail.com&gt;
+Date: Thu, 13 Feb 2014 11:23:29 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 10:57 AM, Samuel Neves &lt;sneves&#64;....uc.pt&gt; wrote:
+&gt; On 13-02-2014 15:40, Solar Designer wrote:
+&gt;&gt; On Wed, Feb 12, 2014 at 06:20:38PM -0500, Bill Cox wrote:
+&gt;&gt;&gt; I wrote an SSE 4.1 version of the inner hash loop in NoelKDF, with a
+&gt;&gt;&gt; quick hack where I compute 4 separate interleaved hashes, so it gets a
+&gt;&gt;&gt; different answer, and has 4 times the parallelism.  I used the fast
+&gt;&gt;&gt; packed 32x32-&gt;32 multiply available on my Ivy Bridge processor
+&gt;&gt;&gt; (_mm_mullo_epi32), which we know will run a lot slower on Haswell.
+&gt;&gt;&gt; This instruction isn't even available until SSE 4.1, so that's a
+&gt;&gt;&gt; narrow band of processors that support it well.
+&gt;&gt; Right, although Samuel Neves posted nice emulation of it via SSE2 in:
+&gt;&gt;
+&gt;&gt; Date: Sun, 09 Feb 2014 05:47:29 +0000
+&gt;&gt; From: Samuel Neves &lt;sneves&#64;....uc.pt&gt;
+&gt;&gt; To: discussions&#64;...sword-hashing.net
+&gt;&gt; Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+&gt;
+&gt; By the way, as an addendum to this, I should point out that the
+&gt; performance of running 4 64x64-&gt;64 multiplications in parallel in
+&gt; Haswell is not significantly worse than VPMULLD.
+&gt;
+&gt; The best measured latency for emulated VPMULLD I got (with the SSE2
+&gt; version) is 9 Haswell cycles, whereas emulating a 64x64-&gt;64-bit
+&gt; multiplication (using 3 VPMULUDQ and a few shifts/additions) can be done
+&gt; in 11 cycles of latency. Native VPMULLD itself is 10 cycles.
+
+Nice!  I measured the inner loop on my Ivy Bridge processor without
+any memory bandwidth limitations, and it does 1 iteration every 4
+clocks.  The multiply takes 3 and the add takes 1, so this seems as
+good as possible.  Everything else is done in parallel, at least when
+running only 1 thread.
+
+The only problem with 9 cycles for VPMULLD or 11 for VPMULUDQ is that
+an ASIC attacker will do this same computation in 4-ish cycles.  He
+sees no latency increase when adding more parallelism.
+Multi-threading seems to offer a way to increase memory bandwidth
+without increasing the multiply-loop latency as much as SIMD.
+However, the combination increases memory bandwidth more than I can
+achieve otherwise, on my machine from 10GB/sec to 13GB/sec.  Memmove
+only achives 17GB/sec, so this is pretty good, though 2 threads
+achieves 22GB/sec (maybe someone should upgrade memmove to do this by
+default).
+
+On the other hand, the SIMD version takes only one CPU, while 2
+threads takes 2.  The SIMD version may be better for systems with lots
+of users.
+
+I'm still torn as to whether or not to offer the SIMD option.  Higher
+memory bandwidth is crucial, but I don't like losing compute time
+hardening as a result.  I wish the NSA could weigh in on this and let
+us know which would frustrate their password crackers more.  Either
+way, I think we're down to the last 30% in how much we make an
+attacker pay for hardware.  That's a good place to be.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

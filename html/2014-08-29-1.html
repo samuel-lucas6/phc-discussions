@@ -1,0 +1,264 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Re: A review per day - Yescript</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/08/28/14">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/08/28/13">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140829005157.GA4886&#64;openwall.com&gt;
+Date: Fri, 29 Aug 2014 04:51:57 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Re: A review per day - Yescript
+
+On Thu, Aug 28, 2014 at 07:04:15PM -0400, Bill Cox wrote:
+&gt; I really would prefer that you keep YESCRYPT_PARALLEL_SMIX, and
+&gt; YESCRYPT_RW.  Reading an unpredictable prior location and mixing it
+&gt; into the state is the best way to defend against Scrypt's current TMTO
+&gt; problem.
+
+I will definitely keep YESCRYPT_RW since it deals with TMTO attacks that
+reduce attacker's cost, even when measured as theoretical space*time,
+by up to 2x or 4x (and sometimes much more so in practice).
+YESCRYPT_PARALLEL_SMIX is less valuable since it deals with TMTO attacks
+that do not reduce the theoretical space*time (but may reduce actual cost
+on real-world hardware).
+
+So maybe YESCRYPT_PARALLEL_SMIX should remain part of the full yescrypt,
+but be excluded from a cut-down partial implementation.
+
+&gt; On 08/28/2014 05:37 PM, Solar Designer wrote:
+&gt; &gt; On Thu, Aug 28, 2014 at 04:05:32PM -0400, Bill Cox wrote:
+&gt; &gt;&gt; - - OPENMP support is required for current version to run in
+&gt; &gt;&gt; parallel
+&gt; &gt; 
+&gt; &gt; Oh, that's a mere implementation detail.  To me, OpenMP-using code
+&gt; &gt; is cleaner and smaller than pthread-using code, but it's easy to
+&gt; &gt; switch it to using pthreads in a fork of the tree, or to include
+&gt; &gt; both versions, if you want to.  I just don't want to add the
+&gt; &gt; complexity of including both.
+&gt; &gt; 
+&gt; &gt; Why do you find it a drawback?  OpenMP has been around for years,
+&gt; &gt; and it hides some of the complexity and removes room for some
+&gt; &gt; potential bugs.
+&gt; 
+&gt; It's not really a drawback now days.  I do worry that OpenMP is not
+&gt; doing a good job starting and merging your threads though.  When I run
+&gt; TwoCats in Ubuntu 14.04, it runs at almost the same exact speed every
+&gt; time.  Yescript gives me more variation in runtime.  I worry OpenMP is
+&gt; the culprit.
+
+OpenMP implementations tend to be extremely sensitive to any other load
+on the system, unless you're using OpenMP with fewer threads than the
+system has logical CPUs.  You had mentioned you run a Minecraft server
+on that machine.  Even if that server consumes only a few percent of CPU
+time, it can have a much bigger impact on OpenMP performance unless you
+take measures to prevent that - e.g., try "export GOMP_SPINCOUNT=10000"
+or "export OMP_NUM_THREADS=7" (leave 1 logical CPU for the machine's
+other load).  YMMV.  So, yes, I see what you mean now.
+
+&gt; So, you divided the number of memory elements N by 3*p^2, where p is
+&gt; the parallelism, to determine how many unpredictable writes to do, and
+&gt; this happens to be the optimal solution to your time*cost maximization
+&gt; under a TMTO attack...
+
+Not exactly.  I thought I had just explained it to you differently.
+OK, this stuff is a bit complicated.
+
+N/3 for SMix2 is the optimal point you mention.  No, it's not "under a
+TMTO attack" - on the contrary, it assumes no efficient TMTO exists.
+(Otherwise it's somewhat below the would-be TMTO-aware optimal point.)
+
+The division by p^2 for the unpredictable writes is because:
+
+With p=1, all of the N/3 iterations in SMix2 t=0 involve unpredictable
+writes.  Now let's increase both N and p by a certain factor, let's call
+it n.  Since p originally was 1, now p equals n.  To avoid potential
+counter-intuitive TMTO surprises, we want to keep the number of
+unpredictable writes (at least) the same, in absolute terms.  Since N is
+now n times higher than it was, that same number of unpredictable writes
+is now represented by (N/3)/n or (N/3)/p (since p=n).  Now recall that p
+is the number of threads we run.  The number of unpredictable writes per
+thread is then (N/3)/p^2.  Yet it's still the exact same number of total
+unpredictable writes by all threads combined, in absolute terms.  So
+we've ensured that we're not making this part of the anti-TMTO defense
+(unpredictable writes) any worse, in absolute terms, when we increase
+both m_cost and p proportionally.
+
+Have I explained it better this time?
+
+&gt; This is why it's hard to read your code!
+&gt; 
+&gt; I spent a lot of time thinking, "Why did he do that?", when reading
+&gt; your code.
+
+I think this is because I've packed a lot into those lines of code.
+Perhaps I should write more comments, but the resulting lengthy source
+files might not necessarily become easier to read overall.  I think
+source code comments should be mostly for implementation detail, whereas
+design rationale belongs mostly in accompanying documentation.  Yes, I
+should improve the latter (a lot) as well.
+
+&gt; I don't expect you to change the code in any way... maybe put in a
+&gt; comment about the N/(3*p^2) thing?
+
+Maybe, or a reference to a specific place in a design rationale document.
+
+&gt; I actually have worked with a few
+&gt; guys who see the code as self-documenting, almost regardless of the
+&gt; complexity.
+
+This is certainly my preference for code I work with, where practical.
+When given a choice between writing a comment and rewriting some code to
+make it self-documenting, I prefer the latter.
+
+The main problem we're facing here is that design rationale isn't only
+about code, and mostly not about our defensive code.
+
+Similarly, scrypt source code, that I based yescrypt's on, didn't
+contain scrypt design rationale comments, nor was self-documenting in
+that respect.  (It was mostly self-documenting as it relates to its own
+implementation detail, which is how it should be in my opinion.)
+I doubt that scrypt source code would be any easier to read if it were
+"inflated" with scrypt design rationale comments.
+
+&gt; I'm doing benchmarks at the moment with Yescrypt through the PHS
+&gt; interface.  I just set the parallelism #define to 4, which is optimal
+&gt; on my test machine.
+
+In my testing, setting yescrypt's p to the machine's logical CPU count
+is almost always optimal, on an otherwise idle system.  So I'd expect
+the optimal p on your machine to be 8, or 7 if you leave that Minecraft
+server running.
+
+I did most of my testing through yescrypt's native interface, though,
+with memory (de)allocation being out of the loop except for one-off
+multi-GB hash computations and ROM initialization.
+
+When invoking yescrypt with p=8 via the PHS() interface, I noticed
+average CPU usage of around 650% instead of the usual 799% or so (as it
+is in the kind of testing mentioned above), on an otherwise idle
+i7-4770K.  I think this loss of 1.5 logical CPUs, on average, is because
+of computation being stalled during memory (de)allocation.
+
+&gt; &gt;&gt; However, it looks like Nloop_rw is set to N/(3*p^2).  It looks
+&gt; &gt;&gt; like it only does N/(3*p) total random read/writes, followed by
+&gt; &gt;&gt; N/3 - N/(3*p)) random reads.  Is it supposed to be this way?
+&gt; &gt;&gt; This seems OK for p == 2 or p == 3, but what about p == 32?  Why
+&gt; &gt;&gt; would I want fewer random writes as a total fraction of memory as
+&gt; &gt;&gt; I increase parallelism?
+&gt; &gt; 
+&gt; &gt; Everything you describe in here is on purpose.  The random writes
+&gt; &gt; exist for p&gt;1 at all only to keep yescrypt's absolute TMTO
+&gt; &gt; resilience (against whatever fixed TMTO attack) for p&gt;1 at p times
+&gt; &gt; higher total memory no worse than it is for p=1 at correspondingly
+&gt; &gt; less memory, with no surprising gap.  It would be rather nasty if
+&gt; &gt; e.g. going from 1 GB p=1 to 2 GB p=2 or even to 32 GB p=32 would
+&gt; &gt; potentially allow for an efficient attack in a smaller amount of
+&gt; &gt; memory than on the 1 GB p=1 hash.  This extra magic with division
+&gt; &gt; by p^2 removes that risk.  For 32 GB p=32, it feels irrelevant as
+&gt; &gt; it's unlikely you could find an efficient attack at &lt; 1 GB on a 32
+&gt; &gt; GB hash, and as you point out this random writes portion becomes
+&gt; &gt; almost negligible, but for e.g. 2 GB p=2 the risk of an efficient &lt;
+&gt; &gt; 1 GB attack could be for real.
+&gt; 
+&gt; Makes sense.
+
+Oh, maybe you simply didn't read this far before starting to reply to
+the paragraphs above.  This explains why you misunderstood me at first.
+Makes sense. ;-)
+
+&gt; In general I would prefer that the code documented any magic :-)
+
+Yes... but it gets tricky when it's design rather than code magic.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

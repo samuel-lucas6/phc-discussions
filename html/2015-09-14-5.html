@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="../../../2015/09/15/1">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="../../../2015/09/15/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150914204301.GA505&#64;bolet.org&gt;
+Date: Mon, 14 Sep 2015 22:43:01 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Mon, Sep 14, 2015 at 05:05:11PM +0100, Hugo Landau wrote:
+&gt; The need for key-value extensibility for password hashing functions
+&gt; is, presumably, nil
+
+Actually I am not doing it for extensibility, but for readability.
+If you have three parameters (say, the p, m and t or Argon2) then
+you can have something like:
+
+    $argon2i$42$5$5000$...
+
+but then you have to remember, as a human reader, in which order the
+p, m and t appear in the string. In my proposal you get:
+
+    $argon2i$m=42,p=5,t=5000$...
+
+which is clearer (for humans). Since the order is fixed, this should not
+be more complex to parse (instead of checking "does it start with '$'",
+code checks for "does it start with ',p='", which is still a single
+strncmp() call for a C-based parser).
+
+Accepting named parameters in arbitrary order, and/or ignoring
+unrecognized parameters, would indeed make parsing more complex, but I
+personally don't want that. I want the whole encoding to be fully
+deterministic so that test vectors work well. This also implies that
+the parsing can remain relatively easy.
+
+I'll try to write the parsing code in a few days, so that we may have a
+baseline for the complexity of implementations.
+
+
+&gt; I also think parameter values can be limited to non-negative integers at
+&gt; this time, unless you are aware of any password hashing schemes which
+&gt; would be incompatible with this.
+
+In Makwa, at least, it is preferable to have a binary identifier for the
+used modulus (in the current spec, it is a hash of the modulus,
+truncated to 8 bytes). This parameter does not map to a non-negative
+integer (well, you _could_ make it an integer, since every sequence of
+bits can be interpreted as an integer, but you see what I mean).
+
+Another case would be PBKDF2, which is configurable with an iteration
+count, an output length, and an underlying PRF (usually HMAC with a
+given hash function). The hash function name could be made part of the
+function identifier (i.e. you have 'pbkdf2-sha1', not 'pbkdf2' with a
+'sha1' parameter), but, conceptually, you could make the hash function
+one of the parameters (as a symbolic string).
+
+
+&gt; I'm not convinced by this rationale. Firstly, I'm not aware of any
+&gt; base64 functionality provided by programming language standard libraries
+&gt; which does line wrapping, etc.
+
+.NET's System.Convert.ToBase64String() includes newlines by default
+(which might be OS-dependent, even). However, there are four versions
+of that call, two of which accepting an extra parameter of value
+Base64FormattingOptions.None to avoid inserting line breaks every 76
+characters (yes, 76, not 64).
+
+"openssl base64" (command-line tool, for shell scripts) also includes
+line breaks (and requires them upon decoding...).
+
+None of this is an irremediable point. "True" Base64 is not harder to
+implement than the "crypt" variant. I'll give it a go (I already did in
+both C and Java, neither of which having innate abilities at Base64).
+
+
+(I note that the B64 implementations already in place for bcrypt and the
+SHA-2-based crypts works only in the encoding direction, which is the
+easier of the two. For salt _decoding_, we need a decoder, which is
+relatively harder to implement.)
+
+
+&gt; Developers in this circumstance (or, preferably, people developing
+&gt; password hashing libraries)
+
+Yes, much preferably, please.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

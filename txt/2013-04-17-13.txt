@@ -1,0 +1,50 @@
+phc-discussions - RE: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Message-ID: <010901ce3ba9$502d7030$f0885090$@acm.org>
+Date: Wed, 17 Apr 2013 13:22:40 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Cc: "'Jeffrey Goldberg'" <jeffrey@...dmark.org>
+Subject: RE: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+@Jeffrey,
+
+I see proposed (1-2) below as equivalent to using a computation/memory expensive PHC as a pre-process and then running a fast PRG (or PRF with counter) on the result to make the derived-key blocks.  
+
+Sure.  Step (1) could even be a PBKDF2 with large count, 512 bit salt, and HMAC-SHA-512 PRF.
+
+For password hashing, isn't the essential vulnerability in situations where the derived key (or an useful part of it) is compromised and an off-line attack predicated on password weakness succeeds?  
+
+For any situation where an off-line attack can be mounted, I think adversaries have all of the initiative as well as the resource advantage.  How the workload is divided in getting to a wide derived key is unimportant so long as the effort can't be short-circuited, making off-line attack moderately easier.
+
+ - Dennis
+
+PS: My analysis was specific to the case of PBKDF2 when a longer-than-blocksize derived key is required.  It is designed for computation expense, not memory expense.  The appeal is in the use of well-known and well-implemented primitives.  With the hypothetical PBKDF2x, the computational work-factor is a function of the number of blocks in the derived key.  I expect the repetition count would be determined accordingly, especially if it is initially determined dynamically by targeting the time window that the first block is produced in so the full derivation fits within a target overall time window.  
+   This does nothing to mitigate the off-line attack of compromised derived keys.  All it does is remove the short-circuits against wide derived keys that apply for weak passwords in plain PBKDF2.
+
+ 
+-----Original Message-----
+From: Matthew Green [mailto:matthewdgreen@...il.com] 
+Sent: Wednesday, April 17, 2013 11:47
+To: discussions@...sword-hashing.net
+Cc: 'Jeffrey Goldberg'
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+	3.2 In this case, every block but the initial block depends on all of its predecessors.  Making each block also dependent on all of its successors is trickier.  Here this is the same as making every block but the last depend on the final block, but they can't all depend on the final block in a trivial way.  The approach I favor, off the top of my head, is to produce additional HMAC rounds following the production of the last block to generate a series of hashes that are xor-ed back, one each, to the predecessors.  This is tantamount to generating (abbreviated) additional blocks that are then discarded but for their sealing together of the block values that are delivered.
+	
+
+
+Wouldn't it be sufficient to break the scheme into two portions: 
+
+1. A computation/memory expensive function that has some fixed output length. 
+2. A standard (and reasonably efficient) KDF that stretches this output to whatever length you need?
+
+I suppose you could probably tackle Solar's comments by adding some efficient phase (0) that first hashes an arbitrary-length input, then feeds it to phase (1).
+
+I really don't know if there's a problem with this approach, I just like it because it seems to isolate the parts we have the hardest time evaluating. Thoughts?
+
+Matt
+
+
+
+

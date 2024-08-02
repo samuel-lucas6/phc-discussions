@@ -1,0 +1,65 @@
+phc-discussions - Memory*Time defense for 1ms hash of Argon2 vs TwoCats
+
+
+Message-ID: <CAOLP8p4vP96+dDOOuALZq0aU+YyuLLhf6_Nw5uVXFXDGGEOoXA@mail.gmail.com>
+Date: Tue, 8 Dec 2015 10:10:24 -0800
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Memory*Time defense for 1ms hash of Argon2 vs TwoCats
+
+I made some mistakes in my prior benchmarks.  The right way to compare
+defense is when both run for the same runtime, not for filling the same
+amount of memory, because runtime is normally the limiting factor, not
+available memory.  Also, I over-estimated the serial multiplications in
+Argon2 by 4X.  This is on my Haswell laptop.
+
+So, here's some new data:
+
+Argon2d 1 iterations  0.2 MiB 1 threads:  107.28 cpb 26.82 Mcycles 16256
+mults
+0.0101 seconds
+
+This is a 1ms hash.  I repeated the inner loop 10 times to get more
+accurate numbers, which is why it is 0.0101 seconds instead of 0.001.  It
+hashes 256KiB.  However, an ASIC attacker will be limited by either memory
+bandwidth, or multiplication chain latency.
+
+Here's TwoCats:
+
+hash:blake2s memCost:12 multiplies:1 lanes:8 parallelism:1
+algorithm:twocats-extended password:password salt:salt blockSize:16384
+subBlockSize:64
+
+e9 33 97 99 fe 7f 12 83
+90 96 ed 6f f6 37 d7 55
+85 ab 44 b6 93 24 ea 4c
+78 17 48 96 90 8c 0e ad      32 (octets)
+
+
+real 0m0.756s
+user 0m0.696s
+sys 0m0.073s
+
+total mults = 261120
+
+This was for 1000 iterations.  Each iteration was 0.76ms.  Both benchmarks
+allocate/free memory in each iteration.  TwoCats fills 4 MiB in less time
+than Argon2 fills 256KiB, which is a factor of 16X difference.  Maybe
+Argon2 has high overhead at low memory for some reason?  The number of
+serial multiplications in TwoCats was also 16X higher than in Argon2.  An
+ASIC attacker will run Argon2 16X faster regardless of whether
+multiplications or memory bandwidth is the speed limiting factor.
+
+The difference in memory*time ASIC defense for a 1ms runtime is greater
+than 16 * 16 = 64.
+
+The difference in ASIC defense for a fixed runtime goes as the square of
+the memory filling speed.  I have not looked at the code in a while, but is
+Argon2 doing some huge hashing computation at the start that would make it
+difficult to do low memory hashing?  I had to modify the benchmark code to
+enable it to hash less than 1MiB.
+
+Bill
+
+
+

@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <20140327211619.GA24757@openwall.com>
+Date: Fri, 28 Mar 2014 01:16:19 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Thu, Mar 27, 2014 at 08:55:25PM +0400, Solar Designer wrote:
+On Tue, Mar 25, 2014 at 01:39:58AM +0400, Solar Designer wrote:
+OK, maybe it makes sense to apply this approach to L2, despite of the
+inefficiency.  Or maybe not.  Typical L2 is 256 KB/core (it has actually
+decreased in size when L3 was introduced), meaning 64 KB/thread may be
+"safe" to use.  At this size, my guess is you give advantage to some GPU
+attackers vs. your typical defender, for the reason explained above.
+
+I did some testing with escrypt's S-boxes, and things are reasonably
+good.  For the first few doublings of S-box size, beyond L1 cache size
+but still fitting in L2 cache, there's only a ~10% performance hit per
+doubling on Sandy Bridge-EP.  It's not worse than that in part because
+escrypt also does some L2/L3/RAM accesses anyway, so there's some L1
+cache thrashing going on anyway.
+[...]
+This is for AVX builds of current development escrypt.  The random
+lookups are 128-bit wide, made with AVX instructions.  They're uniformly
+distributed over the S-boxes of the sizes given above.
+
+I forgot to mention: this is with 8x parallelism of the lookups in each
+thread (4 parallel groups of 2 parallel lookups).  This is maybe ~2x
+more parallelism than these CPUs I tested actually need when I run two
+threads/core.  This is easily tested by running 1 thread/core.
+Performance is above 80% of what 2 threads achieve.  This percentage is
+higher than what it is e.g. with original scrypt or bcrypt, which have
+less parallelism and thus benefit from 2 threads/core more (for two
+independent instances, indeed).
+
+I included this extra parallelism in this combination of settings (which
+I have specialized code for) because I recognize that some otherwise
+similar CPUs will only run 1 thread/core (e.g. some(?) Core i5's lack
+HT) and to better support newer CPUs (not-yet-written specialized code
+for these settings can partially take advantage of AVX2 and even AVX-512
+for the computation, albeit not for the 128-bit lookups themselves).
+
+The inclusion of extra parallelism must have been very helpful to reduce
+the performance impact from higher latency accesses in these tests (that
+go from L2).  Unfortunately, it also helps some attacks, such as with
+local memory on GPUs (as compared to those attacks on same S-box size
+but with less parallelism per instance).  For attacks with global memory
+on GPUs, parallelism doesn't matter (not at these low sizes).
+
+Another drawback of including extra parallelism is that non-SIMD builds,
+which some people will inevitably happen to be making and using and
+having other people use, will then have even more parallelism than those
+crippled builds can use themselves - thereby leaving more room for
+relative speedup of attacks even on similar hardware (same CPU types).
+This makes me appreciate the original bcrypt even more: it's only about
+2x slower for defense than for attack on current CPUs simply because it
+can't use SIMD - not even for attack on CPUs until we gain fast gather
+loads there.
+
+If pufferfish has 4 parallel lookups rather than 8, it'll probably be
+impacted by the size increases (beyond L1 cache size) more.  However,
+going to 8x parallelism has major drawbacks (mentioned above).  It's
+unclear what to do, other than to make the parallelism tunable and
+thereby postpone/move the tough decision onto those configuring our
+schemes for specific uses... which is obviously not great either.
+
+Alexander
+

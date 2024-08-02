@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="14">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p6xqY5i3T49mXLo0VzPd9GLBkVyN_yh0tBcetL=ZBQpgQ&#64;mail.gmail.com&gt;
+Date: Sat, 11 Jan 2014 16:42:10 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 2:23 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; New speed for 1 Salsa20 round and p=32, on idle machine:
+&gt;
+&gt; real    0m1.286s
+&gt; user    0m39.523s
+&gt; sys     0m1.183s
+&gt;
+&gt; Not much change here. :-)
+&gt;
+&gt; 2*3*10*2^30/10^9/1.286 = 50.10 GB/s
+
+Holy cow!  That's serious speed, dude.  The best graphics, FPGA, or
+ASIC attack could not do more than 4-5X better.
+
+&gt;&gt; In fact, if we were to regard only the Salsa20 rounds as computation
+&gt;&gt; that the attacker will need to perform, then even round counts higher
+&gt;&gt; than 8 could be more optimal in attack area*time terms, from defender's
+&gt;&gt; point of view.  Since GB/s is proportional to memory usage for fixed
+&gt;&gt; running time (or actually the other way around), we can estimate AT
+&gt;&gt; costs (in arbitrary units) as follows:
+&gt;&gt;
+&gt;&gt; 48.95 GB/s * 2 rounds = 97.90
+&gt;&gt; 45.63 GB/s * 4 rounds = 182.52
+&gt;&gt; 38.03 GB/s * 8 rounds = 304.24
+&gt;&gt; 30.43 GB/s * 12 rounds = 365.16
+&gt;&gt; 19.93 GB/s * 20 rounds = 398.60
+
+Imagine that all the lines of code you've written in C for escrypt,
+other than for memory access, will cost an attacker maybe $0.02 per
+core, and that Salsa20/20 will run in maybe 2 clocks instead of 1 for
+Salsa20/1.  This is roughly the case, within maybe 2X in cost and
+clock cycles.  It's pointless trying to make an ASIC attacker's
+arithmetic cost significant in either time or money, so we have to
+focus on memory size and bandwidth.  For defense against ASIC attacks,
+your Salsa20/1 benchmark is the best.  50GB/s!  Nice!
+
+Bill
+
+On Sat, Jan 11, 2014 at 2:23 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; Bill,
+&gt;
+&gt; On Sat, Jan 11, 2014 at 10:50:53PM +0400, Solar Designer wrote:
+&gt;&gt; I don't get why limiting the number of threads to what the code can
+&gt;&gt; actually use (with its p=8 setting) reduces performance on this test,
+&gt;
+&gt; Got it: I totally forgot that I had another 32-thread job running on the
+&gt; machine, at the lowest priority (nice +19).  So when I ran only 8 new
+&gt; threads, they shared cores with that other job, whereas when I ran all
+&gt; 32 new threads, they almost fully replaced the other job (apparently,
+&gt; OpenMP's spinning threads were taking up less resources than that other
+&gt; job's actual computation threads).
+&gt;
+&gt; With that other job stopped, I get the following numbers for 1 Salsa20
+&gt; round, p=8, and only 8 running threads:
+&gt;
+&gt; real    0m1.483s
+&gt; user    0m11.398s
+&gt; sys     0m0.383s
+&gt;
+&gt; 2*3*10*2^30/10^9/1.483 = 43.44 GB/s
+&gt;
+&gt; Ditto, 2 rounds:
+&gt;
+&gt; real    0m1.723s
+&gt; user    0m13.331s
+&gt; sys     0m0.370s
+&gt;
+&gt; 2*3*10*2^30/10^9/1.723 = 37.39 GB/s
+&gt;
+&gt; 4 rounds:
+&gt;
+&gt; real    0m2.485s
+&gt; user    0m19.404s
+&gt; sys     0m0.383s
+&gt;
+&gt; 2*3*10*2^30/10^9/2.485 = 25.93 GB/s
+&gt;
+&gt; 8 rounds:
+&gt;
+&gt; real    0m4.256s
+&gt; user    0m33.547s
+&gt; sys     0m0.367s
+&gt;
+&gt; 2*3*10*2^30/10^9/4.293 = 15.01 GB/s
+&gt;
+&gt; So it appears that on the idle machine (as it should have been), 8
+&gt; threads are almost enough to use the 8 memory channels, but not enough
+&gt; to reach similar GB/s speeds when Salsa20 rounds count is increased.
+&gt;
+&gt;&gt; Roughly same speed as for p=8.  That's good.  But now we can go for 32
+&gt;&gt; threads for real:
+&gt;&gt;
+&gt;&gt; real    0m1.293s
+&gt;&gt; user    0m39.497s
+&gt;&gt; sys     0m1.141s
+&gt;
+&gt; New speed for 1 Salsa20 round and p=32, on idle machine:
+&gt;
+&gt; real    0m1.286s
+&gt; user    0m39.523s
+&gt; sys     0m1.183s
+&gt;
+&gt; Not much change here. :-)
+&gt;
+&gt; 2*3*10*2^30/10^9/1.286 = 50.10 GB/s
+&gt;
+&gt;&gt; Back to 2 rounds of Salsa20:
+&gt;&gt;
+&gt;&gt; real    0m1.316s
+&gt;&gt; user    0m39.959s
+&gt;&gt; sys     0m1.353s
+&gt;&gt;
+&gt;&gt; 2*3*10*2^30/10^9/1.316 = 48.95 GB/s
+&gt;
+&gt; real    0m1.305s
+&gt; user    0m40.109s
+&gt; sys     0m1.242s
+&gt;
+&gt; 49.37 GB/s
+&gt;
+&gt;&gt; 4 rounds:
+&gt;&gt;
+&gt;&gt; real    0m1.412s
+&gt;&gt; user    0m43.291s
+&gt;&gt; sys     0m1.130s
+&gt;&gt;
+&gt;&gt; 2*3*10*2^30/10^9/1.412 = 45.63 GB/s
+&gt;
+&gt; real    0m1.404s
+&gt; user    0m43.245s
+&gt; sys     0m1.229s
+&gt;
+&gt; 45.89 GB/s
+&gt;
+&gt;&gt; 8 rounds:
+&gt;&gt;
+&gt;&gt; real    0m1.694s
+&gt;&gt; user    0m52.293s
+&gt;&gt; sys     0m1.068s
+&gt;&gt;
+&gt;&gt; 2*3*10*2^30/10^9/1.694 = 38.03 GB/s
+&gt;
+&gt; real    0m1.684s
+&gt; user    0m52.329s
+&gt; sys     0m1.109s
+&gt;
+&gt; 38.26 GB/s
+&gt;
+&gt; So the same conclusions still apply:
+&gt;
+&gt;&gt; If we stay with pure Salsa20, then maybe 8, 4, or 2 rounds is optimal.
+&gt;&gt; There's only a 2% speedup from going further to 1 round.
+&gt;&gt;
+&gt;&gt; In fact, if we were to regard only the Salsa20 rounds as computation
+&gt;&gt; that the attacker will need to perform, then even round counts higher
+&gt;&gt; than 8 could be more optimal in attack area*time terms, from defender's
+&gt;&gt; point of view.  Since GB/s is proportional to memory usage for fixed
+&gt;&gt; running time (or actually the other way around), we can estimate AT
+&gt;&gt; costs (in arbitrary units) as follows:
+&gt;&gt;
+&gt;&gt; 48.95 GB/s * 2 rounds = 97.90
+&gt;&gt; 45.63 GB/s * 4 rounds = 182.52
+&gt;&gt; 38.03 GB/s * 8 rounds = 304.24
+&gt;&gt; 30.43 GB/s * 12 rounds = 365.16
+&gt;&gt; 19.93 GB/s * 20 rounds = 398.60
+&gt;
+&gt; ... but these are with all cores in use.  With only 8 threads running,
+&gt; lower Salsa20 round counts are more beneficial.
+&gt;
+&gt;&gt; However, in practice the "overhead" XORs and ADDs are probably no less
+&gt;&gt; costly than those that are part of Salsa20 rounds, so 4 or 8 rounds may
+&gt;&gt; be good.  2 rounds does feel potentially worse in terms of significantly
+&gt;&gt; reduced computation (and thus potentially similarly reduced "time"
+&gt;&gt; factor for the attacker with a more suitable hardware architecture).
+&gt;
+&gt; Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

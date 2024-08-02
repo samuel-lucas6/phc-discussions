@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] Argon is highly parallelizable...
+
+Message-ID: <20140827000050.GA19411@openwall.com>
+Date: Wed, 27 Aug 2014 04:00:50 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon is highly parallelizable...
+
+On Tue, Aug 26, 2014 at 06:56:23PM -0400, Bill Cox wrote:
+Both were my dumb mistakes, which I continue to deliver rapid-fire!
+The Argon paper says t_cost should be 236 for 10KiB, (not 234 for
+10MiB).  Why I set -logmcost to 10 I can't even guess, because that
+was a 1MiB hash!  For 16MiB, they say to use t_cost = 3, so here's
+what I should have posted:
+
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 14 -tcost 3
+- -pwdlen 64 -saltlen 16 -threads 3
+Memory allocated: 16 MBytes, 3 threads
+Argon:  8.56 cpb 133.83 Mcycles 0.0963 seconds
+
+real	0m0.043s
+user	0m0.094s
+sys	0m0.004s
+
+It is still not in the 100's to 1000's of authentications per second,
+though.
+
+This is much more reasonable, but yes.
+
+solar@...l:~/yescrypt/t$ time ./phc-test >/dev/null m_cost=17
+(1048576 KiB), t_cost=0 4 c/s real, 0 c/s virtual (258 hashes in
+63.78 seconds)
+
+real    1m3.778s user    5m38.425s sys     1m24.073s
+
+Core i7-4770K, 8 threads.
+
+Nice.  Is this fine speed.  Can I get more with reduced rounds?
+
+[...]
+Either way, it's approx. 4 yescrypt/second vs. one Argon per 4
+seconds, so 16x faster, at 1 GiB including (de)allocation overhead.
+I assume that i7-4770K is about as fast as Bill's i7-3770.  I am
+not using AVX2 in these tests.
+
+Alexander
+
+It should be close.  This run was with 8 Salsa rounds?  Can I please
+have a 2-round option?  :-)
+
+This is with the current hard-coded defaults of 6 pwxform rounds and 8
+Salsa20 rounds.  The Salsa20 rounds count doesn't matter all that much
+anymore, except with low r.
+
+In my testing, pwxform rounds count below 6 may make yescrypt weaker
+than bcrypt in terms of GPU attack resistance at some otherwise sane
+low memory settings.  This is a reason why I am not using a lower
+default.  But if you like, and since this may be OK at 1 GiB, here is
+with 2 pwxform rounds (but still with 8 Salsa20 rounds):
+
+solar@...l:~/yescrypt/t$ time ./phc-test >/dev/null
+m_cost=17 (1048576 KiB), t_cost=0
+4 c/s real, 0 c/s virtual (258 hashes in 53.14 seconds)
+
+real    0m53.142s
+user    4m0.355s
+sys     1m37.674s
+
+63.78/53.14 = ~1.20
+
+As you can see, that's 20% faster memory filling with 3x less
+computation for most sub-blocks (for 7 out of 8, since it's r=8).
+Since it's also 3x less multiplication latency hardening, this is
+probably weaker against ASIC attacks, unless those are memory rather
+than computation bound.
+
+Much more speedup may be achieved by removing the memory (de)allocation
+overhead or/and by measuring throughput for 8 concurrent
+non-synchronized 1-thread instances (like the "userom" benchmark would)
+rather than speed of one 8-thread instance (like the above test did),
+although for KDF use the overhead is probably actually relevant (unlike
+for user authentication on a busy server).  In this test, while the
+memory is being (de)allocated, no computation happens, whereas with
+non-synchronized 1-thread instances most of them would run even when
+some are taking care of the (de)allocation.
+
+Alexander
+

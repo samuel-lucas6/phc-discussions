@@ -1,0 +1,86 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-ID: <CALW8-7JLzH3jZnOb3RLY4R_Aa_pLN4w+ey6A0ysXMWDO=f-j+A@mail.gmail.com>
+Date: Thu, 16 Jul 2015 12:10:54 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+Am I correct that the ROM is used for many subsequent blocks?
+
+Then, the miner generates (i1,i2) <- SHA256(Header,Nonce),
+computes/retrieves X1=Yescrypt_4MB (i1), X2 = Yescrypt_4MB (i2), and checks
+if SHA256(X1,X2,Header,Nonce) <Target.
+
+So this seems to be a scheme with fast variant that needs 32 GB and slower
+variant that lives with 4 MB. And the verification needs 4 MB, too.
+
+To figure out the ASIC advantage, we should compare the hash rate of a
+desktop with 32 GB of RAM with the hash rate of 2^13 (disconnected) ASICs
+each having 4MB on chip. In your calculations desktops do 2^16 hashes per
+second, and the ASICs would do 2^25 hashes per second, so about
+4000x-advantage.
+
+Dmitry
+
+
+On Tue, Jul 14, 2015 at 8:44 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I think this bandwidth-hardened CPU-Hash-thingy has good potential:
+>
+Miner/Strong client algorithm:
+>
+- Fill a 32 GiB "ROM" with 4 MiB hashes generated using Yescrypt, and
+t_cost 1.  Seeds for each hash block are just the block numbers.
+- Generate a 16 Kib block seeded from a digest of a crypto-currency
+block-chain header + nonce.
+- Use two strong hash values generated from this 4 KiB block to index two
+unpredictable areas of ROM.
+- Hash the 4 KiB block with 4 KiB from each ROM area, using Yescrypt's
+second loop (like Lyra2's "wandering phase").
+- If result hash < target threshold, you "solved" the block-chain header
+>
+For 2-round Yescrypt, mining will fill most computer's memory bandwidth,
+and will be bandwidth-limited.  Any ROM blocks left out of memory will have
+to be recomputed, and we can tune the speed of this operation by choosing
+t_cost 1.  A target runtime of say 1ms would be reasonable.  A miner with
+all 32 GiB of 4 KiB memory blocks would be able to initialize memory in 8
+seconds.  After that, nonces could be tested for solving the block at a
+rate of many tens of thousands per second on a typical recent CPU.
+>
+An ASIC based miner trying to cheat by recomputing ROM as needed on the
+fly will have no more than about a 10X advantage at best, due to Yescrypt's
+small memory reads, multiplication-chain compute-time hardening, and 4 MiB
+of required on-chip memory.  Computing 2 such blocks will take the ASIC at
+least 0.2 ms, limiting it's hash rate per core (each of which has a 4 MiB
+RAM) to only 5,000 per second, far lower than a CPU based miner.
+>
+If using a distributed ROM attack, the ASIC network would have to transmit
+8 KiB per hash between ASICs, which is identical to the data transmitted
+from DRAM to the CPU.  The extra complexity and expense of the routing
+network will make this ASIC attack less cost effective than using CPUs.
+>
+The only ASIC attack I see that works is the one where each ASIC has it's
+own dedicated 32 GiB ROM.  The total bandwidth to this memory may be higher
+in the ASIC than a typical CPU, enabling perhaps up to a 10X cost/nonce
+benefit.  For example, the Sony Playstation 4 has a 176 GiB/s memory read
+bandwidth, and cost $400.  However, it only has 8 GiB of memory.  An ASIC
+miner is sure to perform less well than this at bandwidth/dollar.  Also,
+rumor has it that the 8 GiB GDDR5 chips at least used to cost $11 each, or
+$88 total.  Maybe it has come down in cost, but at that price, 32 GiB would
+be about $350 by itself.
+>
+For low-end systems, verification is maybe a few ms, and uses only 4 MiB
+of memory.
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

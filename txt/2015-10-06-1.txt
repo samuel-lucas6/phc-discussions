@@ -1,0 +1,45 @@
+phc-discussions - RE: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4B2AF53@uxcn10-5.UoA.auckland.ac.nz>
+Date: Tue, 6 Oct 2015 04:19:30 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Specification of a modular crypt format (2)
+
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+
+>Hence a compiler is free to assume that this case is impossible (i.e.
+>that "value <= INT_MAX / 10") and to use this knowledge to optimize the
+>code in the program after this expression and even before it. 
+
+Fair enough.  I was assuming the compiler would see that valTmp wasn't live 
+until after the value range check, so would move the code down to where it 
+was used before working with it.  The second link you provided (thanks, very 
+interesting, I'd seen other discussions on this but not that one) is kinda 
+scary, particularly the Dead Code Elimination vs. Redundant Null Check 
+Elimination race condition.
+
+>This has (almost) nothing to do with unsigned numbers. 
+
+Ah, OK, I was assuming it was a side-effect of moving things between 
+different types...
+
+>Both gcc 4.9 -O2 and clang 3.5 -O1 produce binaries which print a
+>negative number.
+
+Ouch!
+
+>https://gcc.gnu.org/bugzilla/show_bug.cgi?id=30475
+
+Ugh, that matches other threads I've seen involving the gcc developers, 
+they'll argue till they're blue in the face that having gcc break code is
+valid because if you squint at the spec just right then the behaviour isn't
+explicitly disallowed, but won't lift a finger to do the right thing.
+
+Maybe I should just tell everyone to use icc, which doesn't seem to have
+these problems (and generally produces better code than gcc to boot).  Or
+Visual Studio, for which I still need to check what it does when I get to
+a Windows box with it installed.
+
+Peter.
+

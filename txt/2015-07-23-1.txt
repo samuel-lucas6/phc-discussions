@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150723004553.GA1873@openwall.com>
+Date: Thu, 23 Jul 2015 02:45:53 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Dmitry Khovratovich <khovratovich@...il.com>
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Wed, Jul 22, 2015 at 09:12:41PM +0000, Jean-Philippe Aumasson wrote:
+There's been some additions to the document, mainly by Bill (thanks!)
+
+There's 3 main tweaks proposed to the algorithm:
+1. blamka
+2. maxform
+3. non-linear indexing
+
+Point 3. looks like a no-brainer to me; any objection?
+
+No objections from me.  It is a no-brainer to me as well, except that
+obviously we need to review the actual change closely (like any other
+change).  I think we should consider it tentatively accepted now.
+
+@Bill, Solar (and others): blamka and maxform, respectively in Argon2i and
+2d, is that what you have in mind, of maxform in both?
+
+I see two options:
+
+A. "blamka and maxform, respectively in Argon2i and 2d".
+
+B. MAXFORM in 2d, and a revision of MAXFORM (yet to be determined) in 2i.
+
+I prefer option B, but it's more work.  If successful, it'd achieve
+greater similarity between 2i and 2d (thus, smaller spec and code size
+for 2i+2d combined) and greater security.
+
+I don't see an easy way to use MAXFORM as-is for 2i, because MAXFORM is
+normally meant to be used on password-dependent inputs and it involves
+S-box lookups, thus contradicting 2i's intended cache-timing safety.
+
+So we may try to come up with a revision where the S-box lookups are
+omitted or replaced or made password-independent (with the MULs kept
+password-dependent) for 2i.
+
+Regarding option A, if we do keep BlaMka in 2i, it makes sense to keep
+it in 2d as well for greater similarity between the two.  That's a
+sub-option of option A.  I have no strong feelings on whether it's only
+MAXFORM or MAXFORM + BlaMka in 2d.  But I feel that MAXFORM is required.
+
+@Dmitry: what do you think? any other proposal of improvement?
+
+Yes, waiting to hear from Dmitry.
+
+I'd like to contribute to the effort of putting MAXFORM in, as well as
+trying to design a revision suitable for 2i.
+
+Let's keep collecting feedback and ideas about
+implementation/API/parameters/etc. We'll decide on those after we're done
+with the actual algorithm.
+
+Yes.  In fact, I think most of those should be generic, not limited to
+just Argon2.
+
+BTW, should we possibly call the final tweaked PHC winner something
+other than Argon2?  Maybe Argon3?  Or an entirely new name the designers
+might suggest?
+
+Alexander
+

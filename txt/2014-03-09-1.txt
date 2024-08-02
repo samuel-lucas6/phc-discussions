@@ -1,0 +1,22 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <op.xcfg8lzryldrnw@laptop-air>
+Date: Sat, 08 Mar 2014 16:06:11 -0800
+From: "Jeremy Spilman" <jeremy@...link.co>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+Just restating what CiC said in bullet form, but seeing it in pseudo-code  
+always helps me. When using password as the HMAC key, the way that PBKDF2  
+does, you end up with:
+
+if (password.length < block_size)
+   password = password.pad(0x00, password.length - block_size)
+else if (password.length block_size)
+   password = hash(password)
+
+I guess it should be apparent that you can pass the hash of a password  
+longer than the block size in place of the password, but I bet 99.9% of  
+people using PBKDF2 would be "shocked" to learn this.
+
+

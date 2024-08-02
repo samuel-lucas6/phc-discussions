@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140210024646.GA17006@openwall.com>
+Date: Mon, 10 Feb 2014 06:46:46 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Sun, Feb 09, 2014 at 08:01:43AM -0500, Bill Cox wrote:
+Wouldn't we want PMULLW rather than PMULUDQ?  4 packed 32x32->32 lower
+mimics the C 32-bit multiply, and gives the same result for both
+signed and unsigned multiplication, which is nice for Java
+compatibility.
+
+PMULLW is 8 packed 16x16->16.  I felt that if we go for 16x16, we
+probably want to take the upper 16 bits of result (so PMULHW or PMULHUW
+or PMULHRSW), not lower, although this does make the signedness matter.
+
+We'd need to compare ASIC circuit sizes for lower vs. upper 16 bits.
+
+Do you feel 16x16->16 is better than 16x16->hi16?
+
+Yes, the latencies and throughput for PMULHW and PMULHUW as given in the
+table I had posted also apply to their lo16 counterparts.
+
+PMULHW (16x16->hi16 signed, up to x16 on AVX2) is nice in that it's
+available across all the range from MMX to AVX2, with proper scaling
+(x4 with MMX, x8 with SSE2, x16 with AVX2).  It also has sane speeds.
+Ditto for PMULLW.
+
+Yet I like 32x32 inputs more.
+
+There's also the option of using PMULLW/PMULHW as building blocks to
+implement 32x32 on archs where native SIMD 32x32 is slow.  I think it'll
+take 3 of 16x16's to implement 32x32->32, so width 16/3 = more than 5 of
+32x32's on AVX2, which compares favorably with one PMULUDQ, which only
+does 4 on AVX2 - but combining the 3 instructions will add latency and
+lower overall throughput, making this weird approach not worthwhile.
+
+Do we have any 32x32->64 in Java(Script) at all, whether signed or
+unsigned?  I'm not familiar with Java(Script).
+
+In C, I'd prefer unsigned, because this is expressed with trivial casts
+from uint32_t to uint64_t (usually not generating any instructions) and
+multiplication.  For signed, the corresponding casts would potentially
+generate sign extension instructions (the compiler would need to be
+somewhat smart to pick a signed 32x32->64 multiply instead, although I
+hope most modern optimizing compilers are smart enough).  Also, we have
+SIMD unsigned 32x32->64 starting with SSE2, but signed only starting
+with SSE4.1.
+
+Alexander
+

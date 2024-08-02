@@ -1,0 +1,124 @@
+phc-discussions - Re: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+Message-ID: <CAOLP8p4STEEF+NmNZK_x2mkO-79R+Z360jQKveab4=-ziYQdkw@mail.gmail.com>
+Date: Fri, 3 Jul 2015 05:49:55 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+On Thu, Jul 2, 2015 at 11:10 PM, denis bider <pwhashing@...isbider.com>
+wrote:
+
+I have addressed reported shortcomings in BusyBeaver. Most of them (if not
+all?) have been pointed out by Bill Cox.
+>
+The new latest version is here:
+>
+http://www.denisbider.com/BusyBeaver-20150703.zip
+>
+
+Wow, that upgrade was fast!  Nice work.
+
+
+>
+Changes:
+>
+(1) A *parallel implementation*, ParaBeaver, is now implemented
+separately in ParaBeaver.h/.cpp. It uses C++11 threading in order to run a
+number of concurrent threads processing BusyBeaver instances. ParaBeaver is
+useful on clients that can expect to have most cores idle, and can benefit
+from parallelization to gain security at no cost to the user. ParaBeaver
+works by allocating room for N number of digests, which are computed in
+parallel based on N number of variations on original salt and password
+inputs. When all N digests have been computed, a hash of the concatenated
+digests forms the final result. In the special case when N=1, the final
+result equals the result of the one BusyBeaver instance. This is a very
+general parallelization construct that would work well with practically any
+similar serial algorithm.
+>
+
+This is close, but now you've given an attacker a free time-memory
+trade-off.  He can compute each of the N hashes in parallel, or
+sequentially.  To mostly defeat that, data should be copied between
+instances at some point.  What I did in TwoCats was sync threads at 1/4
+memory filling intervals, and allowed threads to access any data from any
+thread from a prior filled interval.  IIRC, Yescrypt and Lyra2 have
+something slightly simpler, but good enough.
+
+
+(2) An additional parameter is now supported, swapBlockThreshold, which
+provides a *hybrid mode tradeoff* between side channel resistance and
+preventing an attacker from rearranging the order in which instructions are
+executed so as to better fit into the attacker's cache. BusyBeaver will now
+operate in side-channel-free mode the first 1/4 of the time, and then
+switch to block swapping. During block swapping, the roles of SaltBlock and
+PwBlock are exchanged at every jump, so that both blocks begin to control
+jumps and offsets, and both blocks are read from and written to. ParaBeaver
+supports swapBlockThreshold, and computes it sensibly for use in
+multithreaded execution.
+>
+
+Nice.  I like it.
+
+
+(3) The BusyBeaver class is now templated to allow use of an *arbitrary
+hash* and HMAC. SHA-512 continues to be the default and suggested hash.
+>
+
+Very good.
+
+
+(4) The implementation of *MulModOp64* now uses a right shift by 4 bits
+between multiplication and modulo in order to use a portion of
+multiplication result that preserves more entropy. The result of MulModOp64
+is now used via rotBits in all instructions, to prevent the CPU from
+detecting it's not used and optimizing it away.
+>
+
+That should work.  It also makes your algorithm more ASIC attack
+compute-time resistant since you're building chains of multiply operations.
+
+
+I believe this addresses all raised concerns, while preserving the
+simplicity of the algorithm. Please let me know if I have missed an
+important concern!
+>
+
+ Well... not _all_ my concerns.  I would prefer that BusyBeaver_BlockSize
+be a parameter to the algorithm rather than a constant.  That would make it
+more suitable for both server and client defense, without adding
+significant complexity.
+
+With these changes, I think your not losing any entropy, since every
+operation is reversible.  That said, now you have a minor additional
+problem: the computation prior to the final hash ran be run entirely
+backwards.  In most of the PHC entries, this could be used in some cases to
+benefit an attacker in a TMTO attack, since it gives him more ways to
+recompute values that are missing from memory.  In the case of BusyBeaver,
+you overwrite memory so many times, I doubt there's much reason to be
+concerned about TMTO attacks.
+
+However, like Bcrypt, BusyBeaver in it's current form uses very little
+memory (it fits in L2 cache), and overwrites it many times.  This is good
+for GPU defense, and this makes a nice server-side algorithm.  However, for
+full-disk encryption or unwrapping user keys, I'd prefer to use _lots_ of
+memory - maybe a GiB.  In this case, the memory wont be overwritten many
+times like it is server-side.  Your algorithm would then become more
+sensitive to TMTO attacks, as it should.  There's no point lowering
+memory*time defense much due to paranoia about TMTO attacks.  Lyra2 suffers
+a bit in this regard, making it a bit slower than Yescrypt and Argon2d.  A
+reasonable defense is to introduce a cryptographic hash now and then into
+your computations, which force an attacker to move compute forward.  For
+example, you could compute hashState = SHA512(hashState || registerValue)
+every 10000 or so loop iterations, and do registerValue ^=
+lower64(hashState).
+
+However, this is really a minor concern, IMO, so feel free to leave it out
+;-)
+
+Bill
+
+
+

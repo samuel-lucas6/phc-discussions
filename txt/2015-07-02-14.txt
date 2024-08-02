@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] RE: Password hashing as a self-overwriting Turing machine
+
+
+Message-ID: <1865628343-3164@skroderider.denisbider.com>
+Date: Thu, 2 Jul 2015 17:35:55 +0100
+From: denis bider <pwhashing@...isbider.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] RE: Password hashing as a self-overwriting Turing machine
+
+Taking this line of reasoning further, it might be very cool to
+randomly generate a set of op-codes that are commonly
+available, and to compile them natively for execution.
+
+This is the idea I wanted to convey, and I'm really glad it found an ear. :-)
+
+There are practical difficulties that would make implementation more complex than my current design; the current BusyBeaver can be viewed as proof-of-concept.
+
+But yes: I think *this* is the route to go in brute-force-resistant password hashing and proof-of-work in the long run. Ultimately, an algorithm based on this may likely be *the* solution.
+
+Work has begun just this year on WebAssembly, which will attempt to combine the lessons of Google's Portable Native Client, and Mozilla's asm.js, into a single portable assembly standard supported by all major browsers. As soon as in 2-3 years, support for WebAssembly may be universal on mobiles and desktops.
+
+Right now, an algorithm based on directly generating code would run into significant platform issues. The infrastructure for a single common instruction set is just not there, and it cannot be implemented just for password hashing. However, in a handful of years, there may likely be WebAssembly, with widespread infrastructural support. We'll be able to have a password hashing algorithm that spews out WebAssembly, and there will be infrastructure to run it on nearly every native platform.
+
+If my idea found an ear, it could be argued that I made the submission at just the right time. The designs of current PHC candidates could very well be more appropriate for the current environment. However, an algorithm based on code generation may be the obvious choice in a few years, and now is the time to start thinking about that. :-)
+
+denis
+
+
+-----Original Message----- 
+From: Bill Cox 
+Sent: Thursday, July 2, 2015 09:17 
+To: discussions@...sword-hashing.net 
+Subject: Re: [PHC] RE: Password hashing as a self-overwriting Turing machine 
+
+On Wed, Jul 1, 2015 at 11:13 AM, Marsh Ray <maray@...rosoft.comwrote:
+
+Well, I'm not a computer scientist. Maybe there are a few on the list that
+can chime in.
+>
+But it seems to me that there are two possibilities: either your machine
+does data dependent branching, or it does not. The 'data' being derived
+from the password.
+* If it does allow data dependent branching, then you need to worry about
+branch timing side channels leaking information about the password.
+* If it does not allow data dependent branching, then you don't get to use
+the halting problem as proof of irreproducibility.
+>
+In other words, what is the advantage of executing a randomized stream of
+operations over, say, performing a large block encryption using the salt as
+key? The latter is something the defender's hardware may be able to help
+with.
+>
+
+Executing truly random machine instructions on the defender's machine will
+be essentially impractical to make go faster than a good CPU ran run them,
+even with a custom ASIC.  If it were easy to do, the CPU manufacturer would
+have done it.
+
+In contrast, an attacker's custom ASIC would heavily pipeline the
+encryption hardware, attempting many password guesses in parallel.  That's
+why we need the large memory for hashing.
+
+Taking this line of reasoning further, it might be very cool to randomly
+generate a set of op-codes that are commonly available, and to compile them
+natively for execution.  This is not entirely unlike how the fastest circle
+drawing code used to write it's own machine code based on the circle
+parameters, and then execute it.
+
+BusyBeaver could have been an educational and entertaining entry :-)  I can
+think of a lot of fun directions to go with this.
+
+Bill
+
+
+
+

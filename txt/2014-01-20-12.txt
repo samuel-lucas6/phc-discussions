@@ -1,0 +1,81 @@
+phc-discussions - multiplies (Re: [PHC] escrypt memory access speed)
+
+Message-ID: <20140120121822.GA24867@openwall.com>
+Date: Mon, 20 Jan 2014 16:18:22 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: multiplies (Re: [PHC] escrypt memory access speed)
+
+On Sun, Jan 12, 2014 at 11:58:24AM -0500, Bill Cox wrote:
+On Sun, Jan 12, 2014 at 11:43 AM, Solar Designer <solar@...nwall.comwrote:
+And yes, I was already thinking of throwing in some multiplies.  We can
+easily do several of them one after another while waiting for data to
+arrive.  If each is 3 cycles latency not only on our CPU, but also on
+custom ASIC, then we can achieve a delay of roughly the same number of
+cycles for the attacker that we normally incur because of our memory
+latency.  The attacker's memory might have lower latency, but with the
+multiplies the attacker will be forced to slow down and match our speed.
+
+I like that idea.  Maybe make the number of serial multiplies in the
+hashing loop a parameter?  It would be simple to auto-detect a good
+setting for such a parameter.
+
+Maybe, but for good efficiency this needs to be compile-time, or we'd
+need several code versions or JIT.  I'd rather avoid JIT.
+
+BTW, I'm sure you know this, but for a
+32x32 multiply -32 bit result to be reversible, one of the
+parameters needs to be odd.  I'm only using reversible operations in
+the theory that it helps avoid leaking away entropy.
+
+This isn't exactly reversible even with one of the factors being odd,
+but yes, there is this aspect.  I've been considering the following
+three options (or a mix of them):
+
+1. Use a suitable constant factor, e.g. like it is done during Mersenne
+twister initialization (in fact, I'd even reuse their 32-bit constant,
+if I use this approach, use 32-bit multiplies, and need only one constant).
+Drawback: this probably makes the corresponding specialized ASIC circuit
+roughly twice simpler than a generic two variable inputs multiplier
+would be.  Correct?
+
+2. Keep the variable factors as they are, coming from memory or directly
+from other computations.  Yes, when a factor happens to be even, it's
+like a left shift for the other factor, shifting out some of its most
+significant bits.  However, left shifts are present in many crypto
+primitives.  As long as there's enough other processing on the same
+inputs, with all of their bits in use, this might or might not be fine.
+
+3. Forcibly set the least significant bit, like you chose to do.
+Drawbacks: extra operation for defender (but none for ASIC attacker),
+doesn't use the original value of the replaced bit.  Is your effective
+memory size 31/32 of what's allocated?  Or are you using the same values
+without the OR as well?  If you are, then possibly you could use
+approach #2 above instead.
+
+Is that all I
+have to do?  It seems that if I can show that toggling any input bit
+in the inputs to the hash function toggles ~half of the output bits
+regardless of the other values, then when these things are cascaded,
+toggling any input but should toggle ~half of all memory.  Is this the
+right approach for proving the value of a hash function?
+
+Disclaimer: I am not an expert at this.
+
+This is a good and relevant test, yes.  Another test is to see whether
+the number of different hash values is as expected for uniform
+distribution given a certain number of hashes computed (for different
+non-random yet unique inputs - e.g., sequential numbers).  For example,
+for 32-bit hash values and 100M hashes computed, you should get around
+98844829.5 different hash values.  If you consistently (or on average)
+get significantly fewer (across many different 100M samples, for
+different sets of inputs), then your hash is significantly worse than
+perfect.  If you usually get significantly more, this would suggest that
+your hash preserves properties of the input (seeds) distribution, which
+is also bad.
+
+And yes, I agree that for our use having a nearly perfect hash function
+is not critical.
+
+Alexander
+

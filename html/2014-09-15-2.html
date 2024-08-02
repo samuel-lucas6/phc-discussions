@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Schvrch is broken</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5416BD8D.4030301&#64;ciphershed.org&gt;
+Date: Mon, 15 Sep 2014 06:21:01 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Schvrch is broken
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/15/2014 12:06 AM, Rade Vuckovac wrote:
+&gt; Regarding time cost
+&gt; 
+&gt; 
+&gt; 
+&gt; As it stays (more details is needed perhaps) the statement about
+&gt; PHC_Fast does not pass a basic logic.  Since PHS_Fast function is
+&gt; allegedly time constant function it means that the time cost is
+&gt; indifferent factor. In other words only input which is varied
+&gt; through the initial search is the password. That leads that
+&gt; PHC_Fast function, without even inspecting inner working (treating
+&gt; it as a black box) has multiple outputs for the same input???
+&gt; 
+&gt; 
+&gt; 
+&gt; Regards, Rade
+
+It is very impressive that Steve actually implemented a constant time
+attack.  Steve's attack looks like it's generating the actual correct
+result, in which case it's different than mine.  In my constant-time
+attack, I just compute each state result correctly to within a
+complement or not.
+
+Steve, how are you computing the correct answer in constant time?
+Surely the linear combination of states repeats quickly, but don't the
+256 complement values (one per state) toggle unpredictably for a long
+cycle length?
+
+Here's Revolve:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+        uint64_t i;
+        uint64_t carry = 0;
+        int j;
+
+        for(i = 0; i &lt; rounds; i++)
+        {
+                for(j = 0; j &lt; statelen; j++)
+                {
+                        if(state[(j+2)%statelen]&gt;state[(j+3)%statelen])
+                                carry ^= state[(j+1)%statelen];
+                        else
+                                carry ^= ~state[(j+1)%statelen];
+
+                        state[j] ^= carry;
+                }
+        }
+}
+
+An attacker does not need the correct answer like Steve is computing.
+ He only needs to know if his guess is wrong so he can stop wasting
+time on it and move on.  He can find that out running this code:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+        uint64_t i;
+        uint64_t carry = 0;
+        int j;
+
+        for(i = 0; i &lt; rounds; i++)
+        {
+                for(j = 0; j &lt; statelen; j++)
+                {
+                        carry ^= state[(j+1)%statelen];
+                        state[j] ^= carry;
+                }
+        }
+}
+
+He then compares his result states to the hash value.  If each group
+of 64 bits are either equal, or complements of each other, then his
+guess is correct with high probability, which he can then verify
+running the full algorithm.  Otherwise, it is wrong and he can move
+onto the next guess.
+
+In this attack, each result state is simply the XOR of some subset of
+original states.  A binary matrix can be built to represent which
+input states are XORed into which output states.
+
+These matrices can be built for each value up to t_cost in time
+proportional to t_cost.  After that, any call to revolve can be
+evaluated in constant time.  Also, these matrix values will repeat
+pretty quickly, I think, at which point we can compute them for any
+t_cost with no additional memory.
+
+This attack an be used for a constant time attack on any path through
+the code that calls only evolve and revolve.  The result states will
+be a simple linear combination of input states modulo 2, which can be
+computed in constant time, to within a complement operation on each
+64-bit state value.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFr2JAAoJEAcQZQdOpZUZTPAP/j9kZdRUUkLCa0WZxS78f8R6
+JUbP//vSYIhXrFmIp7jvL09kvAkNk7BiKGGCvO5a7KcK/go3tGDu+MWr5ZOYFpZQ
+OsXNy7lXcD+GRYl9RiueWNWSX7wtWRolNSqiKNQWsE033YmTpFKV8qOb/+lQAErJ
+iB1vK3Jjrg7yj3Zf+stg2c2hKO8bk82yxpqP2zg5ObBsSPQ4pplothJZemulu4oa
+kplAiT8La8BCO4PPrtpdeDXf45l/geIBzORuaRwW5//kZao4xoM64Hignk18p5R1
+8KKeuLuu24AddpNaGVlBkvnvkhJdxps7770/FLWKyQB/3nZeN6elOe8pYnI2pZMH
+GAXEyjD86Bf+NkLJaoMG2RYpKGsfZgmZ7olsFnCucoLK4j+UaOfdZ7qQGFUx0c+N
+3EI3cPvohFjpA20WJOsgdVWmqdwmL6GyilFCRL73V8+2mvJT3KmyJBD154YGyKM5
+5saIvqGNIv4WXE01KSOuybpfCz4NYcub0fpiT1XWdoIiyWNyeMzLlHHZHKTGpSh8
+G5cvs3t1vsC3NYfYPhcDjEiwBrbWlNA6Urh8rWmrAuc3Uz/5RI+Fr2HSbqXpxKT9
+EVPMv+DPxQS9oScS48r+Cu2BNJ9YA7VbPjZidj+4cFVqxhH1d0sv9RWpNIHq6VIX
+mQ43Dm11vnqpmviIlEYc
+=+zRf
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

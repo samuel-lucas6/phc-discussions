@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] On type aliasing and similar issues
+
+Message-ID: <20150408140545.GA27200@openwall.com>
+Date: Wed, 8 Apr 2015 17:05:45 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On Wed, Apr 08, 2015 at 07:25:29AM +0300, Alexander Cherepanov wrote:
+On 2015-04-08 06:03, Samuel Neves wrote:
+>On 04/08/2015 03:37 AM, Alexander Cherepanov wrote:
+>>AFACT this is implementation-defined in C89 (3.3.2.3) and fully defined 
+>>in C99 and C11 (6.5.2.3p3).
+>
+>Yes, type punning with unions is now OK (though implementation-defined; 
+>accessing the wrong member may still trap) in
+
+uint32_t[2] and uint64_t don't have padding bits and have the same size 
+so this particular example is fully defined.
+
+FWIW, icc 14.0.0 miscompiles the code I have in php_mt_seed 3.2 if I
+remove the "volatile" workaround:
+
+#ifdef __ICC
+			volatile
+#endif
+			union {
+				vtype v;
+				uint32_t s[sizeof(vtype) / 4];
+			} u[8], uM[8];
+
+where vtype is e.g.:
+
+typedef __m128i vtype;
+
+and the union members are only accessed directly, not via pointers,
+although indeed there are uses like u[i].s[j] (so with non-constant
+index for the .s[] array).
+
+I thought this was an icc bug, but maybe I'm wrong?
+
+Full context: http://www.openwall.com/php_mt_seed/
+
+>C99 and above. What is being dereferenced in the example is the pointer to 
+>the union, not the members, so I'm not sure
+>strict aliasing's undefined behavior applies. The example could be further 
+>improved to demonstrate this:
+>
+  #include <stdint.h>
+  #include <stdio.h>
+>
+  union U {
+    uint32_t x[2];
+    uint64_t y;
+  };
+>
+  extern union U * v;
+>
+  void f() {
+    uint32_t * p = &v->x[0];
+    uint64_t * q = &v->y;
+    *p = 17;
+    *q = 42;
+    printf("%u\n", v->x[0]);
+  }
+>
+>While Clang and recent GCC do what one would hope (print 42), GCC 3.4 and 
+>Intel compiler print 17.
+
+Yes, it seems the standard intends to permit access to wrong members 
+only via . and -operators. You cannot access them in a less direct 
+way.
+
+In my php_mt_seed example, is accessing .s[j] standards compliant or
+not?  If not, that's really unfortunate.
+
+What about e.g., .s[3] (constant index)?  We could want to narrow down
+icc's behavior - whether the problem occurs only with variable or also
+with constant indices, or maybe even without an array at all.  I haven't
+tried yet.
+
+If you pass them to another function then recent gcc -O2 will print 
+17 too.
+
+This is not surprising.  However, I think behavior within one function,
+where having derived a pointer from a union member is clearly visible to
+the compiler, could be defined.
+
+Does any recent C standard say anything about the special case of
+accessing union members via pointers within the same function?
+
+Alexander
+

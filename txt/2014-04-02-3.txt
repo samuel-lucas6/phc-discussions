@@ -1,0 +1,105 @@
+phc-discussions - Re: [PHC] On the topic of attacking designs, not authors
+
+Message-ID: <20140402023920.4a9bea9b@lambda>
+Date: Wed, 2 Apr 2014 02:39:20 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: discussions@...sword-hashing.net
+Cc: waywardgeek@...il.com, bmenrigh@...ndonenright.net
+Subject: Re: [PHC] On the topic of attacking designs, not authors
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Tue, 1 Apr 2014 20:44:59 -0400
+Bill Cox <waywardgeek@...il.comwrote:
+ 
+I didn't skip ahead, but I finally got to OmegaCrypt.
+
+[...]
+
+I haven't read the whole paper.  It looks to me like it's susceptible
+to cache timing attacks.  You may have mentioned it in your paper, but
+I haven't finished it.
+
+Yeah the data-dependent branching and pseudo-random memory pattern
+leaves a distinct fingerprint for every set of parameters to ocrypt.
+Care was to make sure all the branching depends only on a stream cipher
+so that the cache and timing behavior only leaks information about the
+ciphertext output of the stream cipher.  Also, no bits that are used
+for a branching decision are used as input into anything that turns
+into the final hash output.
+
+I like the way you padded the variable length
+parameters.  I was doing the same until I found there seemed to be
+little interest in this detail, partly because the block hash
+functions all seem to do some padding for us.
+
+I haven't read your security section, but your initial key derivation
+seems ... what did that guy call it?  Strongly secure?  You hashed all
+the inputs, including lengths, with no leaks around it.
+
+Many folks have told me how much they don't like data-dependant
+branching due to all of the treacherous leaks that come from it.  I
+felt like if my proposal is going to use data-dependant branches as the
+core feature it can't afford to leak information other places.
+
+Even slide 68 here doesn't like data-dependant branching:
+http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00068.html
+
+Although my design *is* just if/else in a loop I think I've eliminated
+"eager execution" as cost-effective strategy through the carry value,
+the different amount of ChaCha8 consumed by each branch, and the XOR of
+the memory addresses chosen from ChaCha8 so that different branches
+won't access the same memory.
+
+I seriously considered building a deep tree however in keeping with the
+"simple" theme I decided against it.
+
+I have some ideas for how to improve what gets executed in each one of
+the data-dependent branches but I don't want to make changes in that
+area until I've heard from the community.
+
+I think my code will run faster per thread (a dumb benchmark I'm
+tracking).
+
+I'm not sure what you mean by "faster" but ocrypt is designed to be
+very unfriendly to just about everything.
+
+In my view, if two implementations both produce quality output securely
+in the same amount of time then it doesn't matter if one implementation
+did twice as many computations as another.
+
+I haven't actually tested it but, but I think ocrypt is memory-latency
+limited and probably does fewer actual instructions-per-second than
+most other candidates.
+
+Solar Designer kept bugging me to improve it, so I did,
+but my earlier code was more similar to this.  I think I may have just
+spent more days on it... I started with a simpler PHS like this, but
+then added features until I'd probably added too many.
+
+ocrypt uses both cubehash and chacha8 as "primitives" so in terms of
+simplicity it's already a bit disadvantaged.
+ 
+[...]
+So, pretty sweet entry overall, in my still somewhat ignorant opinion.
+ I don't see any glaring goobers in a quick read.
+
+I've already found a couple typos in the paper and I need to improve
+the formatting so it's easier to follow the detailed specification.
+I'll submit a slightly fixed up paper in a few days.
+
+Thanks for the quick once-over analysis.
+
+Brandon
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlM7eGQACgkQqaGPzAsl94JeNACgmjNIxdsMY3O2AMW+0WBZcg8Q
+lKAAn0IWgxRWltxWi/zlpTuN5NrvsuN1
+=Y4m2
+-----END PGP SIGNATURE-----
+

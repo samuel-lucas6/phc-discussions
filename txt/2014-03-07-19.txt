@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAOLP8p61-QO+Wmd1bGgzAPZtQC9v8TOCHZ-KibN4yzLGGsBCCg@mail.gmail.com>
+Date: Fri, 7 Mar 2014 17:52:45 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 5:27 PM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+In place of a c == 1 PBKDF2, I would say HKDF, which does not use an iteration count, is preferable in place of PBKDF2 in TigerKDF.  The key advantage is that HKDF-Extract uses the salt as the key, the password as the message for the pre-hashing.  Trailing 0 bytes in the salt are not so much of an issue.  <http://www.ietf.org/rfc/rfc5869.txt>.
+
+I agree, though I still worry about leaking timing information by
+hashing the password as a message.  The hack I just implemented pads
+the password and should run in the same-ish time regardless of the
+length.  I add the password length as a parameter in info, so I think
+that gets around collisions like we see in HMAC.
+
+Is it worthwhile worrying about looping over the password potentially
+revealing it's length?  I currently use a "secure_zero" function I
+copied from Blake2 to clear the password after I hash it, unless the
+user passes a flag saying not to.  That function also loops over the
+password, so to make it more secure from a timing point of view, I'll
+need to pass a padding parameter to it and have it overwrite the
+password over and over until it's written a certain number of bytes.
+
+Even then, the though of a cache-timing attack is worrisome, but I
+don't see how that could reveal a password length to better than a
+cache line - typically 64 bytes.
+
+In the CodesInChaos case, I see no reason to add in a PBKDF2 with c == 1, although you could use "purpose" in place of the PBKDF2 salt parameter (or use a combination of purpose and salt).
+
+Yeah, PBKDF2 with c == 1 seems lame when you read the code.  I'll
+stick with HKDF for now.
+
+I think HKDF-Expand has attractive characteristics for expanding keys without compounding the offered iteration count, and that would be particularly apt if you ran a non-trivial iterative PBKDF2 with the same HMAC as the HKDF parts and the required output size to have a PRK for HKDF-Extract.
+>
+ - Dennis
+>
+Aside: I think it would be useful for the HKDF "info"/"purpose" parameter to be part of HKDF-Extract too.  Something like HKDF-Extract(salt, IKM || info) -PRK.
+
+I was surprised that the info parameter is hashed in while expanding
+rather than in extract.  It doesn't matter in my application because I
+do both at the same time, but if I wanted to run a long-runtime
+memory-hard KDF in the middle, it would be annoying to have to keep
+potentially sensitive data in memory until after it completed.  Also,
+if info is very long, I'd hate to have to re-hash it on every output
+block.
+
+Other than that, the HKDF expand loop looks good to me.
+
+PS: Bill, I still think you have the password-length condition backwards.  When the password is LONGER than think hash-function's block size, it is pre-hashed in HMAC.  It is not pre-hashed for password text not larger than a hash-function block.  But this is solved in HKDF since it is pointless for a salt to be larger than a hash-function block and when the salts used are all the same length anyhow.  I also think that practical but generously-large values of an iteration count will successfully hide the timing of HKDF-Extract in any case.
+
+I originally used a 2000 iteration count in PBKDF2, and I hated giving
+it up, partly because it would insure my KDF were at least as secure
+as the somewhat standard application of 2000 rounds of PBKDF2-SHA-256.
+ However, I need every millisecond for memory hashing, and what I did
+was set c == 1, and spend the saved time hashing some early memory,
+and then overwriting it, so that if memory is leaked later on, an
+attacker still has to do some work before he can detect an incorrect
+password guess.  The scariest part about memory-hard KDFs to me is
+having some of that password dependent memory leaking somehow.  For
+example, I can call mmap and request un-swappable memory, but if my
+KDF is running on a virtual machine and someone takes a live snapshot,
+forget it.
+
+Bill
+

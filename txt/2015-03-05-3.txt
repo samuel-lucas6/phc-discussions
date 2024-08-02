@@ -1,0 +1,130 @@
+phc-discussions - Re: [PHC] PHC output specifics
+
+Message-ID: <20150305103638.GA20816@openwall.com>
+Date: Thu, 5 Mar 2015 13:36:39 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] PHC output specifics
+
+On Wed, Mar 04, 2015 at 07:12:43PM +0000, Marsh Ray wrote:
+I posted this to the panel list, but we'd like to move the discussion here.
+
+Thank you for re-posting this in here.  Here's my reply:
+
+Obviously the most important thing is the selection of the algorithm. But in practice there are lots of other ways users of password hashing algorithms can get pwned too.
+
+So I'd like to reiterate my desire for the PHC to produce:
+
+With few (important) exceptions, I agree.
+
+·         One winning function.
+
+I don't see this happening, unless we throw away some use cases.
+
+·         A standard C language API definition. Could be separate ???create??? and ???verify??? functions.
+
+Right.
+
+·         A recommendation for string encoding (e.g., UTF-8 code points)
+
+As a "recommendation" it's fine, but it will also be ignored by some.
+ 
+As a requirement, it's probably too limiting.  There are use cases where
+an application receives an opaque string without reliably knowing the
+encoding (so can't reliably convert to UTF-8 even if it were OK with
+this extra complexity).
+ 
+So I am not sure about this one.
+
+·         A standalone credential (hash value, salt, metadata, etc) format. Probably this would be binary with a standard Base64 encoding.
+
+Right.
+ 
+As to concatenating everything in binary, then base64'ing vs. base64'ing
+the components first, then concatenating, there are pros and cons to
+either approach.  Also, it is unclear whether the standard base64
+encoding or crypt(3)'s historical encoding is preferable.  The latter is
+more compact, especially if we encode before concatenating, which in
+turn is (sometimes a lot) more compact on its own and is more
+human-friendly.
+
+·         A minimal number of knobs to turn for the defender to a) fit the algorithm to their hardware, and to b) fit it to their work factor budget.
+
+I think for complex schemes (if any are selected as winners) two APIs
+are needed: low-level with all the knobs, and higher-level where the
+low-level knobs would be set according to the (few) high-level knobs and
+maybe even the defender system's hardware.  The low-level knob settings
+would then be encoded along with the hash, so verification works
+seamlessly even if the translation from high-level to low-level e.g.
+varies between systems (this will only affect newly set passwords then).
+
+·         Conservative recommended default values for these parameters and advice on other reasonable choices.
+
+I see two or three knobs here, max.
+
+·         Total memory consumption
+
+·         Total CPU consumption
+
+·         Total memory bus operations.
+
+I think we can do without "Total memory bus operations" as a high-level
+knob.  The presumed impact of memory bus saturation is overrated, at
+least for current general-purpose server hardware.  I explained why in a
+relevant discussion on the public list.
+
+Update: Oh, maybe that's not what Marsh wanted this knob for.  Maybe Marsh
+wanted it to control CPU usage vs. memory bandwidth usage as defensive
+measures, for reasons unrelated to their impact on overall system
+performance.  This makes more sense to me.  However, a typical user of
+this API would not be qualified to make an informed decision on this.
+This is difficult even for us.  For example, Bill advocates for
+maximizing the memory filling speed, whereas I also see much value in 
+maximizing the expected attacker's computation latency and memory usage
+product.  I'd like to make this a low-level knob where possible, and in
+an advanced implementation the auto-tuning function could set it
+according to the current defender's system (or implementation authors
+could adjust the default later based on actual attacks, such as when
+there are ASICs).
+
+Instead, as Tony suggested, the thread-level parallelism knob should be
+exposed in the high-level API.
+
+Instruction-level and SIMD parallelism, if tunable, should be low-level
+knobs, in the more advanced implementations to be auto-detected given
+the current defender system's hardware.  Not explicitly exported in the
+high-level API, but encoded with the hash.
+
+[ Fundamentally, there's no difference between thread-level and
+instruction-level parallelism, since parallelism can be moved between
+levels (and attack-optimized implementations often do just that, moving
+the parallelism coming from having multiple candidate passwords down to
+instruction level).  However, there is a difference in efficiency on
+specific platforms and implementation complexity.  Specialized support
+for tunable instruction-level parallelism can be far more efficient and
+cleaner to implement for a given defender than moving excessive
+thread-level parallelism down to instruction-level would be. ]
+
+The first two parameters are probably best expressed logarithmically. The third, I'm not so sure.
+
+I think for parameters that span a wide range or/and are unsuitable for
+fine-tuning anyway, we should use base2 logarithm where possible.
+
+For parameters that are typically small (or fall into a narrow range and
+thus can be expressed via small integers), I think variable-length
+little-endian encoding works best.  This is a reason why we might prefer
+to encode before concatenating.  For example, "E6....9...." could be
+shortened to "E6$9$".  Alternatively, decimal numbers could be used,
+e.g. "14$8$1$" (representing scrypt's recommended N=2^14, r=8, p=1).
+
+If we don't define these things, other people will. Lots of other people, incompatibly, and hilarity will ensue.
+
+Right.  We need a standardization phase.  And maybe we should combine it
+with winner selection.  And maybe we should make some tweaks to the
+finalists themselves (in coordination with the submitters, of course) as
+we standardize them as winners - e.g., Bill sort of suggested that we
+make Catena a lot faster.  We should discuss this (separately from this
+thread).
+
+Alexander
+

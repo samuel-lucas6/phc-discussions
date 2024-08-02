@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CA+hr98H1PMaAygo7jcQ67Vjnd6gDuBP7pY-HAYbyhr1coChbeg@mail.gmail.com>
+Date: Thu, 13 Aug 2015 15:30:58 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 improvement thread
+
+i proposed earlier to leave any such maintenance task to an outer
+layer. i'm not even sure it needs standardization at all, especially
+not within the scope of PHC.
+
+in particular:
+
+1, i propose not doing allocation within the hash function at all.
+memory should be void* parameter to a buffer to use. rationale: there
+are different ways of allocating memory. on embedded systems, there
+might be no heap at all, and there might be different kinds of memory
+(internal, external, etc). only the caller knows how to allocate and
+then properly clean a memory block.
+
+2, i propose taking the password and the salt in a pre-padded, fixed
+size block. rationale: it might be not straightforward how to copy the
+password from a buffer in a manner that does not leak the password
+length. if the password is hashed, hashing leaks length like nothing
+else. padding is of utmost importance.
+
+3, there is no need to implement a separate verify interface.
+rationale: verification is supposed to be a timing-safe comparison,
+and can be or already is provided by other libs.
+
+4, if the algorithm provides server relief, the interface should
+reflect to that, and have two parts, pass 1 and pass 2, which are
+supposed to be chained together when server relief is not used.
+rationale: usage modes belong to the outer layers, the core should be
+as simple as possible (but not simpler). there is no need for a
+function that combines the functionality of other two functions.
+
+5, the result should be a binary of the designed length. no encoding
+or parameter-prepending is necassary. rationale: it is the task of the
+outer layers. it might be unnecessary to store the parameters at all,
+as they might be fixed. an implementor might be short on storage, or
+must put the hash in 16 bytes space for back-compat.
+
+i personally don't care too much about any additional optional
+interfaces, as long as the core, as explained here, is exposed.
+
+
+On Thu, Aug 13, 2015 at 3:08 PM, Dmitry Khovratovich
+<khovratovich@...il.comwrote:
+I would rather enable scrubbing in the extended API to simplify the default
+one. The extended API can then have a boolean flag to clean all the inputs
+immediately after they are used.
+>
+Maybe there are other opinions on that? So far only a few people
+participated the API discussion...
+

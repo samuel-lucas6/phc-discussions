@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] A review per day - PufferFish
+
+Message-ID: <20140901230020.GC2249@openwall.com>
+Date: Tue, 2 Sep 2014 03:00:20 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - PufferFish
+
+On Mon, Sep 01, 2014 at 02:39:56PM -0400, Bill Cox wrote:
+On 09/01/2014 12:54 PM, Solar Designer wrote:
+I guess the pre-hashing is needed to avoid a bcrypt-like password
+length limit.  For bcrypt it's 72; while 144 would be much better
+and would satisfy PHC requirements as-is (128+), it would still be
+a drawback.
+
+I'll take your word for this, but I don't understand!  The S-boxes are
+initialized with SHA512 data, and the password and salt are properly
+hashed with SHA512-HMAC in a way that avoids the HMAC input
+collisions.  What further pre-hashing could there be?
+
+No, not "further".  I meant that the pre-hashing you referred to serves
+the purpose of supporting almost arbitrarily long passwords, as opposed
+to the limit there would be without such pre-hashing.  You wouldn't put
+an arbitrarily long password into a fixed size P-box, nor into somewhat
+limited size S-boxes.
+
+[...]
+CPU-based attacks may achieve some speedup by interleaving
+[...]
+
+Also, to defend against attacker parallelism, using the whole L1 cache
+could be somewhat effective, since the S-box sizes are configurable.
+
+Yes, however at least with yescrypt's L1 cache using code we saw only a
+~10% slowdown per each doubling of S-box size (beyond L1 cache size),
+whereas interleaving of 2 or 3 bcrypt instances provides a ~2x speedup.
+If these numbers hold for Pufferfish, then using exactly L1 cache's size
+provides only very limited defense against interleaving attacks on the
+same CPU.  On the other hand, this would also mean that Pufferfish may
+in fact reasonably exceed L1 cache size in defensive use.  But we really
+need to run benchmarks of Pufferfish itself, at different S-box sizes,
+rather than speculate.  The slowdown for it may be worse than the ~10%
+per doubling I mentioned, because in my yescrypt tests there probably
+was slightly more instruction-level parallelism available and the reads
+were 128-bit rather than 64-bit.
+
+I should probably benchmark PufferFish, but I've got a ton of reviews
+to get through first.
+
+Sure.  Please complete reviews of other PHC candidates first.  Thank you
+for volunteering to do this!
+
+From the code, I suspect it performs on par
+with bcrypt in terms of unpredictable memory accesses per second.
+Because of this, and it's bcrypt-like simplicity, I'm currently
+picking PufferFish as my first choice for a pure bcrypt replacement,
+though not for an Scrypt replacement.  Being a bit slower on older
+machines is probably OK, IMO, given how long it will take for adoption.
+
+OK.
+
+I feel scrypt's SMix-like functionality could be reasonably added on top
+of the existing bcrypt design, achieving maybe better results than
+Pufferfish does (efficiency for out-of-cache accesses due to use of 4 KiB
+blocks) at even lower code complexity than Pufferfish's and still using
+the unmodified Blowfish rounds (yes, no 64-bitness then...)  It's almost
+as simple as making writes in the 2^cost iterations loop go to further
+memory locations rather than wrap around to the starting address, and
+integerify()'ing the latest encrypted block to determine the new S-box
+start address (within the region written so far) for lookups by the next
+iteration of the variable-cost loop.  In this trivial bcrypt extension,
+it'd be just one cost parameter controlling both time and memory; these
+can be split with a bit of further magic.  The 72-character limit could
+be dealt with in the same manner that BSDI's extended DES-based crypt()
+did, without introducing another crypto primitive (that is, staying with
+Blowfish only).  Should still be simpler and much closer to the original
+bcrypt than Pufferfish is.  However, I did not find this good enough,
+didn't have time (if I knew there would be bcrypt replacement
+submissions that don't try to replace scrypt, maybe I would make time
+for this), and I did not want to annoy the OpenBSD folks by a variation
+of bcrypt (being too close to bcrypt proper, yet substantially
+different), even though this would make sense technically (including for
+their use).  Maybe I was wrong.  What this means in PHC context now, I'm
+not sure.  It's late.  So probably nothing.
+
+Alexander
+

@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] The best of the best, IMO
+
+Message-ID: <20140413072208.GA22648@openwall.com>
+Date: Sun, 13 Apr 2014 11:22:08 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] The best of the best, IMO
+
+On Sat, Apr 12, 2014 at 11:59:36PM -0700, Jeremi Gosney wrote:
+On 4/12/2014 11:49 PM, Solar Designer wrote:
+Great.  Now, a way battcrypt might win over Pufferfish anyway is if we
+determine that it performs better even when both are compiled to native
+code (defensive).  This will take some testing, for both defense and
+attack.  Are you doing this sort of testing? :-)
+
+I included JTR patches for both the reference version and the optimized
+version in my submission, and plan to write patches for some of the
+other candidates as well.
+
+Thank you for that!
+
+I was hoping we could reach out to the
+community (john-users mailing list?) for help with this, as I really
+don't want to implement all 22 by myself.
+
+We can, and you're welcome to do that!
+
+However, for this to be of help to PHC decision-making we need
+attack-optimized implementations (in addition to defense-optimized
+ones), and it's unclear whether JtR community members would have
+sufficient incentive for that.  Chances are that almost all of the 23,
+if wrapped into JtR formats, will (initially) be using mostly
+defense-optimized code for attack, which is suboptimal and does not
+(yet) significantly help us answer the questions we need answered.
+It is nice extra testing anyway, though.
+
+With yescrypt's default settings, there's some excessive instruction
+level parallelism included, so I am confident that on currently typical
+CPUs it performs almost as well for attack as it does for defense, with
+no separate implementation needed yet.  (I think there's some room for
+further optimization for both defense and attack, though.)  Of course,
+this is assuming the native API is used, so that the memory
+(de)allocation overhead is kept out of loop.
+
+For Pufferfish and battcrypt, I think there may be significant speedup
+from interleaving of multiple instances for attack.  Someone needs to
+implement that.  And indeed the memory (de)allocation overhead should be
+out of loop for attack as well.  IIRC, you're using alloca() to avoid it
+in the JtR patch, correct?
+
+Also, we need GPU attack implementations.
+
+Alexander
+

@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] On type aliasing and similar issues</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="../../../2015/04/10/1">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="../../../2015/04/10/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150408140545.GA27200&#64;openwall.com&gt;
+Date: Wed, 8 Apr 2015 17:05:45 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On Wed, Apr 08, 2015 at 07:25:29AM +0300, Alexander Cherepanov wrote:
+&gt; On 2015-04-08 06:03, Samuel Neves wrote:
+&gt; &gt;On 04/08/2015 03:37 AM, Alexander Cherepanov wrote:
+&gt; &gt;&gt;AFACT this is implementation-defined in C89 (3.3.2.3) and fully defined 
+&gt; &gt;&gt;in C99 and C11 (6.5.2.3p3).
+&gt; &gt;
+&gt; &gt;Yes, type punning with unions is now OK (though implementation-defined; 
+&gt; &gt;accessing the wrong member may still trap) in
+&gt; 
+&gt; uint32_t[2] and uint64_t don't have padding bits and have the same size 
+&gt; so this particular example is fully defined.
+
+FWIW, icc 14.0.0 miscompiles the code I have in php_mt_seed 3.2 if I
+remove the "volatile" workaround:
+
+#ifdef __ICC
+			volatile
+#endif
+			union {
+				vtype v;
+				uint32_t s[sizeof(vtype) / 4];
+			} u[8], uM[8];
+
+where vtype is e.g.:
+
+typedef __m128i vtype;
+
+and the union members are only accessed directly, not via pointers,
+although indeed there are uses like u[i].s[j] (so with non-constant
+index for the .s[] array).
+
+I thought this was an icc bug, but maybe I'm wrong?
+
+Full context: <a href="http://www.openwall.com/php_mt_seed/">http://www.openwall.com/php_mt_seed/</a>
+
+&gt; &gt;C99 and above. What is being dereferenced in the example is the pointer to 
+&gt; &gt;the union, not the members, so I'm not sure
+&gt; &gt;strict aliasing's undefined behavior applies. The example could be further 
+&gt; &gt;improved to demonstrate this:
+&gt; &gt;
+&gt; &gt;   #include &lt;stdint.h&gt;
+&gt; &gt;   #include &lt;stdio.h&gt;
+&gt; &gt;
+&gt; &gt;   union U {
+&gt; &gt;     uint32_t x[2];
+&gt; &gt;     uint64_t y;
+&gt; &gt;   };
+&gt; &gt;
+&gt; &gt;   extern union U * v;
+&gt; &gt;
+&gt; &gt;   void f() {
+&gt; &gt;     uint32_t * p = &amp;v-&gt;x[0];
+&gt; &gt;     uint64_t * q = &amp;v-&gt;y;
+&gt; &gt;     *p = 17;
+&gt; &gt;     *q = 42;
+&gt; &gt;     printf("%u\n", v-&gt;x[0]);
+&gt; &gt;   }
+&gt; &gt;
+&gt; &gt;While Clang and recent GCC do what one would hope (print 42), GCC 3.4 and 
+&gt; &gt;Intel compiler print 17.
+&gt; 
+&gt; Yes, it seems the standard intends to permit access to wrong members 
+&gt; only via . and -&gt; operators. You cannot access them in a less direct 
+&gt; way.
+
+In my php_mt_seed example, is accessing .s[j] standards compliant or
+not?  If not, that's really unfortunate.
+
+What about e.g., .s[3] (constant index)?  We could want to narrow down
+icc's behavior - whether the problem occurs only with variable or also
+with constant indices, or maybe even without an array at all.  I haven't
+tried yet.
+
+&gt; If you pass them to another function then recent gcc -O2 will print 
+&gt; 17 too.
+
+This is not surprising.  However, I think behavior within one function,
+where having derived a pointer from a union member is clearly visible to
+the compiler, could be defined.
+
+Does any recent C standard say anything about the special case of
+accessing union members via pointers within the same function?
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

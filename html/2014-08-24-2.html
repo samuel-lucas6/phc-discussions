@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] What TrueCrypt (probably) wants from the PHC</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2014/08/23/1">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;53F9C682.1010304&#64;ciphershed.org&gt;
+Date: Sun, 24 Aug 2014 07:03:30 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] What TrueCrypt (probably) wants from the PHC
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/23/2014 12:01 PM, Solar Designer wrote:
+&gt;&gt; TrueCrypt volumes are currently essentially indistinguishable
+&gt;&gt; from true random data (with some unfortunate caveats mentioned in
+&gt;&gt; the audit). Because TrueCrypt has to open volumes with no idea
+&gt;&gt; what the encryption parameters might be, TrueCrypt currently
+&gt;&gt; tries every combination of supported encryption and password hash
+&gt;&gt; to see if any work. That's OK, because it only takes a few
+&gt;&gt; milliseconds to do them all. However, with multiple memory-hard
+&gt;&gt; options, guessing the correct one could take too long. In this
+&gt;&gt; case, I think Catena's "garlic" could work for us. We would have
+&gt;&gt; TrueCrypt first try all the old combinations and when they fail,
+&gt;&gt; we would guess a low garlic level appropriate for a mobile phone,
+&gt;&gt; and then increase the garlic until we either would use more
+&gt;&gt; memory than the machine has or run for too long. If the password
+&gt;&gt; is correct, this should only take about twice as long to discover
+&gt;&gt; the correct garlic level.
+&gt; 
+&gt; This sounds unnecessarily wasteful.  You could as well actually
+&gt; use the too-small-garlic hash values as input to the higher-garlic
+&gt; hash, just like Catena itself does internally.
+
+Good point.  That way an attacker can't just guess the most likely
+setting - he has to go through the whole set of sizes.  I'll do it
+this way instead.
+
+&gt; In fact, you can extend this approach to parameters other than
+&gt; memory cost.  You can also keep increasing the instruction, SIMD,
+&gt; and thread parallelism along with each(?) higher memory cost
+&gt; setting you test. (And this does not mean actually running more
+&gt; threads, etc. than your hardware supports - indeed, you're not
+&gt; forced to actually make use of the parallelism as such on every
+&gt; hash computation.  You'll just use your hardware optimally.)
+&gt; 
+&gt; For example, currently you can use:
+&gt; 
+&gt; 128 MiB, 128-bit, 1 thread 1 GiB, 512-bit, 4 threads 4 GiB,
+&gt; 512-bit, 8 threads 16 GiB, 512-bit, 16 threads
+&gt; 
+&gt; with each stage's result input to the next stage, until you either
+&gt; hit the right password or hit a configured memory limit.
+
+This is basically what I suggested on the TrueCrypt forum a year ago.
+ It certainly would be an improvement to do it this way.
+
+I forgot to mention that I want an option for multi-threaded hashing.
+ Pepper doesn't work out as well.
+
+&gt; If the KDF has configurable cache-timing attack resistance, you can
+&gt; keep it enabled for the first invocation (or two) and disable it
+&gt; for the rest (so you get a hybrid scheme as a result, except on the
+&gt; smallest systems).
+
+That's another good idea.  It could just be a pre-process, like a
+cache-timing resistant 128MiB hash to start.  That way even a cell
+phone gets some protection from unpredictable addressing.
+
+&gt;&gt; Another problem is we face because of our no-visible-parameters
+&gt;&gt; rule is that we can't support a lot of memory-hard hash
+&gt;&gt; functions. Therefore:
+&gt;&gt; 
+&gt;&gt; - - Please choose *one* high-memory usage successor to Scrypt
+&gt; 
+&gt; That's flawed logic.  PHC choosing multiple winners that are
+&gt; suitable for your use doesn't mean you actually have to support
+&gt; multiple schemes. You can choose just one, irrespective of PHC
+&gt; panel's decision.
+&gt; 
+&gt; There are other good reasons for PHC not to inflate the number of 
+&gt; winners.  Your reason is just not among those, in my opinion.
+
+You're right again.  The PMC should pick exactly one winner for each
+specific category.  TrueCrypt falls into the volume-encryption
+category.  Another would be the authentication server category.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT+cZ+AAoJEAcQZQdOpZUZIKYP/3eSIZKgZpQl4yqDYJA8sY26
+DIuRNuSkicnCHh7j9fkx5EDCdJMyV5U8GDX8IpEZ9MlyN2qLIuk0GSSnwaCjHg+L
+ghXKYOsBHm5GCEeIyXQ7je5LLiPhCPr/FmsQfBGVwyz3DuOSvOv+I+ODydWNwqXb
+fvjh0AdVfyN4f2RzV4jw5tzSwZxMJksJAnlJMRE4NGswzwh8m73yMhTFq4x9E7ii
+hPBZ4ogg8IJL/gv5BPxcuz83kxOEJ7/x1ijF8Xg+QpnLzADkMb0rpchemzMEFxTo
+61E3mhSq3lrPjk7rI325C8nASe1CxVsvX+BDHasPnJZ9TZ15zZiaLl6n9YqtywIS
+IgjHWJfYDPBqJfEOEUgRrZnHciG1U5IiI4/w383mezsM6um2HATitBzMj57wgdmt
+g1VBgZSjPv1gajqDy/SfCn4sIGl32lMwP3eOgUIsN6IN5HVziJ+uPuadJ0UWF5zL
+I+VJ02EONCiEyC4+E3sU0lGp+iUJAr/USMDYtiLNn8Rh0FiYlX3syqCayDs3IQoE
+slDj2raw4mGniikkxD5p/SSwYTSAd90OQHG3WquOa6xLmGkn+vGlUb8qpLn2vR19
+ruXei/7+ew0ndwd6ljWpneQe/31Ihq4zn9aOTMxQaKcQbPdjqh0q0phRWSDZfKpY
+RNRpH0+jlgBnEme9T/Tz
+=rXBQ
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

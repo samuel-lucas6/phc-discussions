@@ -1,0 +1,73 @@
+phc-discussions - POMELO v2
+
+Message-ID: <20150330110608.GA27170@openwall.com>
+Date: Mon, 30 Mar 2015 14:06:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Agnieszka Bielec <bielecagnieszka8@...il.com>
+Subject: POMELO v2
+
+Hi,
+
+Agnieszka, one of our prospective GSoC students (CC'ed on this message)
+is currently working to add support for PHC finalists into JtR -jumbo,
+including OpenCL implementations.  She already has an initial
+implementation of POMELO v2 in OpenCL, ported from the reference C code.
+While this is just an initial hack, I thought I'd let this list know.
+Discussion is currently in progress on the john-dev mailing list.
+
+While at it, Agnieszka pointed out this inconsistency in the POMELO v2
+reference code:
+
+    //check the size of password, salt and output. Password is at most 256 bytes; the salt is at most 32 bytes.
+    if (inlen 256 || saltlen 64 || outlen 256 || inlen < 0 || saltlen < 0 || outlen < 0) return 1;
+
+Note how the comment says "the salt is at most 32 bytes", but the check
+is for "saltlen 64".  This inconsistency is present in pomelo_x64.c
+and pomelo_sse2.c, but not in pomelo_avx2.c (which says 64 in both the
+comment and the code).  Which is right?
+
+Some other observations on POMELO v2:
+
+Unlike in v1, there's 256-bit SIMD parallelism in v2.  However, POMELO
+v2 still tries to discourage use of even wider SIMD.
+
+The random table lookups are more frequent than v1's, maybe bringing in
+some bcrypt-like GPU unfriendliness.  However, with the 256-bit SIMD
+parallelism, non-SIMD defensive implementations (such as plain 64-bit
+and especially 32-bit builds) are now at a disadvantage in this respect.
+(It's the same tradeoff I faced in yescrypt, where it can be dealt with
+by tuning pwxform settings.)
+
+The "& mask" and subsequent S[] lookups can be made more efficient at no
+security loss by redefining which bits are being masked and thus
+pre-shifting the (constant for each invocation) mask by 5 (for 32-byte
+S[] elements), thereby directly obtaining the byte offsets.  As it is,
+POMELO v2 requires either indexed addressing (with the index being
+implicitly shifted left by 5 by the CPU) or explicit extra shift
+instructions, either of which (and especially the latter) may have
+performance cost.  On x86, indexed access is only available for up to
+8-byte quantities, so we get explicit shift instructions in the
+generated code.
+
+solar@...l:~/pomelo/POMELO-v2/POMELO/pomelo_code_avx2$ objdump -d pomelo_avx2.o | fgrep -c 'shl    $0x5,'
+24
+
+yescrypt includes the optimization I mentioned above (optimally
+pre-shifted mask, to avoid these shifts).  Unfortunately, getting this
+optimization into POMELO now would be a tweak (it affects which hashes
+are computed, since different bits would be used for index).  If we
+introduce a standardization & tweaks-by-panel phase (which I think we
+should) and POMELO is chosen as a winner, perhaps this is something we
+should fix (in coordination with the author, indeed).
+
+Finally, in case some of us haven't noticed yet, POMELO v2 gives very
+competitive speeds in its specification document - e.g., 1.1 seconds on
+i7-4770K (when running one thread, I guess) for 1 GB.  This is on par
+with Lyra2 and yescrypt.  I haven't run my own benchmarks yet, but if
+this is true then POMELO v2 has moved from competing with Pufferfish
+only (like POMELO v1 did before) to also competing with Lyra2 and
+yescrypt (and continuing to compete with Pufferfish as well).  Nice!
+
+Alexander
+

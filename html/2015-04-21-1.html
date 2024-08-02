@@ -1,0 +1,363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/04/20/6">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/04/20/4">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150421023318.GA16806&#64;openwall.com&gt;
+Date: Tue, 21 Apr 2015 05:33:18 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Dmitry,
+
+I ended up writing a lengthy reply.  I hope you find it more useful than
+time-consuming. ;-)
+
+On Mon, Apr 20, 2015 at 11:08:42PM +0200, Dmitry Khovratovich wrote:
+&gt; First, I would like to better understand your reasoning of having
+&gt; S-boxes. For me, S-boxes in such ARX schemes look quite ad-hoc, and I
+&gt; want to get the right reason before introducing them.
+
+This scheme isn't ARX.  It is more similar to Blowfish than to ARX,
+although it's also significantly different from Blowfish.  Here we have
+MUL-ADD-XOR with inputs to ADD and XOR involving S-box lookups.  In
+Blowfish, we have ADD-XOR-ADD with all of the inputs coming from S-box
+lookups.  Either way, the combination is intended to be non-linear.
+
+Should I coin MAX for MUL-ADD-XOR?  Maybe this construction is MAXFORM?
+
+A design goal is that multiple sequential rounds shouldn't be
+efficiently computable with a shortcut, including with table lookups.
+While a straightforward 64-bit to 64-bit table lookup is impractical,
+there could theoretically be some combination of much smaller table
+lookups and XORs that would compute multiple sequential rounds within a
+practical amount of memory and at a lower latency.  I feel that the
+64-bit lookups from variable S-boxes provide much greater assurance than
+e.g. use of some constants or single variables in the ADD and XOR.
+(This also means that weak S-boxes are possible, but are likely
+sufficiently uncommon not to matter for this application.)
+
+ADD goes right after MUL to take advantage of fused multiply-add
+instructions, such as one available on ARM.  It's 32x32-&gt;64 MUL and
+64-bit ADD in one instruction on 32-bit ARM:
+
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0068b/CIHBJEHG.html" rel="nofollow">http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0068b/CIHBJEHG.html</a>
+
+"The UMLAL instruction interprets the values from Rm and Rs as unsigned
+integers.  It multiplies these integers, and adds the 64-bit result to
+the 64-bit unsigned integer contained in RdHi and RdLo."
+
+&gt; So my questions are:
+&gt; 1) Are S-boxes only an anti-GPU countermeasure?
+
+Mostly yes, but not only.  They also help achieve the design goal above,
+and they provide additional latency guarantee, changing it from MUL
+alone to max(MUL, LUT).
+
+&gt; As I understand, they
+&gt; should not be problem for FPGA and ASICs where the small-size S-boxes
+&gt; can be fit into the low-latency memory. Glanced at your recent
+&gt; bcrypt-FPGA paper, I suppose that FPGA would be a reasonable choice
+&gt; for any attacker and almost any scheme. If yes, then why bothering
+&gt; with S-boxes?
+
+For the reasons above.  GPU attacks may be relevant even in presence of
+FPGAs and ASICs.  Some attackers might readily have some GPUs, or prefer
+to invest in reusable equipment rather than into ASICs.  They are not
+necessarily starting from a pile of dollars that they'd want to
+optimally spend to attack one hash.
+
+GPUs might (or might not) be a better investment than FPGAs for a
+variety of reasons, including:
+
+Relative ease of development for GPUs, and hence expected support for
+more target hashes and ciphers.
+
+GPU boards with high off-chip memory bandwidth (which would be needed to
+attack the whole Argon2) are likely currently cheaper (at least in small
+quantities) than FPGA boards with comparable bandwidth.
+
+Also, memory in a given FPGA might (or might not) turn out to be the
+scarcest resource, limiting the number of instances that will fit per
+chip.  Even in our experiments with bcrypt, we did end up bumping into
+the number of ports to Block RAMs.  With more Block RAMs, we could
+potentially optimize our combinational logic, state machine, and
+communication further and fit slightly more instances per chip.
+
+Some kind of reusable ASICs are likely for well-funded attackers, but
+these might be similar to GPUs or FPGAs in some aspects, including in
+their local memory amount and number of ports.  If the balance between
+computing resources in a chip fits one target (e.g. some hash or cipher)
+optimally, it might not fit another (e.g. Argon2) nearly as optimally.
+
+&gt; 2) If my logic is wrong, then how many S-box lookups per memory block
+&gt; (or per CPU cycle?) would you want?
+
+I am trying to match bcrypt's rate of S-box lookup groups when bcrypt
+vs. our replacement (such as yescrypt or the modified Argon2) are used
+defensively on the same machine.  By "lookup groups" I mean the lookups
+that may occur in parallel in a single defensive instance.  For
+Blowfish, each group consists of 4 lookups (in one Blowfish round).
+For current yescrypt defaults, it's 8.  For my Argon2 hack, it's 2.
+
+The frequency of such S-box group lookups may need to be divided by the
+increase in total size of S-boxes per instance of the hash.  We went up
+from Blowfish's 4 KB to 8 KB in both yescrypt and Argon2 hack.  This
+logic is valid for yescrypt, where also the total number of accesses to
+S-boxes increased (since 8 are performed in parallel).  However, in the
+Argon2 hack the number of parallel lookups has decreased from 4 to 2, so
+the increase in S-box size does not necessarily allow us to make the
+group lookups twice less frequent than bcrypt's and still be assured
+we're at least as anti-GPU as bcrypt is.  The increase in width of S-box
+lookups from 32-bit in Blowfish to 128-bit in yescrypt and 64-bit in the
+Argon2 hack might or might not help.  From what I know about AMD GCN, it
+should help there as the local memory ports used for gather loads appear
+to be 32-bit.  Our 2 64-bit lookups should be almost as good as
+Blowfish's 4 32-bit ones.  But that's just one GPU family.  Things may
+be different on others, and possibly not in our favor.  Luckily, we'd
+typically bump into the local memory size as well, so the increase in
+the total size of S-boxes should compensate for the decrease in
+frequency anyway, even if wider gather loads are supported.  (On AMD
+GCN, bcrypt uses only 1/4 of the computing resources as it bumps into
+local memory size first.  It'd be similar here.)
+
+Also, the frequency of individual S-box lookups (not of groups) should
+ideally match bcrypt's, to be as resistant to GPU global memory attacks
+as bcrypt is.
+
+So I am not going from per-block or per-cycle numbers, although I
+suppose I could derive those and then try to achieve them.  Rather, I am
+running bcrypt vs. the alternative on the same machine, and counting the
+above figures for them.
+
+For current yescrypt:
+
+<a href="http://thread.gmane.org/gmane.comp.security.phc/2716/focus=2721" rel="nofollow">http://thread.gmane.org/gmane.comp.security.phc/2716/focus=2721</a>
+
+For old, in-development yescrypt (prior to PHC submission), which wasn't
+good enough in this respect:
+
+<a href="http://thread.gmane.org/gmane.comp.security.phc/959/focus=1009" rel="nofollow">http://thread.gmane.org/gmane.comp.security.phc/959/focus=1009</a>
+
+I assume that if Argon2 with my hack is similar speed to yescrypt (and
+it appears so from Milan's benchmarks), then having as many S-box lookup
+groups as in yescrypt should do the trick for GPU local memory attacks.
+Unfortunately, it would still be 4x worse for GPU global memory attacks,
+but luckily in an attack on Argon2 there would be other uses for the
+global memory bandwidth as well, and there appears to be a 2x to 4x gap
+between local and global memory attack speed on bcrypt on recent GPUs.
+
+This is why I set the number of un-pwxform rounds per 1 KB block to be
+the same as yescrypt's current default.  Since I have 16 64-byte
+sub-blocks, and you have 16 BLAKE2b's, this amounts to 6 rounds per
+either yescrypt's sub-block or Argon2's BLAKE2b.
+
+Thinking of CPU attacks, though, maybe the default for Argon2 should be
+lower.  (These attacks are slightly less relevant in yescrypt, which has
+pwxform on SIMD units.)  In yescrypt, going from 6 to 4 pwxform rounds
+reduced the S-box lookup rate only slightly (by 14% on FX-8120 at 2 MB).
+Perhaps it's similar for Argon2.  So this may be acceptable.
+
+&gt; Maybe there can be an elegant solution then?
+
+I find what I currently have quite elegant.
+
+A couple of things I failed to fit in, though:
+
+1. "Odd" total S-box sizes such as 12 KB or 24 KB while maintaining
+uniform access.  This would better use typical L1 caches.  I tried to
+use 3 S-boxes to achieve this, but that was ugly and inefficient in
+other ways (e.g., it takes longer to sequentially apply 3 lookup results
+than 2, so the multiply latency hardening is less), so I dropped it.
+
+2. Use of the current block being processed for the S-boxes.  This has
+some advantages, such as the S-boxes being even more variable without
+having to make any extra writes (and extra writes are potentially bad,
+considering systems with write-through caches).  Unfortunately, the
+current block is typically too small (we want 8 KB or 12 KB for the
+S-boxes, but the block is 1 KB for other reasons), and the resulting
+data dependencies from the current block updates in the same function
+may make the code slower (they limit instruction scheduling).
+
+3. Use of the beginning of the memory region for the S-boxes.  Such as V
+in yescrypt or "memory" in Argon2.  This also has aliasing issues
+similar to the above.  Even if we carefully tell the compiler about the
+danger, there's still potential performance impact from worse
+instruction scheduling.  Another difficulty is the chicken-egg problem
+on the first few blocks (do we memset() them to some value initially?)
+
+4. Have the S-boxes slowly overwritten, much like in bcrypt.  This adds
+complexity and isn't essential for anti-GPU, but it helps against
+garbage collector attacks on the S-boxes.  (In yescrypt, I chose to deal
+with those differently.)
+
+I think trying to solve these would result in uglier spec and code, but
+you should try solving #4.
+
+&gt; Apart from S-boxes, the most natural way to increase the latency would
+&gt; be chaining the Blake permutations and integrating high-latency
+&gt; operations into them. It is a good question how to chain properly, and
+&gt; we are still working on it.
+
+Yes, but if you try to fit S-box lookups into the chain that you'd have
+on the SIMD units while also keeping everything that you currently have,
+you'd incur much bigger performance impact.  In yescrypt, the SIMD units
+do nothing but pwxform most of the time.  In Argon2, you'd have modified
+BLAKE2b and something similar to pwxform competing for them.
+
+Also, keeping the non-tradeoff latency hardening chain separate from the
+BLAKE2b rounds allows to (fine-)tune the latency with just one
+parameter, the un-pwxform rounds count.  You do not need to implement a
+chain between the BLAKE2b rounds then.  (Optimized implementations will
+probably have e.g. 2 or 4 versions of the function, though - for
+different round counts.  Perhaps reducing the source code size with a
+function inlining and switch trick similar to what TwoCats used.)
+
+&gt; Regarding your benchmarks, the impact of extra operations on 8 threads
+&gt; is so low, I guess, because the bottleneck is the memory bandwidth
+&gt; rather than the CPU.
+
+Right.  I expect the impact at low m_cost (where all or a significant
+portion of memory fits in a cache) to be much worse.  We need to run
+such benchmarks as well, and then decide on the un-pwxform rounds count.
+I actually thought of having it vary by m_cost in yescrypt, but decided
+against that so far because it would be non-intuitive.  So I think a
+single default should be chosen for Argon2 as well.
+
+&gt; We thank you again for the patches, but just want to think a bit more
+&gt; on the most optimal update.
+
+You're welcome.  And yes, it helps to think of this some more.
+
+&gt; On Mon, Apr 20, 2015 at 8:41 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt; Since we have 8 parallel BLAKE2b's, it may be elegant to split our
+&gt; &gt; 64-bit chain as 8 one-byte inputs/outputs into each BLAKE2b (perhaps in
+&gt; &gt; addition to using 32-bit values in state[0] and state[63]).  We could
+&gt; &gt; also merge them in-between the two groups of 8 BLAKE2b's.  Would this
+&gt; &gt; help increase the latency of tradeoff attacks?  Without thinking of this
+&gt; &gt; much yet, my gut feeling is that it won't, but it'd be some additional
+&gt; &gt; state information that is normally not stored, and that the tradeoff
+&gt; &gt; attacks will need to store (or they'd in fact incur a latency increase).
+&gt; &gt; Very little of it, though.  So probably not worth the overhead.  Yet I
+&gt; &gt; thought I'd bring this up for discussion.
+&gt; 
+&gt; This discussion needs drawing and thinking. Ideally I would want a
+&gt; tradeoff-resistant solution
+&gt; be understandable just in mind, without pen and paper.
+
+I agree.
+
+&gt; &gt; To increase the latency of tradeoff attacks, I think BlaMka may be used
+&gt; &gt; (along with an un-pwxform chain like this, which serves its different
+&gt; &gt; purpose - hardening non-tradeoff latency and providing some anti-GPU).
+&gt; 
+&gt; If using BlaMka, why extra xform chain?
+
+Mostly for the anti-GPU.
+
+Also, in pwxform I tried to maximize the per-bit latency (so that one
+round's highest latency output bits are needed by the next round early).
+I haven't looked into how optimal or not BLAKE2b's rotate counts happen
+to be in this respect (and adjusting them may be bad).
+
+Finally, I suspect the extra chain might allow for a higher number of
+sequential multiplies than BlaMka for the same Argon2 performance.  The
+instruction issue rate for scalar units may be higher than for SIMD, and
+the multiply-hardening rounds may be more closely packed together in
+un-pwxform than in BlaMka.  (I think TwoCats might have had this sort of
+advantage over yescrypt, although this was in part because TwoCats had
+only multiplies, and not S-box lookups, on the scalar chain.)
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

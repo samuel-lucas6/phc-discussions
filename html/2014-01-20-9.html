@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140120105830.GA24625&#64;openwall.com&gt;
+Date: Mon, 20 Jan 2014 14:58:30 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Sun, Jan 19, 2014 at 08:51:46PM -0800, Larry Bugbee wrote:
+&gt; By 'practical' I was thinking of the client passing an interim value of reasonable size, perhaps a hundred bytes or so.  If we are talking about many MBs to address the space part of the equation, it doesn't make sense for a client doing perhaps 7/8 of the work to pass an interim value to the server MBs in size.  A more "practical" approach would be for the algorithm to perhaps call for the client to expand memory to some large size but reduce it to a few hundred bytes for transmission, and if the algorithm calls for it, the server could also expand it to some high memory mode to complete the final 1/8 of the workload.   ...but such an approach would only be possible if the algorithm had some convenient points where the relevant data got periodically reduced to a more "manageable" size.
+
+BTW, the "cost upgrades" happen to allow for this, even though it's not
+their primary intended use.  The server could store an "upgraded" hash,
+the client would compute a "non-upgraded" hash (or upgraded fewer times)
+and the server would "upgrade" the client's provided hash, then compare
+against what it had stored.  Drawback: with the granularity levels for
+"cost upgrades" that are currently being considered, the server will
+perform at least half the work (and, under most schemes, more than that).
+So this isn't of much use for "server relief", but it works for removing
+reusable plaintext password from the wire.
+
+To support such previously unplanned for use, maybe the granularity of
+"cost upgrades" should be less than 2x, although unfortunately this is
+incompatible by keeping the intermediate m_cost's as powers of 2 (if the
+original m_cost was a power of 2).
+
+It would also be nice to enable or increase use of ROM along with a
+"cost upgrade", but this adds complexity (unless this is forcibly done
+along with the very first upgrade, and further upgrades either don't
+expand the expected ROM size or expand it in some predefined manner).
+
+&gt; On another project I hashed a pswd using a salt value AND a second "salt" value being the userid (in lower case to remove ambiguity).  Now, an adversary somehow learning the salt cannot get started building a new table without building one for each of the userids.  Not perfect, but better than just a salt.
+
+It sounds like your first salt wasn't randomly chosen for each new hash
+computed, then.  Normally it would be.  It sounds like your first salt
+was what I'd call a local parameter rather than a salt, to avoid
+confusion (with password hashing, salts are normally assumed to be
+likely-different for each hash).
+
+&gt; Now, you can extend that theme to two salts.  One is retained and used by the server in the traditional way.  A second salt could be used by a client when client-assitance is desired, or by the server if 100% server side.
+
+This makes sense, and at least the server-side salts should be the usual
+per-hash ones.  Unfortunately, a scheme like this no longer fits "cost
+upgrades" misuse.  To have builtin support for it in a PHC candidate,
+we'd have to add complexity.
+
+&gt; In the end, not all targets are worth a maximum effort, so I submit we should choose 2 or 3 PHCs based on differing levels of potential loss.
+
+At this time, I see a need to choose two:
+
+1. Optimal for native code and VM implementations (for VMs lacking
+native code crypto primitives).  Thus, the same for C and e.g. JavaScript.
+(JavaScript will likely move into category #2 below soon.)
+
+2. Optimal for scripting languages that provide native code crypto
+primitives (but wouldn't have our new hashing scheme available as such
+native code primitive right away).  This should work well for PHP,
+Python, Perl, Java.  (Yes, these languages are sometimes compiled to
+native code.  In those cases, maybe #1 will work better.)
+
+I think #1 can be made generic, suitable for many use cases.  Then
+specialized cut-down implementations of it may be produced, with reduced
+feature sets (and supporting subsets of the possible hash sub-types),
+e.g. for use in Unix crypt(3).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

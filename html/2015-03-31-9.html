@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;alpine.DEB.2.11.1503311149270.7010&#64;debian&gt;
+Date: Tue, 31 Mar 2015 12:10:06 +0200 (CEST)
+From: Stefan.Lucks&#64;...-weimar.de
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Dear Honjun,
+
+&gt; Anyway, I will provide more analysis of POMELO in the updated report.  
+
+I am looking forward to reading the updated report. It is a pity that you 
+did not already provide this analysis!
+
+&gt; BTW, I think that it is not necessary to use strong crypto primitive 
+&gt; (such as strong hash function) in the design of password  hashing 
+&gt; scheme, especially if we want to process large amount of memory in a 
+&gt; fast way.   Eventually it turns out that a number of second round 
+&gt; candidates need to cut the round number significantly.   I feel that it 
+&gt; is no longer true that those PHC candidates are based on strong crypto 
+&gt; primitives, although they are still very strong.    
+
+Having spent a significant amount of my scientific career with 
+cryptanalysing primitives, I feel the urge to comment on this. There are 
+two extreme choices to design a password hashing function (or anything 
+else with required cryptographic strength):
+
+(1) A construction based on an underlying strong primitive, with a formal 
+reduction that the password hash function is secure if the primitive is 
+secure.
+
+(2) A novel primitive of its own right.
+
+If the underlying primitive is already well-studied, (1) greatly 
+simplifies cryptanalysis -- and makes it much less likely that any 
+unexpected weaknesses are eventually discovered. Choice (2) is more 
+difficult, but also more interesting and hopeful for the cryptanalysts.
+
+There is also a middle ground:
+
+(1.5) A password hash function based on the round function of an 
+underlying strong primitive.
+
+In this case, some of the cryptanalysis of the underlying primitive is not 
+applicable any more, but some still is. And, while there is no immediate 
+relationship between breaking the new construction and breaking the 
+underlying primitive, an attack on the new construction could well 
+undermine the trust into the underlying primitve.
+
+Finally, a benefit of (1) and, to a lesser extent, (1.5) is that a user 
+not willing to trust the proposed primitive can apply the same 
+construction based on a different primitve. With (2), one can either use 
+the primitive given, or not.
+
+
+Stefan
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

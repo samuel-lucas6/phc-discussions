@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150814113853.GA11303@bolet.org>
+Date: Fri, 14 Aug 2015 13:38:53 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Fri, Aug 14, 2015 at 06:06:01AM +0000, Peter Gutmann wrote:
+Krisztián Pintér <pinterkr@...il.comwrites:
+
+>5, the result should be a binary of the designed length. no encoding or
+>parameter-prepending is necassary. rationale: it is the task of the outer
+>layers. 
+
++1.  PKCS #7/CMS/PGP/etc already do this for you, so you don't need to encode
+parameters yourself.
+
+However, the counterargument can be made that leaving the "outer layers"
+do the job incurs the risk of seeing the job botched by people who are
+not fully aware of what a salt could be.
+
+If you consider what people actually do when they use PBKDF2 or bcrypt
+for basic password verification in a Web server: far too many get it
+wrong with the salt when using PBKDF2 (e.g. using the same fixed salt
+for all users), but not when they use bcrypt. The main reason for that
+is not that bcrypt users have understood what the salt is for; rather,
+it is because the bcrypt implementations already encode the parameters
+and salts into a single aggregate string, and it would take creative
+effort not to use it properly.
+
+In an ideal world, the implementation for a password-hashing function
+would offer both a "simple" implementation that encodes parameter, salt
+and output into a string, to be used for password verification purposes,
+_and_ an "advanced" implementation that outputs the raw binary output,
+which is what you need anyway for a KDF. (For what it's worth, I did
+that for the reference implementations of Makwa.)
+
+All of this _can_ be done with an "outer layer", a simple wrapper around
+the raw-output implementation; however I think it is important that such
+a wrapper be made "standard" by publishing it with the function
+reference implementation itself. In any case, an aggregate string is
+what people will end up storing in their /etc/shadow files or in many
+databases, and it is convenient when such strings can be moved around,
+which requires following a standard encoding.
+
+
+	--Thomas Pornin
+

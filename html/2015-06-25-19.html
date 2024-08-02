@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Why protect against side channel attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="18">[&lt;prev]</a> <a href="20">[next&gt;]</a> <a href="18">[&lt;thread-prev]</a> <a href="20">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150625055006.GA2242&#64;openwall.com&gt;
+Date: Thu, 25 Jun 2015 08:50:06 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Thu, Jun 25, 2015 at 01:40:46AM +0100, Peter Maxwell wrote:
+&gt; Yeah, but on balance a constant-time implementation is still preferable to
+&gt; even the remote possibility of opening up a new attack vector that hadn't
+&gt; existed before...
+
+That's a common opinion, but not the only opinion.
+
+&gt; would be somewhat embarrassing for the PHC if a few years
+&gt; down the line it turned out that password data could be recovered from a
+&gt; local timing attack that an unsalted md5 password hash isn't vulnerable to
+&gt; :-)
+
+Sort of.  However:
+
+1. I wouldn't expect this to be treated as that much of a new finding -
+we're already aware of this possibility for when the salt is known to
+the attacker.
+
+2. What do we optimize for: avoiding embarrassment or maximizing users'
+security?  To avoid embarrassment, the most reliable way is to do
+nothing.  Don't recommend any hashing scheme, and there will be nothing
+to be embarrassed for.  To maximize users' security, we need to accept
+reasonable security tradeoffs and risks, and document them clearly.
+
+(I agree, though, that within reason it makes sense to err on the side
+of caution.)
+
+3. Luckily, "unsalted md5" isn't state of the art prior to PHC.  bcrypt
+and scrypt are, and these already use secret-dependent indexing.  This
+is a reason why I find secret-dependent indexing (barely) acceptable
+when it helps achieve other security goals, but secret-dependent
+branching not acceptable at this time (that would in fact be accepting
+new risks, even if similar).
+
+&gt; Admittedly, I'm still not convinced on the utility of most memory-hard
+&gt; PDFs anyway.  Put it this way, I'm working on a project just now that may
+&gt; end-up serving a reasonably high load of login requests
+
+Can you be more specific?
+
+&gt; and will choose
+&gt; something *far* more light-weight for the password hash than has been
+&gt; generally proposed on this list -- memory and compute cycles aren't free.
+
+Possibly you got confused by us typically talking of fairly high memory
+sizes.  This does not necessarily mean that those same schemes wouldn't
+reasonably scale down to much lower sizes and much higher request rates.
+yescrypt is meant to be scalable down to kilobytes and 10k+ requests/s,
+while still providing good defense to the extent practical (better than
+PBKDF2, and on par with bcrypt at same defensive running time).
+
+&gt; You get far more bang for your buck by giving users a swift swift kick up
+&gt; the rear-end and forcing them to pick marginally better passwords.
+
+I think that's a wrong way to think of the problem.  Here's what I think
+is a better way: more password stretching allows for a less annoying
+password policy.
+
+An exception to this, where I would agree with you, is with password
+hashing times that are so large they are actually noticeable to
+end-users, like hundreds of milliseconds or more.  This is why I find it
+unreasonable to tune KDFs for more than 1 second: it is better to give
+the user a chance to type a few characters (or even words) more than to
+have them wait for a few seconds more.  For password hashing on a
+server, we don't get anywhere close to those numbers, with the target
+latency being in the 1 ms to 100 ms range (and request rate on a
+multi-core server often in the 1k to 10k requests/s range).
+
+Password stretching should be the primary tool, as long as server
+resources permit (leaving some room for spikes).  If you're using only
+the server resources you already have anyway, it's sort of free.
+
+Password policy should be secondary, since it has a cost to the users
+(and thus indirectly a cost to you).
+
+Of course, both should be used at once, but I'd skew the balance towards
+stretching and against policy to the extent practical in a given setup.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

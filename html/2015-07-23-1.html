@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 improvement thread</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/07/22/6">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/07/22/6">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150723004553.GA1873&#64;openwall.com&gt;
+Date: Thu, 23 Jul 2015 02:45:53 +0200
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Cc: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Wed, Jul 22, 2015 at 09:12:41PM +0000, Jean-Philippe Aumasson wrote:
+&gt; There's been some additions to the document, mainly by Bill (thanks!)
+&gt; 
+&gt; There's 3 main tweaks proposed to the algorithm:
+&gt; 1. blamka
+&gt; 2. maxform
+&gt; 3. non-linear indexing
+&gt; 
+&gt; Point 3. looks like a no-brainer to me; any objection?
+
+No objections from me.  It is a no-brainer to me as well, except that
+obviously we need to review the actual change closely (like any other
+change).  I think we should consider it tentatively accepted now.
+
+&gt; @Bill, Solar (and others): blamka and maxform, respectively in Argon2i and
+&gt; 2d, is that what you have in mind, of maxform in both?
+
+I see two options:
+
+A. "blamka and maxform, respectively in Argon2i and 2d".
+
+B. MAXFORM in 2d, and a revision of MAXFORM (yet to be determined) in 2i.
+
+I prefer option B, but it's more work.  If successful, it'd achieve
+greater similarity between 2i and 2d (thus, smaller spec and code size
+for 2i+2d combined) and greater security.
+
+I don't see an easy way to use MAXFORM as-is for 2i, because MAXFORM is
+normally meant to be used on password-dependent inputs and it involves
+S-box lookups, thus contradicting 2i's intended cache-timing safety.
+
+So we may try to come up with a revision where the S-box lookups are
+omitted or replaced or made password-independent (with the MULs kept
+password-dependent) for 2i.
+
+Regarding option A, if we do keep BlaMka in 2i, it makes sense to keep
+it in 2d as well for greater similarity between the two.  That's a
+sub-option of option A.  I have no strong feelings on whether it's only
+MAXFORM or MAXFORM + BlaMka in 2d.  But I feel that MAXFORM is required.
+
+&gt; @Dmitry: what do you think? any other proposal of improvement?
+
+Yes, waiting to hear from Dmitry.
+
+I'd like to contribute to the effort of putting MAXFORM in, as well as
+trying to design a revision suitable for 2i.
+
+&gt; Let's keep collecting feedback and ideas about
+&gt; implementation/API/parameters/etc. We'll decide on those after we're done
+&gt; with the actual algorithm.
+
+Yes.  In fact, I think most of those should be generic, not limited to
+just Argon2.
+
+BTW, should we possibly call the final tweaked PHC winner something
+other than Argon2?  Maybe Argon3?  Or an entirely new name the designers
+might suggest?
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

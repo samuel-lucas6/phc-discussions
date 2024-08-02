@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+Message-ID: <367866525.848238.1389842826925.open-xchange@email.1and1.com>
+Date: Wed, 15 Jan 2014 21:27:06 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+On January 12, 2014 at 9:12 AM Solar Designer <solar@...nwall.comwrote:
+>
+I've attached a new revision of smhkdf (still highly experimental, work
+in progress). It is about twice faster than the first revision, mainly
+due to reduced iteration count in the last loop. With $k 1, that loop
+doesn't need as many iterations; rather, to maximize ASIC area*time, we
+want the memory filling and memory using loops to run for roughly the
+same amount of real time. (Another aspect, though, is that for attacks
+with e.g. CPUs we may want to optimize for greater SHA-512 efficiency,
+even if it reduces the AT cost somewhat. For this reason, maybe the
+optimal iteration count for the last loop needs to be somewhere inbetween
+of what I had in the first revision and in this new one.)
+>
+This new revision also discourages TMTO to a slightly greater extent.
+
+You might want to change:
+        $v .= $x = hash('sha512', $x . substr($v, $j, $blocksize1), TRUE);
+and
+        $x = hash('sha512', $x . substr($v, $j, $blocksize2), TRUE);
+to:
+        $v .= $x = hash('sha512', substr($v, $j, $blocksize1) . $x, TRUE);
+and
+        $x = hash('sha512', substr($v, $j, $blocksize2) . $x, TRUE);
+
+This way the attacker can't do anything until you get the data from $v. Well
+the attacker could precalculate s0 and s1 from $x for the last block:
+s0 = ("x" rightrotate 7) xor ("x" rightrotate 18) xor ("x" rightshift 3)
+s1 = ("x" rightrotate 17) xor ("x" rightrotate 19) xor ("x" rightshift 10)
+
+This has an added benefit of forcing the attacker to shift $x by 7 bytes
+instead of using $x as is.
+
+

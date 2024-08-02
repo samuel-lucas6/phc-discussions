@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] Scrypt can have highest time*average memory cost
+
+Message-ID: <20140329184823.GA2885@openwall.com>
+Date: Sat, 29 Mar 2014 22:48:23 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scrypt can have highest time*average memory cost
+
+On Sat, Mar 29, 2014 at 01:01:36AM +0400, Solar Designer wrote:
+However, what if we normalize for defender's time per hash computed?
+When we do that, it turns out that scrypt reaches its highest normalized
+AT cost at 2*N (just the way it's defined), but yescrypt (yes, that's
+the new name) reaches the highest normalized AT cost (1.5 that of
+scrypt) at 4/3*N (and it drops to 4/3 of scrypt's at 2*N), and other
+schemes where the entire arena is randomly accessed while being filled
+(no sliding-power-of-2) potentially/theoretically reach the highest
+normalized AT cost (twice that of scrypt!) at N (no need for SMix's
+second loop at all, then - it only hurts this potential/theoretical
+highest normalized AT cost).
+
+When I say potential/theoretical, I mean that in those cases (unlike in
+current yescrypt) other factors appear, which may negatively affect the
+AT cost to real-world attackers: non-uniform distribution of accesses
+(allowing for potentially beneficial use of 2+ types of memory with
+different access speed or/and area or/and dollar cost), maybe slightly
+fewer different memory locations being read.  I previously wrote about
+those issues.  There are a few other considerations as well, including
+peak memory usage cost to defender (which the defender must provide
+capacity for, including for the worst case of highest concurrency and
+most unfortunate (de)sync).
+
+Regarding "maybe slightly fewer different memory locations being read",
+I just ran simulations similar to:
+
+http://www.openwall.com/lists/crypt-dev/2013/11/25/3
+
+Specifically, I made the program stop at 4/3*N for the
+sliding-power-of-2 algorithm.  I also made it stop at 1.5*N for the
+modulo division (and for a trivial alternative of it called "wrap"
+here), just out of curiosity.  I already had the hit rate percentage
+output at time N (inbetween the two loops) in the previous program
+revision (and that's the optimal stop point for the modulo division).
+
+The new results show that sliding-power-of-2 achieves a hit rate of 69%
+at its optimal stop point (4/3*N), whereas scrypt achieves only 63% at
+its 2*N time, whereas the modulo division achieves only 50% at its
+optimal stop point of N, and it achieves ~69.7% at 1.5*N (beyond
+sliding-power-of-2's optimal stop point).
+
+So comparing these algorithms, sliding-power-of-2 is actually best in
+terms of hit rate, even with the earlier stop (than what I was testing
+before).  It is plausible that Bill's cubed distribution would work
+better yet, though.  I did not try it yet (and don't have time to do
+that now).
+
+classic
+B' = 292735ce775aaef5
+t_cost = 2097152
+at_cost1 = 1073741824 at_cost2 = 549755813888 at_cost = 550829555712
+at_cost1/t = 512 at_cost2/t = 262144 at_cost/t = 262656
+total: nhits=663284 (63.26%) mhits=9
+
+loop1_pow2(N2 = N/1)
+loop1: nhits=595349 (56.78%) mhits=10
+B' = d9247fb08f9e807c
+t_cost = 2097152
+at_cost1 = 183251937963 at_cost2 = 549755813888 at_cost = 733007751851
+at_cost1/t = 87381 at_cost2/t = 262144 at_cost/t = 349525
+total: nhits=882412 (84.15%) mhits=13
+
+loop1_pow2(N2 = N/3)
+loop1: nhits=595349 (56.78%) mhits=10
+B' = 89be57ce3a548730
+t_cost = 1398101
+at_cost1 = 183251937963 at_cost2 = 183251763200 at_cost = 366503701163
+at_cost1/t = 131072 at_cost2/t = 131072 at_cost/t = 262144
+total: nhits=724167 (69.06%) mhits=11
+
+loop1_wrap(N2 = N/1)
+loop1: nhits=456640 (43.55%) mhits=24
+B' = b7283d0ff61c6599
+t_cost = 2097152
+at_cost1 = 274877644800 at_cost2 = 549755813888 at_cost = 824633458688
+at_cost1/t = 131072 at_cost2/t = 262144 at_cost/t = 393216
+total: nhits=830413 (79.19%) mhits=24
+
+loop1_wrap(N2 = N/2)
+loop1: nhits=456640 (43.55%) mhits=24
+B' = d2070a62b8aaaadd
+t_cost = 1572864
+at_cost1 = 274877644800 at_cost2 = 274877906944 at_cost = 549755551744
+at_cost1/t = 174762 at_cost2/t = 174763 at_cost/t = 349525
+total: nhits=689410 (65.75%) mhits=24
+
+loop1_mod(N2 = N/1)
+loop1: nhits=524257 (50.00%) mhits=21
+B' = 2365d32db26bfc21
+t_cost = 2097152
+at_cost1 = 274877644800 at_cost2 = 549755813888 at_cost = 824633458688
+at_cost1/t = 131072 at_cost2/t = 262144 at_cost/t = 393216
+total: nhits=855632 (81.60%) mhits=22
+
+loop1_mod(N2 = N/2)
+loop1: nhits=524257 (50.00%) mhits=21
+B' = 53d65e2fe1ff8ddd
+t_cost = 1572864
+at_cost1 = 274877644800 at_cost2 = 274877906944 at_cost = 549755551744
+at_cost1/t = 174762 at_cost2/t = 174763 at_cost/t = 349525
+total: nhits=730298 (69.65%) mhits=22
+
+For exact definitions of these algorithms, see the program at the URL
+above.  It has not changed except for the lower iteration count in the
+second loop in some of these tests (marked with "N2 = N/3" and "N2 =
+N/2" as appropriate).
+
+Alexander
+

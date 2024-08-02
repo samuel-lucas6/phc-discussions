@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] multiply latency reduction via table lookups
+
+Message-ID: <531D7A92.1070708@dei.uc.pt>
+Date: Mon, 10 Mar 2014 08:40:50 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply latency reduction via table lookups
+
+On 10-03-2014 08:02, Solar Designer wrote:
+Now, a 16x16->32 lookup table is still pretty large.  A naive
+implementation of it would take 16 GiB.  A smarter implementation would
+probably halve that, due to multiplication being commutative.  (Can we
+do better yet?)
+
+You can use the quarter-squares identity [1] to keep that table at
+around 2^16 entries, in exchange for 2 memory accesses instead of 1.
+This seems to be a better tradeoff than 4 accesses (or 3 using
+Karatsuba) with an 8x8 table, under the assumption that additions and 
+subtractions are 'free'.
+
+Do e.g. CPUs use table lookups like this for multiplication already?
+
+Not for multiplication as far as I know, but complex floating-point
+functions (e.g. inverse square root, trigonometric) usually start with a
+table lookup for initial approximations.
+
+[1]
+https://en.wikipedia.org/wiki/Multiplication_algorithm#Quarter_square_multiplication
+

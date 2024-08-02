@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <20150422165503.GA14797@bolet.org>
+Date: Wed, 22 Apr 2015 18:55:03 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 modulo division
+
+On Wed, Apr 22, 2015 at 09:13:21AM -0700, Bill Cox wrote:
+Why is password length not worth protecting better than we do now?
+
+Hiding the password length is, generally, a lost cause. Or, rather, it
+must first be addressed elsewhere. Consider, for instance, the following
+scenarios:
+
+ -- The password is sent from a client to an authentication server,
+ as part of some HTTP POST request, within protection of SSL. Outsiders
+ can see the encrypted SSL record lengths and infer the password length
+ from that (with byte granularity if RC4 or GCM is used).
+
+ -- The password is typed by a user on his keyboard. The attacker, from
+ the adjacent cubicle (and out of direct sight !), records the typing
+ noise with his smartphone, and then "analyzes" the recording (i.e.
+ plays it at a slower rate) to count the keystrokes.
+
+ -- The password is entered by a user who is assumed to follow the
+ security guidelines published by his organization. These guidelines
+ state that "a password shall consist of exactly eight characters"
+ (yes, there are places where they say that passwords MUST NOT exceed
+ eight characters; some even enforce it). Attackers know that, and thus
+ know the password length.
+
+
+If we really want to hide the password length, then we must hide it in
+all the places where the length is observable, and this begins way
+before the password reaches the hashing function. In a sense, the PHC
+candidates already do all that is possible to hide the password length
+by accepting all binary inputs up to 128 bytes (at least): it is now up
+to the password provider (the system that collects the password from the
+human user and transmits it to the hashing function) to ensure that the
+password is adequately padded with bytes of value 0, so that the
+password hashing function gets fixed-length inputs.
+
+Hiding password _contents_ is still the responsibiity of the hash
+function. In the three example scenarios above, only the password length
+leaks, not the exact character values.
+
+(Well, that's not completely true for the sound-recording example. Keys
+from a given keyboard, pressed by a given user, tend to emit distinct
+sounds. This is still substantially harder to exploit than merely
+counting keystrokes.)
+
+
+	--Thomas Pornin
+

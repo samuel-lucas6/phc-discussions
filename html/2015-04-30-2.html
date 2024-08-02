@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Added multi-threading support to test suite</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2015/04/29/7">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150430043756.GC20660&#64;openwall.com&gt;
+Date: Thu, 30 Apr 2015 07:37:56 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Added multi-threading support to test suite
+
+On Wed, Apr 29, 2015 at 12:15:41PM -0700, Bill Cox wrote:
+&gt; Algorithm          Speed (in ms)
+&gt; --------------------------------
+&gt; Argon2d-sse          151
+&gt; Yescrypt-2pw-sse     160
+&gt; Yescrypt-sse         175
+&gt; Lyra2-sse            258
+&gt; Argon               1620
+&gt; 
+&gt; All but Argon are memory-bandwidth limiited.  Argon is external cache-miss
+&gt; penalty limited, and is not well suited as an Scrypt upgrade (it would be a
+&gt; downgrade, IMO).  However, since the PHC panel has not yet determined
+&gt; whether to allow Argon2 into the competition, I've included Argon's
+&gt; performance here.  Hopefully, this adds some support for allowing Argon2.
+&gt; 
+&gt; Argon2d, Yescrypt, and Lyra2 all provide excellent defense, IMO.  I think
+&gt; the best defensive runs are, in order of defense:
+&gt; 
+&gt; Yescrypt-2pw-sse with 4 threads, hashing 1GiB in 167ms
+&gt; Yescrypt-sse with 12 threads, hashing 1GiB in 175ms
+&gt; Argon2d-sse with 8 threads, hashing 1GiB in 155ms
+&gt; Lyra2-sse with 4 threads, hashing 1GiB in 218ms
+&gt; 
+&gt; If I understand correctly, the 2-round Yescrypt-2pw-sse run is slightly
+&gt; more compute-time hardened than the 6-round Yescrypt-sse run.  The 6-round
+&gt; version does make better use of all 6 of my CPU cores, but I do not think
+&gt; an attacker will be very computation core limited.  I would rather just use
+&gt; 4 cores and get better runtime and compute-time hardening.
+
+This makes sense, but on the other hand:
+
+1. If we just set PWXrounds=2, this means that people who will run 12
+threads on a machine like yours will get almost 3x worse compute-time
+hardening defense than they do now.  (160 ms, 167 ms, and 175 ms are
+similar, so I am primarily looking at other differences.)  We can't
+expect apps and users to always tune for optimal number of threads.
+And on servers, request rate capacity is decided by what happens at
+highest load.
+
+2. If it weren't for the limited memory bandwidth of the machine, your
+4-thread run would be more susceptible to CPU attacks.  (As it is, it's
+only very slightly more susceptible, as seen from the 167 ms vs. 160 ms
+(non-)difference.)  If this is later attacked on a bigger machine (with
+more memory channels), I'd expect attacks on the 4-thread, 2-round
+version to run much faster than on the 12-thread, 6-round version.  Both
+use roughly the same memory bandwidth on your current machine, but the
+4-thread version would leave more of the new machine's CPUs available to
+take advantage of that machine's greater memory bandwidth.
+
+3. The 175 ms vs. 167 ms difference is negligible (and the extra 3x
+parallelism is compensated for by the 3x increase in compute-time
+hardening per thread).  I think it's fair price for #1 and #2 above.
+
+That said, I hear you and I am considering lowering the default
+PWXrounds or/and making it runtime tunable.  (OTOH, the latter goes
+against simplicity.  So probably not in yescrypt-lite.)
+
+&gt; I rate Argon2d-sse after Yescrypt-2pw-sse and Yescrypt-sse for poorer
+&gt; compute-time hardening and GPU defense, and Lyra2-sse after Argon2-sse for
+&gt; it's longer runtime, since memory*time defense goes as the square of the
+&gt; memory hashing speed.
+
+Yeah.  To be fair, yescrypt's GPU defense is important at way lower
+m_cost.  At 1 GB, it's not required, except that it changes the
+compute-time hardening from MUL latency to max(MUL, LUT) latency.
+
+&gt; Lyra2-sse
+&gt; ---------
+&gt; 
+&gt; $ ./tst-lyra2-sse -p1 -m43700 -t1
+&gt; 8 32 43700 1 680 1044960
+&gt; 
+&gt; $ ./tst-lyra2-sse -p2 -m43700 -t1
+&gt; 8 32 43700 1 345 1044952
+&gt; 
+&gt; $ ./tst-lyra2-sse -p4 -m43700 -t1
+&gt; 8 32 43700 1 218 1045024
+&gt; 
+&gt; $ ./tst-lyra2-sse -p8 -m43700 -t1
+&gt; 8 32 43700 1 235 1045000
+&gt; 
+&gt; $ ./tst-lyra2-sse -p12 -m43700 -t1
+&gt; 8 32 43700 1 258 1044620
+
+The slowdown seen here when going from 4 to 8 or 12 threads is nasty,
+especially on servers.  This, too, is something I tried to avoid when
+not setting PWXrounds lower.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

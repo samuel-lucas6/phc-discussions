@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150331125007.GA2715&#64;openwall.com&gt;
+Date: Tue, 31 Mar 2015 15:50:07 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+Hi Dmitry,
+
+Thank you for your help reviewing yescrypt!
+
+On Tue, Mar 31, 2015 at 12:11:28PM +0200, Dmitry Khovratovich wrote:
+&gt; To produce a 1 KB-block,
+&gt; Argon2d applies the Blake2b round 16 times in total. 1 Blake2b round
+&gt; is equivalent to 2 rounds of Salsa20, extended to 64-bit words.
+&gt; 
+&gt; As I understand the yescrypt pseudocode, r=8 yields 1 KB blocks.
+&gt; BlockMIX then applies pwxform r1=16 times, and Salsa20/8 one time.
+&gt; 
+&gt; The latency of the compression function/block of Argon2d is 2 Blake2b
+&gt; rounds. Since the compression function has full diffusion (every input
+&gt; bit of 1 KB-block affects every output bit), any output byte has also
+&gt; latency of 2 Blake2b rounds.
+&gt; 
+&gt; In yescrypt, the SIMD lanes are mixed only in the Salsa20 call, which
+
+Agreed so far.
+
+&gt; means that the block latency is not 16 pwxform calls+ 8 Salsa rounds,
+&gt; but far smaller, only the equivalent of 4 pwxform+8 Salsa rounds.
+
+No.  Where does the number 4 come from?
+
+Processing of every sub-block depends on the previous processed sub-block.
+
+&gt; This is for the block; all the subblocks but the last one do not need
+&gt; Salsa,
+
+Yes, typically most sub-blocks except for one or a few last ones (or
+exactly the last one with the provided compile-time settings, as you
+correctly say) do not need Salsa.
+
+&gt; so their individual latencies are only 4 pwxform.
+
+No.  They depend on processing of the same lanes in previous sub-blocks.
+
+At least that's the intent.  If you found an error preventing this data
+dependency from working as intended, please let me know.
+
+&gt; Thus indeed, yescrypt block function has higher latency, though not
+&gt; that much higher compared to Argon2d (2-3x for most of the blocks).
+
+I disagree.  I continue to think it's 16x more sequential rounds in
+yescrypt in Bill's test.
+
+&gt; However, the yescrypt's BlockMIX is not memory-hard, as most of it can
+&gt; be computed using only 16 bytes of RAM (not including the storage) by
+&gt; computing it lanewise. This property might be mitigated by subblock
+&gt; shuffling, but I have not analyzed it.
+
+Yes, it can be computed lanewise up until the final Salsa20/8, but
+that's a non-issue.  In fact, this flexibility may be somewhat useful on
+register-starved archs.  pwxform() in yescrypt-opt.c actually partly
+takes advantage of this: it has the loops re-ordered to be
+gather{rounds{simple}} rather than rounds{gather{simple}}, for some
+slight speedup on register-starved archs.  yescrypt-opt.c does not take
+this to the BlockMix level, but it could.
+
+Do you think this has any drawback, and why?
+
+Yes, there is a local memory vs. computation tradeoff here, but the only
+place where yescrypt actually tries to depend on having much local
+memory is with pwxform's S-boxes.  The current block isn't meant to be
+tied to local memory for sane performance.  Also, its typical size is
+just 1 KB anyway, and it's accessed sequentially anyway (so its reads
+from global memory wouldn't be that slow), compared to the typical 8 KB
+for the S-boxes, which are accessed randomly (16-byte lookups by
+default).  So this tradeoff doesn't appear lucrative to likely
+attackers, and it is allowing for relatively minor local memory needs
+reduction anyway (like to 8.5/9 with the typical numbers I gave here if
+paying for this with a 2x increase in computation time).
+
+What bothers me more is the simplification I made between yescrypt v0
+and v1 in how the S-boxes are initialized.  There's now an equivalent of
+classic scrypt's TMTO there, but applied to the S-boxes.  My expectation
+is that this tradeoff is also usually not lucrative, but it isn't as
+non-lucrative as the above.  For example, an attacker who reduced the
+local memory needs for the S-boxes from 8 KB to 4 KB by not storing
+every other 64-byte block (since they're initialized in such blocks)
+would incur a Salsa20/8 (yes, 8 rounds) per every other S-box lookup, of
+which there are two per pwxform round per gather lane.  So for them one
+pwxform round per gather lane would effectively turn into Salsa20/8, on
+average.  With 4 gather lanes per 64-byte sub-block (the current
+default) and just 1 pwxform round, that's 4x more work than classic
+scrypt did, and it's still on top of also needing 4 KB S-boxes in local
+memory.  For 2 pwxform rounds as in Bill's benchmark, that's 8x more
+work than classic scrypt's.  For 6 pwxform rounds as in the current PHC
+submission's defaults, that's 24x more work than classic scrypt's.
+That's just too much work (and latency) to do so frequently.  So I
+accepted this simplicity vs. local memory TMTO resistance tradeoff in
+favor of simplicity in v1.  But like I say, this does bother me a bit.
+
+&gt; Do I understand yescrypt right?
+
+I think not.  Perhaps I need to describe it better, including the
+expected latencies.
+
+&gt; &gt; That's cool, but that's 8192-bit parallelism, right?
+&gt; 
+&gt; I would like to comment on this as well, but I do not quite understand
+&gt; how you measure the parallelism. Maybe the compression function
+&gt; picture in Argon2 specification helps.
+
+I was looking primarily at your code.  I saw 16 BLAKE2 rounds, of which
+2 groups of 8 had data dependencies between the groups.  This appears to
+be consistent with what you're saying.  Right?
+
+Thanks again,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

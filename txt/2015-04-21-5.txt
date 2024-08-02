@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <20150421125126.GA31760@bolet.org>
+Date: Tue, 21 Apr 2015 14:51:26 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 modulo division
+
+On Tue, Apr 21, 2015 at 06:26:31AM +0300, Solar Designer wrote:
+It appears that Argon2 uses modulo division with arbitrary (and
+changing) divisors (usually not powers of 2).  Argon2d applies this to
+secret-dependent integers.  This is an extra source of timing leaks, on
+top of secret-dependent lookup addresses.
+
+Do we consider this a drawback?
+
+Generally, small integer division algorithms that are not constant-time
+have a running time that depends on the length of the operands, but not
+on the actual values. Thus, if you need to compute x % y while hiding
+the length of x, then you can compute (x + k*y) % y  with a suitable
+constant k (preferably a power of 2...). For instance, if x is a secret
+integer in the 0..0xFFFF range, then set k = 2^16. This won't hide the
+size of the divisor (y), but it should make execution time (and
+conditional branch pattern) independent of the actual value of x. The
+cost of the extra shift-and-add should be small compared to that of the
+division.
+
+
+I make this remark without having looked at Argon2 so I don't know
+whether it applies well or not. Also, note that while some architectures
+offer division opcodes (x86, PowerPC...), others do not (especially ARM
+before ARMv7, and also some ARMv7 variants); the latter will use a
+software implementation that will be linked in and possibly inlined by
+the compiler. For architectures without a hardware divide, a
+special-purpose fully-unrolled division function could be written, that
+offers constant-time processing. It is possible that even on some
+architectures with a hardware divide, an unrolled no-division code chunk
+could offer comparable or even better performance (this depends quite a
+lot on what is known at compile-time about the dividend and the
+divisor).
+
+
+	--Thomas Pornin
+

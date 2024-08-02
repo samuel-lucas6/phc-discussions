@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <20141212020921.GA23911@bolet.org>
+Date: Fri, 12 Dec 2014 03:09:21 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On Fri, Dec 12, 2014 at 01:21:32AM +0000, Marsh Ray wrote:
+So the old security properties given by salting were:
+
+A.      Prevents precomputation TMTO via rainbow tables
+
+B.      Prevents attackers from re-using work on one hash against another
+
+C.      Prevents the trivial determination that two accounts chose the same password
+
+Today
+
+(A)   may be still important
+
+(B)   Is important to the extent that the attacker is not targeting a specific user.
+
+(C)   Seems almost useless now.
+
+I am not sure reason "C" has ever been important, although I am ready
+to believe that some people thought it mattered.
+
+"A" and "B" are really the same thing. A more general wording is that we
+want to avoid _cost sharing_ between several attack instances. An
+attacker who has a bunch of unsalted hashes to crack (say, a database
+dump) will compute the hash function once for each candidate password,
+and compare it against all his hash values; such an attacker thus
+attacks N passwords at the same cost as attacking 1 password. If,
+instead of looking up his computed hash values against a whole list, he
+remembers his hash values in some big table and then performs lookups in
+that table, then this is a "precomputation" situation (rainbow tables
+are just a smart compression method for huge precomputed tables). Apart
+from the precise chronology of attacker's actions, precomputation and
+parallel attack of several hashed passwords are mostly the same thing.
+
+
+When a password hashing function uses a salt, it no longer is a
+function, but a family of many functions. The salt is then the index of
+the function to use, within the set of functions in the whole family.
+Having a family of function, with as little reuse as possible, defeats
+cost sharing, under the assumption that hashing work performed with one
+function of the family yields no information whatsoever on hash values
+computed with another function.
+
+
+	--Thomas Pornin
+

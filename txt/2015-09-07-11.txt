@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] Re: Interest in specification of modular crypt format
+
+Message-ID: <55EDC241.7040300@devever.net>
+Date: Mon, 7 Sep 2015 17:58:41 +0100
+From: Hugo Landau <hlandau@...ever.net>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Interest in specification of modular crypt format
+
+On 07/09/15 15:49, Solar Designer wrote:
+Should there be a shortcut syntax where some parameter can be omitted
+and a default used? e.g. have p and t default to the smallest
+supported (which is generally what I would recommend for password
+hashing use anyway). If so, it'd be preferable to use another
+delimiter between the parameters. 
+I suspect not. It just doesn't seem worth it. The savings are tiny. In
+this day and age of multi-terabyte hard disks, nobody, but nobody, is
+complaining that they can't upgrade from their "md5(password)" disaster
+because they can't afford the disk space. (The only real issue that
+comes to mind is that some systems may have a hardcoded limit, perhaps
+255 bytes; but that's miles away, and any such limit needs to be
+reasoned about in terms of worst cases, not best cases.)
+
+I'd expect many (possibly most) implementations not to insist on the
+decimal numbers having proper syntax (digits only) and being in range
+(except after decoding, where an overflow may have already occurred).
+It's just too tempting to simply use atoi() or a scripting language's
+equivalent, instead of proper use of strtoul() (with its somewhat weird
+semantics) or checking the string against a regexp first (including a
+length limit).
+>
+This is true. However, I would question the likelihood of an
+implementation being presented with such crypt strings. If someone is in
+a position to present arbitrary malicious crypt strings to an
+implementation, you have bigger problems.
+
+This seems like it is best rectified with a robust test suite which
+offers both must-pass and must-fail test cases, with plenty of cases for
+edge conditions on integer parsing.
+
+

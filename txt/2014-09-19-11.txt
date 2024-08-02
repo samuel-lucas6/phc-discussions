@@ -1,0 +1,62 @@
+phc-discussions - A GPU friendly hashing algorithm - gpuhash
+
+
+Message-ID: <541CA7D9.6070501@ciphershed.org>
+Date: Fri, 19 Sep 2014 18:02:01 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A GPU friendly hashing algorithm - gpuhash
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+After reading so many good ideas in detail during my reviews, I wanted
+to go back and apply some of what I'd learned in a new password
+hashing algorithm.  This is not an entry for the competition, but it
+might be fun to discuss.
+
+I started out trying to include Antcrypt's idea with many different
+hash functions.  I found it slowed down my defense quite a bit, maybe
+3X in speed, making it harder to hurt GPUs as well as I wanted to.
+Also, I wanted to include Wolfram's Rule 30 which I read about in the
+Schvrch attached paper.  Unfortunately, these simple
+single-dimensional cellular automaton run great on GPUs.
+
+So, here's gpuhash, in a proof-of-concept form.  It is *GPU friendly*
+on purpose.  The idea is that it might lead towards a good hashing
+function to run in the Parallel entry, in that it might run a lot
+faster than SHA512 on a GPU, and not have too much speed-up in an ASIC.
+
+Gpuhash currently has a 32x32 bit state in a grid.  Rule 30 is applied
+on each column 16 times, and then I "diaglonalize" it, by
+right-shifing each row by it's row number.  I then apply Rule 30 on
+each row 16 times.  I know that odd-numbers here are better, but I
+wanted to see what this would do.  It seems to mix well.
+
+I read somewhere that cell-phone GPUs have 32 32-bit registers and
+that operations can be applied to either to rows or columns of bits.
+I am hoping this hash fits cell-phone GPUs well.
+
+The code is attached.  Enjoy!
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUHKfWAAoJEAcQZQdOpZUZ/YkP/2TSFXpJLMzen5lRVSjhJVZN
+4Si9e3ZcpQtaUuZT8oA4RkckpuK8BmY5zl8Ygnksstsy5ZX93vx/5cvibowYW3iJ
+63oGE48jQyVA78YM2qM+xBRAh8+9E4V38E3MyeJx3szJgo+uAmTOLR5Oh0DwDFHs
+sCokuse31peyBr7mCxQUVsmKuLGZuTJ1xAsxxepMJMelvyqiLZZniNyDVTcvdpoj
+udw1ZQAtOE18J7OY5G+whdqpVRxSVv0NvxoLHRt9A/FjjVsXGkzB/HwzWvq+lG5V
+LZYZYC7kCGUcu99+5X/w7sKxzNSV3U0v3xpjKexRO/AHPpYpEQv+l1bQ1EdJK6Ag
+lnfLM8NgYLkuRxiw+5yGoX3rUd0BuoHxrhhOIBiId1Z/Mt+j1RgJ5fAlOPLK519r
+TeVuk0QcYn4mue/ODHUUwvRk0xFm9STV7BYLXczL+OeGyqrLt4Yu1NicNqUDKd65
+/FJ7j1vkdWh1DrlN5+4QtME6iYWdH6Tx+NDG6EOWa6pN1wBh+XiCQ+6PVGg6yR98
+N8Zt7/e9lcdYGkGsmY+SxUrof23EuaSJ27G0SRRRXnqLN+gIk6CBMcO2+nffdvkD
+DQNbhMFQS725dIXtvjlU7TnCKaa/DS0Nxc4UgURqEY1FYPC4/UL7K5JZcmDthjdG
+Tx3CqgyV1clb2Z+oPasL
+=xU2m
+-----END PGP SIGNATURE-----
+
+Download attachment "gpuhash.tar.gz" of type "application/gzip" (7439 bytes)
+

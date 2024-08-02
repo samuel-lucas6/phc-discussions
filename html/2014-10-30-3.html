@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p78A=31X_+PehAFzf9Ooe3bFGtF7Y3-o5F-v5MrACjsEw&#64;mail.gmail.com&gt;
+Date: Thu, 30 Oct 2014 05:55:22 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Hi, Jacob.  This is a nice analysis.  I like that you've read each
+algorithm carefully and have gained several insights into each.  That's a
+ton of work.  I know how hard it is to read the algorithms and get all the
+details about each right.  Of course, the responses will only point out the
+mistakes... which I'll now do for TwoCats...
+
+You misread TwoCats.  It is easy to do, which is one reason I wrote
+SkinnyCat, which indeed is vulnerable to both GC and WGC attacks.  However,
+TwoCats has strong defense against both.  I would argue that TwoCats has
+the strongest GC and WGC defense of all the entries.
+
+TwoCats uses Catena's idea for “garlic” to defend against memory-leak
+attacks.  If we wind up creating a framework for the eventual winner based
+on Catena's framework, I would like to add this garlic-based memory-leak
+defense.  It can be applied to any of the memory-hard algorithms.
+
+TwoCats overwrites the derived key (hash32 is the variable name) after
+hashing only 1KiB of memory, which it does faster than any other entry.  It
+then overwrites this 1KiB of hashed memory by hashing 2KiB of memory over
+it, and then overwrites the derived key again.  This should sound familiar
+- I copied it from Catena :-)  However, while Catena eventually abandoned
+starting with minGarlic == 0 and instead uses minGarlic == maxGarlic,
+TwoCats continues this process, applying garlic from 0 to maxGarlic –
+overwriteCost before applying maxGarlic.  By default overwriteCost is 6,
+meaning I give up 1/32nd run-time, and therefore lose 1/32 memory*time
+defense against brute-force guessing attacks.  I felt this was a reasonable
+trade-off, in order to gain strong memory leak defense, including GC and
+WGC defense.
+
+This not only overwrites hashed memory derived from the key and the derived
+key, but also stack variables, which should also be taken into account
+(which is yet another idea I learned from Alexander).  By default, TwoCats
+also overwrites the password passed to it before hashing any memory.  I
+believe TwoCats is the only entry that does this.  Leaving the password in
+memory while running a memory-hard hash is obviously worse than being
+susceptible to a WGC attack.  I certainly hope the PHC never publishes real
+code that does this, even if it is simply reference code.
+
+Here's my analysis of Catena's memory-leak defense (based on the first
+submitted version - I haven't read the new revision yet).
+
+By default, Catena runs with minGarlic == maxGarlic == 18.  In this mode,
+Catena does not begin to overwrite memory derived from the password until
+it has finished filling memory.  During this entire time, H(H(key
+material)) is present in memory.  If Catena tries to use too much memory,
+this memory might get swapped to disk.  If Catena is running continuously,
+as it might on an authentication server, with lambda == 3, there is about a
+1 in 4 chance that a cold-boot attack, DMA attack, or forced hibernation,
+will reveal H(H(key material)).
+
+In contrast, TwoCats, when repeatedly called to hash even 32MiB of memory,
+a cold-boot attack has only about a 1 in 2^15 chance of revealing H(H(key
+material)).  IMO, Catena, as well as most other entries, does not do enough
+to protect this early sensitive data.  This is how the PHC winner is likely
+to be PWN-ed in reality.  This is not a theoretical attack like
+cache-timing attacks, but something any script-kiddie can do easily today.
+
+After the winner is announced, assuming we do not require that it be
+strengthened to provide better memory leak resistance, here's what I could
+do in theory at the next BlackHat (but I wont):
+
+I could set up an authentication server continuously running the PHC
+winner, walk up to it with a plug-in peripheral like a firewire device,
+perform a DMA attack, and likely walk away with the H(H(key material))
+without even having to shut down the server.
+
+I believe memory leak vulnerability is the most significant weakness of
+memory-hard password hashing schemes.  Applying early levels of garlic
+seems like the best defense, IMO.  A "tweak" to Catena could easily provide
+this defense.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

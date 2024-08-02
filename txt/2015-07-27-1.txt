@@ -1,0 +1,105 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CAGiyFdduTzC3rviSac-HNeyrhcFcHDD5KHwbefQAdux1xce0Qg@mail.gmail.com>
+Date: Mon, 27 Jul 2015 15:39:12 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+Dmitry, Alex: what about writing a MAXFORM patch for Argon2 and measure
+things? or can we decide without?
+
+Dmitry: ok for a single API with different flags for 2d and 2i? (if so,
+we'll update
+https://docs.google.com/document/d/1AHAZaA6yU8xFXA1bBoqKTbgWiY0jItNnkXV2cR9_Bcg/edit?usp=sharing
+)
+
+
+
+On Sun, Jul 26, 2015 at 4:27 AM Solar Designer <solar@...nwall.comwrote:
+
+On Tue, Jul 21, 2015 at 12:50:52PM -0700, Bill Cox wrote:
+On Tue, Jul 21, 2015 at 12:45 PM, Solar Designer <solar@...nwall.com>
+wrote:
+MAXFORM is the scalar equivalent to (and subset of) pwxform.  It's
+neither parallel, nor wide, but is otherwise the same.
+>
+It would co-exist with Argon2's existing SIMD code.
+>
+Nice!  I was getting excellent multiplication-chain hardening with a
+similar approach.  The scalar pipeline has a faster multiplier.
+>
+Actually, which multiplier is faster varies by CPU type and mode.
+In x86-64 builds, the scalar code may have to use 64x64->64 when it
+actually only needs 32x32->64, and this may be an extra clock cycle.
+>
+Per my notes, SIMD 32x32->64 is 3 to 5 cycles, and scalar 32x32->64
+where available is also 3 to 5 cycles, but the 64x64->64 is 3 to 6
+cycles.  That's across what I deemed are currently relevant x86(-64) CPUs.
+>
+But yes, on many recent x86-64 CPUs scalar is faster (like 3 or 4
+cycles) and SIMD is slower (like 5 cycles).  On some older ones (but
+still relevant), it's the other way around.
+>
+Switching Argon2 to use pwxform would be too much of a change - not
+code-wise, but design-wise.  If we were to do that, then it'd be better
+to go with (simplified) yescrypt or the like instead, which we already
+have separately (just not as the PHC winner).
+>
+Alexander
+>
+Got it.  In that case, I'm for the MAXFORM upgrade.  I agree that
+Bcrypt-like GPU resistance is a critical defense.  For example, without
+it,
+I would have to use Yescrypt in the PoW systems I've been playing with
+rather than Argon2.  With MAXFORM, would Argon2's GPU resistance be as
+strong as Yescrypt's?
+>
+The short answer is: not exactly as strong (with differences possible in
+either direction), but similar.
+>
+Agnieszka's latest benchmarks of yescrypt on GPU, along with the bcrypt
+on GPU benchmarks we had before, help me answer this more precisely.
+>
+As can be seen from Agnieszka's benchmarks, the current pwxform default
+of 128-bit lookups vs. bcrypt's 32-bit ones appears to have actually hurt
+performance 4x-ish on AMD GCN GPUs, compared to bcrypt's (which runs at
+CPU-like speed on those GPUs).  This is consistent with my understanding
+of GCN's local memory ports (lots of 32-bit wide ports, so when we make
+wider lookups, we use multiple ports at once).  However, this didn't
+make much of a difference on NVIDIA Kepler GPUs (bcrypt runs at similar
+poor speed on those that we're getting for yescrypt now).  For NVIDIA
+Maxwell, I am not ready to answer - Agnieszka's Maxwell GPU is small,
+and I don't readily have bcrypt speed numbers for it.
+>
+With MAXFORM, the lookups will be 64-bit, which is in-between.
+>
+At the same time, the parallelism will be lower (in yescrypt, we
+currently have 4 parallel 128-bit lanes, resulting in a total of 4x2 = 8
+parallel S-box lookups, whereas in MAXFORM it's just one chain with 2
+parallel S-box lookups).  The effect of this will probably vary across
+GPU types and attack implementations.  On one hand, this may allow us to
+increase the latency hardening compared to yescrypt's (use more MAXFORM
+rounds than yescrypt would use pwxform rounds), although it looks like
+we're not going to (on the contrary, we may prefer to minimize the
+overhead of having MAXFORM chain added).  On the other hand, this means
+less competition for access ports to whatever memory stores the S-boxes
+in an attacker's device such as a GPU.
+>
+The lower parallelism will definitely help harden defensive
+implementations on older and smaller CPUs, as well as scalar builds
+(where the Blake2b is also using scalar code) even when running on
+recent SIMD-capable CPUs.  This is actually a concern I have about
+yescrypt's current pwxform settings: they're worse than bcrypt when
+faced with those SIMD-less CPUs/builds.  MAXFORM (or obviously tuning
+yescrypt's pwxform like it) addresses this.  Argon2 with MAXFORM will
+have this concern addressed all the time...  OK, that's not exactly
+true: setting the MAXFORM rounds count low in order to expose Argon2's
+parallelism has roughly the same effect as setting yescrypt's PWXsimple
+and PWXgather high in order to have the parallelism.  So it's similar.
+>
+Alexander
+>
+
+
+

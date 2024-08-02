@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Minor bug in yescrypt
+
+Message-ID: <20150324032027.GA2156@openwall.com>
+Date: Tue, 24 Mar 2015 06:20:27 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Minor bug in yescrypt
+
+Hi Steve,
+
+Thank you for reviewing my code!
+
+On Mon, Mar 23, 2015 at 09:34:56PM -0500, Steve Thomas wrote:
+file yescrypt-ref.c, line 728, in yescrypt_kdf():
+
+- size_t dklen = g ? sizeof(dk) : buflen;
++ size_t dklen = buflen;
+
+This needs to be this way since upgrades break if they are not the same length.
+
+No, that's deliberate.  Both server relief and hash upgrades are only
+defined for exactly 256-bit hashes.  I need to document this (just wrote
+down a note to this extent, thanks!)
+
+Technically, longer than 256-bit hashes may also be upgraded, with the
+upgrades using their initial 256 bits, but maybe it's better to declare
+this unsupported.
+
+Shorter than 256-bit hashes can't be upgraded, because they need a
+256-bit previous hash for the upgrades, but they can nevertheless be
+computed right away with g 0 if the caller so desires for whatever
+reason.  And there's a valid reason why they might: g 0 increases
+resistance to garbage collector attacks.
+
+Part of the rationale for the above is that I opted to address the
+confusion reported here:
+
+http://thread.gmane.org/gmane.comp.security.phc/2237/focus=2239
+
+by having yescrypt's output for a shorter length always be a prefix of
+its output for a longer length.  scrypt has the same property, and I
+felt it'd be cleaner to preserve it for all of yescrypt's modes as well.
+(I'd appreciate more testing for this property, to ensure there are no
+exceptions to it in current yescrypt.)
+
+Unfortunately, this has some complexity cost, such as on producing
+exactly 256-bit intermediate derived keys and having a 256-bit buffer
+to put them into even if the requested final output size is shorter (so
+can't just use the output buffer unconditionally).  It's not just the
+line you quoted above, but several other lines as well.
+
+Thanks again,
+
+Alexander
+

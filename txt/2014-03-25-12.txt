@@ -1,0 +1,145 @@
+phc-discussions - Re: [PHC] New password hashing entry: PolyPassHash
+
+Message-ID: <CA+aY-u6yLoS2v+o-6K_QME1X7OSeaxoGkd5UONtKauNxYeJhnw@mail.gmail.com>
+Date: Tue, 25 Mar 2014 17:25:51 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] New password hashing entry: PolyPassHash
+
+On 25 March 2014 15:28, Justin Cappos <jcappos@....eduwrote:
+
+Okay, but if you can secure this separate secure system, why not just
+store the password database there and have a well defined interface for
+asking auth questions (like systems such as HoneyWords argue for)?
+>
+
+​Because systems with password databases must as an inherent part of their
+design be exposed to a much larger attack surface.
+
+
+
+>
+I get the notepad / pen argument from a security standpoint.  Of course,
+you have to change this password anytime someone leaves, etc.  I guess
+whether this is a concern depends on your environment.   You also need to
+wait for someone to enter the password / key to be able to use a new system
+upon restart.
+>
+
+​Changing the secret key for something like that is dependent on
+environment and is a far more involved discussion (it's not as simple a
+question as it first appears).​
+
+You also need to wait for someone to enter the private key for a
+certificate when starting a server with TLS support, and that's generally
+considered ok.
+
+
+
+>
+I agree that either way if an attacker can read memory on a running
+server, they can read what is essentially a hashed and salted password
+database.   Of course they can also read plain-text passwords as they are
+entered (for most auth systems).
+>
+
+​Yes.  However, we can split this into two categories:
+
+i. The situation whereby the attacker gains full access to memory and the
+password database and takes the lot, in one go​.  This isn't any good for
+monitoring plaintext passwords as they are entered because there isn't a
+persistent access.
+
+ii. The attacker gains full and persistent access.  The exposure of
+plaintext passwords will depend on length of compromise and the frequency
+upon which users sign-in, i.e. it would be much worse, say, in a company's
+internal network than your average web service.
+
+For the most part, we're considering i.  Because with ii. it doesn't matter
+how good the PHC winner is, the attacker has won anyway.
+
+
+So, for i., your scheme is security equivalent to the scheme of storing a
+simple master key in memory.  Personally, I see measures of storing a
+secret key in memory as part of a defense-in-depth approach as I'm
+certainly not going to place all my bets on an attacker not compromising
+memory -- the password hashes, in my view, must themselves provide adequate
+security even when that secret key is compromised.
+
+
+
+
+>
+I don't think that anyone would disagree that having an offline / uber
+secure mechanism for storing some private data that is used to encrypt
+password hash databases is a big win.   The admin / security team could go
+and access a separate server, copy over a key / password, change them
+diligently as people come and go, etc.   However, from a usability
+standpoint, it seems to be something that organizations often are found not
+to do in practice.
+>
+
+You'd be surprised what companies do and don't do in practice.
+
+However, in any case, I'd be very wary of putting too much stock into an
+in-memory secret, whether we're talking a simple key or your secret sharing
+scheme.
+
+
+
+>
+Instead of doing all of this, they could just do "apt-get install
+polypasshash" and then worry about other things...
+>
+
+Hmmm.
+
+
+
+
+
+
+>
+Thanks,
+Justin
+>
+>
+On Tue, Mar 25, 2014 at 10:36 AM, Peter Maxwell <peter@...icient.co.uk>wrote:
+>
+>>
+>>
+>>
+>On 25 March 2014 14:17, Justin Cappos <jcappos@....eduwrote:
+>>
+>>The issue is where does the security team / admins store the key between
+>>reboots?   If it is on disk, then an attacker can trivially find and use
+>>it.   (Several surveys of password breaches have shown that attackers
+>>usually obtain password databases through attacks where they do not have
+>>root access on a live machine.)
+>>>
+>>>
+>In a previous incarnation, we solved the problem by setting up some
+>custom software akin to keepass/passwordsafe on a secure server that was
+>only accessible to the security team (if an attacker gained access to that
+>machine, we'd have bigger problems than a compromised password database).
+> There were only about a dozen passwords/keys needing stored and it worked
+>fine.  Worst comes to the worst, a notepad and pen will often suffice :-)
+> (and has the distinct advantage that it canny be compromised remotely)
+>>
+>So in your threat model: on reboot, a member of the security team/SoC
+>would retrieve the master key from their password store then use it to
+>setup the password server.
+>>
+>The two models are security equivalent: if memory on the password server
+>is compromised in either your example or in the situation of storing a
+>simple master key, the consequences are the same.
+>>
+>>
+>>
+>>
+>>
+>
+>
+
+
+

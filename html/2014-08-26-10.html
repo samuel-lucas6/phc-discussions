@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon is highly parallelizable...</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="../../../2014/08/27/1">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="../../../2014/08/27/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;53FD1097.20204&#64;ciphershed.org&gt;
+Date: Tue, 26 Aug 2014 18:56:23 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon is highly parallelizable...
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/26/2014 05:38 PM, Solar Designer wrote:
+&gt; On Tue, Aug 26, 2014 at 02:18:29PM -0400, Bill Cox wrote:
+&gt;&gt; I had not realized that the Argon authors claimed that t_cost ==
+&gt;&gt; 3 is the minimum safe number of rounds for 1GiB, and for 10MiB,
+&gt;&gt; it was 236. Running the benchmarks again with these numbers:
+&gt;&gt; 
+&gt;&gt; 10MiB case:
+&gt;&gt; 
+&gt;&gt; Linux-AES-NI&gt; time Argon-Optimized -taglength 32 -logmcost 10
+&gt;&gt; -tcost 234 -pwdlen 64 -saltlen 16 -threads 5 Memory allocated: 1
+&gt;&gt; MBytes, 5 threads Argon:  346.15 cpb 338.04 Mcycles 0.3923
+&gt;&gt; seconds
+&gt;&gt; 
+&gt;&gt; real	0m0.106s user	0m0.347s sys	0m0.047s
+&gt; 
+&gt; You said "for 10MiB, it was 236", but then benchmarked 1 MiB and
+&gt; 234?
+
+Both were my dumb mistakes, which I continue to deliver rapid-fire!
+The Argon paper says t_cost should be 236 for 10KiB, (not 234 for
+10MiB).  Why I set -logmcost to 10 I can't even guess, because that
+was a 1MiB hash!  For 16MiB, they say to use t_cost = 3, so here's
+what I should have posted:
+
+Linux-AES-NI&gt; time Argon-Optimized -taglength 32 -logmcost 14 -tcost 3
+- -pwdlen 64 -saltlen 16 -threads 3
+Memory allocated: 16 MBytes, 3 threads
+Argon:  8.56 cpb 133.83 Mcycles 0.0963 seconds
+
+real	0m0.043s
+user	0m0.094s
+sys	0m0.004s
+
+It is still not in the 100's to 1000's of authentications per second,
+though.
+
+&gt; This sort of TMTO safety margin surely makes Argon look relatively 
+&gt; useless for user authentication either way.  We should be talking 
+&gt; hundreds or thousands of authentication attempts per second at
+&gt; this memory usage per hash.
+&gt; 
+&gt; BTW, why 5 threads?  Was it the fastest choice in your testing?
+
+I picked the fastest number of threads.  In this last run, it was 3.
+
+&gt;&gt; 1GiB case:
+&gt;&gt; 
+&gt;&gt; Linux-AES-NI&gt; time Argon-Optimized -taglength 32 -logmcost 20
+&gt;&gt; -tcost 3 -pwdlen 64 -saltlen 16 -threads 8 Memory allocated: 1024
+&gt;&gt; MBytes, 8 threads Argon:  13.25 cpb 13250.55 Mcycles 18.4738
+&gt;&gt; seconds
+&gt;&gt; 
+&gt;&gt; real	0m4.097s user	0m18.329s sys	0m0.146s
+&gt; 
+&gt; This isn't nearly as bad, but is ~16x slower than yescrypt t=0, 
+&gt; including memory allocation overhead (and more than that if we
+&gt; don't count the overhead).  With modified phc-test to test just 1
+&gt; GiB, via the slow interface with memory (de)allocation overhead on
+&gt; each try:
+&gt; 
+&gt; solar&#64;...l:~/yescrypt/t$ time ./phc-test &gt;/dev/null m_cost=17
+&gt; (1048576 KiB), t_cost=0 4 c/s real, 0 c/s virtual (258 hashes in
+&gt; 63.78 seconds)
+&gt; 
+&gt; real    1m3.778s user    5m38.425s sys     1m24.073s
+&gt; 
+&gt; Core i7-4770K, 8 threads.
+
+Nice.  Is this fine speed.  Can I get more with reduced rounds?
+
+&gt; Without YESCRYPT_PARALLEL_SMIX, so with scrypt style parallelism,
+&gt; it's almost the same speed:
+&gt; 
+&gt; solar&#64;...l:~/yescrypt/t$ time ./phc-test &gt;/dev/null m_cost=14
+&gt; (131072 KiB), t_cost=0 3 c/s real, 0 c/s virtual (258 hashes in
+&gt; 64.58 seconds)
+&gt; 
+&gt; real    1m4.579s user    5m44.078s sys     1m24.225s
+&gt; 
+&gt; This is actually 1 GiB too, as 128 MiB times 8 threads with their 
+&gt; separate regions (scrypt style).  This uses more memory bandwidth,
+&gt; and is more TMTO resilient within each of the 128 MiB regions (if
+&gt; this notion even makes sense), but allow for the obvious free 8x
+&gt; TMTO for each instance via sequential rather than 8x parallel
+&gt; computation.
+&gt; 
+&gt; Either way, it's approx. 4 yescrypt/second vs. one Argon per 4
+&gt; seconds, so 16x faster, at 1 GiB including (de)allocation overhead.
+&gt; I assume that i7-4770K is about as fast as Bill's i7-3770.  I am
+&gt; not using AVX2 in these tests.
+&gt; 
+&gt; Alexander
+
+It should be close.  This run was with 8 Salsa rounds?  Can I please
+have a 2-round option?  :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/RCUAAoJEAcQZQdOpZUZtLwQAIqRQKvpgSiuzaEX2cgajYh+
+23niQcVu2xcHfaVip8NQ8IBRouYD5CObzdMSMeLV6lp/CcqG7I4/qBqrujR8fcBM
+DxLJWhgGg93da8ya++Z9/RU5P4dJ31F3ZTnISVa0e/jyUvyx6xZOZ4fVOUvW96Df
+i7xBrI1Oy8v/X0NsSToHxF9E99m0FWrgJFS6zJD5UPdOgY1ElGLLFc3kfg0WIj61
+ct8HJfPiZidRDg23xVj6hD4OJs+mJOcM8qGJO4mWNG9NN9CLo9Yy9sA4/tJrf2vI
+Cv8pOiA26kW2ra+P7JeEO785DHA63TjjKwnulP2vIsgleu1XO61a09+XVdNuYBbH
+OAJ1oEwOerGhPNSCX84leV4lVVJxSOhK2RgFAKAXDRKEGa/7EwPoW7TKeX1XS3yP
+fN8+H82X8DSYrV2/Bj+4a7RCwbiqPX1YcsAAIn8JXIRgNhRbK5mw7LwBBs3kvxgJ
+otiG4sPFAUXGvYcOZRpFyFhssxtA9eR0Tx8AKTeLR8qSBeQ9Rp4CbjkMDmVulJAF
+muy1lM0QnjIQRfEFYmZ2vArc9HvqN8TarR1yqoVYuvpfuJP6jGofxsnEpbi6F6KL
+3p8YAM45TkIPG0kA0BsR0eK4jKP5ooFTYzrqm0mkMeNV/RTptmJhjeiJBweSq0AX
+Q1M5l60BbqZBExRCD/8i
+=91Lk
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

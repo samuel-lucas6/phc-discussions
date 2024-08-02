@@ -1,0 +1,161 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <20140314194240.GA6165@openwall.com>
+Date: Fri, 14 Mar 2014 23:42:41 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Fri, Mar 14, 2014 at 12:42:47PM +0100, Thomas Pornin wrote:
+On Fri, Mar 14, 2014 at 12:11:05PM +0400, Solar Designer wrote:
+Thank you for your opinion.  Does this imply that you'd like the PHC to
+introduce a new scheme that would use CPU only (not RAM)?
+
+Actually, I expect PHC to ultimately provide a portfolio of "deemed
+good" schemes, somewhat like eSTREAM (and unlike AES or SHA-3).
+
+Right, but I think that ideally this portfolio should be small.
+
+In
+particular, there are extra features that any specific algorithm may or
+may not provide, e.g.
+
+I realize you're merely providing examples, yet I'd comment on them:
+
+the ability to increase the work load (iteration
+count) without having access to the source password,
+
+Maybe we should ask for this to be added during the "tweaks" phase, if
+it's not implemented in a submission that gets selected as a finalist,
+yet the feature is deemed desirable.  I think that this property alone
+is not a sufficient reason to have an extra scheme in the portfolio.
+
+or a "fast path"
+allowing much faster computation of a given hash if a specific secret
+key is known.
+
+As I mentioned before, I think a shortcut like this could be used for
+more effective memory cost upgrades than what e.g. Catena provides.
+It'd be curious to see that implemented.  As to simply "faster"
+computation (and thus "slower" after the secret is wiped), this isn't
+worth the complexity and added risks (e.g. of imperfect wipe), I think,
+because the same may be achieved by simply adding iterations.  This
+trick is beneficial specifically for memory cost upgrades, I think.
+
+Or even more advanced features such as the ability to
+delegate computation to an external untrusted system.
+
+This is an interesting topic, which somehow we haven't touched on this
+list yet, although at least Jeremy Spilman and I thought of it before.
+
+Arguably, it falls in the same category as hash upgrades and client-side
+pre-hashing, because it can also be implemented on top of an existing
+password hashing scheme lacking this feature as a built-in one -
+although the resulting hashes are then incompatible with those produced
+by the hashing scheme on its own (that is, when it's applied directly to
+a plaintext password and its result is stored as-is).  I agree that
+having features like that defined within the password hashing scheme
+itself may be beneficial.  Moreover, there are probably ways to
+implement this feature as a built-in better than it'd be implemented
+externally, by introducing blinding with some per-hash-computation
+randomness rather than merely by relying on fixed secrets (the
+difference is in how much metadata is leaked to the external party).
+
+Some candidates
+may appear to be extremely good in the CPU+RAM tunable usage area while
+lacking some of these extra features, so a portfolio will probably be a
+more appropriate result.
+
+I think some of the features you mentioned aren't very difficult to add
+to any scheme, so it may be better to do that during the "tweaks" phase
+(or before) than to increase the number of schemes in the portfolio.
+Of course, the author(s) of that otherwise "extremely good" schemes
+would need to be willing to make or accept such additions.
+
+It also implies that there is room for improvements for CPU-only (or
+CPU-and-small-RAM-only) schemes.
+
+Definitely!
+
+E.g. with bcrypt you cannot increase
+the iteration count in an "offline" way (you have to start again from
+the source password),
+
+True, although this can be done in a higher-level algorithm running on
+top of bcrypt.  Of course, it's no longer bcrypt proper, then - and yes,
+it'd be nice to have this built-in.
+
+there is no "fast path",
+
+No need for it if the memory cost is not upgradable.
+
+the output is 192 bits only,
+
+184, and that's more than enough.  Yes, PHC stipulates 256+ bits for
+extra safety margin and for use as KDF.  But for password hashing
+bcrypt's 184 bits is no problem.
+
+the input password length is limited
+
+Unfortunately, yes.
+
+(nominally 56 bytes, in
+
+The actual limit is 72 chars.  56 is an error in the bcrypt paper, and
+it's repeated in the scrypt paper and elsewhere.
+
+practice more often 55 or 51 characters, depending on the implementation
+library),...
+
+Huh?!  I've never seen implementations of bcrypt like that.  Have you?
+Got any pointers?
+
+You might be referring to some implementations of Blowfish, but are
+those relied upon by any implementation of bcrypt?  If so, that's a bug,
+and it's not bcrypt proper.  But like I said, I am unaware of such
+implementations.
+
+I actually thought of making a PHC submission based on bcrypt,
+correcting the issues/limitations you mentioned and making a few other
+enhancements (including possibly making the memory size tunable) - but I
+didn't feel it'd be worth introducing yet another password hashing
+scheme to this world.
+
+PBKDF2 avoids some of these issues (e.g. it does not limit
+input or output length) while adding a few extra ones (PBKDF2+SHA-256 is
+GPU friendly; computing time is proportional to the output length;...).
+
+Right.  Even worse, PBKDF2's computing time is proportional to the
+output length only for the defender, but not for the attacker - if the
+attacker has the derived key (which is the case when PBKDF2 is directly
+used for password hashing, and the hashes are then attacked).  This is
+mitigated by setting dkLen to at most the underlying hash's output size.
+Not great.
+
+Now it is very fine that some PHC candidates will use RAM and be tunable
+in that respect. This is a research area that is in need of deep
+exploration, and there are contexts where gobbling up RAM by the
+gigabyte is the right thing to do for password hashing (e.g. when
+deriving the symmetric key for disk encryption).
+
+Agreed, and it's not only for the "by the gigabyte" case.  I think the
+whole range of memory cost settings from KB to multi-GB may be considered.
+
+I don't think that there will be ONE winner. I don't thinkg that there
+should be one and only one winner
+
+I also don't think so, but I also don't think the portfolio should be
+large.  There has to be justification for adding each additional scheme
+to the portfolio, and maybe such justification should include rationale
+on why those same additional features or whatever were not added to one
+of the other schemes in the portfolio instead.  "The authors didn't do
+it at the time of submission" might not be sufficient justification -
+it'd only explain how it happened in the PHC process, not excuse us for
+subjecting the industry to an unnecessarily large number of "approved"
+password hashing schemes.
+
+I think we might need a round of cross-pollination, as someone (I don't
+recall who) called it when I suggested it in here a few months ago.
+
+Alexander
+

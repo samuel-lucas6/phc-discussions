@@ -1,0 +1,139 @@
+phc-discussions - Re: [PHC] avoiding cache thrashing
+
+Message-ID: <CAOLP8p7w+DnJOf01k-4D1BEFmdPUgCwUw1DkzsX7bV0kDuNScA@mail.gmail.com>
+Date: Fri, 21 Feb 2014 22:17:03 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] avoiding cache thrashing
+
+On Fri, Feb 21, 2014 at 8:59 PM, Solar Designer <solar@...nwall.comwrote:
+Notice how with very tight read/compute, 2 MiB pages may be helpful even
+starting with 256 KiB allocation (or even 128 KiB per thread!)  With my
+code, I am not seeing the effect at sizes this low, perhaps because the
+added latencies don't hurt it until they become bigger.
+
+I did finally check my processors /proc info files.  The relavant lines may be:
+
+DirectMap4k:       24456 kB
+DirectMap2M:     8314880 kB
+
+I interpret this as 2Mb pages being used for most memory.  I don't
+know how this effects performance.  Obviously less page allocation
+overhead is a good thing.
+
+>When I run on my son's quad-core 3.4GHz Ivy Bridge machine, with 4MB
+>and 8 threads, it does 154GiB/s of memory hashing bandwidth (hashing
+>4MiB, 10,000 times, 2 reads + 1 write each pass, .775s runtime).  4
+>threads do about 142GiB/s, and then it drops rapidly, and 1 thread
+>does 54GiB/s.  That's very close to 128 bits every clock, but with 1
+>thread I wouldn't expect many L1 misses.
+>
+These are very impressive speeds.  You're making it hard to compete with
+you, in terms of bandwidth at least!
+>
+When you say "2 reads" each pass, are you counting even the reads from
+the previous block, which is almost always still in L1 cache?  I am not
+counting reads that are expected to be from L1 and L2 in the GB/s
+figures I post so far.  This means reads from the previous block and
+reads from the S-boxes are not counted.  Well, or maybe I should count
+them separately, just to see how close (or not) I am getting to the
+CPU's maximum L1 cache read bandwidth (I'd say not very close, since I'm
+still doing more computation than you do).
+
+Yes, for small hashing sizes that fit in L2 and/or L1, I count all the
+memory accesses, including the previous block, which is probably still
+in L1, because I'm just trying to get a feel for cache bandwidth.  For
+external memory dominated hashing, I only count 1 read and 1 write,
+since the previous page is still in cache.  Per GiB, I count 2GiB of
+bandwidth for external memory with large hashing, and 3GiB for small
+hashing that fits in cache.
+
+Anyway, I am currently getting worse speeds than yours at memory sizes
+this low (e.g. 1 MiB/thread * 4 threads, to test against your results),
+but that's when I keep L1 S-box lookups and multiplies in there (and
+don't count the S-box lookups towards bandwidth used).  Dropping the
+multiplies brings the speeds to be on par with yours.  Dropping the L1
+S-box lookups as well makes the speeds higher than yours, but that's not
+fair comparison because you do have small random lookups (albeit not as
+small: you said 256-bit, whereas I do 128-bit in these tests).
+
+Probably just how I'm counting... I suspect your SSE code is at least
+as efficient as mine.
+
+I think you actually have the multiplies in a separate thread.  I don't
+do that because for many use cases we'll only have 1 thread/instance
+(even if our caller may invoke our instances from multiple threads).
+I did suggest doing the multiply-hardening in parallel with SSE memory
+accesses, but I didn't mean threads.
+
+I misunderstood, and rewrote most of the hashing algorithm to separate
+multiply hashing from the memory hashing.  It was a very significant
+overhaul, and I've not gotten a lot of sleep lately :-)  On the
+positive side, on separate threads, they simply don't slow each other
+down.  The performance is awesome.
+
+The funny thing is that I spend 9X more time mentoring other
+programmers than I get to spend being trained by someone awesome.  I
+see myself working late at night because Solar Designer said I could
+do better... I do the exact same thing with the guys I train.
+
+>I was pretty happy to see 4 threads working that well in
+>parallel.  I put the 10,000 repeat loop around the block hash, and set
+>the block size to 4KiB, so each thread is hammering the same 4KiB over
+>and over most of the time.
+>
+Oh.  Were your high speeds for L1 cache only, then?!  I thought L3.
+I ran my 4-thread benchmarks mentioned above on the whole escrypt, with
+only the data mixing function tweaked in different ways (for higher
+speed at these unusually low memory sizes).
+
+Yes, that's all in L1, counting 2 reads and 1 write.  External memory
+hashing is still around 13GiB/s on my Ivy Bridge processor with 2
+threads (counting 1 read and 1 write).
+
+>It remains to be seen if the simple hash
+>I'm doing is strong enough, but it seems to hammer memory pretty well,
+>at least with low thread counts.  My thinking was that if I run just
+>large enough to bust out of GPU local memory, then these highly
+>repeated hashing loops should cause GPUs lots of memory access grief,
+>especially since 1/2 of the reads are randomized every 32 bytes, just
+>as you suggested (randomizing *prev rather than *from).
+>
+I think the only reason why this may "cause GPUs lots of memory access
+grief" is because you have those randomized small reads.  Without them,
+the above doesn't sound GPU-resistant.  Remember, Litecoin does "bust
+out of GPU local memory", yet there's the usual 10x to 20x speedup at
+Litecoin when going from CPU to GPU.
+
+Yep, I'm using your small random read idea.  I'm torn between 256 bit
+reads, 128 bit reads, and configurable width reads.  128 bit reads
+seem optimal for my processor, SFAIK, but we've got decent 256 bit
+AVX2 coming on strong and likely 512 bit after that.  My variable
+width tests all performed poorly, so I'm using a compromise between
+128 bit and 512.  I assume that only doing one of my operands randomly
+and reading 256 bits at a time means it will not be as GPU resistant
+as Bcrypt for very small memory configurations, but there are a lot of
+trade-offs here.
+
+I might wind up with a 256 bit version using Blake2s, and a 512 bit
+version using Blake2b, but for now, I'm just doing the 256 bit
+version.
+
+>If your offer is still good, I'd appreciate a chance to play with an
+>AMD machine with some impressive memory bandwidth.
+>
+My offer is still good, but we don't have "an AMD machine with some
+impressive memory bandwidth".  Our only AMD machine for this is FX-8120
+with two DDR3-1600 sticks - IIRC, you already have access to something
+very similar.  So my offer is about access to Haswell, Sandy Bridge-EP
+(16 cores, 32 threads, 128 GiB RAM as 8x DDR3-1600, several compiler
+versions installed), Xeon Phi 5110P, assorted GPUs.  I'll e-mail you
+about setting up your accounts.
+>
+Alexander
+
+Sweet.  That'll give me enough to play with to really get in trouble
+at work :-)  I've been keeping out of trouble so far by not sleeping.
+
+Bill
+

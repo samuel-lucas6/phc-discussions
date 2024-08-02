@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] Specification of a modular crypt format (2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="../../../2015/10/10/1">[next&gt;]</a> <a href="9">[&lt;thread-prev]</a> <a href="../../../2015/10/11/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;9A043F3CF02CD34C8E74AC1594475C73F4B2E734&#64;uxcn10-5.UoA.auckland.ac.nz&gt;
+Date: Fri, 9 Oct 2015 13:55:41 +0000
+From: Peter Gutmann &lt;pgut001&#64;...auckland.ac.nz&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] Specification of a modular crypt format (2)
+
+[Several replies combined into one, since I'm not sure how on-topic it still
+ is :-)].
+
+Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt; writes:
+
+&gt;Did they already implemented C99?
+
+2013 (haven't checked 2015 yet) supported a lot of C99, but since I have to
+support pretty much every compiler under the sun I can't use C99 anyway.
+
+&gt;[ftrapv]
+&gt;
+&gt;Yes, a nice option. Beware though that it doesn't work in 64-bit mode for gcc
+&gt;at least up to version 4.9:
+
+In any case the ftrapv behaviour (crash the program) is worse than useless,
+when you've got code that checks for overflows and handles them you want the
+checks to not be removed, not to be given the option to have your program
+crash.  So the difference between gcc and gcc -ftrapv is that the former
+produces braindamaged behaviour, the latter does the braindamage and then
+crashes your program as well.
+
+&gt;<a href="http://blog.regehr.org/archives/213" rel="nofollow">http://blog.regehr.org/archives/213</a>
+
+Oh, they quote the basketball analogy.  For people who haven't seen this, it
+draws the following analogy for UB:
+
+  Somebody once told me that in basketball you can’t hold the ball and run. I
+  got a basketball and tried it and it worked just fine. He obviously didn’t
+  understand basketball.
+
+What they omit to mention is that if you try this, you expect the umpire to
+declare it an infringement and confiscate the player's golf bats (from which
+you can deduce that my knowledge of sportsing, see
+<a href="http://vectorbelly.com/electrical177.html" rel="nofollow">http://vectorbelly.com/electrical177.html</a>, leaves something to be desired).
+You don't expect an air strike to take out the stadium, killing everyone
+inside (gcc/ftrapv).
+
+&gt;Maybe just fix bugs in the code?:-) Seriously, some recent tools make it
+&gt;easier. First of all, run your test suite with valgrind, Address Sanitizer
+&gt;and Undefined Behavior Sanitizer. Raise code coverage with a fuzzer (e.g.
+&gt;American Fuzzy Lop) and, perhaps, KLEE.
+
+I already do all of that, and also cppcheck, clang, Coverity, Klocwork,
+Prefast, and some others.  Problem is that (a) gcc breaks code faster and more
+effectively than any analyser can find things and (b) most developers don't do
+this, which means they can't even try to work around gcc's problems.  I hate
+to think how much code out there is broken by gcc, with no-one the wiser...
+
+&gt;Then use tools like Clang Static Analyser and cppcheck. Then proceed to
+&gt;STACK[3], Frama-C etc.
+
+That really doesn't scale.  I already perform what I'm sure most developers
+would agree is an insane amount of analysis on my code, and still can't catch
+all the things that gcc does to it.  What's worse, no matter how much analysis
+I perform, I can never be sure that I've managed to counter all the things
+that gcc will end up doing to it.  I can't imagine that any project built
+under time/commercial pressures could afford to invest this amount of effort
+into fighting what gcc does to their code.
+
+(Some time ago, one of the leads at Coverity said at a talk that they invest
+something like 80% of their effort not into creating more code to find
+problems but doing things like getting rid of false positives due to warnings
+that are technically valid but that most people would agree are unnecessary.
+In other words they recognise that Doing the Right Thing helps users more than
+quoting dogma at them and breaking things like the gcc folks do.  Other
+vendors like Fortify handle this a bit differently, they rank things by
+severity but don't put so much effort into FP suppression, so when you look at
+the lower grades of warnings you get so many of them that you mostly end up
+just skipping them.  Not saying that this is necessarily a bad thing, but I
+prefer the Coverity approach to the Fortify one).
+
+&gt;just start with the usual suspects
+
+Already doing that, but it's pretty sad that I need to add -fdont-break-my-code
+flags just to get the compiler to not break my code.  And just because you and
+I know that these flags exist doesn't mean that everyone else does, so they'll
+still get caught
+
+Peter.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+phc-discussions - Re: [PHC] What's your favorite entry so far, and why?
+
+Message-ID: <52D02121.1030804@uni-weimar.de>
+Date: Fri, 10 Jan 2014 17:34:41 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What's your favorite entry so far, and why?
+
+On 09.01.2014 14:10, Bill Cox wrote:
+On Thu, Jan 9, 2014 at 4:56 AM, Christian Forler
+
+[ 1GB vs 10 MB ]
+
+That's why Catena's Sever Relief idea makes sense.  The key stretching
+should be matched to the machine it's running on.  For my laptop, I
+would prefer 2GB.  For my phone, maybe 256MB.  On a loaded server, maybe
+10MB is all it can afford.
+
+    We designed Catena to run smoothly on (almost) any modern computer
+    without causing extra pain for regular users/admins.
+
+
+That's awesome, but I think we should not develop for the lowest common
+denominator machine.  Scrypt measures the available RAM and CPU speed
+and picks parameters automatically.  For client-side KDF, I think this
+is a good way to go.
+
+Yes. there is a significant amount of hosts were this approach works ver
+well. You are free to adjust Catena-n cost parameters as well.
+
+
+For KDF that runs on my machine, I want a good fraction of a second of
+KDF with maximum memory usage.  I think server admins will appreciate a
+password protection framework that's easy to use, flexible, and stays
+out of their way if needed.  I think the Catena framework sounds like
+the right approach.  My only  gripe is that if I'm going to spend 1
+second on a KDF, I'm going to want to hash a lot of memory.  Script's
+speed (about 1/4 GB/second on my development machine) should be
+considered the lower bound on acceptable efficiency, IMO.
+
+"Of course it is not secure, but look how fast it is!" :-)
+
+
+There is no reason Catena has to run slowly, and I haven't looked at the
+code, so I don't know what efficiency changes have been made.  For
+example, you could run with two rows small enough to fit in L1 cache,
+and then do a ton of rows, followed by a final round that hashes all
+memory from all rows 4KB at a time.
+
+Nope. We are not interested that Catena can not efficiently computed
+without tones of  L1 and L2 cache misses since this also effects
+the performance of GPU implementations.
+
+
+You could replace memory locations in Catena's rows with blocks of
+memory of significant size, and have randomized edges between blocks
+instead of a single edge between nodes.
+
+Hmm...
+
+ You also could also use an ultra-fast non-cryptographic hash in the
+inner loop.
+
+Maybe we can reduce the demands on the inner-loop hash function without
+getting into (theoretical) trouble.
+
+
+ You also could modify the graph a bit so that the inner
+loop could process a user-selectable number of hashes in parallel. 
+
+That alone makes a 3X speed difference on my development machine.  Adding
+multiple threads is as simple as running N copies at the same time, and
+you could hash memory between them as a post-process to force cheaters
+to keep it all.
+
+You have some nice ideas which will be discussed in the near future. I
+will keep you up-to-date.
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (552 bytes)
+

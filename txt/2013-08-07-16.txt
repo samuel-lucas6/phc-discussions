@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+Message-ID: <CAK9dnSydiptXR_BM+WkjucQZmFOH1O0PZbPPXu-xUUUTy2a5UA@mail.gmail.com>
+Date: Wed, 7 Aug 2013 10:11:28 +0200
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+2. `hash.call(salt, chains.join)` isn't parallelizable but takes a
+significant amount of time (A third with SHA-256).
+
+>
+This implementation is clearly naive. In C you could preallocate a large
+buffer where the string could be constructed in place in parallel, and the
+hash function could be run incrementally as more chunks become available
+(assuming you run M threads at a time to compute N chains). I could modify
+the Ruby version to do this as well.
+>
+The problem is that you first join the chains, and then hash them. So the
+hashing is completely sequential. You need to first hash each chain, than
+concatenate the hashes and then hash again.
+
+
+>
+>
+>3. Your memory access is predictable, so the usual store every sqrt(n)th
+>value, regenerate on the fly" technique breaks it:
+>>
+>For the first step a machine with pmem^{1/2} memory which stores every
+>pmem^{1/2}th value. This runs in pmem time and uses pmem^{1/2} memory for a
+>total cost of pmem^{3/2}.
+>>
+>For the second step use a machine with 2*pmem^{1/2} memory, initialized
+>to the data produced in step 1. Then regenerate pmem^{1/2} values for each
+>step in time pmem^{1/2} and pmem^{1/2} memory. Since there are pmem^{1/2}
+>steps, the total time is pmem, and thus the total cost for this step is
+>pmem^{3/2}.
+>>
+>Combined cost of these machines is ptime*pmem^{3/2}. A defender with a
+>standard computer has cost ptime*{pmem^2} instead.
+>>
+>
+I can't say I understand what you're getting at here. Do you have
+something I can read on this topic? (possibly the scrypt paper?
+>
+
+I don't know any sources for this technique, but I suspect it can be used
+on all hashing schemes with predictable memory access.
+
+* You can use it to accelerate scrypt's first phase, but not the second
+phase. Since scrypt only claims that the second phase is memory-hard, this
+doesn't break scrypt.
+   Discussed this with solardiz on twitter:
+https://twitter.com/solardiz/status/362644103546142721
+* You can use it on yarrkov's high AT proof-of-work scheme:
+   Discussed on the crypto mailing list a few months ago
+http://www.mail-archive.com/cryptography@randombit.net/msg03689.html
+
+The general idea is that you don't keep everything in memory you're
+supposed to, but only an occasional checkpoint. From this checkpoint you
+can recompute memory near it. Often it's a good choice to keep sqrt(n)
+checkpoints from which you can recompute any value you're interested in in
+time n/sqrt(n)=sqrt(n).
+
+On specialized hardware it's often cheap to recompute it in parallel to
+your normal computation without delaying the normal computation.
+Unpredictable memory access often breaks this, since the recomputation
+delays the normal computation instead of running in parallel.
+
+It's often possible to improve upon the sqrt(n) technique by adding more
+intermediate steps. But I didn't work out the details.
+
+
+

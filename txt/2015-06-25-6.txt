@@ -1,0 +1,45 @@
+phc-discussions - RE: [PHC] Why protect against side channel attacks
+
+Message-ID: <CY1PR0301MB06681A4534BF9F5EDAA8CC2BACAE0@CY1PR0301MB0668.namprd03.prod.outlook.com>
+Date: Thu, 25 Jun 2015 00:35:15 +0000
+From: Greg Zaverucha <gregz@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Why protect against side channel attacks
+
+The pros in your list for Hybrid (last two bullets) only matter in the event of a breach (offline attack), and this should be a very rare event.  The cons could happen all the time (depending) on the system.  OTOH, the cons for “Cache-timing resistant”  happen only in the event of a breach.
+So I guess you weight offline attacks more than I do, which is why we disagree.  (in other words you’re willing to tolerate a small decrease in everyday security for more defense against the exceptional event of a breach, but I’m not)
+
+Greg
+
+From: Bill Cox [mailto:waywardgeek@...il.com]
+Sent: Wednesday, June 24, 2015 5:21 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Wed, Jun 24, 2015 at 12:12 PM, Greg Zaverucha <gregz@...rosoft.com<mailto:gregz@...rosoft.com>wrote:
+Suppose you use password hashing function X in many products and services, in a range of contexts (on mobile devices, PCs, servers, in VMs, etc…).  Now suppose that cache-timing attacks against X are shown to be practical, someone has released an attack tool, and it’s in the news under the name PasswordBleed, and someone has even made a logo for it.  The tool needs the salt and username.  It works by observing the cache access pattern of a victim process/VM, which narrows down the search space to a set of passwords small enough to attack online (i.e., the tool re-computes the hashes for passwords in a dictionary and compares their access patterns to the observed pattern, those that are close are kept). So no breach has occurred and no hashes were leaked.  (I realize that in most systems the salts aren’t public, but I think we all agree that X should not get weaker if the salt is known).
+
+While this is true, I still would prefer to see a "main" winner that uses a hybrid architecture, with a cache-timing resistant first loop followed by an unpredictable memory access loop (like Scrypt and Lyra2, and Yescrypt in Scrypt compatible mode).  As a special additional category, I'd also like to see a "cache-timing resistant" winner, with the understanding that most users would be advised to use the "main" winner.
+
+Here's the trade-off I see in security for a hybrid architecture like Lyra2 vs a pure cache-timing resistant architecture like Catena/Argon2i:
+
+Hybrid:
+
+- An attacker with usernames and salts, who can mount a cache timing attack and associate the cache timing signatures with user accounts, can recover the password and does not require a password hashes to do it.  However, it is expensive per password cracked, similar to an off-line attack, maybe 2-6X cheaper.
+- Without the salts, an attacker can still see when cache-timing signatures re-occurred, leaking knowledge of when users login.
+- The hybrid architecture retains full time*memory defense against common off-line attacks.
+- The hybrid architecture retains full defense against common TMTO attacks.
+
+Cache-timing resistant:
+
+- Against the common off-line guessing attack, it will be 2-3X cheaper to crack passwords, since cache-timing-resistant algorithms run with 2-3X lower memory*time defense in general.
+- Massively parallel attacks are more effective, since the data access pattern is known in advance.  Memory I/O can be heavily pipelined.
+- In a TMTO attack, any required computations can be done in advance, since an attacker knows when the data is needed, speeding up the attack.
+- In a TMTO attack, an attacker does fewer recomputations, since he can choose values to free from memory that he knows can quickly be recomputed.
+
+I feel that the overall security advantage lies heavily with the hybrid architecture.
+
+Bill
+
+
+

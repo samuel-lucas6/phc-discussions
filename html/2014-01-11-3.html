@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - many-core archs (Re: [PHC] ASICs)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140111041322.GB2317&#64;openwall.com&gt;
+Date: Sat, 11 Jan 2014 08:13:22 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: many-core archs (Re: [PHC] ASICs)
+
+On Fri, Jan 10, 2014 at 02:47:36PM -0500, Bill Cox wrote:
+&gt; By the way, the chip company the guy you quoted works for is making an
+&gt; interesting product for brute-force password guessing for KDFs that
+&gt; use &lt;= 1MB of memory.
+&gt; 
+&gt; <a href="http://www.adapteva.com/epiphanyiv/" rel="nofollow">http://www.adapteva.com/epiphanyiv/</a>
+&gt; 
+&gt; Looks pretty cool.
+
+Actually, we had two Google Summer of Code projects last year,
+implementing bcrypt and Litecoin (scrypt at 128 KB) on Epiphany.
+We got reasonably good performance numbers for bcrypt.  For E64, they're
+on par with common CPUs and GPUs, but at much lower energy consumption:
+
+<a href="http://www.openwall.com/presentations/Passwords13-Energy-Efficient-Cracking/">http://www.openwall.com/presentations/Passwords13-Energy-Efficient-Cracking/</a>
+
+Our Litecoin speeds were very poor compared to GPUs (in fact, this was
+expected, so the student did not have enough motivation).  We ended up
+using a TMTO factor of 5 (and also slightly below 5, but above 4, in a
+more experimental code revision) to fit in each core's 32 KB of local
+memory (paying for that with only a 2x increase in number of Salsa20/8
+computations).
+
+I still have a ZedBoard with E16 FMC running here, may provide remote
+access if anyone is interested in developing for it.  Unfortunately,
+there are too few E64's currently in existence, so we had to be using
+one at Adapteva's office (remotely).  Luckily, this worked fine even for
+Katja's live demo at Passwords^13.
+
+&gt; Grid based multi-CPU companies seem to come along
+&gt; every few years.  I hope they do well, but the always seem to be a
+&gt; solution looking for a problem.  Maybe they can sell a bunch to
+&gt; governments for password cracking?
+
+Maybe, although I'd be happier with them satisfying commercial demand,
+even if also for password cracking.  I think what's missing are PCIe
+boards with multiple energy-efficient many-core chips per board.  Then
+they'd be able to compete not only in terms of energy efficiency, but
+also in terms of raw performance per board - for suitable tasks only,
+though.  I did discuss this with Andreas, and he agrees.
+
+Another company - Kalray - recently released a PCIe board with their
+288-core chip, but it also has only one such chip, and it is pricey:
+
+<a href="http://www.kalray.eu/news-7/news/kalray-launches-mppa-board-emb01-its-first-mppa-r-based-embedded-board" rel="nofollow">http://www.kalray.eu/news-7/news/kalray-launches-mppa-board-emb01-its-first-mppa-r-based-embedded-board</a>
+<a href="http://www.kalray.eu/products/mppa-board/mppa-board-emb01/" rel="nofollow">http://www.kalray.eu/products/mppa-board/mppa-board-emb01/</a>
+<a href="http://www.kalray.eu/technology/" rel="nofollow">http://www.kalray.eu/technology/</a>
+
+Regarding the 256 vs. 288 cores confusion, their replies on Twitter:
+
+&lt;@Kalray1&gt; @solardiz The MPPA256 has in reality 288 cores !  This brings 288*0.4*(1 branch + 2 ALU + 1 load/store + 1 FMA counted as 2) = 691.2 GOPS !
+&lt;@Kalray1&gt; @solardiz  The MPPA256 has in reality 288 cores ! This brings  288*0.4*( 1 FMA counted as 2) = 230 GFLOPS !
+&lt;@Kalray1&gt; @solardiz 16 clusters of 17 cores + 4 quad-cores in the IOs subsystems.
+
+Then there's Tilera, which I think is doing pretty well targeting the
+high-speed networking market, providing solutions for traffic monitoring
+and DPI (nasty!) and maybe also IDS/IPS and potentially anti-DDoS:
+
+<a href="http://tilera.com" rel="nofollow">http://tilera.com</a>
+
+And there's XMOS, but it's about realtime rather than high performance,
+so sort of an alternative to small FPGAs (not good for password cracking):
+
+<a href="http://www.xmos.com" rel="nofollow">http://www.xmos.com</a>
+
+I guess you knew these, but I thought others on this mailing list might
+appreciate a summary of current many-core/MIMD archs.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

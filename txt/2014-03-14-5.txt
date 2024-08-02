@@ -1,0 +1,109 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <20140314081104.GB2590@openwall.com>
+Date: Fri, 14 Mar 2014 12:11:05 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Thu, Mar 13, 2014 at 07:20:34PM -0400, Thomas Pornin wrote:
+If I may summarize things: the defender's machine has, on average, some available resources, which are the difference of what the defender started with (i.e. what he gets from his hardware) and what was used for the "normal business tasks" of the defender. The defender will want to use these resources for password hashing, i.e. he will configure the various parameters of his password hashing function so as to maximize the cost _for the attacker_ while using only his free resources (resources become "not free" when using them forces the defender to slow down his business tasks below some predefined limit of acceptability).
+
+Yes, and yes the hashing shouldn't necessarily be entirely free - there
+should be some acceptable limit to its cost.  In some cases, it will be
+in terms of percentage of CPU and/or RAM bandwidth resources on a
+server.  In some other cases, it will be in terms of how many servers
+are dedicated to authentication (or even just to password hashing) vs.
+running other portions of whatever service the organization provides.
+
+If the function was well designed, then the most cost-effective hardware for the attacker is the same machine as what the defender uses. However, since the attacker does only the password cracking, while the defender has other things to do, they don't both compete with exactly the same weapons.
+
+Yes.  Even in the multi-server example, the attacker might be able to
+dedicate a larger percentage of their servers to password cracking (vs.
+other uses they might have).
+
+The resources offered by the hardware are of different kinds. To simplify things here, there is CPU time, and RAM bandwidth. Both kinds can be allocated with fine granularity (as you say, it is easy, for the hardware, to interleave RAM access requests on a given bus with low switching overhead; the same can be said for CPU, as long as you don't try to switch more than a few thousand times per second because of the L1 caches). "Optimal" hardware is one where the amounts of both resources will be well balanced with regards to the problem at hand: if you increase the load (e.g. number of concurrent users), at some point you will run out of CPU or of RAM bandwidth; for optimal hardware you will run out of both at the same time.
+
+Right.
+
+We can easily describe kinds of server-like systems which are thoroughly unbalanced, toward CPU usage or toward RAM bandwidth usage. For instance, if the server does heavy computations which fit in L1 cache, then there will be a lot of free RAM bandwidth when the CPU saturate.
+
+Yes, but note that you can't unbalance a system towards RAM bandwidth
+usage as much as you can towards CPU time usage.  You can use 100% of
+CPU time while not consuming almost any RAM bandwidth.  You can't use
+RAM bandwidth without also using CPU time.  To saturate RAM bandwidth on
+a typical PC hardware server, you spend several cores' worth of CPU time
+as well.  (For this discussion, I am ignoring extreme special cases like
+saturating RAM bandwidth via DMA from multiple 10G NICs.)
+
+Looking at it from another angle, when the password authentication
+request rate is so high that you're already using most CPU cores for it,
+there's no point in leaving 100% of the memory bandwidth idle just in
+case the rest of cores running other tasks would need that much
+bandwidth.  When the number of those remaining cores drops low enough,
+they simply can't use the entire RAM bandwidth of the system, even if
+their tasks were 100% memory bound.  (And in practice their desired
+resource usage will typically not be so extremely unbalanced.)
+
+I think in password hashing scheme design it's appropriate to consider
+that some portion of RAM bandwidth goes along with some amount of CPU
+time spent, because by taking that CPU time for our needs we're also
+taking away opportunities from other tasks to use (and to need to use)
+memory bandwidth.
+
+Ideally, the password hashing function will be tuned so as to restore the balance, thus maximizing the free resource usage. Since various servers have various resource usage patterns, we can say that a good password hashing function will offer many tunable parameters so that optimality may be reached.
+
+Sort of, although for the issue at hand it's sufficient to have just one
+more tunable parameter: the number of rounds of whatever computation
+we're doing between our (presumably non-cached) RAM accesses.  In
+scrypt, this is the number of rounds of Salsa20.  And scrypt gets away
+without having it tunable.
+
+The gist of our disagreement is then the following: I tend to assume, from "shared experience", that the majority of servers actually in use have more free CPU than free RAM bandwidth. Apparently you don't assume the same.
+
+Correct.  There are a few additional points, though, which I've tried to
+explain above.
+
+But, really, the problem is ill-defined as long as we don't specify what really is our target market. What servers are we talking about ? How do we measure how "important" a kind of server is ? The question is more about economics than computer science, so that call for another species of specialist.
+
+I think you're exaggerating the issue.  There's a fairly low limit on
+how much things can be unbalanced towards higher RAM bandwidth usage on
+typical server hardware, irrespective of "target market".  (The same
+can't be said about things being unbalanced towards higher CPU time
+usage.  This is almost unlimited.)
+
+Another point is that I don't actually believe in tunable parameters. At least not many. If we take 100 sysadmins, and give them a password hashing function with a single tunable parameter, we can expect that about 80 or 90 of them will do at least token effort at setting that parameter to a right value for their problem at hand. With two parameters, that proportion will drop; since measuring performance is actually hard (or, at least, much too rarely done, for some reason), two or more tunable parameters imply a lot of combinations which won't be explored correctly, or at all.
+
+Yes.  I intend to use the workaround that Larry mentioned: provide
+recommended sets of parameter values for different use cases and for
+currently typical machines, yet define the password hashing scheme also
+for other combinations of parameter values, some of which we might need
+to start recommending in the future.
+
+In my view, a "good" password hashing function should provide enough parameters to make it adequate for a large variety of situations, but must refrain from complexity.
+
+I agree, and I find this challenging.  escrypt may well be above the
+complexity threshold that many of us are comfortable with, but if we
+simplify it a lot it won't be sufficiently better than other PHC
+submissions and pre-PHC password hashing schemes in other aspects, so
+there would be no point in introducing it.
+
+That's my opinion, of course, but it implies that I am not a big fan of functions which can be tuned for both CPU and RAM "usage" (for some notion of usage). Such functions are doomed to be awfully misapplied in practice.
+
+Thank you for your opinion.  Does this imply that you'd like the PHC to
+introduce a new scheme that would use CPU only (not RAM)?  What's the
+point, when we already have e.g. PBKDF2 and bcrypt?  Sure, I am aware of
+minor issues with these that can be avoided while staying CPU-only, but
+is this minor incremental step important enough to introduce yet another
+CPU-only password hashing scheme, when we could have done much more?
+
+I am simplifying this a bit in the questions above.  I realize that
+bcrypt is not exactly CPU-only, with its 4 KiB and access pattern
+turning out to be enough to thwart GPU attacks for now.  I also realize
+that you could similarly use a slightly larger fixed amount of memory,
+still fitting in a cache, and you'd potentially improve upon bcrypt in
+this way (although it's far easier to inadvertently make things worse in
+terms of GPU resistance than to improve).
+
+Alexander
+

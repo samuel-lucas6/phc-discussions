@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <20141223015907.17d6e174@lambda>
+Date: Tue, 23 Dec 2014 01:59:07 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: "Jeremy Spilman" <jeremy@...link.co>
+Cc: discussions@...sword-hashing.net, epixoip <epixoip@...dshell.nl>,
+ bmenrigh@...ndonenright.net
+Subject: Re: [PHC] How important is salting really?
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Mon, 22 Dec 2014 16:49:16 -0800
+"Jeremy Spilman" <jeremy@...link.cowrote:
+
+When might the target size be one? Well, for example, in a targeted
+or on-demand attack, versus the general case of an attacker trying to
+re-sell in bulk the weakest passwords in the database. In this case
+you might look at what is the average cost to crack just one account.
+You can't rely on hiding among millions of salts to make the attack
+slower.
+
+Right.  Salting only makes sure work done on one hash can't be re-used
+for other hashes.  Salting doesn't make things less secure but in some
+scenarios it doesn't add any security either.
+
+This is why we need a layered approach to password hashing / storage.
+
+* We need salting to help slow down parallel cracking of big dumps.
+
+* We need salting to prevent pre-computation (rainbow tables).
+
+* We need personalization keys to add an additional secret that in some
+  scenarios (where the key remains secret), can prevent any cracking
+  whatsoever.
+
+* We need slow hashes to make repeated guessing costly.
+
+* We need high-memory usage to make parallel guessing costly.
+
+* We need to minimize the reusability of work from one guess on the same
+  hash to the next (anti-stream processing).
+
+* Users needs to choose good passwords.
+
+
+A failure in any of these makes the job of the cracker easier.  Salting
+is just *one* protection out of many.  It helps in some situations, it
+does nothing in others.
+
+Brandon
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlSYzHEACgkQqaGPzAsl94KBmgCeN9HganYoImx3S+Ss2skwcvgI
+ocsAoIzCPXfN+FAdjzl6F9i4kjydUvpB
+=eFZE
+-----END PGP SIGNATURE-----
+

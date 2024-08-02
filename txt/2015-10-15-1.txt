@@ -1,0 +1,103 @@
+phc-discussions - Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Message-ID: <20151015130314.GA10594@openwall.com>
+Date: Thu, 15 Oct 2015 16:03:14 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Here's an update, after some over-quoting (since it's been a while):
+
+On Wed, Aug 19, 2015 at 05:09:42AM +0300, Solar Designer wrote:
+Agnieszka Bielec produced OpenCL implementations of Argon2d and 2i, and
+ran benchmarks at the same 1.5 MiB level that we had used for Lyra2 vs.
+yescrypt testing.
+
+IIUC, these are for Argon2 1.0, before BlaMka and the indexing function
+enhancement.
+
+Argon2i t=3 m=1536
+i7-4770K - 2480
+GeForce GTX 960M - 1861
+Radeon HD 7970 GE (*) - 1288
+GeForce GTX TITAN (**) - 2805
+
+Argon2d t=1 m=1536
+i7-4770K - 7808
+GeForce GTX 960M - 4227
+Radeon HD 7970 GE (*) - 2742
+GeForce GTX TITAN (**) - 6083
+
+(*) We actually use one GPU in HD 7990 at 1.0 GHz, which is equivalent
+to HD 7970 GE.
+(**) With slight overclocking by the GPU card vendor.
+
+Raw detail:
+
+http://www.openwall.com/lists/john-dev/2015/08/17/62
+
+Jeremi Gosney's company, Sagitta HPC, has kindly sponsored the addition
+of a Titan X to our HPC Village machine, which I finally got around to
+announcing here:
+
+http://www.openwall.com/lists/announce/2015/10/14/1
+
+although we've been playing with the Titan X for a while now (a very
+fast and well-behaving card and driver), and Agnieszka ran Argon2
+benchmarks on it.
+
+The results for Argon2 so far are moderately disappointing from attack
+perspective: although Agnieszka got speeds higher than those quoted
+above, she has also got comparably higher speeds out of the old Kepler
+architecture Titan.
+
+Here are the updated figures:
+
+Argon2i t=3 m=1536
+i7-4770K - 2480
+GeForce GTX 960M - 2007
+Radeon HD 7970 GE (*) - 1542
+GeForce GTX TITAN (**) - 4292
+GeForce GTX Titan X - 6301
+
+Argon2d t=1 m=1536
+i7-4770K - 7808
+GeForce GTX 960M - 4881
+Radeon HD 7970 GE (*) - 4266
+GeForce GTX TITAN (**) - 11715
+GeForce GTX Titan X - 9600
+
+I am especially concerned about the 960M (a mobile GPU with 65W TDP)
+performing surprisingly well, at 75% of CPU speed for 2i and 54% for 2d.
+This means that a larger desktop/gaming/server Maxwell GPU will
+trivially outperform the CPU.
+
+... and it does, but not by such a large margin.  Also, the older Kepler
+GPU outperforms the CPU now, for both 2i and 2d.
+
+For 2i, the best result is for Titan X: 6301/2480 = 2.54 times faster
+than the CPU.
+
+For 2d, the best result is for the old TITAN: 11715/7808 = 1.5 times
+faster than the CPU.
+
+GTX Titan X is more than 4 times larger than the 960M.  We need to add
+it to the mix and see.
+
+Added, but the previously expected scaling is not seen: it's 4+ times
+larger, but only 3 times faster at 2i, and 2 times faster at 2d.
+
+To me, this suggests the code is still badly unoptimized - in fact, we
+know there's heavy register spilling going on, and the kernel is huge.
+It is possible that we incur too many global memory accesses, and favor
+the mobile GPU's relatively narrower memory bus.
+
+Here's the raw detail:
+
+http://www.openwall.com/lists/john-dev/2015/09/05/12
+http://www.openwall.com/lists/john-dev/2015/09/06/26
+
+This is still for Argon2 1.0.  We got to update to the latest.
+
+Alexander
+

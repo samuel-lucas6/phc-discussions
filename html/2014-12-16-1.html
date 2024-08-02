@@ -1,0 +1,322 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: Some KDF stumbling blocks, plus Common</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/12/15/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/12/15/1">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;loom.20141216T055116-340&#64;post.gmane.org&gt;
+Date: Tue, 16 Dec 2014 04:57:57 +0000 (UTC)
+From: Adam Back &lt;adam&#64;...herspace.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: Some KDF stumbling blocks, plus Common
+
+On 14 December 2014 at 16:24, Thomas Pornin &lt;pornin&#64;...et.org&gt; wrote:
+&gt; That kind of thing could be handled "procedurally". For instance,
+&gt; some sort of ceremony where a few well-known persons gather together
+&gt; (people with high programming expertise), implement a RSA modulus
+&gt; generator that does not save the private factors, and run it.
+
+There is no procedure known to man that can not be simulated with
+video editing, preparation etc.  This issue has been discussed at
+length in the context of the trapdoors in zerocoin &amp; zerocash.  It
+wont fly.  The failure-mode is catastrophic and the financial
+motivation $billions and the trust assumptions diverse.
+
+&gt; Thinking more about it, I came to conclusion that my blinding is not
+&gt; really different from yours; it is rather an improvement;
+
+it loses information theoretic security.
+
+&gt;   I chose e = 2^w because it made optimal implementation easier
+
+a reasonable tradeoff; less work but more predictable across
+implementations.
+
+&gt;   Anyway, the exact choice of e does not matter much here. Hashing
+&gt;   of password pw is done by padding pw into some integer m modulo n
+
+that also breaks information theoretic security and not needed if you
+have confidence in the blinding.
+
+&gt;   then computing m^e mod n (the padding is very important here
+&gt;   because RSA and Rabin are malleable, meaning that (m^e)*(m'^e) =
+&gt;   (m*m')^e, so without a proper padding, an attacker running an
+&gt;   exhaustive search might be able to mutualize some
+&gt;   exponentiations).
+
+I use a different n for each user because I avoid the shared trap
+door, so there is nothing to reuse.  I do see the attack and to
+elaborate concretely if you were reusing: compute lots of small prime
+values v_i: w_i = g^w mod n and then explore permutations of products
+of powers of v_i to find passwords.
+
+&gt; Now the creation of the blinding pair is a puzzler, because of the
+&gt; following:
+&gt;
+&gt;   - The delegation server, being untrusted, MUST NOT learn the value
+&gt;     x (first element of the blinding pair). Otherwise, it could
+&gt;     deduce m from the received value u.
+&gt;
+&gt;   - A given blinding pair (x,y) may be used repeatedly for a given
+&gt;     password m, but not for two distinct passwords m1 and m2;
+&gt;     otherwise, the delegation server (or an eavesdropper) may learn
+&gt;     m1/m2 and then deduce things about both m1 and m2 (this depends
+&gt;     heavily on the details of the padding).
+
+again I dont think you should be reusing blinding values, even for the
+same password.  If nothing else it leaks privacy and allows cacheing.
+Now someone can just find the cache, and no work is required other
+than the users stolen device with its stored blinding value.  Blinding
+values should be fresh, one-use and not-persisted client side (beyond
+the duration of the computation).
+
+&gt;   - Generating a new random blinding pair is as expensive as
+&gt;     computing a hash. It can be done efficiently if you know p and
+&gt;     q, but then, if you know p and q, you can also compute the whole
+&gt;     hash yourself.
+
+The scheme I use does not have that problem.
+
+<a href="https://bitcointalk.org/index.php?topic=311000.0" rel="nofollow">https://bitcointalk.org/index.php?topic=311000.0</a>
+
+Recall g is a fixed base, y=g^e mod n is stored at setup (when p and q
+is known), and blinded work is r=m*g^b mod n , the computation is
+s=r^e mod n and unblinding is u=y^b mod n (fast as b is &lt; n) and
+m^e=s/u mod n.
+
+&gt; As I understand it, the usage context that we are talking about is
+&gt; that of a brain wallet, which is similar (conceptually) to
+&gt; password-based encryption for a file containing some confidential
+&gt; data (the wallet simplifies things by "just" generating the ECDSA
+&gt; private key directly instead of producing a symmetric key to encrypt
+&gt; a random ECDSA private key, but that does not change things much
+&gt; here).
+
+Thats a secondary and not recommended use.  Brainwallets are a bad
+idea.  Primary use is for offloading KDF from devices in the users
+control which contain encrypted keys that the user wants to protect
+with a password with more KDF work than they have compute resources
+for, but are willing to pay a cent or something to outsource the work
+for.  If/when the device is stolen, the security of this model reverts
+to the brainwallet scenario where the attacker can attack.
+
+&gt; Then I confess that I don't really see how you can use your blinding
+&gt; in that setup:
+&gt;
+&gt;   - A blinding pair can be generated efficiently when n itself is
+&gt;     produced (with the knowledge of the factors p and q). However,
+&gt;     one has to assume that the hashing will be performed at a time
+&gt;     when p and q are no longer available, because otherwise you
+&gt;     could use p and q to compute m^e efficiently, without needing
+&gt;     any delegation.
+
+blinding in my scheme is different to yours.  Its something like
+elgamal y variable where g^b and y^b are both computed dynamically and
+cheaply as b is small, and then where at setup y=g^e mod n is computed
+cheaply while p, q are known.
+
+&gt; As far as I can see, in the brain wallet scenario, your proposal can
+&gt; be summarized as follows (it is possible that I did not get it
+&gt; right, so please correct me if that's the case):
+&gt;
+&gt;   * You generate a new n, x, and y when the password is chosen or
+&gt;     changed.
+&gt;
+&gt;   * The wallet has some local storage, where (x,y) is stored. We assume
+&gt;     that any compromise of this storage will be through a wholesome
+&gt;     theft of some device, which will not go unnoticed.
+
+There is no x, y with the x^y mod n relation that yours scheme has.  y
+label is used for something different, an elgamal-like y=g^e mod n.
+
+&gt;   * Whenever you need to hash m, you use the stored blinding pair
+&gt;     for delegation. An hostile delegation server learns nothing.
+&gt;
+&gt;   * If the wallet is stolen then the thief must still pay the full
+&gt;     price of computing the expensive hash (and he could already have
+&gt;     done it with the ECDSA public key alone).
+&gt;
+&gt;   * HOWEVER, if the device thief also has access to an instance of
+&gt;     the delegation protocol (through eavesdropping or collusion with
+&gt;     the delegation server), then he gets both x and x*m mod n, from
+&gt;     which he immediately deduces m. If the padding that transforms
+&gt;     the password pw to m is some (fast) hash, then the attacker does
+&gt;     not get the password itself, but a way to run a fast dictionary
+&gt;     attack, which is almost as good (or bad, depending on point of
+&gt;     view).
+
+no because b the blinding factor is fresh, one-use, non-persistent,
+and random on each and every run.  I dont think its accurate to call a
+protocol variable a blinding value *unless* it has those
+characteristics fwiw.
+
+the user wont be unknowingly paying for delegation KDF after the
+device is stolen because he no longer has the device.  This reduces
+security to noticing when someone takes your device which is something
+practical to do: its your smartphone, keep it in your pocket.  Have
+another smart-phone and a panic protocol, sweep the funds if your
+device is missing.  Key your smart-phone to a NFC key manager on a
+ring or bracelet, and encrypt its entire contents with the key at
+drive level, now your smart-phone is a brick when outside of your
+possession.
+
+&gt; in the Makwa proposal, [...] mechanism for delegation, that expands
+&gt; on the idea of the blinding pairs. The main idea is that if (x,y)
+&gt; and (x',y') are blinding pairs, then so is (x*x',y*y').
+&gt;
+&gt;   + Instead of generating one blinding pair, I generate 300 of
+&gt;     them. If this is done at the same time as n is generated, then
+&gt;     this is still reasonably efficient. If the factors p and q are
+&gt;     not known, the 300 pairs can still be produced, at the same cost
+&gt;     as 300 full hashes.
+&gt;
+&gt;   + Whenever the password must be hashed, a new random blinding pair
+&gt;     is produced, by multiplying together a random selection of some
+&gt;     of the 300 pre-generated pairs. That new pair is used for one
+&gt;     delegation, then discarded. The generation of such a pair is
+&gt;     more expensive than its actual use, but still tolerable in many
+&gt;     context (it amounts to 300 multiplications modulo n, about half
+&gt;     the cost a RSA private key operation).
+&gt;
+&gt;   + The 300 "source" blinding pairs need no confidential
+&gt;     storage. They can even be shared between several users (subject
+&gt;     to the trust issue about proper generation of n and discarding
+&gt;     of the prime factors).
+
+nothing in my scheme requires confidential storage either, and its
+cheaper and info theoretically secure to just generate a random b?
+
+&gt; This system increases some costs, but fixes the "secure storage"
+&gt; issue.
+
+I am not sure what the secure storage issue is.  It is always better
+to have a non-public ciphertext even if there is a designed
+high-to-uneconomic (vs plaintext bitcoin) compute cost for deriving
+its key from a password.
+
+There is no additional secure storage requirement.  y &amp; n can be
+public.  They need a different property: integrity.  But that can be
+achieved by putting a sticker on the laptop, card in wallet or all
+over the place with the information.  Its a recognition rather than
+recall question too for mnemonic storage.
+
+&gt; If a brain wallet uses this delegation system, then the device thief
+&gt; no longer gains anything by stealing the device, even if he colludes
+&gt; with the delegation server.
+
+that's just saying you'll reduce security by volunteering to put your
+encrypted private key online.  it doesnt increase security, but its a
+choice someone could make.  I wouldnt recommend it personally.  People
+are bad at estimating password entropy.  Someone might try the
+uneconomic attack and get lucky anyway.
+
+&gt; Does all of this makes sense ?
+
+I think the primary difference is you are admitting the security
+reduction of reusing n (assuming you can find a politically acceptable
+central trusted entity to delete p,q).
+
+If you drop that requirement and add a nice-to-have of
+information-theoretic security (of delegation) you're probably going
+to arrive at the same place I have.
+
+&gt; I was not planning of making a new package version, but if I do then
+&gt; I'll be sure to include some reference to you. Do you have some
+&gt; "official" publication beyond the Web forum entry quoted earlier ?
+
+no the web link is all there is.  I could put it on my web site to
+make it a little more redundantly stored.
+
+Adam
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

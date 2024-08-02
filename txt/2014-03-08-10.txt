@@ -1,0 +1,245 @@
+phc-discussions - Re: [PHC] TigerKDF paper and code ready for review
+
+Message-ID: <20140308022718.GB28733@openwall.com>
+Date: Sat, 8 Mar 2014 06:27:18 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+On Fri, Mar 07, 2014 at 10:50:48AM -0500, Bill Cox wrote:
+I need to overhaul the benchmarks.  I'm still noodling what to report.
+ Should I drop direct Scrypt numbers and only report the improved
+Escrypt numbers, or list both?
+
+You may list both, but I'm not sure what is meant by "direct Scrypt
+numbers".  Yours look too low for an --enable-sse2 build (my code
+revision is not _that_ much faster than Colin's), so what are they?  Are
+they possibly dominated by some kind of overhead?  The scrypt program
+runs a benchmark first (to determine the settings to use), is that
+included in your timings?
+
+Also, you estimate the memory allocation overhead as 15% to 20%, but in
+my testing on various Linux systems it is usually higher than that,
+sometimes a lot higher.  Maybe your system is somehow more efficient,
+but I'm not convinced.
+
+I feel bad already about listing my
+Catena numbers - these aren't even official entries yet, but I wanted
+to justify the need for the unpredictable second loop, and the Catena
+benchmarks are useful for that.  Also, I only want to list numbers for
+the case where all else is equal - last time I substituted the exact
+same hash function into Catena that I used in NoelKDF, and I should
+probably do the same this time and update Catena to use the SSE/AVX2
+optimized memory hash function I use.
+
+I'm also not sure I'm measuring the critical parameters correctly -
+for example Catena uses 1/4th the memory compared to it's DAG size,
+but it fills memory in the first 1/6th of the runtime (1st write pass
+out of a total of 6 read/write passes, assuming memory bandwidth
+limited), meaning it has an average memory usage of 11/12ths the peak,
+while TigerKDF has 1/2 the average relative to peak, and Scrypt has
+3/4ths (with the naive assumption that every pass has equal speed).
+Maybe I should report both average and peak time*memory costs?
+
+Yes, I think you should.  And you were right in the posting you made the
+other day that average may be more important than peak.  I had been
+considering adjusting SMix second loop's default iteration count in
+escrypt, but decided to leave it at N precisely to maximize the average
+memory usage given fixed running time (and thus minimize the number of
+concurrent optimally (de)synchronized attacks that may be run on a
+memory-limited system).
+
+Also,
+is it fair to only list single-thread numbers for Catena when it is
+still possible to use pepper?  Single-thread is probably the most
+important case, but how do we highlight the advantage of a
+multi-threaded implementation, especially since we're hashing memory
+between threads?  In reality, most implementations will probably use p
+1 with our KDFs, but with Catena, they'll mostly not use pepper.
+
+I don't understand how Catena's pepper is related to multi-threading.
+Can you explain?  (Perhaps I should take a closer look at Catena.)
+
+In general, though, I think all 3 of these cases are important, and
+should be considered when designing a KDF/PHS:
+
+1. Single-threaded, single instance runs.  This is what happens in apps
+that choose not to use threads for whatever reason (or lack thereof) and
+need to generate a key for en/decrypting some data.
+
+2. Multi-threaded, single instance runs.  This is what happens in apps
+like above, but which do enable threads.
+
+3. Single-threaded, multi instance runs.  This is what happens on
+authentication servers.  The multiple instances may be threads in the
+authentication service, or they may be separate processes, or they may
+even be in different VMs.  Whatever they are, the settings of our
+password hashing scheme should be chosen such that sufficient capacity
+for concurrent authentication attempts is achieved.
+
+Maybe optimizing for multi-threaded or/and multi-instance case (#2 or #3
+above) is more important than for single-threaded, single instance case
+(#1 above), because this is two use cases vs. one.
+
+One of my favorite changes to Scrypt would be reducing it from
+Salsa20/8 to Salsa20/2.  If it were me, I'd make the default Escrypt
+hashing Salsa20/2
+
+I could, but there's little point now that except in scrypt compat mode
+(where it has to stay Salsa20/8 for compat) I only invoke Salsa20 once
+per the larger, tunable size block (thus, with r=8 I invoke one Salsa20/8
+per 1 KiB processed).
+
+or faster (ChaCha/Blake2 based).
+
+If scrypt compat is ever dropped, then sure I'd like to switch to
+ChaCha20, for a couple of reasons.  We could include both scrypt compat
+and switch to ChaCha20 in other modes, but then we'd have to carry both
+Salsa20 and ChaCha20.
+
+Do you mind if I
+make that 3-line change to your Escrypt version and add those numbers
+to the table?
+
+I'm all for you including such benchmark results.
+
+I think there's value in promoting this change for
+Scrypt, in addition to contrasting it to TigerKDF benchmarks.
+
+I dislike promoting changes, except within PHC, for
+evaluation/discussion.  I think it'll be best for the industry if fewer
+different approved/promoted KDFs/PHSes (or changes to them) come out of
+PHC.  So I think scrypt with Salsa20/2 should be included in your
+benchmarks not to promote anything, but to compare the options we've
+been considering and to justify your approach against a similarly tuned
+"competitor".
+
+Also, I should probably list TigerKDF numbers without SSE enabled as
+well.  I currently haven't implemented the optimized non-SEE version,
+but it wont be too hard.
+
+Maybe, but note that I'm afraid there's currently no adequately
+optimized non-SSE implementation of scrypt.  I've been meaning to make
+one, but haven't gotten around to doing it.  For now, both upstream's
+crypto_scrypt-nosse.c and its revision in escrypt have those avoidable
+blkcpy/blkxor things, which I fully optimized out in -sse.  The same
+optimization is possible for -nosse, it just needs to be done.
+
+Frankly, I'm not as skilled at designing code for so many different
+cases.  For example, I followed your thread about making use of
+multiple CPU multipliers, and I understand the potential benefit, but
+I'm sticking to just 1.  My head will explode otherwise.
+
+This is fine.  I have difficulty meeting all of the desired properties
+at once as well.
+
+I think it's actually good that TigerKDF takes a different approach than
+escrypt.  There's little point in having two very similar submissions.
+
+I'm also trying to figure out how to best auto-select parameters.
+Both repetitions and number of multiplies effect runtime, but for most
+users, I'd like to let them just specify a timeCost parameter.  The
+default "full" interface just has a timeCost right now.  Maybe I
+should add an extended interface.
+
+Right.
+
+There's also an issue with blocksize.  For only 1 repetition and large
+memory, I've found 16KiB to be superior to 4KiB, but some CPUs may
+have only 4KiB or 8KiB L1 caches, and I'm tempted to reduce the block
+size down to 4KiB.  If I do, I probably wont make it adjustable, since
+the performance penalty at 4KiB block sizes on high end machines isn't
+too bad.
+
+There's a tradeoff here that I mentioned to you before, but you don't
+appear to be considering yet:
+
+1. The 4 KiB to 16 KiB range is beyond what you can afford when using
+RAM in the same machine (you can use 512 to 1024 bytes with acceptable
+penalty), and it lets attackers use larger block or/and more distant
+memory.
+
+2. However, for bcrypt-like GPU resistance, you need this 4 KiB to 16 KiB
+range (currently) for the L1 cache lookups.
+
+In escrypt, I deal with this by keeping the L1 cache S-boxes separate
+from the previous block.  Your reuse of the previous block is great in
+reducing complexity (I envy you!), but it means that you may have to
+choose a block size that is suboptimal in one or both respects above.
+
+I guess you should leave things as-is (be it a property of TigerKDF -
+that is, optimization for simplicity rather than for other optimal block
+sizes), but you might want to document the drawback(s).  No need to
+duplicate escrypt's approach (let's have a choice, and quite possibly
+TigerKDF's relative simplicity will win).
+
+If you can come up with a way to decouple these two sizes without
+introducing much complexity, that would be very nice, though.
+
+However, I do adjust the block size and sub-block size downwards if
+low memory is used.  Currently, if there are less than 256 blocks per
+thread, I decrease the block size, all the way down to 32 bytes for a
+1KiB hash (which is what memCost == 0 means).
+
+Hmm.  What happens at e.g. 128 KiB peak memory usage - what block size
+would you use, and would it still be no smaller than bcrypt's 4 KiB?
+(Although, as discussed separately, you don't appear to achieve bcrypt's
+GPU resistance at memory sizes like 128 KiB currently.  Maybe you can
+repair this separately.)
+
+I think you'll find that with Salsa20/2 hashing, that 1KiB
+Scrypt hashing is significantly slower than 4KiB hashing.
+
+Measurably, yes, but not necessarily significantly enough to relax the
+dependency on the memory being the machine's local RAM rather than
+something else an attacker might have.  IIRC, the difference was on the
+order of 10%.
+
+What I am considering is splitting each block's final (and only)
+Salsa20/8 in two Salsa20/4's, so that the next block's index is
+determined sooner (take it after 4 rounds).  Then the effect of block
+size on performance should be less.  In my testing on current machines,
+Salsa20/4 matches the delay associated with TLB miss + next block's
+first cache line miss.
+
+>8. Inter-thread memory hashing to thwart TMTOs (Solar Designer)
+>
+In another message, you mentioned you introduced multiple thread syncs
+per hash computation.  Why?  I think it is best to have just one more
+than scrypt does (so 2 instead of 1).  Each threads sync is potentially a
+huge performance loss when the system is under other load (overbooked),
+which is a common occurrence on servers (OK, perhaps they should fully
+avoid "our" threads anyway, using solely their own coming from nearly
+concurrent authentication attempts).
+
+Doing several thread syncs is the most recent enhancement I've made.
+In NoelKDF, I only did one in the middle and one at the end, and only
+the first half of memory was accessed by multiple threads.  Perhaps
+the additional complexity is not worth it, but without more sync
+points, an attacker has fewer TMTO options.  For example, if he can
+fit 1/2 the memory, but not all of it, he can fill the first half and
+then run the second half threads sequentially.  This results in a
+higher time*memory cost though.
+
+What do you think?  Should I revert back to just 2 sync point?
+
+Oh, so this stems from you continuing to fill memory even while multiple
+threads are accessing the previously filled memory.  I don't have that
+in escrypt due to the scrypt-like split into memory-filling and
+memory-using phases.  As you already realized, continuing to fill memory
+after 1/2 of total running time doesn't increase the average memory
+usage (across multiple attack cores) all that much, so you could
+reconsider that... or maybe it's too late for such changes, and maybe it
+makes more sense to keep TigerKDF different and unique in this respect,
+so that we have more choice in the PHC.
+
+As to the number of sync points given that you continue to fill memory
+during all of the running time, I'm not sure which is best.  On an idle
+system, it's OK to sync many times.  Under other load, this becomes
+costly (potentially ridiculously costly).  Maybe use case #2 (of the
+three listed above) is mostly for users' own computers, but even if so
+those computers are not necessarily 100% idle.  Maybe you can have 3
+sync points by default (at 1/2, 3/4, 1).
+
+Alexander
+

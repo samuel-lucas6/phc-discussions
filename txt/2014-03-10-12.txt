@@ -1,0 +1,84 @@
+phc-discussions - Re: [PHC] Upgrade HKDF to HKDF2?
+
+Message-ID: <CAOLP8p5HEZKCyE+RrDVyF_QtxaiVjJgJpX2U6t5+oh8YNp8G8A@mail.gmail.com>
+Date: Mon, 10 Mar 2014 09:45:17 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Upgrade HKDF to HKDF2?
+
+On Mon, Mar 10, 2014 at 7:33 AM, CodesInChaos <codesinchaos@...il.comwrote:
+> It is not able to directly generate long output lengths, and has a limited input key length.
+>
+Keyed BLAKE2 shares this trait with plain HMAC. You should not compare
+keyed BLAKE2 with HKDF, but with HMAC-SHA-2. Both take a uniformly
+random key and a message, producing a fixed length output.
+>
+BTW you can use HKDF with any keyed hash, not just HMAC. For example
+if you're using BLAKE2, you can use its keyed mode instead of HMAC. I
+mainly view HKDF as a convention for how to expand input with
+different purpose strings.
+>
+>It also forces sensitive "info" data to remain in memory too long.
+>
+The `info` string is usually not secret. It's not key material, it's a
+kind of purpose that avoids interactions between different
+protocols/applications using the same password. For example you could
+use something like "tls-client-encryption-key" or "myapp-user-login".
+>
+This also explains why its an input of the expand step, you want to
+specify it *after* the expensive operation so you don't have to run it
+multiple times if you want multiple outputs.
+
+I think having the info parameter in HKDF_Expand is worthwhile, but
+the lack of one in HKDF_Extract is a potential security issue.  When
+we give users a generic "data" or "info" input, we should not
+discourage them from using it with sensitive data, as this can greatly
+enhance security.  Simply having an info parameter in HKDF_Expand
+invites users to use it this way.
+
+The other alternative is to force them to concatenate all sensitive
+data up-front into password, allocating a buffer of password1Size +
+password2Size, and doing a couple of memcpys.
+
+Am I too hung up on not doing memcpy on the password?  The PHC site states:
+
+"Resilience to side-channel attacks (timing attacks, leakages, etc.).
+In particular, information should not leak on a password's length."
+
+Every implementation I've read so far that does any sort of
+password/key hashing either calls memcpy with the password/key length
+or has a for loop over the length, including PBKDF2, HMAC, HKDF, SHA2,
+Blake2, Scrypt, and Catena.  Since they all do this, can I just assume
+it's OK?
+
+> However, it potentially leaks password length due to no padding.
+>
+1. You can't avoid length leaks entirely with a `(char* password,
+size_t length)` API. You'd need a `(char* password, size_t length,
+size_t buffer_size)` API. But that's pretty hard to use with little
+gain.
+2. You can implement normal hashes with a chosen lower bound on the
+number of compression function calls. This is an implementation issue,
+not a specification issue. Doing so it pretty easy with BLAKE2 due to
+its simple padding and a bit harder with SHA-2 since the position of
+the non-zero padding depends on the data length.
+    You could argue that a specification should invite a correct
+implementation. This is the only argument for your forced padding
+plans I can think of.
+
+I believe a specification should invite a correct implementation.
+I've read the specs, and some implementations, but I do not know
+whether or not a correct implementation should include a pad to hide
+the overhead of memcpy or a fast for loop over the password length.
+Can we just say that memcpy on sensitive data is OK?
+
+Thanks for all the in-depth feedback.  It's very helpful.
+
+BTW, if I calling memcpy on the password length is OK, I can hash all
+my input parameters, including the password, using HKDF without any
+changes.  I'll just malloc a buffer large enough, with a size that is
+a multiple of something big, like 256 or 1024 bytes, memcpy everything
+into it, call HKDF_Extract, zero the buffer and free it.
+
+Bill
+

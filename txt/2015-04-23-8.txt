@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150423102525.GA4694@openwall.com>
+Date: Thu, 23 Apr 2015 13:25:25 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+Dmitry,
+
+On Mon, Apr 20, 2015 at 11:36:09PM +0200, Dmitry Khovratovich wrote:
+I should add that C(q) is actually overestimated in the program.
+First, it does not take into account that the total number of blocks
+is limited (2^20 for 1 GB, for example).
+
+How would this help in an attack?  Is it just in the way you wrote
+below, or in some other way as well?
+
+Secondly, it counts every
+block as many times as it appears in different branches of the
+recomputation tree. A more clever tradeoff method would not recompute
+the same block too many times.
+
+Would being so clever be practical?  I think usually not.  For small
+computation and depth penalties, the frequency of such helpful block
+"collisions" would be low, so they're probably not worth the extra logic
+to detect them.  For high computation and depth penalties, detecting
+these "collisions" would be costly, and keeping those blocks in memory
+for longer than is necessary for the current branch could negate the
+original TMTO's reduction in memory needs.
+
+For example, doesn't the 1.6 billion computation penalty combined with
+depth penalty of 86 for the 1/6 attack on yescrypt (not including the
+BlockMix-level attack for this discussion) mean that way more than 2^20
+blocks get recomputed (or checked for in other branches and transferred
+from there, as you suggest) per each iteration of the SMix[12] loops?
+If so, trying to keep those recomputed blocks in memory during that one
+iteration, in case they are needed by another branch of the tree, would
+consume at least as much memory as the TMTO is trying to save.
+
+Alexander
+

@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Some remarks on Lanarea</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="14">[&lt;prev]</a> <a href="16">[next&gt;]</a> <a href="../../../2014/04/03/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;87ha6bq0ok.fsf&#64;wolfjaw.dfranke.us&gt;
+Date: Wed, 02 Apr 2014 10:13:31 -0400
+From: Daniel Franke &lt;dfoxfranke&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Some remarks on Lanarea
+
+Lanarea doesn't seem to use very much memory. Its memory requirement is
+the size of its matrix, which is m_cost * 16 bytes, plus some small
+constant. The reference implementation allocates an additional m_cost *
+(16 + sizeof (uint8_t*)) bytes plus some heap-management overhead, but
+this can be avoided through better optimization. m_cost * sizeof
+(uint8_t*) and the heap overhead can be saved by allocating the matrix
+as one contiguous block of memory rather than as an array of pointers to
+individually-allocated rows. The 16*m_cost bytes allocated for 'chain'
+can be saved by modifying blake2 to traverse its input in the order
+determined by diagonal_ur(), and then passing the matrix to it directly.
+
+Running Lanerea's reference implementation with m_cost = 100 and t_cost
+= 1 takes roughly one second on my desktop. One second is a lot.  It's
+far too much for authentication servers. It's reasonable for some key
+derivation applications, but on the same order of magnitude as the
+cutoff for reasonableness. Yet at this setting, its memory utilization
+is only a little over 1600 bytes. In contrast, scrypt can use on the
+order of a gigabyte when it's run for this long.
+
+Part of the problem is that Lanarea's running time increases
+quadratically with its memory cost. The loop beginning at line 7
+iterates 16*m_cost times, and at the end of each iteration on line 33,
+hashes 16*m_cost bytes of data. A corollary to this observation is that
+as m_cost grows large, Lanarea's running time is asymptotically
+dominated by the cost of hashing, which is the most GPU-friendly part of
+the algorithm. The irregular order in which the hash traverses the
+matrix won't hurt GPUs much, if at all, because the order is static and
+therefore amenable to prefetching.
+
+I don't think the conditional branching in lines 13 thru 26 is going to
+be effective at defeating GPUs, as is claimed by the security analysis,
+because the branches don't have to actually be implemented as
+branches. Instead, just perform *all* of the operations (they only
+require a couple of CPU cycles each), and then use CMOVs or bit
+arithmetic to select the one you want. This might be a good idea even
+for CPU implementations, because mispredicted branches are expensive for
+CPUs too.
+
+Once this branch-elimination technique is implemented, most of the inner
+loop in lines 8 thru 27 can be implemented by 128-bit-wide SIMD
+instructions. This isn't necessarily a bad thing, because CPUs have
+those available too. The only line which looks like it would require
+sixteen 8-bit instructions rather than one 128-bit SIMD instruction is
+line 11, because the row index 'r' in the matrix lookup is dependent on
+z.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

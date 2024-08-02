@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - tunable low-level parallelism</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="26">[&lt;prev]</a> <a href="28">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150414204029.GA6605&#64;openwall.com&gt;
+Date: Tue, 14 Apr 2015 23:40:29 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: tunable low-level parallelism
+
+On the panel list, I was asked "what is a reasonable default, and how
+often do we have to update it?" referring to tunable instruction-level
+parallelism, such as yescrypt pwxform's settings.  Here's my answer:
+
+The default may be provided by something like a yescrypt_default_flags()
+function, which may differ between implementations (but will try not to
+use too many different settings) - e.g., yescrypt-opt (scalar) may
+currently use a single 64-bit lane (to achieve bcrypt-like anti-GPU even
+on 32-bit systems), and yescrypt-simd use the current default of 512-bit
+as 4x 128-bit SIMD lanes.  AVX2 should run this reasonably, merging
+pairs of 128-bit S-box lookups.  (BTW, I previously experimented with
+such merging of 64-bit S-box lookups on SSE*/AVX, with good results, but
+opted to make 128-bit lookups the default.)  MIC and AVX-512 will have
+to merge four 128-bit S-box lookups, which is significantly suboptimal
+yet isn't that bad, along with other fully 512-bit processing (for the
+MUL, ADD, XOR sequences).  A 512-bit optimized setting (using 512-bit
+S-box lookups as well) may be introduced (obviously, it'd hurt anti-GPU
+on pre-Haswell CPUs significantly, which is why I don't do it yet).
+As to needing more than 512-bit parallelism on currently anticipated
+CPUs, I am not sure - with 4-way SMT, perhaps 512-bit will remain
+sufficient.  Another factor is L1 data cache size, which is currently
+expected to remain at 32 KB, so only accommodating 4 threads * 8 KB
+S-boxes anyway.  This will take some testing.
+
+To summarize: two parallelism settings right now (64-bit, and 512-bit
+with 128-bit S-box lookups), and a third one in the foreseeable future
+(either full 512-bit, or something like 1024-bit with 512-bit S-boxes,
+whichever turns out to be optimal on actual AVX-512 CPUs).
+
+After that, update every 10 years or so.
+
+Note that compatibility (both backward and forward) may easily be
+maintained, with fallbacks to generic code for settings that have no
+optimized code written for them yet or for which such code has already
+been dropped.  Generic code for BlockMix_pwxform is quite simple.
+
+The actual settings used will need to be encoded along with hashes, or
+along with encrypted filesystems, etc., just like m_cost and t_cost.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

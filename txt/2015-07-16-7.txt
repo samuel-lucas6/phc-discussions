@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-ID: <CAOLP8p7p5nA-jvj=4x4_7OUDppcwMGt8h0JfrkOxxmanz4ii6w@mail.gmail.com>
+Date: Thu, 16 Jul 2015 10:49:52 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+On Thu, Jul 16, 2015 at 3:10 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Am I correct that the ROM is used for many subsequent blocks?
+>
+
+Yes.
+
+
+Then, the miner generates (i1,i2) <- SHA256(Header,Nonce),
+computes/retrieves X1=Yescrypt_4MB (i1), X2 = Yescrypt_4MB (i2), and checks
+if SHA256(X1,X2,Header,Nonce) <Target.
+>
+
+I did not make a key point clear enough:  The miner computes a Yescrypt
+hash of only 8 KiB, not 4 MiB.  This is critical.  A CPU based miner with
+32 GiB of "ROM" data in RAM would compute X =
+Yescrypt_8_KiB(4KiB_block(i1), 4KiB_block(i2)), and check if X < Target.
+
+
+So this seems to be a scheme with fast variant that needs 32 GB and slower
+variant that lives with 4 MB. And the verification needs 4 MB, too.
+>
+
+Yes.  The key idea here is that we need fast verification for two different
+groups, and they have different needs.  A miner or "full node" verifies the
+entire block chain, and doing a full 8-second hash per block would be
+intolerable (the time to fill the ROM is about that on a common desktop).
+However, after filling memory once, verification can proceed at over a
+million verification per second, because only 8 KiB of data needs to be
+read from the ROM for each.
+
+
+To figure out the ASIC advantage, we should compare the hash rate of a
+desktop with 32 GB of RAM with the hash rate of 2^13 (disconnected) ASICs
+each having 4MB on chip. In your calculations desktops do 2^16 hashes per
+second, and the ASICs would do 2^25 hashes per second, so about
+4000x-advantage.
+>
+Dmitry
+>
+
+Disconnected ASICs would lose quite badly, since the CPU miner is reading 8
+KiB per hash at 20 GiB/s, while a disconnected ASIC must compute 2 4-MiB
+Yescrypt hashes in series.  We chose these computations to be 1 ms (by
+adjusting t_cost) for the CPU defender.  There is no way the ASIC can do
+this more than 10X faster, so each hash will require (1ms + 1ms)/10 =
+0.2ms.  This is only 5,000 hashes per second.  In comparison, the CPU
+defender fills 20GiB of memory bandwidth reading 8KiB of memory per hash.
+This is over 2.6 million hashes per second.  The CPU defender is over 500X
+faster than the 4MiB ASIC.
+
+A more interesting ASIC attack is when we have 8192 ASICs with 4MiB
+networked together.  In this case, each ASIC holds 4 MiB of the ROM data,
+for a total of 32 GiB.  To compute Yescrypt(4KiB_block(i1),
+4KiB_block(i2)), ASIC_i2 must transmit 4KiB_block(i1) to ASIC_i1.  This is
+only 4KiB transmitted, compared to the CPU/DRAM case where the CPU reads
+8KiB.  However, to be comparable in speed to the CPU case, the ASICs need a
+routing network capable of 8192*10GiB/s ==8192*10GiB/s out.  The total
+bandwidth of this random-routing network is over 80 TiB/s.  The challenge
+is to design the router so that it does not dominate the cost.
+
+At a minimum, the routing network requires 10 times 10-gigabit pins per
+ASIC.  An Achronix FPGA has 64 of these pins, and in theory costs around
+$600.  However, they also have to connect to other nodes in the routing
+fabric.  I do not know how to do this routing without several layers of
+these FPGAs.  Their cost would dominate in my designs.
+
+A custom routing ASIC which maximizes bandwidth while minimizing cost would
+work out better.  If I remember correctly, GDDR5 DRAMs have about 20 GiB/s
+bandwidth and only cost around $11 for the small ones at this speed.  If we
+could for $10 build a routing ASIC with 10GiB/s in and out, we'd
+cost-reduce the router considerably.  Maybe it could be done for $100 per
+hashing-ASIC node.
+
+This is what the threat landscape looks like for bandwidth-hardening PoW,
+SFAICT.
+
+Bill
+
+
+

@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20151004090003.GA27004@openwall.com>
+Date: Sun, 4 Oct 2015 12:00:03 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Mon, Sep 28, 2015 at 01:15:15AM +0300, Solar Designer wrote:
+On Sun, Sep 27, 2015 at 04:46:48PM -0400, Anthony Ferrara wrote:
+On Sep 27, 2015 2:52 PM, "Solar Designer" <solar@...nwall.comwrote:
+For PHP and such, I think this pretty much implies the encoding will
+also need to use RFC Base64.  Then it's just sprintf of some decimal
+numbers and some base64()'s.  So my point remains that Thomas' proposed
+encoding is neither here nor there.
+
+Completely fair. I am less concerned around the encoding of the salt than
+the encoding and specification of the parameters. If a high level api is
+provided for generating the salt, then awesome. That helps a lot. Though I
+would still suggest keeping it readable.
+
+Regarding crypt B64 vs. RFC Base64, Alexander Cherepanov has just
+pointed out to me that there are in fact major issues with common
+base64 decoders.
+
+Alexander Cherepanov has since posted about it in here.
+
+Thomas had hinted at that, but I didn't realize just
+how bad things actually were.  So I withdraw that suggestion for now.
+
+So it looks like we've chosen to use a verbose encoding:
+
+https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md
+
+and it looks like we've switched to (almost) RFC Base64:
+
+"The B64 encoding is the standard Base64 encoding (RFC 4648, section 4)
+except that the padding  =  signs are omitted, and extra characters
+(whitespace) are not allowed"
+
+As much as I am for compact encodings, I think if we chose to go verbose
+anyway, we should not omit the padding '=' signs.  Just to make it
+easier to use standard encoding/decoding functions.
+
+A reason to omit them is to ensure that '=' are only seen between
+parameter names and values, but this is not necessary for parsing.
+Even something like this may be parsed unambiguously:
+
+$id$param1=123,param2=B64here==,param3=B64there=$salt==$hash=
+
+It's not pretty, but it's simpler to create and parse when you already
+have base64 encoding/decoding functions.  Unfortunately, those decoding
+functions on their own typically won't ensure strict syntax (they're
+about as broken as strtoul() in this respect, or maybe slightly worse
+even), but that may be a reason for us not to choose RFC Base64 rather
+than to omit padding, I think.
+
+Alexander
+

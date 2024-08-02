@@ -1,0 +1,113 @@
+phc-discussions - Re: [PHC] Schvrch is broken
+
+Message-ID: <CAG+Gt9boyDdyvT2mrgWscxXScM2NtMQvyNCtmj=qOVr-bzyrNw@mail.gmail.com>
+Date: Tue, 16 Sep 2014 13:29:34 +1000
+From: Rade Vuckovac <rade.vuckovac@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Schvrch is broken
+
+Hi
+
+
+Since we have nice PoC (assuming that is proof of concept) there should be
+the concept in the first place (or it is assumed to go directly to the
+proof / code). Without the concept, below is Bill’s attack analysis
+instead.
+
+
+State a,b,c,d (stirred elements)
+
+Hash of above state is a’
+
+
+
+Hash is done by one revolve update. Evolve is skipped for clarity.
+
+~ indicates flipped state
+
+
+case 1 carry = b xor c xor d
+
+case 2 carry = b xor c xor ~d
+
+case 3 carry = b xor ~c xor d
+
+case 4 carry = b xor ~c xor ~d
+
+case 5 carry = ~b xor c xor d
+
+case 6 carry = ~b xor c xor ~d
+
+case 7 carry = ~b xor ~c xor d
+
+case 8 carry = ~b xor ~c xor ~d
+
+a’ = a xor (can be any of the cases above*) carry
+
+
+
+hacked version (Bill’s attack)
+
+ha’ = a xor carry(case 1)
+
+
+claim is that comparing ha’ and a’ the state a, b, c, d can be dismissed or
+further checked.
+
+“He then compares his result states to the hash value.  If each group of 64
+bits are either equal, or complements of each other, then his guess is
+correct with high probability, which he can then verify running the full
+algorithm.  Otherwise, it is wrong and he can move onto the next guess.”
+
+
+
+The real issue is not that hacked version has some hits. The major problem
+is that it will be wrong in some cases as well (as demonstrated above)
+missing genuine passwords and possibly running search considerably long
+without a result.
+
+
+
+*Note that carry brings state-info from the last state only, that number of
+cases grows exponentially (state length wise), the period of state grows
+exponentially (state length wise) … The other quirks and current attacks
+about revolve (and stir) function is presented and analysed in quite few
+papers (3) and finally there is MAG submission from eStream with some notes
+as well. The links were provided therefore ignorance should not be the
+issue any more and actually going through them can save some time for all
+of us.
+
+
+Regards, Rade
+
+On Tue, Sep 16, 2014 at 3:05 AM, Steve Thomas <steve@...tu.comwrote:
+
+On September 14, 2014 at 11:06 PM Rade Vuckovac <rade.vuckovac@...il.com
+>
+wrote:
+>
+ Regarding time cost
+>
+ As it stays (more details is needed perhaps) the statement about
+PHC_Fast
+>does not pass a basic logic.  Since PHS_Fast function is allegedly time
+>constant function it means that the time cost is indifferent factor. In
+other
+>words only input which is varied through the initial search is the
+password.
+>That leads that PHC_Fast function, without even inspecting inner working
+>(treating it as a black box) has multiple outputs for the same input???
+>
+>
+I guess I should of just posted code in my first message:
+https://github.com/Sc00bz/break-schvrch
+>
+This takes about 3 minutes to run. With SSE or AVX it will be faster but
+this is
+a nice PoC. Note that the generation only needs to be done once per m_cost
+and
+once for each t_cost when m_cost is zero.
+>
+
+
+

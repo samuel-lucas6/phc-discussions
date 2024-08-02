@@ -1,0 +1,128 @@
+phc-discussions - Re: [PHC] Is this really safe ...
+
+Message-ID: <51641201.4070101@defuse.ca>
+Date: Tue, 09 Apr 2013 07:05:05 -0600
+From: havoc <havoc@...use.ca>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Is this really safe ...
+
+On 04/09/2013 02:41 AM, Yann Droneaud wrote:
+Hi,
+
+Is it really safe to use GitHub to store a secret key ring ?
+
+Someone point me to this:
+
+https://github.com/skeeto/dotfiles#readme
+
+    You may have noticed, yes, I have my private PGP key in here!
+Dangerous?!
+    Maybe, it's an experiment. It's got a strong passphrase on it and I've
+    pumped up the key strengthening settings in GPG, like so,
+
+    gpg --s2k-cipher-algo AES256 --s2k-digest-algo SHA512 --s2k-mode 3 \
+        --s2k-count 10000000 --edit-key <key id>
+
+    Then run passwd in the key editor. That's over 10 million rounds of
+    SHA-512 which takes a half-second to compute on my laptop.
+Brute-forcing
+    my passphrase should be completely impractical. I invite anyone to
+prove
+    me wrong
+
+
+It's secure as long as all of the keys are encrypted. It's what I use
+for my off-site backups at Amazon too:
+
+https://defuse.ca/blog/encrypted-automatic-backups-with-pkc
+
+Except I publish just the encrypted private key, not my entire key ring.
+
+The benefit is that it lets you automate the backup encryption and
+upload process without having to put the password in the script. As long
+as the password protecting the private key is secure, then it can't be
+decrypted (hopefully).
+
+[snip key information]
+
+
+So if I understand, the iteration count will be equal to "Count / Hash
+output size",
+eg 163840 rounds.
+
+
+
+The way the iteration count is stored is actually pretty obscure:
+
+http://mathcs.slu.edu/Public/may/Cryptography/InterestingDownloads/PGP810-S-X%20Folder/PGP810-S-X-Inner/libs2/pgpsdk/priv/utilities/pgpStr2Key.c
+
+The specific code is:
+
+/*
+ * The count is stored as 4.4 bit normalized floating-point.  The high
+ * 4 bits are the exponent (with a bias of 6), and the low 4 bits
+ * are the mantissa.  0x12 corresponds to (16+0x2) << (0x1+6).
+ * The minimum value is (16+0) << (0+6) = 0x400 = 1024.
+ * The maximum is (16+0xf) << (0xf+6) = 0x3e00000 = 65011712.
+ * These functions convert between the expanded count and a
+ * floating-point approximation.
+ */
+#define EXPBIAS	6
+static PGPUInt32
+c_to_bytes(PGPByte c)
+{
+	return ((PGPUInt32)16 + (c & 15)) << ((c >4) + EXPBIAS);
+}
+
+
+Which gives:
+
+(16 + (212 & 15)) << ((212 >4) + 6)
+=10485760
+
+Which agrees with the output of your commands.
+
+Here's part of the code that does the hashing:
+
+/* Find the length of the material to hash */
+bytes = c_to_bytes(priv->buf[10]);
+/* Always hash a least the whole passphrase! */
+if (bytes < slen + 8)
+	bytes = (PGPUInt32)(slen + 8);
+
+/* Hash len bytes of (salt, passphrase) repeated... */
+while (bytes slen + 8) {
+	multiHashUpdate (h, v, num, priv->buf+2, 8);
+	multiHashUpdate (h, v, num, (PGPByte const *)str, slen);
+	bytes -= slen + 8;
+}
+
+slen is the length of the password, and the length of the salt is 8.
+
+The total calls to the compression function is:
+
+Count / Hash *input block* size.
+
+SHA512's block size is 1024 bits, the approximate number of times SHA1's
+compression function gets called is:
+
+10485760 / 1024 = 10240.
+
+So he is incorrect to say "That's over 10 million rounds of
+SHA-512..."
+
+I haven't read any implementation of the Iterated-Salted S2K algorithm,
+but it seems, well,
+worst than PBKDF. I tought PGP would use such algorithm to protect
+secret keys.
+
+I agree the algorithm is not the best, but it's there for backwards
+compatibility with old versions of PGP from 1996, before PBKDF2 was
+published (RFC2898, 2000) (Source: Solar Designer told me on twitter,
+but I can't find the tweet). You can always run the password through
+PBKDF2 yourself before you give it to GPG.
+
+-- 
+Havoc
+https://defuse.ca/
+

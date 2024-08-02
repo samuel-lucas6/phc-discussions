@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <CALCETrXk8_GpdPT3yy3nO4btAGA0DMz+Nh7aP4HVkhKOEsxzfA@mail.gmail.com>
+Date: Wed, 23 Mar 2016 09:10:37 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] hash encryption
+
+On Tue, Mar 22, 2016 at 9:38 PM, Samuel Neves <sneves@....uc.ptwrote:
+On 23/03/2016 03:41, Solar Designer wrote:
+>Hi,
+>>
+>I am planning to release yescrypt 1.0 later this year.  One planned
+>feature that stayed on my to-do list so far is builtin support for
+>(re-)encryption of hashes.
+>>
+>One way to do it would be to use a block cipher like AES.  However,
+>yescrypt does not normally use any block cipher, and bringing in an
+>extra crypto primitive just for this one feature is not great.
+>>
+>Another way would be to reuse the salt as IV when reusing an already
+>available hash function as a stream cipher.  However, this increases
+>reliance on salts being unique.
+>>
+>Yet another way would be to create a block cipher out of a hash, using
+>the Luby-Rackoff construction.  This is my current preference.
+>>
+>Attached is an implementation of a 256-bit block cipher based on
+>SHA-256 (which yescrypt has anyway).  I'd appreciate a review.
+>
+Underlying the SHA-256 compression function there is already a block cipher, often known as SHACAL-2. It is used in
+Davies-Meyer mode (SHACAL-2(key, block) + block) to turn it into a compression function. Turning SHA-256 into a Feistel
+block cipher seems like overkill, but obviously works.
+>
+Alternatively, sticking with primitives already in (ye)scrypt, one can reuse the underlying permutation of Salsa20 to
+turn it into an Even-Mansour block cipher---P(block xor key) xor key.
+>
+
+A while ago, I looked, and it seemed like all the security analysis of
+the Salsa20 permutation assumed that a bunch of the input words to the
+core permutation were fixed.  In the Even-Mansour scheme, they would
+be under strong attacker control.  Did I miss something?
+
+--Andy
+

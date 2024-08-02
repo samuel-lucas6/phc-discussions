@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Salt
+
+Message-ID: <CALW8-7LeFq4h33FxQQYojmL-zOVremKS73ZOOMmU-+sF8QHoPw@mail.gmail.com>
+Date: Sun, 29 Mar 2015 17:58:14 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Salt
+
+It seems that a formal definition is not needed actually, as there is
+no particular definition for key or plaintext in cryptography.
+
+Instead, we claim that a password hashing function is secure against
+attack A if salt satisfies properties P. For instance, suppose that an
+adversary looks for a preimage to any of the given set of password
+hashes, where salts are stored in cleartext. Iff the salts are unique,
+then any password attempt would work for a single hash only (whereas
+if the salt repeats for N passwords, a password is essentially tried
+for N hashes simultaneously). Thus in this setting salt should be
+nonce.
+
+One may imagine other scenarios. For instance, part of the salt can be
+secret, and an adversary wants to recover it (for some reason). Then
+salt should be random.
+
+Randomness and uniqueness are not equivalent properties, nor either of
+them implies the other. However, for sufficiently long salts (100 bits
+and longer) random salt is unique with good probability.
+
+Best regards,
+Dmitry
+
+On Sun, Mar 29, 2015 at 4:12 PM, Dmitry Chestnykh
+<dmitry@...ingrobots.comwrote:
+Dear password hashers,
+>
+We need to formalize the definition of salt.
+>
+In some papers it's described as a "sequence of random bytes", but that's not enough.  As I understand, for those password hashing functions I'm aware of, the only requirement for salt is to be unique and unpredictable, and a sequence of random bytes fits this perfectly. But it's common for users to put non-random values into salt, or use a concatenation of random values and personalization string (e.g. website address). Some may want to keep bits of salt secret. Without formalizing the definition of salt, people will be arguing if such use is safe or not forever. Also, if one password hashing function doesn't require a uniformly random salt, but then another function is introduced, which has weaknesses if the salt value is non-random, users won't be able to safely upgrade. So we should create a formal definition of salt and describe all the requirements for it.
+>
+--
+Dmitry Chestnykh
+Coding Robots
+http://www.codingrobots.com
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

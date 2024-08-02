@@ -1,0 +1,114 @@
+phc-discussions - Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p7UyvSwcys-s=bNEGjDR3H--avtsAW3_tKYWy4-hG1vRA@mail.gmail.com>
+Date: Sun, 29 Dec 2013 17:29:02 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Initial hashing function. Feedback welcome
+
+I have written an initial hacked-up version of a program that for now I'm
+simply calling "keystretch".  Here's some ways it compares to scrypt:
+
+- On my Core i7 linux box, it's over 8X faster for a given memory size,
+single-threaded, no SSE
+- Memory is hashed as it's filled, rather than filling, then hashing.
+- 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+intermediate derived key.
+- The derived key does not depend on the number of threads
+- All threads hash randomly from all of memory at the same time, so you
+can't run p smaller runs in series, where p is scrypt's parallelization
+parameter
+
+Credit for hashing all of memory with each thread goes to Alexander.  It's
+a good idea, IMO:
+
+http://www.openwall.com/lists/crypt-dev/2013/11/20/1
+
+Performing the typical 2048 SHA-256 rounds on the password at the start,
+and then clearing the password, insures that we have security at least as
+good as OpenSLL can provide today for our ssh private keys.  Any additional
+security is in positive territory.
+
+Having the hash result not depend on the number of threads, and also
+filling memory as we hash, allows me to have a stop pattern that I look for
+when decrypting.  Along with salt, I can store the final hash value, which
+also looks random.  When decrypting, I fill memory until this stop value is
+seen.  This allows better deniability for the encrypted file, as both the
+hash and stop value appear to be random.  This is important for TrueCrypt.
+
+A weakness of the hashing function vs scrypt is that it is a simple
+non-cryptographic hash, rather than script's Salsa20/8.  This is the
+primary reason it runs faster.  If we do not need a strong cryptographic
+hash, there is significant opportunity for improving performance.
+
+Is there any reason such a simple hash function should not be used?  I am
+particularly interested in feedback on this point.
+
+Here's the hashing code.  MAX_THREADS is currently 16.  The first page of
+memory has already been filled with PBKDF2_SHA-256 using the salt as the
+salt and password.  Thread keys have been initialized with PBKDF2_SHA-256
+using the intermediate derived key and the salt.  I've removed thread
+synchronization for this post, which still needs work.  Are there any bugs?
+ Feedback welcome:
+
+typedef struct threadContextStruct *ThreadContext;
+
+struct threadContextStruct {
+    uint64 *mem;
+    uint64 *threadKeys;
+    volatile uint32 *nextPageNumPtr; // This pointer points to the same
+value in each thread
+    uint32 pageLength;
+    uint32 numPages;
+    uint32 keyLength;
+};
+
+// Fill toPage, hashing with the key and fromPage as we go.
+static void fillPage(ThreadContext c, uint64 *key, uint32 fromPageNum,
+uint32 toPageNum) {
+    uint32 pageLength = c->pageLength;
+    uint64 *fromPage = c->mem + fromPageNum*pageLength;
+    uint64 *toPage = c->mem + toPageNum*pageLength;
+    uint32 pageMask = pageLength - 1;
+    uint64 keyData, pageData, lastPageData = 1;
+    uint32 i;
+    uint64 *k = key;
+    uint64 *kEnd = key + c->keyLength;
+    uint64 *t = toPage;
+    for(i = 0; i < pageLength; i++) {
+        keyData = *k;
+        *t++ = keyData;
+        pageData = fromPage[keyData & pageMask];
+        *k++ += (pageData*keyData) ^ lastPageData;
+        if(k == kEnd) {
+            k = key;
+        }
+        lastPageData = pageData;
+    }
+}
+
+// This is the thread's main function.  It hash pages randomly into the
+derived key.
+static void *hashMem(void *threadContextPtr) {
+    ThreadContext c = (ThreadContext)threadContextPtr;
+    uint32 fromPageNum = 0, toPageNum;
+    uint32 numPages = c->numPages;
+    uint32 hash;
+    uint64 *key;
+    while(true) {
+        toPageNum = (*(c->nextPageNumPtr))++;
+        if(toPageNum >= numPages) {
+            pthread_exit(NULL);
+        }
+        key = c->threadKeys + (toPageNum & THREAD_MASK)*c->keyLength;
+        hash = (uint32)(key[0]);
+        if(toPageNum MAX_THREADS) {
+            fromPageNum = hash % (toPageNum - MAX_THREADS); // Could
+eliminate mod operation
+        }
+        fillPage(c, key, fromPageNum, toPageNum);
+    }
+}
+
+
+

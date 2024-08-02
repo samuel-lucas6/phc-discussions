@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Message-ID: <CAOLP8p4L-dLDo1JQZh=S+zjo-96yEH1b1nVyJQTKM878Po-JpQ@mail.gmail.com>
+Date: Thu, 30 Oct 2014 14:44:46 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+On Thu, Oct 30, 2014 at 1:03 PM, Jakob Wenzel <jakob.wenzel@...-weimar.de>
+wrote:
+
+OK. I just had a close look to your code and now I am convinced. I
+just overlooked that PRK is overwritten for each increment of the
+garlic factor, which, when starting with MinGarlic = 0, is indeed at
+an early stage of the hash generation, rendering WGC attacks not
+applicable. Nevertheless, if I understood your code and explainations
+right, skinnycat does not support the parameters startMemCost and
+stopMemCost and thus, the proposed WGC attacks on the value PRK seems
+to work.
+>
+
+I agree.  SkinnyCat sacrificed many defenses (mostly suggested by
+Alexander) to slim down.  It also lacks GPU defense through the small
+unpredicable memory reads, and multiplication chain based compute time
+hardening, parallel threads, adjustable data lanes (to match the SIMD
+unit), and a lot of tunables to optimize for a particular platform.
+
+
+>
+>By default, Catena runs with minGarlic == maxGarlic == 18.  In
+>this mode, Catena does not begin to overwrite memory derived from
+>the password until it has finished filling memory.  During this
+>entire time, H(H(key material)) is present in memory.  If Catena
+>tries to use too much memory, this memory might get swapped to
+>disk.  If Catena is running continuously, as it might on an
+>authentication server, with lambda == 3, there is about a 1 in 4
+>chance that a cold-boot attack, DMA attack, or forced
+>hibernation, will reveal H(H(key material)).
+>>
+>
+For Catena-BRG, this is indeed an attack which succeeds with a
+chance of $1/(lambda+1)$. Thanks for pointing this out! We will
+recommend to use Catena-BRG with MinGarlic = 1 in the next version
+of our submission paper to thwart this attack.
+>
+>
+That would slow you down 2X, meaning you would lose another 2X in
+memory*time defense against brute-force password guessing attacks.
+ Instead, please consider doing what TwoCats does, and apply
+Garlic starting at 0, but when you get close to the m_cost, just
+skip ahead and to the last level of garlic.  This enables your
+algorithm to trade-off defense against brute-force guessing attacks
+vs memory-leak attacks.
+>
+I certainly have copied many good ideas from Catena.  It would be
+nice to contribute back something :-)
+>
+>
+We will indeed consider this idea! Thanks!
+>
+Best regards,
+Jakob
+>
+
+You're welcome.  Catena still rocks.  I learned a ton from Catena.
+
+Bill
+
+
+

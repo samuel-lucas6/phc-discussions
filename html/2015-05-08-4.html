@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150508224512.GA25372&#64;openwall.com&gt;
+Date: Sat, 9 May 2015 01:45:12 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt
+
+Hi Marcos,
+
+On Fri, May 08, 2015 at 06:10:10PM -0300, Marcos Simplicio wrote:
+&gt; &gt; I find the testing methodology weird and wrong.  You're reporting
+&gt; &gt; microseconds.  You should be reporting hashes per second rates 
+&gt; 
+&gt; OK, hashes/s is indeed a better metric for reporting this. Alone, this
+&gt; should not change the ratios shown in the 3rd column, though, so I do
+&gt; not agree that the end result is actually wrong. I agree that further
+&gt; tests can be made and *added* to the analysis, though, and that is a
+&gt; good thing (see below).
+
+The CPU speed figures will change a lot, and this will change the 3rd
+column.  Latency on under-loaded CPU can't be directly and reliably
+converted to throughput.  We just don't have that data in your results.
+(Also, there's a major issue with memory (de)allocation - see below.)
+
+This conversion is valid for GPU, because you're not actually reporting
+latency for it - you're already reporting 1/throughput.  I merely ask
+that you do the same for CPU, and while at it report throughput directly
+rather than via the reciprocals.
+
+&gt; Anyhow, the code was made available so anyone can improve the tests for
+&gt; different platforms (note: please try getting the code from the root
+&gt; folder, "<a href="https://github.com/leocalm/Lyra/" rel="nofollow">https://github.com/leocalm/Lyra/</a>", not from the sub-folder I
+&gt; sent earlier). We will also include our execution scripts there as soon
+&gt; as we clean them up.
+
+Do you mean like:
+
+$ git clone <a href="https://github.com/leocalm/Lyra/GPU_attacks" rel="nofollow">https://github.com/leocalm/Lyra/GPU_attacks</a>
+Cloning into 'GPU_attacks'...
+error: The requested URL returned error: 403 while accessing <a href="https://github.com/leocalm/Lyra/GPU_attacks/info/refs" rel="nofollow">https://github.com/leocalm/Lyra/GPU_attacks/info/refs</a>
+fatal: HTTP request failed
+$ git clone <a href="https://github.com/leocalm/Lyra/GPU_attacks" rel="nofollow">https://github.com/leocalm/Lyra/GPU_attacks</a> -b master GPU_attacks
+Cloning into 'GPU_attacks'...
+error: The requested URL returned error: 403 while accessing <a href="https://github.com/leocalm/Lyra/GPU_attacks/info/refs" rel="nofollow">https://github.com/leocalm/Lyra/GPU_attacks/info/refs</a>
+fatal: HTTP request failed
+
+&gt; &gt; for full device load, for both CPU and GPU.
+&gt; 
+&gt; For the CPU, I guess you are proposing we do something similar to what
+&gt; Milan did in Test9, right? If so, that sounds reasonable.
+
+Yes, that's right.
+
+For yescrypt, you can also use the included "userom" program for a
+sanity check of your results.  You run it like this:
+
+solar&#64;...l:~/yescrypt/yescrypt-0.7.1$ ./userom 0 2
+r=8 N=2^11 NROM=2^0
+Will use 0.00 KiB ROM
+         2048.00 KiB RAM
+'$7X$96..../....WZaPV7LSUEKMo34.$IqbBioI2fvqrKNcxDpBdqysJN52oeaKhLk3EQM6t4o/'
+Benchmarking 1 thread ...
+938 c/s real, 938 c/s virtual (1023 hashes in 1.09 seconds)
+Benchmarking 8 threads ...
+3426 c/s real, 436 c/s virtual (7161 hashes in 2.09 seconds)
+
+This excludes the memory (de)allocation overhead.  With the overhead
+included, the numbers will be somewhat lower.  In fact, userom.c
+includes that version, too - through changing "#if 1" on line 266 to an
+"#if 0".  Wow, actually it's a lot slower at many threads then:
+
+Benchmarking 8 threads ...
+1278 c/s real, 207 c/s virtual (3069 hashes in 2.40 seconds)
+
+I think I figured it out.  I pretty much only cared about either having
+the memory (de)allocation out of the loop or KDF use so far.  So I
+wanted the resulting allocation to be optimal (page size and alignment),
+not the (de)allocation itself to be fast.  Thus, yescrypt-platform.c
+prefers to use mmap(), which means there's always two syscalls, and
+moreover the kernel zeroes this memory each time before handing it back
+to the process.  Simply patching "#undef MAP_ANON" right before
+alloc_region() in yescrypt-platform.c brings the speeds to:
+
+Benchmarking 8 threads ...
+2790 c/s real, 370 c/s virtual (3069 hashes in 1.10 seconds)
+
+which is 81% of the original speed.  That's far more reasonable.
+
+Forcing use of 2 MB pages (lowering HUGEPAGE_THRESHOLD to below 2 MB)
+while staying with mmap() also helped, but not as much:
+
+Benchmarking 8 threads ...
+1606 c/s real, 266 c/s virtual (3069 hashes in 1.91 seconds)
+
+Overall, at these sizes the memory (de)allocation overhead can be very
+significant.  The 2790 c/s speed above is good, but it is unclear if
+it'd be achieved in separate processes each doing just one password
+hash, rather than in repeated use by the same process.  Probably not
+(but the mmap() speed should be achievable, perhaps by actually using
+mmap() like I did).  This isn't in any way specific to yescrypt; it's
+just that this code highlighted it.
+
+&gt; Now, for the GPU, we have to disagree: (see
+&gt; <a href="http://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy" rel="nofollow">http://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy</a>):
+&gt; 
+&gt; "Higher occupancy does not always equate to higher performance
+
+Oh, that's just a misunderstanding.  By "full load" on the GPU, I didn't
+mean utilizing it beyond the optimal point.  Of course, you need to tune
+for optimal performance.  We assume that an attacker will.
+
+To summarize: on CPU do run the maximum number of concurrent threads
+even if that's sub-optimal, because this is the scenario that will limit
+the cost settings on a server.  On GPU, use optimal settings - whatever
+results in the highest throughput.
+
+&gt; Since we were looking for the best throughput, our scripts tried many
+&gt; different occupancies until the optimal point was found, just like we
+&gt; did for plotting "Figure 20" in Lyra2's Reference Guide. Indeed, 8
+&gt; threads per warp gives lower latency (hence, higher throughput) than the
+&gt; usual 32 threads per warp, for both algorithms, so the former is optimal
+&gt; for the attacker.
+
+"lower latency (hence, higher throughput)" isn't necessarily right when
+the number of concurrently computed hashes changes between your tests.
+
+However, overall I agree - you need to tune for the highest throughput.
+In fact, I think you should omit results that are not the highest.
+
+&gt; &gt; In a similar spirit, I think we should lock p=1 for these tests, and add
+&gt; &gt; the maximum amount of parallelism externally - much like it'd happen on
+&gt; &gt; an authentication server or in an attack.  So e.g. on a quad-core Intel
+&gt; &gt; CPU with HT, we should run 8 threads externally to both yescrypt and
+&gt; &gt; Lyra2, both at p=1. 
+&gt; 
+&gt; That is a reasonable test.
+
+I'm happy you agree.  I think it's the only test needed for these low
+m_cost values.  Except that:
+
+&gt; &gt; And keep the memory (de)allocation out of the loop,
+&gt; &gt; if we can - or maybe report both kinds of benchmarks (with this overhead
+&gt; &gt; included or excluded, as it can be either depending on how well a given
+&gt; &gt; software integration or server deployment has been performed).
+&gt; 
+&gt; We will start with (de)allocations inside the loop, since that seems to
+&gt; have better correspondence with a higher memory usage scenario (and
+&gt; takes less effort for now :) )
+
+OK, but it's the less reliable test - the speeds vary too much across
+different memory (de)allocation methods and repeated invocations from
+the same process vs. newly created processes.  You might be benchmarking
+mostly this overhead, which is fundamentally the same for Lyra2 and
+yescrypt (so does not help PHC select one or the other), but may be
+currently very different because of current implementation detail.
+
+&gt; We will try to use the same approach Milan did in his benchmarks to have
+&gt; comparable results.
+
+Sounds good.  From his description, I guess it'd correspond to my tests
+above.  It's unclear which version of the memory (de)allocation we want
+benchmarked, though.  Maybe several versions, and ensure that Lyra2 and
+yescrypt use the same version in each comparison.
+
+&gt; For a sanity check, though: Figure 10 in Milan's benchmarks shows a
+&gt; throughput of ~1100 h/s for mcost = 1 MiB, tcost = min (so, yescrypt's
+&gt; T=0) and parallel_processes = 1, which is much closer to what our
+&gt; latency measurements suggest (~750 h/s) than to your numbers.
+
+Right.  But it's for just one core in use.  Definitely not the case I
+optimized for.
+
+&gt; My best
+&gt; guess is that most of the difference comes from the different platforms
+&gt; (hardware, OS, etc.),not necessarily from methodology. For example,
+&gt; considering only processor speed, ours is 2.2 GHz, Milan's is 2.1 GHz,
+&gt; and i7-4770K is 3.5 GHz.
+
+I now think the difference must be primarily from the memory
+(de)allocation, which is slower for yescrypt's use of mmap()/munmap()
+vs. the competitors' use of malloc()/free() when either approach is used
+repeatedly from the same process.  With the latter, memory is not
+necessarily freed back to the OS, so is not necessarily zeroed when it
+is reallocated by the same process when it computes the next hash.
+Obviously, zeroing 2 MB got to have a cost.
+
+As to clock rates, you're indeed right that they're very different, but
+the difference is smaller than you think since we should be looking at
+the relevant turbo rates.  For your E5-2430, it's 2.7 GHz when one core
+is in use, vs. i7-4770K's 3.9 GHz.  3.9/2.7 = 1.44 vs. 3.5/2.2 = 1.59.
+I think it's similar for turbo rates with multiple cores in use:
+
+<a href="http://en.wikipedia.org/wiki/List_of_Intel_Xeon_microprocessors#Xeon_E5-24xx_.28dual-processor.29" rel="nofollow">http://en.wikipedia.org/wiki/List_of_Intel_Xeon_microprocessors#Xeon_E5-24xx_.28dual-processor.29</a>
+
+This gives 3/3/4/4/5/5 for E5-2430 turbo rates depending on number of
+cores in use.  For all cores in use, it'd be 2.2+0.3 = 2.5 GHz.  For
+i7-4770K it's 3.7 GHz.  3.7/2.5 = 1.48, which is still slightly smaller
+than the 1.59 estimate that we'd arrive at from base clock rates.
+
+(FWIW, I actually measured these clock rates for i7-4770K, and verified
+that Wikipedia table's data for some other Xeon E5 CPUs - they matched.
+I don't have access to E5-2430 in particular.)
+
+But these clock rate effects are smaller than the memory (de)allocation
+effect.  I actually didn't expect it'd be _that_ bad.
+
+BTW, I'd be happy to create you (your team) accounts on our systems, so
+that you can benchmark both Lyra2 and yescrypt on a system where I can
+directly reproduce and confirm your results.  This will eliminate
+needing to consider clock rate differences and such.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

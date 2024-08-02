@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] optimizing memory access speed
+
+Message-ID: <CAOLP8p4M=Mif1iAHkCNWuSUdgKNFaWZzgWrbzJhCqMx6xgmBHQ@mail.gmail.com>
+Date: Tue, 31 Dec 2013 15:34:19 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] optimizing memory access speed
+
+I have a cache mystery that's driving me nuts.  I thought that loading 16KB
+into L1 cache would allow me to randomly hash 64-bit words in L1 cache with
+no cache penalties.  For some reason, if I read through "sourceBlock"
+linearly, rather than jumping around, the code runs 2X faster.  Alexander,
+you're insights into cache performance seem top notch.  Can you spot the
+issue?  The following code has one line commented out in the inner loop.
+ Depending on which is commented in, it runs 2X faster or slower,
+independent of the optimization level.  I'm compiling on a Core i7 with a
+recent version of gcc, using:
+
+        gcc -Wall -m64 -O0 memorycpy.c -o memorycpy
+
+When I compare assembly code, only one instruction changes, so I'm pretty
+sure this is a caching issue of some sort.  I just can't figure out what it
+is.  Here's the code.  Thanks in advance!
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MEM_SIZE (1LL << 31)
+#define MEM_LENGTH (MEM_SIZE/sizeof(unsigned long long))
+#define BLOCK_SIZE (1LL << 14)
+#define BLOCK_LENGTH (BLOCK_SIZE/sizeof(unsigned long long))
+#define BLOCK_MASK (BLOCK_LENGTH-1)
+
+int main() {
+    unsigned long long *mem = (unsigned long long *)malloc(MEM_SIZE);
+    unsigned long long i, j;
+    unsigned long long hash = 0x12345;
+    unsigned long long hashBlock;
+    unsigned long long *sourceBlock;
+    unsigned long long *destBlock;
+    printf("blockLen: %llu, memLen:%llu\n", BLOCK_LENGTH, MEM_LENGTH);
+    // Initialize 1st page
+    for(i = 0; i < BLOCK_LENGTH; i++) {
+        mem[i] = i;
+    }
+    for(i = 1; i < MEM_LENGTH/BLOCK_LENGTH; i++) {
+        hashBlock = hash % i;
+        sourceBlock = mem + hashBlock*BLOCK_LENGTH;
+        destBlock = mem + i*BLOCK_LENGTH, BLOCK_SIZE;
+        for(j = 0; j < BLOCK_LENGTH; j++) {
+            hash ^= sourceBlock[hash & BLOCK_MASK] * 0xdeadbeef + 12345;
+            //hash ^= sourceBlock[j & BLOCK_MASK] * 0xdeadbeef + 12345;
+            destBlock[j] = hash;
+        }
+    }
+    // Force the optimizer to keep the memory
+    printf("%u\n", ((unsigned int *)mem)[rand() % MEM_LENGTH]);
+    return 0;
+}
+
+
+

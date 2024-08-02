@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <CALWCaoba4y5A97aBP1FpzF+Z03+EGF3skBVhMQ6gP-81nzLaBg@mail.gmail.com>
+Date: Sun, 11 Oct 2015 16:12:54 +0200
+From: Massimo Del Zotto <massimodz8@...il.com>
+To: Solar Designer <solar@...nwall.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+You are spot on - barrier removal is one of the effects
+of __attribute__((reqd_work_group_size(x, y, z))) when x*y*z equals native
+wavefront size.
+I put the barrier here mostly for aesthetic reasons.
+Moved as suggested, as this is an important design decision which deserves
+some emphasis.
+
+Massimo
+
+2015-10-11 8:29 GMT+02:00 Solar Designer <solar@...nwall.com>:
+
+Massimo,
+>
+As a trivial change to your existing code, you could try moving the
+barrier.  You have:
+>
+                                barrier(CLK_LOCAL_MEM_FENCE);
+                        }
+                        xo = (ulong)(xo >32) * (uint)xo;
+                        xo += gather[0 + 0];
+                        xo ^= gather[2 + 0]; // do this uint for slightly
+improved perf?
+                        xi = (ulong)(xi >32) * (uint)xi;
+                        xi += gather[0 + 1];
+                        xi ^= gather[2 + 1];
+>
+but you could have:
+>
+                        xo = (ulong)(xo >32) * (uint)xo;
+                        xi = (ulong)(xi >32) * (uint)xi;
+                        barrier(CLK_LOCAL_MEM_FENCE);
+                        xo += gather[0 + 0];
+                        xo ^= gather[2 + 0]; // do this uint for slightly
+improved perf?
+                        xi += gather[0 + 1];
+                        xi ^= gather[2 + 1];
+>
+Maybe the compiler does this for you anyway, or maybe not.
+>
+The way I designed pwxform, the multiplications and gather loads are
+supposed to work in parallel.
+>
+Alexander
+>
+
+
+

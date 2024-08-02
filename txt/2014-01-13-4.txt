@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+Message-ID: <521292372.692386.1389607514526.open-xchange@email.1and1.com>
+Date: Mon, 13 Jan 2014 04:05:14 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+Oops I just noticed a bug on line 21 (this shouldn't change the speed):
+        for ($i = 0; $i < $c; $i++)
+should be:
+        for ($i = 1; $i < $c; $i++)
+
+On January 13, 2014 at 3:31 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Mon, Jan 13, 2014 at 02:50:22AM -0600, Steve Thomas wrote:
+I averaged 7 calls and took the average of 3 runs. So your i7-4770K is
+4.45x faster.
+>
+Ouch. I guess you're using a 32-bit build of PHP. Right?
+
+Nope, it's 64 bit. I think it might be slow because I'm using WAMP and It's
+PHP 5.3.4.
+
+
+$v = array();
+>
+BTW, if we do that, we can also discourage TMTO by random writes in the
+last loop:
+>
+http://www.openwall.com/lists/crypt-dev/2013/11/20/1
+>
+I think the same is not easy to do on a string, where substr() can only
+be used on the right hand side, right? We're lacking an equivalent of
+Perl's vec() in PHP, right?
+>
+I believe so, but you could do this with reading and writing characters.
+Only
+problem is this is slow.
+>
+Do you mean treating the string as array of chars?
+
+Yes.
+
+
+I think PHP arrays are always associative (they use hash tables), which
+means they're somewhat inefficient for our needs here. Right?
+>
+Correct, I don't know what they use to store arrays but it's order
+preserving.
+If I had to guess it would be a b-tree with two extra pointers for next and
+previous.
+I was actually impressed with the speed of Catena in PHP. I thought it would
+be much worse because of the use of arrays.
+>
+Yes, the only ~3.5x slowdown for Catena vs. a PHP-tuned algorithm is not
+that bad.
+>
+Speeds aside, I like the secret-dependent indexing better, despite of
+the side-channels risk, because it introduces a dependency on memory
+latency for the attacker. With pre-determined indices, the attacker may
+prefetch blocks way in advance.
+>
+I think the side-channels issue may be mitigated by combining both
+approaches: switching to the risky secret-dependent indexing at some
+point during hash computation, so that the impact of a potential
+early-reject (possible after side-channel monitoring) is fairly low.
+
+This is OK until you upgrade your hashes then it will do the secret-dependent
+indexing throwout.
+
+

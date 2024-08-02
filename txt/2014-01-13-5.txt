@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Message-ID: <20140113105501.GA15330@openwall.com>
+Date: Mon, 13 Jan 2014 14:55:01 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On Mon, Jan 13, 2014 at 04:05:14AM -0600, Steve Thomas wrote:
+On January 13, 2014 at 3:31 AM Solar Designer <solar@...nwall.comwrote:
+On Mon, Jan 13, 2014 at 02:50:22AM -0600, Steve Thomas wrote:
+I averaged 7 calls and took the average of 3 runs. So your i7-4770K is
+4.45x faster.
+>
+Ouch. I guess you're using a 32-bit build of PHP. Right?
+
+Nope, it's 64 bit. I think it might be slow because I'm using WAMP and It's
+PHP 5.3.4.
+
+Here's what we have on the i7-4770K:
+
+$ php5 -v
+PHP 5.3.10-1ubuntu3.8 with Suhosin-Patch (cli) (built: Sep  4 2013 20:00:51)
+Copyright (c) 1997-2012 The PHP Group
+Zend Engine v2.3.0, Copyright (c) 1998-2012 Zend Technologies
+
+I doubt it's the PHP version difference.  More likely it's something
+with your build of PHP.
+
+I think the side-channels issue may be mitigated by combining both
+approaches: switching to the risky secret-dependent indexing at some
+point during hash computation, so that the impact of a potential
+early-reject (possible after side-channel monitoring) is fairly low.
+
+This is OK until you upgrade your hashes then it will do the secret-dependent
+indexing throwout.
+
+Then it will start the secret-dependent indexing _relatively_ earlier,
+but that's at the same time as pre-upgrade in absolute terms.
+
+I think this is just one of many issues/drawbacks with supporting and
+using hash upgrades.  Another/worse drawback is that area-time cost for
+upgraded hashes is lower than it can be for same-duration new hashes.
+
+The hash upgrading idea would have been great in 1990s, when we were not
+trying to use much memory.  These days, it is not as great.  (Yet I had
+it on my slides from PHDays 2012 and later.)
+
+Alexander
+

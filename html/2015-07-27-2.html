@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - [OT] Improvement to Momentum PoW</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5V=m--XjXkxeNouKGupByFEKJpD+QeppdgTSoYpt0BHw&#64;mail.gmail.com&gt;
+Date: Mon, 27 Jul 2015 11:29:09 -0700
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;, 
+	"cryptography&#64;...zdowd.com" &lt;cryptography&#64;...zdowd.com&gt;
+Subject: [OT] Improvement to Momentum PoW
+
+A problem with Momentum as currently implemented is that it can be run with
+reduced memory, enabling efficient GPU attacks
+&lt;<a href="http://da-data.blogspot.com/2014/01/gaining-momentum-duplicate-detection-in.html" rel="nofollow">http://da-data.blogspot.com/2014/01/gaining-momentum-duplicate-detection-in.html</a>&gt;.
+I think we can get around this problem simply by changing the parameters it
+uses.  Here's what Momentum computes:
+
+for i, j in [0 .. 2^n-1]:
+    if Hb(i) == Hb[j] and H(i || j) &lt; threshold:
+        report i, j
+
+In this case, Hb is specific to a block-chain digest and nonce, as is H.
+In the current implementations, n is 2^26 and the size of Hb's output is 50
+bits.  H's output is far larger, either 256 or 512 bits.  This leads to on
+average something like 3-ish collisions per nonce tried.
+
+If instead, we run with n == 26, and Hb's output also being 26 bits, then
+we get around 2^26 collisions.  Each needs to be tested to see if H(i || j)
+&lt; threshold.  The obvious algorithm is to do this rapidly is:
+
+Initialize array M to 2^26 empty lists.
+for i in [0 .. 2^n-1]:
+    list = M[Hb(i)]
+    for j in list:
+        # i collides with j
+        if H(i || j) &lt; threshold:
+            report i, j
+        if H(j || i) &lt; threshold:
+            report j, i
+    list.append(i)
+
+This seems to defeat Bloom filters and similar memory reduction
+techniques.  While a parallel Pollard Rho algorithm would work, it's slow
+and reduces memory no more than the simple TMTO attack where we only store
+some small range of Hb(i) in the hash table to reduce it's size.
+
+I am not sure why this approach is not used in current implementations.  Is
+there some attack I'm not seeing?
+
+While this slight modification might enable Momentum to resist GPU attacks,
+it's runtime is still dominated by Hb and H calculations, which an ASIC
+will speed up dramatically.  I get around that by generating 32
+non-cryptographic hash values for each cryptographic hash generated,
+getting a speed-up of over 16X.  However, modern Intel CPUs seem to be very
+weak at running buffered radix-sort.  An ASIC will run at full memory
+bandwidth, which might be far higher than a typical CPU's bandwidth.  For
+example, I can fill 1 GiB with unsorted birthday hashes in 0.2 seconds on
+my machine.  When I create 256 buffers of 4KiB each, and do a byte-based
+radix-sort pass, this delay jumps up to about 0.65 seconds.  This is with
+temporal streaming writes, so I'm not polluting L2 or L3 cache with my
+buffer writes.  An ASIC would see no such additional delay, and would
+likely have significantly higher bandwidth to memory as well.
+
+I'm think that ASICs will still win significantly vs CPUs on every
+implementation I've seen of Momentum.  The enhancements above should, if
+I'm not mistaken, at least stop GPUs.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+phc-discussions - RE: [PHC] Re: Suggestion: API should include a verifier function
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E0906DE97@TK5EX14MBXC286.redmond.corp.microsoft.com>
+Date: Thu, 28 Mar 2013 19:02:56 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+CC: "fgrieu@...il.com" <fgrieu@...il.com>
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+In the history of computing, nobody has ever needed a way to "hash passwords" per se.
+
+What the world needs is a batteries-included and fool-resistant scheme for securely storing and validating password-based credentials.
+
+- Marsh
+
+-----Original Message-----
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org]
+Sent: Thursday, March 28, 2013 11:05 AM
+To: discussions@...sword-hashing.net
+Cc: fgrieu@...il.com
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+Yes to all of that.  And the reason that I said "Again, it is all the more reason
+that there be a verification API behind which a platform-sensitive solution
+can be encapsulated."  What you give the compiler/script-engine is not what
+you get.  Sometimes cpu dependence and use of assembly code is the
+answer.  But that can all be somewhere behind the API.
+
+I think Jeremy's observation about where the retrieval of the held key occurs
+and where the verification happens are all important.  I don't think that's so
+much an observation about the comparison as about where the verification
+occurs.  And if one is situated where the fetched key (correct-hash) value is
+observable, it strikes me that there is a lot more for the vulnerable party to
+worry about than this attack.
+
+I agree that an attack of the scale required here going undetected and
+unthwarted suggests far more difficulty than just this vulnerability.
+
+I am not proposing a change to the PHS API.  I am agreeing that a PHSverify( )
+interface is also desirable (whether or not a minimum requirement for a PHS
+submission).  A reference implementation should be carefully annotated to
+explain what is undesirable to put into production without addressing
+platform issues in the implementation and the threat model where situated
+in an application.
+
+ - Dennis
+
+-----Original Message-----
+From: Francois Grieu [mailto:fgrieu@...il.com]
+Sent: Thursday, March 28, 2013 09:35
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+[ ... ] I am skeptical at universality of a reference implementation of
+bulletproof hash-to-key comparison, and think a reference implementation
+(similar to Dennis E. Hamilton's second example) belongs to some reference
+example uses and test harness, also taking care of giving reference values for
+input in at least a practical subset of UTF-8 (and perhaps canonicalizing 16-bit
+unicode input).
+
+Such reference would be quite useful, I think, and largely common to all
+submissions sticking to the default API:
+
+|    int PHS(
+                     void*   out, size_t  outlen, // hash output
+               const void*    in, size_t   inlen, // password input
+               const void*  salt, size_t saltlen, // salt input
+            unsigned int  t_cost,                 // controlling of time
+            unsigned int  m_cost                  // ||||controlling of memory||
+            ); |
+
+If that API needs extensions, I think the single most useful would be a control
+on how many CPUs should be usable (or perhaps the design challenge would
+bemaking that largely transparent).
+
+
+   Francois Grieu
+
+

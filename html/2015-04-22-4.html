@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 modulo division</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="../../../2015/04/23/1">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="../../../2015/04/23/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150422171448.GB14797&#64;bolet.org&gt;
+Date: Wed, 22 Apr 2015 19:14:48 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2 modulo division
+
+On Tue, Apr 21, 2015 at 07:01:29PM +0200, Krisztián Pintér wrote:
+&gt; side channel attacks not only bypass the computational hardness. it is
+&gt; false that in case of a succesful attack, the hashing scheme reverts
+&gt; back to a single hash, or a half-hash if there are two phases. side
+&gt; channels are much more sinister. it is possible to steal the password
+&gt; in situations when it was not at all possible without them.
+
+However, one should note that when side channel attacks apply, they tend
+to have a large scope. For instance, if you have two VM running on the
+same multi-core hardware, code from one VM may spy on the processing in
+the other VM through cache timing analysis (it has been demonstrated in
+lab conditions, but I have not -- yet -- heard about an actual case
+spotted in the wild). Of course this means that the attacker (the evil
+VM) will try to get passwords and encryption keys; but the attacker
+may also try to attack every single other processing that occurs within
+the target VM.
+
+Arguably, if a machine hashes passwords, then this means that it
+enforces some sort of explicit or implicit authentication system, and,
+in many cases, that the machine processes at some point confidential
+data. Any such processing is a potential target for side-channel attacks.
+
+We cryptographers tend to concentrate on cryptographic algorithms,
+because that's our jobs, and also because cryptographic keys (and
+passwords) concentrate secrecy: guessing a key or password unlocks
+access to a lot of things. But we must remember that using constant-time
+cryptographic algorithms handles only the "tip of the iceberg". It would
+be wrong to believe, or make users believe, that by using a
+"constant-time password hashing function" all security issues have been
+addressed.
+
+A consequence is that if you are really serious about the security of
+your server, then you will take wider protective measures against timing
+attacks -- basically, you rent a physical server, not a VM(*). At which
+point side-channel leaks from the password hashing function have ceased
+to be an issue.
+
+
+This is not a simple problem. What I want to say is that the context
+matters. It is _nice_ if a password hashing function offers protection
+against side-channel leaks, because it opens up some new possibilities,
+but only as part of a whole-system design that protects every
+confidential data within it against the same kind of leak. Unfortunately
+this is very hard to do, unless you use heavy artillery (dedicated
+hardware), and the nice protection offered by the password hashing
+function then loses a lot of its relevance.
+
+Therefore, I don't think that offering constant-time processing is a
+_mandatory_ part of any password-hashing function. It is good to have,
+it scores extra points, but a function that does not do anything special
+against side-channel leaks is not irremediably unsuable either.
+
+
+(That being said, Makwa offers constant-time processing, leaking only
+the password length, not the password contents; and, as I wrote in
+another email, this can and should be fixed in the caller, not the
+function itself.)
+
+
+	--Thomas Pornin
+
+(*) Cache-timing attacks on a physical server, from the outside, have
+also been demonstrated, but they required some rather specific
+conditions, in particular an attacker on the same LAN, and a lot of
+attacker-triggered requests, something which is not easy to obtain when
+the target is a password entered by a legitimate user.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

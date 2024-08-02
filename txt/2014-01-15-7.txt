@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <CAOLP8p5iFNiPx2KvxqFBkRJMpskigcf8gcRm9fQfO_6h2dv=GQ@mail.gmail.com>
+Date: Wed, 15 Jan 2014 06:42:40 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Wed, Jan 15, 2014 at 2:38 AM, Solar Designer <solar@...nwall.comwrote:
+On Tue, Jan 14, 2014 at 10:01:24PM +0000, Marsh Ray wrote:
+Predictable lookups defeat this approach.  With predictable lookups,
+we're relying almost exclusively on memory bandwidth for the time
+factor.  Not even on memory latency anymore.  That's only one constraint
+for the attacker, out of possible 3 constraints mentioned above.  This
+is a major drawback of Catena, etc.
+
+Hi, Alexander.  Thanks for suggesting this idea in the first place,
+and I hope you don't mind me using it.  What should we call this sort
+of time-hardening using multipliers?  I'm thinking "sequential
+compute-hardened", "sequential time-hardened", "sequential
+multiply-hardened" or somthing like that.
+
+I don't see how reading from unpredictable RAM locations helps.  Maybe
+my pseudo-code is hiding the loop dependencies.  Here's the actual
+current first loop (I switched from using the word "page" to "block"):
+
+    PBKDF2_SHA256(c->threadKey, c->threadKeySize, c->salt, c->saltSize, 1,
+        (uint8 *)(void *)c->mem, c->blockLength*sizeof(uint32));
+   uint32 *toBlock = c->mem + c->blockLength;
+    uint32 *fromBlock;
+    uint32 hash = 1;
+    uint32 prevFromVal = 0;
+    uint32 i;
+    for(i = 1; i < c->numBlocks; i++) {
+        fromBlock = c->mem + (uint64)c->blockLength*((i + (Rand(i) % i)) >1);
+        uint32 j;
+        for(j = 0; j < c->blockLength; j++) {
+            uint32 fromVal = *fromBlock++;
+            hash = hash*(fromVal | 1) + prevFromVal;
+            *toBlock++ = hash;
+            prevFromVal = fromVal;
+        }
+    }
+
+Note that fromVal does depend on the secret.  To begin to compute hash
+= hash*(fromVal | 1) + prevFromVal, we need to let the previous
+computation for hash finish, and it takes ~1ns (0.89ns on my dev
+machine).  Even though fromVal can be waiting in advance for the
+multiplication to start, we still have to let the old value of hash
+propagate through the multiplier to get the next value of hash.  I do
+not believe that this can be sped up with anything other than a faster
+multiplier.
+
+Bill
+

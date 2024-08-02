@@ -1,0 +1,130 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <20140822143124.GA22742@openwall.com>
+Date: Fri, 22 Aug 2014 18:31:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Hi Dmitry,
+
+On Wed, Aug 06, 2014 at 10:31:25AM -0700, Dmitry Khovratovich wrote:
+here is the link to the slides of the talk I have just given at
+PasswordsCon'14. It investigates time-memory tradeoffs for PHC candidates
+Catena, Lyra2, and Argon, and estimates the energy cost per password on an
+optimal ASIC implementation with full or reduced memory.
+
+https://www.cryptolux.org/images/5/57/Tradeoffs.pdf
+
+This is very nice analysis.  Thank you!
+
+How would you summarize the reasons why Lyra2 T=1 appears to hold up
+better than Catena-3 and -4 against computation in less memory?  Is it
+primarily Lyra2 making more memory accesses per iteration (and thus more
+of them total, at these settings, right?) or is Lyra2's simple reverse
+order working better than Catena's bit reversal order, or both, or is
+some other factor more important than these two?  (Yes, I didn't look
+into your attacks closely.  Sorry.)
+
+You appear to be focusing on relative slowdown at fractions of the full
+memory usage, as well as on finding optimal tradeoff points in terms of
+energy consumption per password tested.  While these results are highly
+desirable to have, maybe even more important is cost per password tested
+(e.g. also in terms of energy consumption) for the different PHC
+candidates being compared when they're tuned for the same defensive
+request rate capacity (on commodity server hardware)?  Indeed, you'd
+need to estimate such costs at the candidates' respective optimal
+tradeoff points.
+
+Suppose you'd optimally attack Catena-3 at 1/32 memory, and Lyra2 and
+Argon at full memory.  However, if Catena-3 at same defensive memory
+cost setting is e.g. twice faster than Lyra2 and Argon (an arbitrary
+number for the sake of illustrating my point), then this may enable a
+defender to use roughly twice more memory with Catena-3 to achieve the
+same (maximum affordable) time cost per hash computed.  Once Catena-3 is
+tuned like that, its non-tradeoff area-time cost probably grows by a
+factor of 4, meaning that it loses to Lyra2 and Argon only by a factor
+of 8, not 32 as this could have originally appeared.  In some other
+scenario (e.g. with other PHC candidates, or if the 2x speed difference
+is actually an under-estimate), this might affect the rankings of PHC
+candidates as it relates to practical relevance of their susceptibility
+to TMTO.  Do you agree?
+
+Isn't Argon significantly slower than both Catena-3 and Lyra2 T=1?
+If so, it'd probably lose to Lyra2 when we consider actual attack costs
+for same defense costs, rather than relative slowdowns with tradeoffs.
+Is this your understanding too?
+
+Additional comment: It is a standard practice in the crypto community to
+give explicit security claims for the recommended parameter sets so that
+cryptanalysts could easily identify the primary targets. Many PHC
+candidates do not follow this rule by not only missing these claims but
+also concealing the recommended parameters. As a result, cryptanalysts like
+me spend valuable time attacking wrong sets or spreading the attention over
+multiple targets.
+
+Remember: third-party cryptanalysis increases the confidence in your
+design, not decreases it (unless it is badly broken). Analysis of a 5%-part
+of your submission (one of 20 possible parameter sets) is little better
+than no analysis at all. It is also worth mentioning that to make fair
+comparison of candidates, benchmarks and performance discussion in general
+should cover recommended parameter sets only.
+
+I agree.  yescrypt tries to achieve adequate security for whatever time
+and memory costs are given to it, across a very wide range of possible
+settings (ranging from kilobytes for RAM, to terabytes for RAM+ROM).
+However, I think we want to focus on the following parameter sets when
+evaluating yescrypt vs. other candidates:
+
+Common defaults for all tests:
+p=1 (no internal thread-level parallelism)
+t=0 (lowest running time for a given memory usage)
+mask=1 (every other read is from ROM, if available)
+YESCRYPT_RW and YESCRYPT_PWXFORM flags are set
+YESCRYPT_PARALLEL_SMIX flag does not matter (is no-op when p=1)
+
+RAM only tests:
+
+1. r=8 N=2048
+(2 MiB, request rate ~10k/s on a 16-core server)
+
+2. r=8 N=16384
+(16 MiB, request rate ~1k/s on a 16-core server)
+
+3. r=8 N=1048576
+(1 GiB, KDF use)
+
+4. r=8 N=1048576 p=(a multiple of logical CPU count) YESCRYPT_PARALLEL_SMIX set
+(1 GiB, KDF use, multi-threaded)
+
+RAM+ROM tests:
+
+5. r=7 N=2048 NROM=134217728
+(1.75 MiB RAM, 112 GiB ROM, request rate ~10k/s on a 16-core server)
+
+6. r=7 N=16384 NROM=134217728
+(14 MiB RAM, 112 GiB ROM, request rate ~1k/s on a 16-core server)
+
+You may adjust NROM to fit your hardware, and/or we may provide access
+to our machine.  At least for the tests with ROM, the system should have
+enough "huge pages" allocated and available to the user account, as
+shown here:
+http://www.openwall.com/presentations/PHDays2014-Yescrypt/mgp00014.html
+
+Please note that yescrypt's TMTO resistance grows with higher t.  At t=0
+it is meant to be adequate, but not excessive.  Optimal t doesn't
+necessarily correspond to "full memory" being the optimal attack point.
+I think our actual goal should be different, as I tried to explain above -
+namely, maximizing attack costs in absolute terms, for same defense
+costs.  And t is part of the defense costs, so it should be kept as low
+as practical.
+
+If you analyze yescrypt and conclude that optimal attack/defense cost
+ratio is achieved at some t 0, then this may be a reason to recommend
+such higher t for yescrypt going forward.  For now, I'd like to give t=0
+a try.
+
+Thanks again,
+
+Alexander
+

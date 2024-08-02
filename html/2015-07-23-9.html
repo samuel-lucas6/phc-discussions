@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 improvement thread</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150723181240.GB2446&#64;openwall.com&gt;
+Date: Thu, 23 Jul 2015 20:12:40 +0200
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Thu, Jul 23, 2015 at 09:58:59AM -0700, Bill Cox wrote:
+&gt; I'm glad to hear Alexander has benchmarks showing low impact when
+&gt; integrating maxform.  That's great news.  Where is the code?  I prefer the
+&gt; code to any other description.
+
+Here it is:
+
+<a href="http://thread.gmane.org/gmane.comp.security.phc/2767/focus=2840" rel="nofollow">http://thread.gmane.org/gmane.comp.security.phc/2767/focus=2840</a>
+
+In there, "I get 23% performance impact for 1 thread, and 6% for 8
+threads.  That's still relative to unmodified Argon2, at 6 un-pwxform
+rounds, 1 GB."
+
+where un-pwxform is the exact same thing I decided to call MAXFORM later.
+
+I think 6% for 8 threads is easily affordable, but 23% for one thread is
+a bit nasty for those users who would somehow run just one
+single-threaded instance at a time.  I also give another reason for
+possibly using a lower MAXFORM rounds count:
+
+"A concern is that when the defensive running time is limited by this
+scalar chain, we're making Argon2 more susceptible to CPU attacks, where
+the attacker would interleave 2+ instances (and more RAM is typically
+available in the system anyway).  This is partially mitigated by us
+being close to bumping into L1 data cache size, but nevertheless it is a
+concern.  For this reason, maybe a smaller default un-pwxform rounds
+count (such as 3 or 4) should be chosen, especially at low (defensive)
+thread counts."
+
+going with those lower rounds counts like 3 or 4 would also almost
+eliminate the single-thread performance impact.
+
+And re-reading that thread made me recall a reason why we might want to
+keep BlaMka along with MAXFORM:
+
+"To increase the latency of tradeoff attacks, I think BlaMka may be used
+(along with an un-pwxform chain like this, which serves its different
+purpose - hardening non-tradeoff latency and providing some anti-GPU)."
+
+OTOH, the MAXFORM chain may also serve to harden the tradeoff latency if
+we have its S-boxes overwritten all the time (such as with the 1 KB
+state array, sliding it over the 8 KB or so S-boxes).
+
+So there's still much work to do on this, which I'd like to help with,
+but the initial results were promising.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

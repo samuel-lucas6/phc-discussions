@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] On type aliasing and similar issues</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/04/11/6">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/04/10/2">[&lt;thread-prev]</a> <a href="../../../2015/04/14/28">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;552B1CDB.9040803&#64;openwall.com&gt;
+Date: Mon, 13 Apr 2015 04:33:15 +0300
+From: Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On 2015-04-10 17:19, Solar Designer wrote:
+&gt; On Fri, Apr 10, 2015 at 03:59:05PM +0300, Alexander Cherepanov wrote:
+&gt;&gt; The direct use of member names is relatively clear -- it's alllowed and
+&gt;&gt; it's plainly spelled out in a footnote in 6.5.2.3p3 (C99 and C11). The
+&gt;&gt; use through pointers is also relatively clear -- it's prohibited, which
+&gt;&gt; is plainly spelled out in gcc doc[1].
+&gt; [...]
+&gt;&gt; Everything becomes more complicated when a member of a union is an
+&gt;&gt; array. It's somewhat in-between these two cases and I'm not sure how
+&gt;&gt; it's supposed to be treated.
+&gt;
+&gt; What about uses like this:
+
+This question turned out to be surprisingly difficult. After a lot of 
+reading it seems I got some understanding what's going on.
+
+1. I've got some interpretation of relevant parts of the C standard (as 
+written) which is quite simple and hopefully non-self-contradicting.
+
+2. This interpretation is not what the Committee intended. The problem 
+is that the Committee didn't write what it wants and probably don't yet 
+know what it wants exactly. The sore state of affairs is perfectly 
+demonstrated by the Defect Report #236 [1] submitted 2000-10-18. The 
+first example in this DR is allowed by the standard (opinion of the 
+reporter and my opinion too) but DR is closed saying that "Both programs 
+invoke undefined behavior" without much further explanations. I would be 
+scratching my head about what it means for a long time but there are 
+many discussions of this DR and the last one[2] states (2010-10-08): "In 
+2005-04 (Lillehammer), the committee gave up waiting for the words to 
+materialize, instead deciding simply to state the committee's intention 
+in the DR response, without worrying about whether that intention was 
+accurately described by the standard." It seems there is not much 
+progress in this area during last 15 years, including with the release 
+of C11 standard.
+
+[1] <a href="http://open-std.org/jtc1/sc22/wg14/www/docs/dr_236.htm" rel="nofollow">http://open-std.org/jtc1/sc22/wg14/www/docs/dr_236.htm</a>
+[2] <a href="http://open-std.org/jtc1/sc22/wg14/www/docs/n1520.htm" rel="nofollow">http://open-std.org/jtc1/sc22/wg14/www/docs/n1520.htm</a>
+
+3. GCC has its own rules which are more strict than the C standard. That 
+is some strictly conforming programs are miscompiled. There is a 
+thread[3] which discusses the question very similar to your one quoted 
+below. Good explanation is in [4], it ends with this: "the original 
+poster is correct that GCC doesn't implement C99 aliasing as written in 
+the standard regarding unions.  We don't do so because we determined 
+that this can't possibly have been the intent of the standard as it 
+makes type-based aliasing relatively useless."
+
+[3] <a href="https://gcc.gnu.org/ml/gcc/2010-01/threads.html#00013" rel="nofollow">https://gcc.gnu.org/ml/gcc/2010-01/threads.html#00013</a>
+[4] <a href="https://gcc.gnu.org/ml/gcc/2010-01/msg00263.html" rel="nofollow">https://gcc.gnu.org/ml/gcc/2010-01/msg00263.html</a>
+
+4. AFAIK GCC rules are not documented except for [5]. But I think I've 
+got some idea about what they want. There is some hope that it's not 
+self-contradicting:-)
+
+[5] <a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#Type-punning" rel="nofollow">https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#Type-punning</a>
+
+BTW regarding your idea of visibility of unions inside a function. It 
+was proposed[6] and kinda rejected[7] in discussion in gcc mailing list.
+
+[6] <a href="http://open-std.org/jtc1/sc22/wg14/www/docs/n1090.htm" rel="nofollow">http://open-std.org/jtc1/sc22/wg14/www/docs/n1090.htm</a>
+[7] <a href="https://gcc.gnu.org/ml/gcc/2004-12/msg00164.html" rel="nofollow">https://gcc.gnu.org/ml/gcc/2004-12/msg00164.html</a>
+
+&gt; typedef union {
+&gt; 	struct { uint32_t a1, a2; } a;
+&gt; 	uint64_t b;
+&gt; } any_t;
+&gt;
+&gt; void copy2(uint32_t *dst, uint32_t *src)
+&gt; {
+&gt; 	((any_t *)dst)-&gt;b = ((any_t *)src)-&gt;b;
+&gt; }
+&gt;
+&gt; There's no access to members of the union through a pointer (nor even
+&gt; through an array), but there's expected to be access through uint32_t *
+&gt; pointers in the caller of copy2().  Would a compiler inlining copy2() be
+&gt; guaranteed to do what the programmer expected (copy two 32-bit values,
+&gt; potentially faster and assuming 64-bit alignment)?
+
+According to (my understanding of) the C standard: it's ok when dst and 
+src happen to be aligned as required for uint64_t, undefined behavior at 
+pointer conversion otherwise. gcc 4.9.1 on my x86_64 GNU/Linux shows 
+_Alignof(uint32_t) == 4 and _Alignof(uint64_t) == 8. IOW: not ok.
+
+GCC: never ok because there is no object of type any_t where dst or src 
+point to.
+
+&gt; Or with the opposite uses of the two integer types:
+&gt;
+&gt; void add32x2(uint64_t *dst, uint64_t *src)
+&gt; {
+&gt; 	((any_t *)dst)-&gt;a.a1 += ((any_t *)src)-&gt;a.a1;
+&gt; 	((any_t *)dst)-&gt;a.a2 += ((any_t *)src)-&gt;a.a2;
+&gt; }
+&gt;
+&gt; where the caller is expected to access through uint64_t * pointers.
+
+C standard: ok (assuming _Alignof(any_t) == _Alignof(uint64_t) &gt;= 
+_Alignof(uint32_t)).
+
+GCC: never ok because there is no object of type any_t where dst or src 
+point to.
+
+&gt; (Of course, this example is sensitive to byte order - or rather, to the
+&gt; order of 32-bit halves in a 64-bit word.)
+
+The order of 32-bit halves in a 64-bit word is probably not important in 
+your example. The fact that halves from the POV of logical bits are the 
+same as halves from the POV of storage is. AFAIU location of specific 
+bits of uint64_t inside 8 bytes is not specified.
+
+&gt;&gt; Side note: not much have changed between C89 and C99 in this question.
+&gt;&gt; Accessing a wrong member in a union is an implementation-defined
+&gt;&gt; behavior in C89 but a footnote in 3.3.2.3 implies that the reason for
+&gt;&gt; this is indeterminate byte order. OTOH this behavior is defined in C99
+&gt;&gt; but the byte order is still not specified. Hence a strictly conforming
+&gt;&gt; program shouldn't use it anyway.
+&gt;
+&gt; There are many use cases where byte order does not matter, such as when
+&gt; implementing a maybe-faster memset() or memcpy() alike that would use a
+&gt; wider data type (as long as alignment and total size permit).
+
+GCC has[1] "may_alias" type attribute for such cases.
+
+[1] 
+<a href="https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html#index-g_t_0040code_007bmay_005falias_007d-type-attribute-3372" rel="nofollow">https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html#index-g_t_0040code_007bmay_005falias_007d-type-attribute-3372</a>
+
+-- 
+Alexander Cherepanov
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

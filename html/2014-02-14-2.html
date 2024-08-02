@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;00bf01cf292d$1baaf6d0$5300e470$&#64;acm.org&gt;
+Date: Thu, 13 Feb 2014 18:33:10 -0800
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+I think I commented on this before.  It applies in the design of PRNGs that use products modulo a word size too.  
+
+To keep the lower-order bits of progressive multiplications from being poisoned by growing sequences of 0s, it is necessary to force both multiplication operands to be odd.  That appears to be the only simple cure.  This effectively removes a bit from the possible period/product-space but one way to deal with that is keep the seed (for PRNG) odd but shift the low order bit out of the delivered result.  (If the product is double width, you can shift in an additional bit before delivering the single-width result, or simply deliver only positive single-word values (rather than a full [unsigned] word).  
+
+This is a hack.  I have no idea how it impacts pseudo-randomness.  I used it in one place to suppress even-valued seed choices by forcing them to be odd when initializing a common PRNG.  I am not talking about cryptographically-acceptable PRNGs.
+
+In the case of two pseudo-random inputs to a multiplication, I think forcing them both odd is some help.  I have no idea whether "|3" is better than "|1" for this purpose, but I suggest that both operands should be assured odd by some means.
+
+ - Dennis 
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek&#64;...il.com] 
+Sent: Thursday, February 13, 2014 06:44
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+[ ... ]
+
+In the version of this I tested, I make "value" (horrible name...)
+64-bit, so the cast to 32-bit is not reversible, so there's no problem
+there.  However, without the "| 3", I see that most of the LSBs after
+1B iterations of the hash loop are 0.  The problem is that the upper
+bits have no way of impacting the lower bits, so whenever value is odd
+and we multiply by an even, that LSB of value never again impacts the
+LSB of future values of value.  Maybe I should rename value to v?
+
+[ ... ]
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

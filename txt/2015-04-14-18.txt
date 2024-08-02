@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Bug in yescrypt pwxform specification pseudocode
+
+Message-ID: <20150414134451.GA2760@openwall.com>
+Date: Tue, 14 Apr 2015 16:44:51 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Bug in yescrypt pwxform specification pseudocode
+
+Hi Ken,
+
+On Tue, Apr 14, 2015 at 03:09:01AM -0400, Ken T Takusagawa wrote:
+The loop indices in pwxform run from 0 to "X"-1 in the 
+reference implementation 
+yescrypt-v1/yescrypt/yescrypt-0.7.1/yescrypt-ref.c :
+
+for (i = 0; i < PWXrounds; i++) {
+ for (j = 0; j < PWXgather; j++) {
+  for (k = 0; k < PWXsimple; k++) {
+
+But run from 0 to "X" in the specification document 
+yescrypt-v1/yescrypt/yescrypt-phc.rst :
+
+1:   for :latex:`$ i = 0 $` to :latex:`$ PWXrounds $` do
+2:     for :latex:`$ j = 0 $` to :latex:`$ PWXgather $` do
+5:       for :latex:`$ k = 0 $` to :latex:`$ PWXsimple $` do
+
+(Other "for" loops in the specification document explicitly 
+specify "X"-1.)
+
+You're correct.  Thank you!
+
+As to fixing this, maybe the rounds loop should go from 1 to PWXrounds
+in the spec, whereas implementations may also make it from 0 to
+PWXrounds-1 (or even use a "do ... while (--count)" loop, or an unrolled
+loop).  For the gather and simple loops, they should in fact be
+zero-based, as the spec uses zero-based indices here and elsewhere, so
+the upper bounds in the loops in the specs need to be "X"-1 as you say.
+
+I'll plan to include a fix for this in the next update of the spec.
+The code is correct as-is, so there won't be a change to that (nor to
+the test vectors, obviously).
+
+Alexander
+

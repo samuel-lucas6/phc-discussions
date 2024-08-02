@@ -1,0 +1,57 @@
+phc-discussions - RE: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <007c01cf153f$c9f36c10$5dda4430$@acm.org>
+Date: Sun, 19 Jan 2014 09:56:31 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>,
+	'Krisztián Pintér' <pinterkr@...il.com>
+Subject: RE: [PHC] Native server relief support for password hashing in browsers
+
+To test my understanding, here:
+
+ 1. The case of K = H(PBKDF(pwd,salt))
+
+Is equivalent to the use of a client-side password safe or other consistent generator, the idea being that the key communicated, k0, including k0 = PBKDF(pwd,salt), is likely unique and computationally indistinguishable from random.  Basically, the recipient of k0 has no knowledge of its production and there is no evidence for it in K.
+
+ 2. Under the given PHC threat scenario, it is assumed that K is disclosed and the work factor for discovering a k0 (or k0' collision) value by off-line attack is daunting enough and of limited value (i.e., that value is not reused in any other setting).  That work factor applies to H, not the PBKDF.
+
+ 3. It seems to me the critical issues here are (a) the secure maintenance of the k0 source and communication of k0 to the service and (b) the security in which K = H(k0) is derived and k0 is no longer available, and (c) the difficulty in finding a k0' collision for a disclosed K.  Under the conditions of (1), it seems to me that (c) depends most of all on the size of k0 and K in bits more than anything else.  Other things can be done, but the greatest source of exponentially-increasing difficulty against off-line attack is (simply) having more bits in K and k0 along with a cryptographic-quality H().
+
+OBSERVATIONS
+
+The appeal here is that authenticating a given k0 against K is easy in comparison with attempting to determine k0 by brute force, even off-line with significant time and resources.  It would seem this is as good as it gets for a situation in which the persistent K is purloined.  Ideally, the difficulty buys enough time to mitigate the loss of K before knowledge of it can be exploited.  This is the primary security case for password-based authentication, as far as I can tell.  It seems to be a key requirement for PHC.
+
+It is interesting to see the attention on all sorts of other mitigations on this list.  But it seems to me that the critical mitigation is to a well-known and recurring threat, the disclosure of K to an attacker.  The next vulnerability would seem to be the direct disclosure of k0 by some means. (I think this would be the primary vulnerability apart from the fact that it is probably not achievable by off-line means.)
+
+Is that a fair characterization of the situation to which PHC is directed?
+
+ - Dennis
+
+-----Original Message-----
+From: Krisztián Pintér [mailto:pinterkr@...il.com] 
+Sent: Sunday, January 19, 2014 02:55
+To: Solar Designer
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+
+Solar Designer (at Sunday, January 19, 2014, 8:54:37 AM):
+
+I'd say "secure tunnel" is orthogonal to "client-side hashing", as well
+as to "better password hashing" in general.  Any of these are somewhat
+nice to have even without the others, although of course a combination
+of them is usually preferable.
+
+let me add that all PBKDF-s can be naturally and easily extended to
+support server relief. all we need is to add a final hashing step:
+
+K = H( PBKDF(pwd, salt) )
+
+the server can request the intermediate result, and do the
+hashing only.
+
+also, any PBKDF can be used in advanced schemes, like SRP.
+
+these are all orthogonal to the PBKDF itself.
+
+

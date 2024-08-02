@@ -1,0 +1,97 @@
+phc-discussions - Re: [PHC] Tortuga issues
+
+Message-ID: <CALCETrU-q7z6efqe0eQ=fnKqBepeStF7kKPK7YvnXru=-zTCaw@mail.gmail.com>
+Date: Thu, 3 Apr 2014 12:40:53 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tortuga issues
+
+On Thu, Apr 3, 2014 at 4:03 AM, Jeremi Gosney <epixoip@...dshell.nlwrote:
+On 4/2/2014 9:26 PM, Bill Cox wrote:
+>Tortuga fails on both windows and Linux for 1MiB m_cost, due to
+>allocating hashing memory on the stack.
+>
+>
+Just a heads-up, the optimized implementation of Pufferfish has this
+`issue' as well, as it calls alloca() to dynamically allocate the sbox
+buffers on the stack. The reference implementation allocates memory on
+the heap with calloc() so this is not a problem there, but you'll blow
+out the stack on the optimized implementation if using an m_cost 10
+(it doesn't "go to 11.")
+>
+And yes, this was done intentionally. Since it is unlikely that anyone
+will be using an m_cost 10, it's a mostly-safe optimization
+(especially for attackers, which is largely what the optimized
+implementation was, rewriting the algorithm from an attacker's perspective.)
+>
+For optimized defender code, where one might just be crazy enough to use
+an m_cost of 11, there might be some benefit in writing a custom malloc
+implementation that can quickly allocate heap memory without the
+unnecessary overhead, not unlike JTR's mem_calloc_tiny(). But I think
+this is implementation-specific detail that is outside the scope of the
+PHC. Ideally implementers should be coding to the reference
+implementation and making their own optimizations, using the optimized
+code only as, erm, a reference.
+
+Remember that it's entirely possible that a PHC winner will be asked
+to compare an untrusted password to an unsalted hash, salt, and
+parameters.  Crashing isn't nice.
+
+Alas, this is even worse than a DoS.  This code:
+
+#include <alloca.h>
+
+extern void use(void *ptr);
+
+void test(size_t size)
+{
+  use(alloca(size));
+}
+
+Generates this assembly with gcc -O2 -S:
+
+        .file   "alloca_probe.c"
+        .text
+        .p2align 4,,15
+        .globl  test
+        .type   test, @function
+test:
+.LFB0:
+        .cfi_startproc
+        pushq   %rbp
+        .cfi_def_cfa_offset 16
+        .cfi_offset 6, -16
+        addq    $30, %rdi
+        andq    $-16, %rdi
+        movq    %rsp, %rbp
+        .cfi_def_cfa_register 6
+        subq    %rdi, %rsp
+        leaq    15(%rsp), %rdi
+        andq    $-16, %rdi
+        call    use
+        leave
+        .cfi_def_cfa 7, 8
+        ret
+        .cfi_endproc
+.LFE0:
+        .size   test, .-test
+        .ident  "GCC: (GNU) 4.8.2 20131212 (Red Hat 4.8.2-7)"
+        .section        .note.GNU-stack,"",@progbits
+
+
+There's no probe, so, depending on the order in which the memory is
+accessed, this can shoot all the way past the guard page and turn into
+a standard buffer overflow.  (Of course, the data being written may
+not be easy to control, so it's mitigated a bit.)
+
+If you compile with -fstack-probe, you may get far better behavior.
+The code execution risk is gone (assuming that your threading library
+doesn't suck), and you can actually safely use a much larger amount of
+memory if you're in the main thread.
+
+On the other hand, using alloca for a one-time thing like this seems
+completely pointless.  A decent malloc can allocate a buffer in a few
+tens of ns.
+
+--Andy
+

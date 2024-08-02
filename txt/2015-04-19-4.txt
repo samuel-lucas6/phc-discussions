@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <137094276.48543261.1429408554300.JavaMail.root@larc.usp.br>
+Date: Sat, 18 Apr 2015 22:55:54 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+----- Mensagem original -----
+
+De: "Solar Designer" <solar@...nwall.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Sábado, 18 de Abril de 2015 17:42:06
+Assunto: Re: [PHC] "Attack on the iterative compression function"
+
+On Fri, Apr 17, 2015 at 10:05:47AM -0700, Bill Cox wrote:
+Here's the outrageous claim they make against Yescrypt:
+>
+for 1/4 memory, Yescrypt has a 1/2 "Time-memory product"
+>
+In their previous table, they say that at a 1/4 memory attack, the
+attacker
+must do 1135 times more computation. The time*memory defense as
+used by
+the whole world other than the Argon team is therefore 283.75. This
+paper
+is off by a factor of 567.5!
+>
+I do not consider this a weakness of Yescrypt. I wish the Argon
+team would
+start using proper terminology.
+
+As to a possible tweak, I'd appreciate attacks on scrypt's shuffling
+and
+on the reverse order sub-blocks (as I suggested in another message).
+While it can be said that these are attacked by storing additional
+intermediate sub-blocks, that general statement isn't actionable for
+me
+to choose the more effective mitigation, nor to document exactly how
+effective or not it is.
+
+In Lyra2, we did include a write/read reversal for dealing with such attacks: while the memory is being filled during the Setup phase, any row is initialized from the higher to the lower index, and later read from the lower to the higher index. So, before one can start using a row, he/she needs to first compute the whole row, with a computation latency of C (the parameter that controls the number of columns in the row). 
+
+After the initialization, though, the row is always read in the same order, so no further latency penalties apply as the recomputation depth grows. We preferred this strategy because initializing the row in the reverse order came for free, while reversing the row after it is updated would take extra memory operations, and also because the penalties for higher T in Lyra2 were already very high according to our TMTO analysis (which includes the strategy by Argon's team, named "sentinel-based strategy"). 
+
+However, the said reversal should add a delay of C for every increase in depth of 2 according to our estimates, assuming that only the initial state of the iteration is kept. 
+
+Marcos. 
+
+
+

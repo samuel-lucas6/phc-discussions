@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] Why protect against side channel attacks
+
+Message-ID: <20150625055006.GA2242@openwall.com>
+Date: Thu, 25 Jun 2015 08:50:06 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Thu, Jun 25, 2015 at 01:40:46AM +0100, Peter Maxwell wrote:
+Yeah, but on balance a constant-time implementation is still preferable to
+even the remote possibility of opening up a new attack vector that hadn't
+existed before...
+
+That's a common opinion, but not the only opinion.
+
+would be somewhat embarrassing for the PHC if a few years
+down the line it turned out that password data could be recovered from a
+local timing attack that an unsalted md5 password hash isn't vulnerable to
+:-)
+
+Sort of.  However:
+
+1. I wouldn't expect this to be treated as that much of a new finding -
+we're already aware of this possibility for when the salt is known to
+the attacker.
+
+2. What do we optimize for: avoiding embarrassment or maximizing users'
+security?  To avoid embarrassment, the most reliable way is to do
+nothing.  Don't recommend any hashing scheme, and there will be nothing
+to be embarrassed for.  To maximize users' security, we need to accept
+reasonable security tradeoffs and risks, and document them clearly.
+
+(I agree, though, that within reason it makes sense to err on the side
+of caution.)
+
+3. Luckily, "unsalted md5" isn't state of the art prior to PHC.  bcrypt
+and scrypt are, and these already use secret-dependent indexing.  This
+is a reason why I find secret-dependent indexing (barely) acceptable
+when it helps achieve other security goals, but secret-dependent
+branching not acceptable at this time (that would in fact be accepting
+new risks, even if similar).
+
+Admittedly, I'm still not convinced on the utility of most memory-hard
+PDFs anyway.  Put it this way, I'm working on a project just now that may
+end-up serving a reasonably high load of login requests
+
+Can you be more specific?
+
+and will choose
+something *far* more light-weight for the password hash than has been
+generally proposed on this list -- memory and compute cycles aren't free.
+
+Possibly you got confused by us typically talking of fairly high memory
+sizes.  This does not necessarily mean that those same schemes wouldn't
+reasonably scale down to much lower sizes and much higher request rates.
+yescrypt is meant to be scalable down to kilobytes and 10k+ requests/s,
+while still providing good defense to the extent practical (better than
+PBKDF2, and on par with bcrypt at same defensive running time).
+
+You get far more bang for your buck by giving users a swift swift kick up
+the rear-end and forcing them to pick marginally better passwords.
+
+I think that's a wrong way to think of the problem.  Here's what I think
+is a better way: more password stretching allows for a less annoying
+password policy.
+
+An exception to this, where I would agree with you, is with password
+hashing times that are so large they are actually noticeable to
+end-users, like hundreds of milliseconds or more.  This is why I find it
+unreasonable to tune KDFs for more than 1 second: it is better to give
+the user a chance to type a few characters (or even words) more than to
+have them wait for a few seconds more.  For password hashing on a
+server, we don't get anywhere close to those numbers, with the target
+latency being in the 1 ms to 100 ms range (and request rate on a
+multi-core server often in the 1k to 10k requests/s range).
+
+Password stretching should be the primary tool, as long as server
+resources permit (leaving some room for spikes).  If you're using only
+the server resources you already have anyway, it's sort of free.
+
+Password policy should be secondary, since it has a cost to the users
+(and thus indirectly a cost to you).
+
+Of course, both should be used at once, but I'd skew the balance towards
+stretching and against policy to the extent practical in a given setup.
+
+Alexander
+

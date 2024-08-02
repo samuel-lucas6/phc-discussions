@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <560BAA58.70905@devever.net>
+Date: Wed, 30 Sep 2015 10:24:40 +0100
+From: Hugo Landau <hlandau@...ever.net>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 28/09/15 12:12, Thomas Pornin wrote:
+Hello all,
+>
+here are my revised specification for the modular crypt format, and
+example code. Here are the changes since the last version:
+This seems good. A few small issues:
+
+- By allowing variable hash lengths but not specifying the hash length
+in the parameter section, a salt string is ambiguous and cannot be used
+to unambiguously generate a hash. This introduces a dependency on an
+implicit parameter, the hash length, which needs to be communicated
+separately from the salt string. I should be able to unambiguously
+generate a password using only a salt string. I shouldn't have to append
+a dummy all-zeroes hash as a byzantine way of communicating the hash
+length, or add a separate parameter just for the hash length.
+
+Either the hash length should be explicitly declared, or (better) hash
+length variation should be removed on the grounds that there's no clear
+use case for it. If a use case comes into being, support for different
+hash lengths can be introduced at that time.
+
+- I think the acceptance of non-canonical strings should be changed from
+'MAY' to 'SHOULD NOT'. Thus this is allowed but discouraged.
+
+Of course this leads to the question of whether this will encourage
+implementations to reject non-canonical strings and thereby introduce
+fragility (see Postel's law). I don't think this applies since this is a
+new application without any burden of compatibility with existing
+implementations.
+
+Generally speaking, if you accept non-canonical strings, there is going
+to end up being some implementation which takes the liberty of
+generating them. Whereas if you reject them from the beginning, all
+implementations will make sure they generate only canonical strings.
+
+In other words, I don't think Postel's law properly applies for new
+protocols. If there is any case in which the principle should be
+adopted, it is after many implementations are available and the effort
+of standards to encourage conformance has failed and has ceased to have
+any influence, in which case implementations get updated to reflect reality.
+

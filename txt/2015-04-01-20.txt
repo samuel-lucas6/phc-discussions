@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] OMG we have benchmarks
+
+Message-ID: <20150401130833.GA11262@openwall.com>
+Date: Wed, 1 Apr 2015 16:08:33 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] OMG we have benchmarks
+
+Steve,
+
+On Wed, Apr 01, 2015 at 05:22:34AM -0500, Steve Thomas wrote:
+On April 1, 2015 at 3:45 AM Solar Designer <solar@...nwall.comwrote:
+Cool! Why are these for t_cost from 2 to 5, though? Where's t_cost 0
+and 1?
+
+2x to 5x are how many passes are done over memory (ignoring the initialization
+of memory). This is what I came up with here:
+http://article.gmane.org/gmane.comp.security.phc/2550
+
+This was just my attempt at coming up with useful settings to compare algorithms
+and Milan Broz was awesome enough to run them.
+
+Oh.  Thanks.
+
+While I see the need for normalization, I'm not convinced doing it here
+for just this one dimension (TMTO resistance) helps at all, because
+there are other dimensions as well (such as compute latency).
+It definitely makes sense to normalize for real time and real memory
+usage, like Milan did in memory_time.png, but normalization beyond that
+should possibly be kept separate from the charts, or maybe we need to
+produce many of them for different kinds of normalization relevant to
+different kinds of attacks.
+
+I think only behavior with the lowest supported t_cost matters
+for selection of a scheme, whereas exactly how higher t_cost affects the
+behavior is merely additional information to be used for fine-tuning.
+
+Yes but using minimum t_cost has problems because some algorithms aren't memory
+hard at those levels.
+
+You appear to be re-purposing the term "memory hard" to have a stronger
+meaning than what Colin's paper on scrypt specified.
+
+I assume when the winner is picked we'll have minimum
+settings that aren't broken. I personally think that any setting that allows for
+TMTO is broken. Thus why I started at 2x. Also there are multiple because
+battcrypt, POMELO, and Pufferfish don't use t_cost linearly. Well yescyrpt too
+but that's just the first two that are weird.
+
+What exactly do you mean by "allows for TMTO"?  At all?  Almost all of
+them do, except perhaps for battcrypt and Pufferfish where the storage
+needed for the indices would be too large (due to the 4-byte and 8-byte
+"block size", respectively).
+
+So you probably mean some TMTO efficiency threshold, e.g. TMTO that
+results in overall reduction of the area-time product - like what
+happens in the original scrypt.  Is this so?
+
+Do you think yescrypt allows for such beneficial TMTO at t_cost = 0, and
+why?  If Table 6 in Argon team's analysis applied as-is, then we'd have
+a 1.7 times increase in computation for 1/2 memory, so the TMTO would be
+very slightly beneficial: area-time product reduced to 0.85 of
+original.  Even if so, this is probably not a sufficient reason to go
+for a higher t_cost (and lower m_cost, if the total running time is
+fixed).  But this hasn't been shown to apply to yescrypt, and I expect
+that it does not, due to yescrypt being somewhat different from the
+generic scheme analyzed there.  Specifically, it has an increased and
+more uniform coverage of V for dependencies in SMix1 (56.78% vs. 50%)
+and it runs SMix2 for another 1/3 of SMix1's time (bringing the coverage
+to 69.06%).  This is probably enough to change the 0.85 figure to above 1.
+On top of this, yescrypt's claimed area-time product at t_cost = 0 is
+lower, at (1/3+1/3)/(1/2+1/3) = 80% of what's theoretically possible for
+its running time (e.g., of what TwoCats tried to achieve).
+
+Thus, unless you're trying to achieve a higher degree of minimum TMTO
+unfriendliness, I think yescrypt at t_cost = 0 achieves what's needed.
+
+Of course, I am eager to see analysis of yescrypt by Dmitry et al. once
+it's available, but for now I see no reason to just assume that we need
+higher minimum t_cost.
+
+What do you say?
+
+Alexander
+

@@ -1,0 +1,44 @@
+phc-discussions - variable TMTO factor for average-aware TMTO (was: "Attack on the iterative compression function")
+
+Message-ID: <20150418225740.GA2446@openwall.com>
+Date: Sun, 19 Apr 2015 01:57:40 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: variable TMTO factor for average-aware TMTO (was: "Attack on the iterative compression function")
+
+Dmitry,
+
+On Sat, Apr 18, 2015 at 11:42:06PM +0300, Solar Designer wrote:
+[...]
+how the average (rather than peak) memory usage is reduced with TMTO.
+The recomputation depth grows the longer the algorithm runs, so the
+average (across the running time) is skewed towards a higher portion of
+the TMTO'd memory size.
+
+BTW, a more efficient TMTO attack (not just on the possible iterative
+component, but in general) might involve the TMTO factor changing during
+the attack.
+
+For example, target 1/3 memory during the memory filling phase (possibly
+for roughly 1/4 average) and 1/4 memory for the subsequent processing.
+That way, average will be closer to 1/4 all the time, and you might pack
+more such TMTO'd parallel instances in the same total amount of memory.
+
+Alternatively, on the contrary increase the amount of memory for further
+processing to mitigate the recomputation tree depth growth.  With
+optimal phase shifts between the parallel TMTO'd instances, this too
+might help increase the total number of instances.
+
+Switching the TMTO factor may have a cost of its own, but not always.
+If you choose to increase the amount of memory e.g. between yescrypt's
+SMix1 and SMix2, you may simply let SMix2 perform its writes to the
+extra portion of memory.  In fact, I did something like this in my old
+sim-tmto.c, where I use TMTO factor of 5 for SMix1 and 2 for SMix2's
+extra writes, for a total of 1/5+1/2 = 7/10 of non-TMTO memory (plus
+indices).  That exact attack doesn't apply to the current yescrypt,
+as previously discussed (because sim-tmto.c assumes original scrypt's
+SMix1).  But it shows that the approach with variable TMTO factor is
+potentially viable in general.
+
+Alexander
+

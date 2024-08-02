@@ -1,0 +1,103 @@
+phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <CAOLP8p4dpCFmgjxvY0Phfdiy3guQfDyQ9pe0ezbC5JWz=qjHpw@mail.gmail.com>
+Date: Wed, 8 Jan 2014 21:09:39 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+On Wed, Jan 8, 2014 at 7:48 PM, Peter Maxwell <peter@...icient.co.ukwrote:
+
+>
+>
+>
+On 8 January 2014 23:46, Bill Cox <waywardgeek@...il.comwrote:
+>
+>RC4 is the perfect example to use, and I disagree about the entropy
+>ratio.  If you have 20 bits of entropy in a user's password, and 256 bits
+>of entropy from salt, using RC4 initialized from this 276 bits to generate
+>4GB of hash data is a *good* idea.
+>>
+>
+Only if you're talking about the tiny minority of systems that can afford
+to use 4Gb of memory that you can guarantee is protected and not ever paged
+to disk, *per-login*.  If your server needs to handle even 10 logins per
+second, that's a wee bit of a problem... it wasn't that long ago that I was
+admining production webservers with 1Gb memory or less.
+>
+
+Catena's framework offers a good solution for this.  Servers that can't
+support the load of compute and memory intensive KDFs have the option of
+offloading to the client.  I am a big fan of "Server Relief Support".  At
+the same time, that does not mean that the KDF has to be compute or memory
+intensive in applications that can't support it.  That's what m_cost and
+t_cost are for.  However, the value of a memory-hard KDF goes up in
+proportion to the memory used.
+
+
+If you cannot guarantee to protect that entire 4Gb blob leakage then as
+Poul-Henning pointed out your lack of entropy becomes an issue, i.e. the
+salt is public and therefore doesn't count towards the entropy so your 20
+password bits is only 2^20 ~ 1m combinations and an attacker can
+potentially determine the password from even a small fragment* of that 4Gb
+keystream with less effort than the memory-hard problem.
+>
+
+I could use the world's best crypt-strength hash or permutation to fill
+memory, and if an attacker gets access to it, he'll have a way to abort
+incorrect password guesses early.  That's why I think we need to perform a
+significant number of initial hashes on the password to create an
+intermediate derived password before writing data derived from it to a lot
+of memory.  If memory leaks to an attacker, and we've done 2048 rounds of
+SHA-256 before filling memory, the attacker will be no better off than if a
+user had bothered to protect his id_rsa private key the hard-coded maximum
+of 2048 rounds of SHA-256.
+
+
+[*] - in this specific scenario with RC4, it would really need to be
+near the beginning of the keystream output but the argument generalises
+better if the filling algorithm is not cryptographically strong.
+>
+
+What argument?  Are people attackers going to invert the hash?
+
+
+My point is that it's useless to worry about the entropy of the data we
+>write to memory.  RC4 is already too strong, and a waste of CPU cycles.  So
+>long as we don't lose significant entropy along the way, any dumb hash that
+>an attacker has to actually compute is good enough.
+>>
+>
+As a side issue: RC4 is not generally considered particularly strong
+these days, there are non-trivial biases in the keystream.
+>
+
+Which is irrelevant for memory-hard KDFs.  Why should we care?
+
+
+The main question however concerns the feasibility of protecting memory
+regions that large, or for that matter anything anywhere near that large,
+when you're filling with password dependent data using an algorithm that
+can be easily inverted.
+>
+
+Easily inverted?  Not that it matters, but who cares if we can invert a few
+steps of a hash when we have billions of operations needing inverting?
+
+
+In other words, if - like you said - you're not losing entropy along the
+way then it implies a permutation, and if it is easy to invert said
+permutation then an attacker only needs a word or two of memory to
+undermine your memory-hardness.
+>
+
+There can be weaknesses in a hash function that could potentially lead to
+non-memory hardness.  The hash function has to be considered.  However,
+some basic non-linearity and the property that entropy is not lost during
+hashing (permutations or low collision hashes) is all that's required,
+SFAIK.
+
+Bill
+
+
+

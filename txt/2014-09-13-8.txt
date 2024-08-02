@@ -1,0 +1,113 @@
+phc-discussions - A review per day - AntCrypt
+
+
+Message-ID: <5414A76D.8010000@ciphershed.org>
+Date: Sat, 13 Sep 2014 16:22:05 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A review per day - AntCrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Last one!
+
+Antcrypt, because it comes first alphabetically, was ripped pretty
+hard as soon as the algorithms were published.  There were a lot of
+issues pointed out.  I will only point out a couple.  However, the
+main idea is cool.  Basically, instead of just hashing pseudo-random
+memory locations, they use pseudo-randomly picked hashing functions in
+each iteration of the inner loop.
+
+I read through the functions used, and was shocked to see it uses sin
+and cos as hashing functions.  I have trouble forgiving this
+particular mistake.  Also, it's runtime is O(m_cost^2).  This is
+because memory is hashed m_cost/16 times for each increment of t_cost.
+ This makes the algorithm unusable at large memory sizes.  Here's some
+benchmarks.
+
+4MiB benchmark:
+
+PHCtime ./phs-antcrypt 0 14
+allocating 4194305 bytes
+
+fb e9 95 82 22 9d 32 03
+10 31 5c e5 bf 84 15 b8
+6f 98 e6 3e 61 5c 62 fb
+97 91 36 95 14 f8 9b ff      32 (octets)
+
+
+real	0m0.653s
+user	0m0.652s
+sys	0m0.000s
+
+
+128MiB benchmar:
+
+PHCtime ./phs-antcrypt 0 19
+allocating 134217729 bytes
+
+04 c7 f8 59 62 15 1a ec
+2f 42 07 4f c3 80 e8 c2
+58 23 7e ce e4 e3 96 bc
+a1 eb 6c 22 d7 dc e1 3c      32 (octets)
+
+
+real	0m21.026s
+user	0m21.020s
+sys	0m0.012s
+
+Note the rapid runtime increase.  I was not patient enough to do the
+1GiB run.
+
+The paper is correct that having a high number of functions which can
+be selected in the inner loop will slow down GPUs, due to their SIMD
+architecture.  With thousands of functions, this might be pretty
+strong GPU defense.  I think this is an excellent core idea.
+
+However, I could go on ripping the code for a while.  I figure
+AntCrypt has been picked on enough.  If people really want me to bury
+this implementation in criticism, I will, but is there a point?  IMO,
+the bottom line is that the PHC does not need this code.  However,
+maybe the PHC needs the core idea.
+
+Combining AntCrypt GPU defense with bcrypt or Yescrpt GPU defense
+could create the most GPU unfriendly algorithm ever.  However,
+combining these two techniques should be left to guys who understand
+CPUs at a very low level, and are comfortable optimizing time*memory
+defense, as well as bandwidth hardening and preferably compute-time
+hardening.  I would prefer to see Samuel Neves or Alexander give it a
+go if they had time.  I might be interested if the these guys were not
+available, but the results would not be as good.  At least I would not
+put sin and cos in there :-)  I think that each hashing function could
+be a somewhat random sequence of ARX permutations rather than the
+one-operation primitives in the AntCrypt code.  That would make it
+easy to have very many different functions that also could run really
+well on modern CPU SIMD units, with excellent memory bandwidth.
+
+In summary, if possible, I would prefer to salvage the idea, but
+someone else should implement the code.  If the idea can be salvaged
+by accepting AntCrypt into the next round for that purpose, then I'd
+say AntCrypt is worth moving forward.  If it has to be based on this
+code, I would pass on AntCrypt.  Can the core hashing idea be saved
+despite it's weak wrapper?
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFKdpAAoJEAcQZQdOpZUZBLEP/iREotnSj7XucZL48RXEZ/0x
+odH36FGdBcX/B9I+UB729QEOE7/g23/8yI5M8cowsLXZ/nz4R3lJJafBFKvVq7No
+x9KjQ5zhcyLk+WwTiiGjH/jTorkiXCqW5DgdP9KquQjjEi3o/YNv8bTbxTmkI7xx
+5BovRepRV1Uq0zjeyaVHNgCQVgdIYLVBmBo/DwtYwpyf+bowBUJH8rRFQqjtpG8b
+huBLaw/xfxQQ3irAfixQD2M5gAZEHSFPPDXkC+NjBaEa4Vwb6H4Mm4UjdaD47F9b
+stygPdMHJ2DWLcChWlZa94i541Ab2+oYWHwaI2VVM74IBH+Slpgp7hRyQIKKnbGb
++n3x/xaPsAhEsAD+a7MGw04ASRspTo2GYFoiIjo0afb/+ViloxcyE/UgHW+TaBut
+3qcoz8HCbMrB8ErKYywjLA0IbfpNBtQQH6jUvz/0rP5eraOlauHZKVxfUfzhvXkP
+QV0w2SKnp3P+eHdOV5Cgr4XiRo0SQqYefJObeEPcd5ADiOL+YCe4T6OfuQASXeUO
+TOeVax0lKo9/1sG665+MlUtS5kX1529WoaHUsylhl3Q0Veg0RHI+pMuRA/3ITbgM
+/qNoH8ughRMtEm9N/5I+ED5QAWUsUnaPI8jrfXMv9ZG4OBjPPwYzQlE4UyiS3X/J
+7aAjgYWmCyV1xS9ft6zJ
+=XcpD
+-----END PGP SIGNATURE-----
+

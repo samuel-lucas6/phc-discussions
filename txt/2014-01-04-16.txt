@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <CAOLP8p7bujJ3v4qZ-sJmVOWBL8KzX7FSiKMGteGcNAEzLewZeA@mail.gmail.com>
+Date: Sat, 4 Jan 2014 14:13:07 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+Being able to generate V[i] where V is memory in short time would defeat
+the memory-hardness property.
+
+Alexander had a good concern in this area.  We can quickly determine the
+"random" previous page addresses because we only need to compute the first
+value of each page, which is used as the random address.  If we can't
+determine these addresses quickly, then clearly we can't compute V[i]
+quickly, since we wont even know what previous values it depends on.
+
+The relevant line in the code which generates each V[i] is:
+
+ *toPage++ = *prevPage + ((*fromPage * *(prevPage + 1)) ^ *(fromPage - 1));
+
+Given the non-linear nature of this hash, an attacker is going to have to
+compute the entire operator tree all the way back to the original page of
+sha256 data.  Not a single value can be left out.  By the time we get 64MB
+into the hashing, this computation depends on all 16KB of the sha256 output
+in the first page, and any single bit change will drastically restructure
+the operator tree, and the intermediate values.  Passing the Dieharder
+tests is empirical evidence that the intermediate values don't seem to
+develop any obvious long-term bias, which is really all that would worry me
+in an algorithm like this.
+
+I'm beginning to feel pretty good about it's security.
+
+
+

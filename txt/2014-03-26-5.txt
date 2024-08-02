@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] The SkinnyCat lives
+
+Message-ID: <CAOLP8p6TbhTDc0Oue5q-JQVnrufjUTYxo8PDpZ7SQCg7pnP=mA@mail.gmail.com>
+Date: Wed, 26 Mar 2014 13:29:20 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] The SkinnyCat lives
+
+On Wed, Mar 26, 2014 at 11:58 AM, Anthony Ferrara <ircmaxell@...il.comwrote:
+Bill,
+>
+I opened a quick issue. It appears that SkinnyCat limits passwords to 255
+bytes due to the length parameter being declared as a `uint8_t`. The
+algorithm itself seems to support longer passwords as everywhere else it is
+used internally other than the 2 function headers is represented by a
+`unit32_t` field. So not sure if this is intentional or not, nor if it is an
+issue or not. Just pointing out an observation.
+>
+Anthony
+
+Hi, Anthony.  This is intentional.  The full TwoCats algorithm allows
+password, data, and salt lengths up to 2^30 bytes each, but to do
+this, I need to use the Init/Update/Final APIs to all of the supported
+cryptographic hash functions.  In SkinnyCat, by limiting the password
+and salt to a combined 512 bytes, I can allocate an array on the stack
+without even calling malloc, concatenate all the input data there, and
+make a simple call to the hashing API on one line.
+
+With this scheme, adding a new hash function, so long as it outputs
+256 bits, requires just adding a new enumerated type value, and two
+lines in a switch statement.  In comparison, TwoCats has an object
+oriented wrapper class to support hash functions.  It's more powerful,
+but it adds complexity.
+
+Thanks for taking a look.  There are probably goobers in there.  This
+code did not exist 30 hours ago, and I've worked on it for most of
+those hours.  Sleep deprivation has to have had an impact.
+
+Bill
+

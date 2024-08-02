@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="21">[&lt;prev]</a> <a href="23">[next&gt;]</a> <a href="21">[&lt;thread-prev]</a> <a href="23">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;52DD48F6.5090402&#64;uni-weimar.de&gt;
+Date: Mon, 20 Jan 2014 17:04:06 +0100
+From: Christian Forler &lt;christian.forler&#64;...-weimar.de&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On 20.01.2014 14:38, Bill Cox wrote:
+[...]
+&gt; Thanks for the link!  I don't know why I had not seen it before.  I
+&gt; just ran catena-blake2b-opt-test on my development machine, and I got
+&gt; this:
+&gt; 
+&gt; runtime: 0.296 seconds
+&gt; garlic: 18
+&gt; lambda: 3
+&gt; memory: 64*2^18 = 16MB
+&gt; memory access: 5 reads, 4 writes: 9*16MB = 144MB
+&gt; bandwidth: 487 MB/s
+&gt; 
+&gt; I could have some of these numbers wrong... blake2 runs a bit faster
+&gt; than SHA512, so I only benchmarked blake2b.
+
+
+&gt; For comparison, the default build of scrypt on the same machine
+&gt; (running 64-bit arch linux) fills 500MB in 1.8 seconds, doing 1 read
+&gt; and 1 write.  If fills 5X more memory in the same time, though it's
+&gt; memory bandwidth is only 16% higher.
+
+OK. Lets check if we want to compute both algorithms without without L3
+cache misses. Let Assume that we have 2 MB of L3 cache, and that the
+absence of cache mises improve the runtime by the factor of 10. Then we have
+
+Runtime scrypt : 2^8/10 * 0.3 seconds = 7.68 seconds, and
+Runtime Catena:  ((2^3)^3)/10 * 0.3 seconds = 15.36 seconds.
+
+Observation: On low memory devices, scrypt runs faster then Catena.
+
+
+
+&gt;&gt;&gt; The Catena paper blew me away and I stole some of their ideas
+&gt;&gt;&gt; wholesale. However, it seems like an academic solution at this stage.
+&gt;&gt;&gt; It has nothing to support modern memory architectures, no useful
+&gt;&gt;&gt; parallelism, and no high performance hashing. Of course, all of that
+&gt;&gt;&gt; can be added, but until I see a real-world solution, it remains
+&gt;&gt;&gt; theoretical work in my mind.
+&gt;&gt;
+&gt;&gt; Catena uses Blake2b which has parallelism in it. SHA512 was added
+&gt;&gt; because there was a PHP implementation that used SHA512. SHA512 is
+&gt;&gt; built into PHP and will be faster than Blake2b written in PHP.
+
+&gt; The implicit parallelism in Blake2b and other hashing algorithms is a
+&gt; bad thing for memory-hard KDFs, IMO.  Any parallelism that our CPUs
+&gt; can't take advantage of is an advantage to the attacker. 
+
+Blake2b was designed to use the parallelism that is internally available
+in common CPUs. Almost all "modern" CPUs support SIMD instructions.
+
+"Most modern processors are superscalar, that is, able to run several
+instructions per cycle through pipelining, out-of-order execution, and
+other related techniques. BLAKE2 has a natural instruction parallelism
+of 4 instructions within the G function; processors that are able to
+handle more instruction-level parallelism can do so in BLAKE2bp, by
+interleaving independent compression function calls.
+...
+Limits in both semiconductor manufacturing processes, as well as
+instruction-level parallelism have driven CPU manufacturers towards yet
+another kind of coarse-grained parallelism, where multiple independent
+CPUs are placed inside the same die, and enable the programmer to get
+thread-level parallelism. While sequential BLAKE2 does not take
+advantage of this..." -- <a href="https://blake2.net/blake2_lncs.pdf" rel="nofollow">https://blake2.net/blake2_lncs.pdf</a>
+
+
+&gt; - Even blake2b is too slow for this competition, though I seem to
+&gt; remain in the minority in feeling this way.  What's wrong with r[i] =
+&gt; r[i-1]*(prevRow[reverse(i)] | 1) + 12345?
+
+Why do you think that your almost-linear equation is a good hash function?
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="22/1" rel="nofollow" download>signature.asc</a><strong>" of type "</strong>application/pgp-signature<strong>" (535 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

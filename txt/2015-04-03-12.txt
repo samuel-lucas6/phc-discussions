@@ -1,0 +1,136 @@
+phc-discussions - Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Message-ID: <CAAS2fgRTtXkVQ2q0t5mjbUma+eM9o_APoez9mW1q=hQo2cFEJQ@mail.gmail.com>
+Date: Fri, 3 Apr 2015 13:34:11 +0000
+From: Gregory Maxwell <gmaxwell@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+On Fri, Apr 3, 2015 at 12:01 PM, Solar Designer <solar@...nwall.comwrote:
+I'm not an expert in cryptocurrency issues, but from what I heard so far
+[...]
+around 2 MB currently.  Maybe an expert would chime in.
+
+If I must. I wasn't going to respond on Bitcoin things-- they're
+largely out of scope, for this list (for reasons I'll explain now
+below).
+
+On Fri, Apr 3, 2015 at 12:34 PM, Dmitry Khovratovich
+<khovratovich@...il.comwrote:
+The things are a bit different. Transactions are hashed and
+ECC-signed, and indeed they must be verified fast. Still, an ECC
+signature check takes about 1/1000-th of a second, and the current
+rate of 700 transaction per block means that the total verification
+takes almost a second already.
+
+This is pretty far off the mark.
+
+Little to no signature verification occurs when a new block is
+received from the network because virtually all signatures have been
+long since verified when the transactions were originally relayed.
+The only signature verification required is whatever small is required
+from transactions that hadn't (yet) made it there.
+
+Typical block processing time on the Bitcoin network is a a few tens
+of ms including things like disk I/O.
+
+[As an aside, state of the art verification of secp256k1 on a 3.2GHz
+desktop cpu is around 70,000 verifications per second]
+
+Additionally, a large fraction (probably a vast super-majority) of
+participants in the Bitcoin network use simplified payment
+verification (SPV; see section 8 of the Bitcoin whitepaper).
+
+SPV nodes have a reduced security model which does not autonomously
+validate the integrity of the data in the network. They do not
+transfer or verify signatures at all, excepting for transactions which
+are probably related to them.  They must, however, verify the proof of
+work in order to gauge the consensus of the computational majority via
+the longest (most work) chain rule.
+
+Right now a SPV node synchronizes with the Bitcoin network in a few
+tens of seconds. A POW which took 1 second to verify would take the
+initial startup from seconds to over four days. (Thats four days of
+computation on top of whatever other work the system is doing, e.g.
+basically on top of the tens of seconds for as SPV node; or on top of
+about 3 hours of computation for a full node.) This would make things
+like secure phone wallet apps completely unusable.
+
+SPV is also used for small embedded devices.  In theory, one could be
+constructed using only a few hundred bytes of dynamic ram (and the
+assistance of an untrusted network peer), and many interesting
+applications-- such as "smart property" the automatically transfers
+its ownership based on payments in the Bitcoin network-- require SPV
+functionality inside small embedded devices or the verification of SPV
+data inside a zero-knowledge proof.
+
+However, mining is different, you do not hash transactions there, you
+just hash a singe nonce. Spending 1 second for block hashing means
+that the total block verification would take 2 seconds instead of
+current 1. Not a big deal, blocks appear every 10 minutes (in Bitcoin)
+anyway.
+
+The time between blocks is exponentially distributed with a mean value
+of 10 minutes. There is substantial variance between times and there
+_must_ be for the network to converge on a single state; the expected
+value must be many times larger than the propagation delay of the
+network to deliver convergence in a reasonable amount of time.  Adding
+a substantial delay also reduces the good-put of the network and would
+confer an advantage to a consolidated high power attacker,
+effectively, it makes the system not progress free (the attacker gains
+ground during the time everyone else is off working on their own forks
+because they've not yet learned and verified the best state).
+
+A one second POW verification delay would also not just result in a
+one second delay to block propagation, however-- it would result in a
+one second delay per-hop through the network as verification of the
+proof of work is the only real defense against denial of service
+flooding attacks using blocks. This would increase the network radius
+to several seconds; which would be enough to cause user visible
+network faults (large state reorganizations) even with a ten minute
+mean time and absent any actual attacker, given Bitcoin's current
+network topology.
+
+So I think this subject is mostly moot because the functions discussed
+here are largely unsuitable for this application space; and (less
+severely) not very suitable for hashcash in general. It's critically
+important for this application that proof creation and verification be
+highly asymmetric. Iterating a fast cryptographic hash function
+against a hard to meet test achieves that goal very well. There are
+additional considerations: The function chosen must be largely
+approximation free (it must not be possible to produce a faster
+defective implementation) a difficult consideration which is much less
+important for password hashing, and it must be possible to randomly
+generate instances with known, uniform, difficulty (e.g. requiring
+uniformity of the outputs), even in the face of approximation and
+optimization. etc. The decentralized property of the system also
+requires that as many participants as possible are running their own
+node software (SPV or, preferably, full) rather than trusting third
+parties-- which hardly seems likely if running a node results in
+gigabyte-scale memory spikes for verifiers.
+
+Some people, like John Tromp, have been exploring the space of other
+kinds of POW functions that achieve properties like using memory
+hardness while minimizing the harm against other considerations here;
+but this is specialized work and heads off in a very different
+direction than PHC. (I have doubts about how worthwhile those efforts
+are either, but at least they're done with a careful mind to the
+application requirements and tradeoffs by someone who understands
+them).
+
+I have no doubt there will be new "cryptocurrencies" that pick up
+anything output from here and stir it with a mishmash of half
+understood technobabble and some other transparently broken
+cryptography or outright backdoors, in an effort to generate another
+speculative asset pump-and-dump-- as we've seen in the past. But the
+security and functionality of these systems is largely irrelevant to
+their market success, so any technical considerations to serve them
+are likely a waste of time here.
+
+The space of trying to be a good password hash is for authentication
+hard enough, maybe being a good hardening KDF isn't too much to ask.
+But going into crypcurrency work functions is a big step in
+requirements in an area which is new, not well understood, and heavily
+misunderstood (including the kind of financially convenient
+misunderstanding which is especially hard to deal with).
+

@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Re: Attack on Argon2i?
+
+Message-ID: <CAOLP8p4FUBkDuXV5=ghQ=SYTPZB0_T5f-rFjSPj5icjY=BiqCw@mail.gmail.com>
+Date: Tue, 12 Jan 2016 10:28:25 -0800
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: Attack on Argon2i?
+
+On Tue, Jan 12, 2016 at 9:44 AM, Krisztián Pintér <pinterkr@...il.com>
+wrote:
+
+>
+so i'm long since against pseudorandom but fix access patterns. first,
+i don't see the benefit of a pseudorandom but fixed over a simple and
+fixed.
+
+
+I agree, at least for cache-timing-resistant algorithms.
+
+I just read the paper.  From a theoretical point of view, it is an
+interesting.  I found the summary misleading, which says there is a 5X TMTO
+against Argon2i without mentioning that to do this, you have to run Argon2i
+in a non-recommended 1-pass mode.  They go on to say this:
+
+"The Balloon hash functions are easy to implement and are fast enough to
+support hundreds of authentications per second while using
+using all of the high-speed (L2) memory on a modern CPU core."
+
+As I've said before, time*memory defense is often proportional to the
+square of the memory filling speed, and it is true in this case.  If this
+algorithm takes 2ms to fill 256KiB of L2 cache, then it is so slow that it
+should be ignored for any real-world password hashing.  We have algorithms
+that run more than 32X faster, for a 1024X-ish improvement in time*memory
+defense.
+
+While using password-independent addressing, I think they made a mistake in
+using the salt.  Salt should not be public.  Also, they lose defense
+against important meta-data when using salt, in that an attacker with
+cache-timing can determine when a user logs in.
+
+Bill
+
+
+

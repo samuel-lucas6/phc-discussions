@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] yescrypt throughput vs. PWXrounds
+
+Message-ID: <20150403201118.GA29002@openwall.com>
+Date: Fri, 3 Apr 2015 23:11:18 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt throughput vs. PWXrounds
+
+On Fri, Apr 03, 2015 at 09:05:59PM +0300, Solar Designer wrote:
+rounds  2 MB            128 MB          2 MB + 2 GB ROM
+6       2772 / 511      30 / 7          2592 / 486
+4       3653 / 691      32 / 9          3269 / 647
+2       5340 / 1077     33 / 13         4288 / 974
+1       6454 / 1451     33 / 15         4760 / 1255
+[...]
+[...] claim that yescrypt achieves bcrypt-like frequency(*) of its
+S-box lookups and thus is at least as GPU-unfriendly as bcrypt even at
+the lowest m_cost settings.  Would being no more than 2x worse than
+bcrypt still be OK?  I'm not sure.  I would be uncomfortable about that,
+even though bcrypt isn't one of the PHC finalists. ;-)
+
+(*) Also considered are parallelism of the S-box lookups and total size
+of the S-boxes.
+
+One way to compensate for the reduced number of rounds in terms of
+bcrypt-like anti-GPU is to double the size of the S-boxes.  With the
+S-boxes doubled from 8 KB to 16 KB, and PWXrounds = 2, I get 4212
+hashes/second instead of the 5340 hashes/second in the table above.
+This gives 2772*6 / (4212*2) = 1.97 reduction in compute hardening, but
+2772*6 / (4212*2*2) = 0.99 almost no change in bcrypt-like anti-GPU,
+both compared to the current defaults of 8 KB and 6 rounds.
+
+So it is possible to retain bcrypt-like anti-GPU at lower PWXrounds, but
+I am not happy about the almost 2x reduction in compute hardening.  And
+the speedup achieved with the reduced PWXrounds is less, because some of
+it is lost to L1 cache misses on the S-box lookups.  16 KB is a bit too
+large since we have other data as well (current block being processed).
+IIRC, the impact on Intel CPUs is less, though.
+
+At 128 MB, PWXrounds = 2 with 16 KB S-boxes gives 31 / 11, as compared
+to 33 / 13 in the table above (for 8 KB S-boxes).
+
+Alexander
+

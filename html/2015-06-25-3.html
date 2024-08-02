@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Why protect against side channel attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4NNHgH58ZyZqPo+xT7+fcjuCH1i7WbJyREmzcNMt-9_g&#64;mail.gmail.com&gt;
+Date: Wed, 24 Jun 2015 17:20:42 -0700
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Wed, Jun 24, 2015 at 12:12 PM, Greg Zaverucha &lt;gregz&#64;...rosoft.com&gt;
+wrote:
+
+&gt;  Suppose you use password hashing function X in many products and
+&gt; services, in a range of contexts (on mobile devices, PCs, servers, in VMs,
+&gt; etc…).  Now suppose that cache-timing attacks against X are shown to be
+&gt; practical, someone has released an attack tool, and it’s in the news under
+&gt; the name PasswordBleed, and someone has even made a logo for it.  The tool
+&gt; needs the salt and username.  It works by observing the cache access
+&gt; pattern of a victim process/VM, which narrows down the search space to a
+&gt; set of passwords small enough to attack online (i.e., the tool re-computes
+&gt; the hashes for passwords in a dictionary and compares their access patterns
+&gt; to the observed pattern, those that are close are kept). So no breach has
+&gt; occurred and no hashes were leaked.  (I realize that in most systems the
+&gt; salts aren’t public, but I think we all agree that X should not get weaker
+&gt; if the salt is known).
+&gt;
+
+While this is true, I still would prefer to see a "main" winner that uses a
+hybrid architecture, with a cache-timing resistant first loop followed by
+an unpredictable memory access loop (like Scrypt and Lyra2, and Yescrypt in
+Scrypt compatible mode).  As a special additional category, I'd also like
+to see a "cache-timing resistant" winner, with the understanding that most
+users would be advised to use the "main" winner.
+
+Here's the trade-off I see in security for a hybrid architecture like Lyra2
+vs a pure cache-timing resistant architecture like Catena/Argon2i:
+
+Hybrid:
+
+- An attacker with usernames and salts, who can mount a cache timing attack
+and associate the cache timing signatures with user accounts, can recover
+the password and does not require a password hashes to do it.  However, it
+is expensive per password cracked, similar to an off-line attack, maybe
+2-6X cheaper.
+- Without the salts, an attacker can still see when cache-timing signatures
+re-occurred, leaking knowledge of when users login.
+- The hybrid architecture retains full time*memory defense against common
+off-line attacks.
+- The hybrid architecture retains full defense against common TMTO attacks.
+
+Cache-timing resistant:
+
+- Against the common off-line guessing attack, it will be 2-3X cheaper to
+crack passwords, since cache-timing-resistant algorithms run with 2-3X
+lower memory*time defense in general.
+- Massively parallel attacks are more effective, since the data access
+pattern is known in advance.  Memory I/O can be heavily pipelined.
+- In a TMTO attack, any required computations can be done in advance, since
+an attacker knows when the data is needed, speeding up the attack.
+- In a TMTO attack, an attacker does fewer recomputations, since he can
+choose values to free from memory that he knows can quickly be recomputed.
+
+I feel that the overall security advantage lies heavily with the hybrid
+architecture.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

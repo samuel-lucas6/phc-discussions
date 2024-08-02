@@ -1,0 +1,119 @@
+phc-discussions - Re: [PHC] Memory performance and ASIC attacks
+
+Message-ID: <53FF9B16.8080002@ciphershed.org>
+Date: Thu, 28 Aug 2014 17:11:50 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory performance and ASIC attacks
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/28/2014 01:23 PM, Solar Designer wrote:
+On Thu, Aug 28, 2014 at 12:07:24PM -0400, Bill Cox wrote:
+>TwoCats and Yescrypt are the most ASIC attack resistant
+>algorithms in the competition for hash sizes of 32MiB and up.
+
+If so, why not for lower sizes as well?  Do you mention this as
+the lower boundary just in case, since Pufferfish (and bcrypt, but
+it's not in PHC) might win at some really low sizes (perhaps way
+below 1 MiB)?
+
+Yescrypt likely provides the strongest ASIC defense for all hashing
+sizes, but it is a lot harder to analyze.  With more of the CPU cores
+tied up when maxing out L3 bandwidth, Yescrypt will require more chip
+resources and power to attack than TwoCats, though I think TwoCats is
+quite good for cache-bound defense.
+
+I didn't want to claim Yescrypt has the best ASIC resistance at small
+memory sizes when I haven't carefully analyzed all the entries that
+don't easily bust out of cache.  I've been a lot less interested in
+algorithms that don't deal with DRAM latency issues, so I can't claim
+to know enough about them to rate their ASIC resistance for small
+memory sizes.  I'll get there eventually :-)
+
+>Lyra2 is a close second, off by about 2X in my tests, only
+>because Lyra2 does not have a multi-threading option.
+
+Only 2x worse while completely lacking computation latency
+hardening? Are you sure it's safe to rely solely on memory latency
+and bandwidth? Previously, you were not so sure.
+
+No, it's not enough for the truly paranoid.  I still recommend that
+Lyra2 add some additional compute-time hardening, but that would make
+it more complex, and that is a trade-off that could reasonably go the
+other way.
+
+I've mentioned this idea before, but integrating the hashing cores
+onto a Samsung 4Gib DRAM chip could be devastating to hashing
+algorithms that depend only on DRAM bandwidth for hardness.  The
+bandwidth possible on-chip is insane.  Instead of 32-bit buses, we
+could have 1024-bit buses, and latency would go down rather than up,
+because we'd eliminate a lot of the muxing-down from the DRAM blocks
+and be closer to their native width.  The flexibility to hash with
+multiple cores on small portions of the DRAM chip or having one use
+the full 512MiB would not be hard, so it could do 16 32MiB hashes in
+parallel, or one 512MiB hash, for example.
+
+A problem here for attacking Yescrypt and TwoCats is that DRAMs are
+memory optimized rather than logic optimized.  Lyra2 and a lot of
+other entries can be sped up quite a bit in custom logic.  I think it
+would only take a clock cycle to compute a Blake2b round, even on a
+slow 1.5GHz DRAM process.  Loading a cache with one row of Lyra2 data
+could be done at speeds I don't even want to think about, so the only
+limitation would be the read/write latency to a 1-row cache, and it's
+a memory optimized process!
+
+In comparison, both TwoCats and Yescrypt have multiplication chains
+that would give the DRAM process fits.  They'd be lucky to do them in
+3 clocks at 1.5GHz, twice as slow as an Intel CPU.  However, they
+could still execute 16 32MiB hashes in parallel, just not quite as
+fast as cache latency limited hashes like Lyra2.  Lyra2's sequential
+computation chain and unpredictable addressing make it impossible to
+do more than one Blake2 + a couple reads and write to local cache per
+clock, and there might have to be an extra clock for unpredictable
+read latency, so it's not too bad.
+
+>Here's two sets of cache tests.
+
+Thanks!  Per these results, for 4096 byte blocks all 3 levels of
+cache are equally fast, and RAM is less than 2x slower.  This may
+be so for 1 thread on an otherwise idle system, but it is important
+to remember that with multiple running threads things may be very
+different: the caches closer to the CPU cores may demonstrate much
+better scalability than others (and than RAM) since they and/or the
+buses to them are more numerous.
+
+Good point!  I'll have to add multiple threads to my test.
+
+(With multi-threaded hashing, with some working set sizes close to
+the total L3 cache size, L3 turns out to be moderately slower than
+RAM. This is despite of L3 being several times faster than RAM for
+purely sequential reads, as opposed to for reads in large random
+blocks, also from multiple threads on the same system.  Luckily,
+this phenomenon, or rather it occurring to a sufficient extent that
+L3 appears slower than RAM, is not very common.)
+
+Alexander
+
+I'll see if I can reproduce this case.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/5sSAAoJEAcQZQdOpZUZUSQP/RK4QmcoHwnmki2MvVidKEIz
+quQ2GiEi2G5ebWBDb2pP1ZQNEbKImQHigM1u6zZ4JMdPcRyWy20DpZqWQWJaOqqg
+TIR9AeYTVqKNtf4PaOJVMo59mL5uVqDZskXFCOQtx+MF0aJ1HkM91JP+AZgJbD5C
+w68N0Vp6uzwrnSCxPL0JYlTKWV0yQ5fn8uxLNX+WMG7ENuy2b+1R8tv4Jc7S1n8P
+7PiGsGxu+4oWb46/xV9qrT9fP9/0cqX1N0WGiu7fOlqjqMf2iSWybkQtx1VTbhTD
+CmI+YltT65W4STxDvxrRhXCt9ryoET3/f0XmU+A6wJee9/W+rpGZRfuumwhe+a8+
+ewk7Yd4oysbAMdX21pe+RPv0GmJCjvp/WL/IpAwv3KxDM+rI94Yo6b8X62n81mx1
+ytvHHLZZPkJ14gtZZUR4W8td1i9sc7NoENSMtBZhaHEapIigOdUAmk8hrtSpy+tC
+nP6BYy1dFX3S8IAb77hDUw42lArhsfc7gLY5AsyaBREYcsbhkRjqudz+RjxQd0VC
+x+Myvy1QK8UxyIcYEGIdvI0tdNYC6gBSkcCu8gTiG/apkjAfAme8Xd1FaDxHy0s5
+GDfW1J9b5U1TD8y92YZx/I/1XWBT2TuD5ecSytyqfTFaIUQYFl81hjxTy8drU3wJ
+xQpFMcQmbpY2IuAujeoA
+=fD9d
+-----END PGP SIGNATURE-----
+

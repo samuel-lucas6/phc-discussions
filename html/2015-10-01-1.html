@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format (2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/09/30/14">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/09/30/7">[&lt;thread-prev]</a> <a href="../../../2015/10/02/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;560C89C1.7040305&#64;openwall.com&gt;
+Date: Thu, 01 Oct 2015 04:17:53 +0300
+From: Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-09-29 15:55, Thomas Pornin wrote:
+&gt; On Tue, Sep 29, 2015 at 03:05:59AM +0300, Alexander Cherepanov wrote:
+&gt;&gt; AIUI the decoder tries to be strict. Then perhaps it's worth to
+&gt;&gt; check that 'str' doesn't start with ' ' or '-' here and try to catch
+&gt;&gt; overflows.
+&gt;
+&gt; Strictly speaking, the decoder tries to be strict when strictness is
+&gt; cheap.  If we want a strict decoder of numerical values, strtoul()
+ &gt; won't be enough;
+
+I've thought about something cheap, like this (untested):
+
+#define DECIMAL(x)   do { \
+		char *dec_ep; \
+		if (str[0] &lt; '0' || str[0] &gt; '9' ||
+		    str[0] == '0' &amp;&amp; str[1] &gt;= '0' &amp;&amp; str[1] &lt;= '9') { \
+			return 0; \
+		} \
+		errno = 0; \
+		(x) = strtoul(str, &amp;dec_ep, 10); \
+		if ((x) == ULONG_MAX &amp;&amp; errno) { \
+			return 0; \
+		} \
+		str = (const char *)dec_ep; \
+	} while (0)
+
+(The check "dec_ep == str" is no longer needed because we made sure that 
+the string starts with a valid number presentation but could be put back 
+just to be on the safe side. The check "(x) == ULONG_MAX" is probably 
+unnecessary but e.g. POSIX says that "The value of errno should only be 
+examined when it is indicated to be valid by a function's return value.")
+
+But it turned out the description of strtoul contains the following 
+tidbit: "In other than the "C" locale, additional locale-specific 
+subject sequence forms may be accepted." So, yes, strtoul() won't be enough.
+
+&gt; we would need something like this:
+&gt;
+[skip]
+&gt;
+&gt; I am not sure this is worth the effort. It is not very complex to do
+&gt; (less than 40 lines of C code).
+
+Yes, I am not sure too.
+
+&gt;&gt;&gt; 	if (pp-&gt;m &lt; 1 || (pp-&gt;m &gt;&gt; 30) &gt; 3) {
+&gt;&gt;
+&gt;&gt; Why not just compare with a constant here?
+&gt;
+&gt; This is to avoid a spurious warning. If I write this:
+&gt;
+&gt; 	if (pp-&gt;m &lt; 1 || pp-&gt;m &gt; 0xFFFFFFFF)
+&gt;
+&gt; then the compiler, on a 32-bit machine, will complain that the
+&gt; comparison result is "always true". I don't want spurious warnings: they
+&gt; train developers to ignore warnings.
+
+Ah, this is an interesting problem and you have a nice trick here. But 
+the need to use tricks in reference implementation is unfortunate. I 
+think at least a comment is warranted.
+
+OTOH this points to another question: why did use unsigned long type at 
+all? AFAICT Argon2 uses uint32_t for its parameters and PHC API uses 
+unsigned int. And this is another argument against a use of strtoul.
+
+-- 
+-- 
+Alexander Cherepanov
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

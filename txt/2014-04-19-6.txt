@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2
+ initial review)
+
+Message-ID: <CAOLP8p6uhn7Ce3bV+TtD7Bcco6PesvDPHe0QvUp0RfL0hRz+3A@mail.gmail.com>
+Date: Sat, 19 Apr 2014 15:30:26 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2
+ initial review)
+
+On Sat, Apr 19, 2014 at 11:14 AM, Justin Cappos <jcappos@....eduwrote:
+
+Is better performance strictly better?   Is this meant to quantify
+algorithm quality in some way or just to figure out which algorithms are in
+the same equivalence class for performance?
+>
+
+Knowing nothing else about a memory-hard algorithm, I would say hashing
+more memory faster is better.  That's because the cost per guess to an
+attacker is somewhat proportional to how much memory is used, and how long
+it is used for.  For any given runtime, using more memory will cost an
+attacker more.  However, that's just one metric, though an important one.
+
+More important than how fast you can fill memory with hashed data is how
+much memory your algorithm uses on average while doing it.  For example, an
+attacker with virtual memory will care about the total of several runs at
+once, which will depend more on the average per run than the peak.
+
+Once you know how much memory is used on average, you should get a feel for
+how long an attacker will have to do the same to run the algorithm.  What's
+important here is that there be some sort of runtime hardness to the
+algorithm, forcing an attacker to take a similar amount of time.  The most
+basic limit to the runtime of a memory-hard algorithm is it's memory
+bandwidth.  Per dollar, we can roughly buy 10X the bandwidth capability
+using GPUs rather than Intel boxes, which isn't all that bad.  So, if an
+algorithm maxes out bandwidth while hashing data (like Yescript, Lyra2, and
+TwoCats), most attackers will only be able to get around a 10X cost benefit
+vs defenders.  That rocks compared to doing PBKDF2-SHA256!
+
+For cache-bound memory-hard algorithms, again bandwidth is the primary
+limiting factor in many cases.  My Intel CPU does about 100GiB/s to L1
+cache, though you can also limit an attacker with less than that to L3
+cache.
+
+After these simple measurements, it's time to look at the algorithm and the
+author's claims to see what other defenses they have.  For example,
+Yescript and TwoCats do multi-threading with TMTO defense between threads,
+and multiplication chains for compute-time hardening.  Lyra2 has some
+serious TMTO defense, and may just win outright in that category.  Yescript
+has a laundry list of defenses  greater than any of the others, IMO.
+
+Finally, and likely most importantly will be cryptanalysis.  High
+performance and multiple lines of defense are all great, but if there are
+security weaknesses in the algorithm, it shouldn't be used.
+
+Bill
+
+
+

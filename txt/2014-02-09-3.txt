@@ -1,0 +1,142 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140209034903.GA12840@openwall.com>
+Date: Sun, 9 Feb 2014 07:49:03 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Sat, Feb 08, 2014 at 09:52:14PM -0500, Bill Cox wrote:
+On Sat, Feb 8, 2014 at 3:31 AM, Solar Designer <solar@...nwall.comwrote:
+        value = ((value ^ (value >30)) * (mem[prevAddr + i] | 3))
+          + mem[fromAddr + i] + i;
+>
+(totally untested).
+>
+Alexander
+
+I like this last one.  This should get rid of the modulo 4
+simplifications.  It adds another operation in the inner loop, and
+it's the worst kind: the right-shift requires nothing but wires in an
+ASIC.  Still, this is what I'll try next if needed.
+
+Yes, the worst kind.  Also, the XOR is only 2-bit.  Unfortunately.
+
+The only reason to choose this is that it's not entirely arbitrary but
+is also used in MT and thus has been a target for attacks for a while.
+
+Also, regarding latencies and throughput for various integer multiply
+instructions on x86 and x86-64, including several SIMD forms, it is
+really non-obvious whether to choose 16x16->hi16(32) or 32x32->32 or
+32x32->64 or 64x64->64 or even 64x64->128 for the primitive, especially
+if we're considering supporting SIMD (tunable).  Up until Haswell and
+Avoton (8-core Atom for servers), things were much clearer (32x32->32
+had at most 5 cycles latency in 4x SIMD form on CPUs supporting such
+SIMD form), but those two microarchitectures, which we can't disregard
+now since both will be found on new servers, have messed the timings up -
+or maybe we're lucky to see this change (trend?) now rather than when
+it'd be too late.
+
+Based on data from http://users.atw.hu/instlatx64/ for currently most
+relevant CPUs, which I think are Intel's Core 2 through Haswell and
+Avoton, and AMD's Bulldozer/Piledriver, I got this:
+
+PMULHW		16x16->hi16 signed	MMX(x4) - AVX2(x16)	L: 3-5	T: 1-2
+PMULHUW		16x16->hi16 unsigned	SSE(x4),SSE2(x8),...	L: 3-5	T: 1-2
+PMULHRSW	16x16->16 fixed point	SSSE3(x8), AVX2(x16)	L: 3-5  T: 1-2
+
+PMULDQ		32x32->64 signed	SSE4(x2), AVX2(x4)	L: 3-5	T: 1-2
+PMULUDQ		32x32->64 unsigned	SSE2(x2), AVX2(x4)	L: 3-5	T: 1-2
+
+PMULLD		32x32->32		SSE4(x4), AVX2(x8)	L: 5-11	T: 1-11
+
+IMUL		32x32->32		x86			L: 3-4	T: 1-2
+IMUL		64x64->64		x86-64			L: 3-6	T: 1-4
+
+[I]MUL		32x32->64		x86			L: 4-5	T: 4-5
+[I]MUL		64x64->128		x86-64			L: 4-7	T: 3-7
+
+These also appear to hold true for Pentium Pro family (PPro, P2, P3, and
+P2/P3 Celeron), for the instructions that exist on those CPUs, but not
+for P4 (which is slower, with its worst case appearing to be at L: 21
+T: 11 for 64x64->128), nor for 1990's original Pentium P54C (L: 9 T: 9).
+
+As you can see, my old favorite PMULLD has really bad worst-case latency
+and even worse throughput, all due to Haswell and Avoton.  On Haswell,
+it has 10 cycles latency (not only for the new 8x AVX2 form, but also
+for the old 4x SSE4.1/AVX form) and 2 cycles throughput (I take it to
+mean we'll have 5 SIMD vectors go through the pipeline in the 10 cycles).
+In terms of 32-bit MULs/second throughput, this is fully compensated for
+by the doubling of vector width with AVX2 (when we're able to use that
+extra width), but 10 cycles latency is just inappropriate for our
+purpose, because we know an ASIC will cut it to 3 cycles.  On Avoton,
+it's even worse: 11 cycles for both latency and throughput, and it only
+has SSE4.1, so we'll get only 4 32-bit MULs per 11 cycles on it.
+
+On all CPUs in the Core 2 to Ivy Bridge range, PMULLD is 5 cycles
+latency (and 1 or 2 cycles throughput), so it's only moderately worse in
+terms of latency than non-SIMD 32-bit multiplies (which are 3 or 4
+cycles latency).  So it would be within consideration.
+
+As a workaround, if we favor lower latency over higher throughput,
+maybe we should combine two PMULUDQ's to produce a lower-latency
+equivalent of PMULLD when running on Haswell and Avoton (for Avoton,
+this would produce much higher throughput too).  I've experimented with
+such emulation briefly, albeit in context of adding SSE2 support to
+php_mt_seed (which previously required SSE4.1+ for any SIMD at all),
+where plenty of parallelism is available (so I did not measure the
+effect on latency).  Here are my emulated _mm_mullo_epi32()'s (normally
+SSE4.1+) with SSE2 intrinsics:
+
+#ifdef __GNUC__
+#if 0
+#define _mm_mullo_epi32(a, b) ({ \
+		__m128i _a = (a), _b = (b); \
+		__m128i p = _mm_mul_epu32(_a, _b); \
+		__m128i q = _mm_mul_epu32(_mm_srli_epi64(_a, 32), \
+		    _mm_srli_epi64(_b, 32)); \
+		_mm_unpacklo_epi64( \
+		_mm_unpacklo_epi32(p, q), \
+		_mm_unpackhi_epi32(p, q)); \
+	})
+#else
+#define _mm_mullo_epi32(a, b) ({ \
+		__m128i _a = (a), _b = (b); \
+		_mm_unpacklo_epi32( \
+		    _mm_shuffle_epi32(_mm_mul_epu32(_a, _b), 0x08), \
+		    _mm_shuffle_epi32(_mm_mul_epu32(_mm_srli_epi64(_a, 32), \
+		    _mm_srli_epi64(_b, 32)), 0x08)); \
+	})
+#endif
+#else
+#define _mm_mullo_epi32(a, b) \
+	_mm_unpacklo_epi32( \
+	    _mm_shuffle_epi32(_mm_mul_epu32((a), (b)), 0x08), \
+	    _mm_shuffle_epi32(_mm_mul_epu32(_mm_srli_epi64((a), 32), \
+	    _mm_srli_epi64((b), 32)), 0x08))
+#endif
+
+Instead of _mm_srli_epi64(..., 32), we may use _mm_srli_si128(..., 4) -
+which of these is faster and which is slower varies by CPU type.
+
+I think this can be optimized (manually) when put in specific context -
+there's not always a need to have the vector elements in the same order
+(and even in the same vectors) as with _mm_mullo_epi32() proper.
+
+I think this adds at best 4 cycles of latency on top of PMULUDQ's 5
+cycles (on Haswell and Avoton), bringing the total latency to at least
+9, which is only 1 or 2 cycles better than those arch's native PMULLD.
+Maybe the context-specific optimization I mentioned can bring this
+closer to 5 cycles latency.
+
+This makes me think that maybe we actually want to depend on a 32x32->64
+expanding multiply.  It's 3 to 5 cycles latency with SIMD, and also 3 to
+5 without (3 is reached by using x86-64's 64x64->64 with 32-bit inputs,
+otherwise it's minimum 4 cycles for non-SIMD) - so no harm from SIMD, as
+long as our algorithm is chosen such that no vector element shuffling is
+needed.
+
+Some other forms look somewhat attractive as well.
+
+Alexander
+

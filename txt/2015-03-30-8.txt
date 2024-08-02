@@ -1,0 +1,139 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Message-ID: <CALW8-7+bTZMZHC4g6kNkBp8Mzih+zqX0w8aoXecWRtjfQsc6rg@mail.gmail.com>
+Date: Mon, 30 Mar 2015 14:58:45 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Hi Alexander,
+
+you're certainly right, the stored indices must be taken into account
+when counting memory for tradeoffs. For the default parameters of
+Catena and Lyra2 that we considered, these indices occupy less than
+1/1000 of total memory, and we just (explicitly or implicitly) ignored
+this small addend in the computation. The same happened to other
+"service" information that we use in the attacks (such as storing the
+access complexities, which accounted to 1/6000 of memory, cf. page 9
+of the report).
+
+Indeed, smaller blocks would increase the proportion of indices in the
+memory. To have them occupy, say, 1/10 of memory, let us consider 1 GB
+memory size. 100 MB of 3-byte indices would imply 2^{25} blocks, i.e.
+32-byte blocks. However, on the x86 architecture random access to
+32-byte blocks  would increase latency dramatically (my estimate would
+be 3-5x at least), and make the scheme much slower and thus weaker.
+
+On the architectures where the memory latency is only  a few CPU
+cycles (AVR?), smaller blocks can be useful.
+
+Dmitry
+
+
+
+On Mon, Mar 30, 2015 at 2:31 PM, Solar Designer <solar@...nwall.comwrote:
+On Fri, Feb 13, 2015 at 04:45:35PM +0100, Dmitry Khovratovich wrote:
+>The report is permanently available at
+>http://orbilu.uni.lu/handle/10993/20043  and will be soon added to ePrint
+>as well.
+>
+Sorry for stating the (maybe) obvious, but here's an additional comment,
+which I don't recall seeing on this mailing list yet:
+>
+Indices of or some other kind of references to vertices cost memory too,
+a few bytes each.  They will be needed to actually mount the attacks,
+and their number (and thus total size) may be significant.
+>
+For example, Table 6 seems to imply that a massively-parallel machine
+with essentially free computing cores would compute the hash with a time
+penalty equal to the depth penalty, which is only 26.6 for 1/10 memory.
+(While this feels like a bad tradeoff, it could make sense for some
+attackers who e.g. only have 1/10 memory in a chip.)  However, with a
+small enough block size, storing that tree's structure as needed for
+such optimal computation may take a comparable amount of memory to that
+for the actual data being stored.
+>
+Thus, decreasing block size is a way to make TMTO less efficient.  In an
+extreme case, the block size may be comparable to one index size (e.g.,
+4 bytes), and this would defeat even mild TMTO attacks (except on
+TMTO-friendly schemes like the original scrypt, where it is not
+necessary to record any metadata).  However, to significantly discourage
+TMTO attacks needing a depth like the 26.6 figure above, block size of a
+few hundred bytes would likely work as well (and this is a reasonable
+setting for some PHC schemes).
+>
+BTW, the extra/sim-tmto.c simple TMTO attack implementation included in
+the yescrypt submission accounts for the metadata required to mount the
+attack, and reports it like this:
+>
+scrypt ircmaxell:
+B' = 24efce90
+t_cost = 512
+m_cost = 256
+scrypt ircmaxell TMTO1 = 5, TMTO2 = 2:
+B' = 24efce90
+t_cost = 978
+m_cost = 180 elements + 256 indices (363 alloc + 256 ptrs) + 512 counters
+>
+This shows that while the number of "elements" decreased from 256
+without TMTO to 180 with TMTO, we also added "256 indices (363 alloc +
+256 ptrs) + 512 counters" for this algorithm's metadata.  At small
+element size, this would be non-negligible, up to the point where the
+TMTO doesn't reduce total memory usage at all despite of reducing the
+number of elements significantly.
+>
+Here's what I wrote in a private e-mail reply a year ago:
+>
+---
+Someone wrote:
+>[...] I seem to recall from
+>my theory of computation class that TMTO is a property of anything
+>that can run on a Turing machine, so it seems hopeless to defeat it
+>completely,
+>
+Sort of.  You can in fact always recompute instead of storing and
+retrieving intermediate results, but the theory that the memory needs
+can always be reduced, up to the point of needing no memory for any
+intermediate results, fails when you realize that referring to
+intermediate results that you don't store has non-zero memory cost -
+e.g., it can be the size of a set of array indices.
+>
+Suppose at some point in computation your algorithm finds out it needs a
+past intermediate result it didn't store.  It can initiate recomputation
+of that intermediate result, but for that it needs to store some
+identifier of that intermediate result somewhere (e.g. in a variable or
+in a recursive call's stack frame or on a Turing machine's tape), so
+that the re-invoked algorithm can store this one intermediate result
+this time.  OK, it's only one such identifier, not a big deal - but what
+happens if the same issue had already occurred (and thus will occur
+again) during the recomputation of that one intermediate result?  You
+now have two identifiers to store, and so on.
+>
+Given this theory, it's _not_ hopeless to defeat TMTO completely.  This
+may be done by keeping the size of intermediate result identifiers on
+par with or larger than the size of those intermediate results
+themselves - in other words, making them tiny but numerous - then coming
+up with an algorithm that computes the function in the least amount of
+memory possible.
+>
+However, this might be impractical, for other reasons.
+>
+>but I definitely see where there is room for improvement.
+>
+Yes, the current focus is on discouraging TMTO (unless it's specifically
+desired in a given use case), not on making it impossible (even if that
+could be done).
+---
+>
+Once again, sorry for stating the (maybe) obvious.
+>
+Alexander
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

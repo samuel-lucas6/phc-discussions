@@ -1,0 +1,72 @@
+phc-discussions - Re: [PHC] Security concern for Catena
+
+Message-ID: <52CA79DA.8050208@uni-weimar.de>
+Date: Mon, 06 Jan 2014 10:39:38 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Security concern for Catena
+
+On 05.01.2014 21:47, Bill Cox wrote:
+I just skimmed through the paper on Catena.  Not that my opinion counts,
+but it's a very nice piece of work!  Many ideas in Catena are very close
+to what I was looking for in password security.
+
+That said, I see a potential security flaw.  Let's say an attacker has a
+goal of 100X reduction in the memory cost.  Let's assume the hash
+function is SHA-256, and that V(i+1) = SHA-256(V(i)).  In the first
+loop, we fill memory with the chained SHA-256 output.  An attacker has
+to compute it all.  Instead of storing every memory location as he goes,
+he only stores 1 in 100 locations, saving 100X the memory area and
+bandwidth.
+
+This observation is the reason why we came up with Catena-\lambda. :-)
+
+It is true for a single BRG (\lambda=1) since you have T= O(N^2/S). This
+does not work for (\lambda 1) due to the fact that we have
+T = O(N^{\lambda+1}/S^\lambda). To compute a node in a lowerish
+row, you need a bunch of memory or a vast computational effort.
+
+
+Note that infinity-memory hardness is comparable to sequential-memory
+hardness. :-)
+
+ Again, he must have the values at each of these
+random-ish locations and is forced to recompute them from the saved
+SHA-256 data, which on average will be 50 rounds of SHA-256 to provide
+the missing data.  So far, so good, because our area*time has not
+changed by more than a small constant.
+
+
+Our countermeasure to the attack above is the stacking of multiple
+(\lambda) BRGs, This dramatically increase the re-computation cost.
+
+Therefore, your observations are valid for Catena-1, but we will either
+submit Catena-3 or Catena-4. :-)
+
+BTW. Just try to implement your attack for Catena-2.
+
+
+This whole custom ASIC uses 1/100th of the external memory and
+bandwidth, but has 100 on-chip SHA-256 hashing cores.  Maybe that many
+cores costs a bit of die area, but it's tiny compared to the multi-GB of
+RAM that the attacker may have saved.
+
+We recommend to use Catena with 1-8 MB of RAM. A lot of devices can not
+afford to allocate multi-GB or cores for a single login process,
+especially when you have a multi-user system. Therefore, we designed
+Catena in a way to be deployable in almost all environments. You
+can even deploy Catena on a web 2.0 service (such as twitter), embedded
+system or a network-router by using the server-relief version of Catena.
+
+
+I don't want to sound down on Catena.
+
+No problem. I rather like tough reviews than uncritically approval. :-)
+
+Best regards,
+Christian
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (552 bytes)
+

@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Best use of ROM in password hashing
+
+Message-ID: <23757.1398011078@critter.freebsd.dk>
+Date: Sun, 20 Apr 2014 16:24:38 +0000
+From: "Poul-Henning Kamp" <phk@....freebsd.dk>
+To: discussions@...sword-hashing.net, Bill Cox <waywardgeek@...il.com>
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+In message <CAOLP8p7fRf_Z_dC2ccXjzrqu6D8mwPM3j9QPMEWM7PFOQNXzPQ@...l.gmail.com>
+, Bill Cox writes:
+
+>Using large ROMs for authentication servers is brilliant.  It is pretty
+>hard to steal a TiB or more without being noticed, and if an attacker does
+>not have a copy of the ROM, he's stopped cold.
+
+We can argue up and down about how large a ROM you can or cannot
+steal, but given that 1TB USB sticks have been available for over
+a year, I do not buy the claim that stealing 1TB is "pretty hard".
+
+We still don't know how many GB Snowden got away with and the
+*NSA* of all organizations didn't notice a thing...
+
+And a large ROM it's not without its downsides.
+
+You cannot generate that TiB algoritmically and keep the algorithm
+around, that would defeat the purpose, it has to be based on
+randomness.
+
+That means that you have to back it up, and run integrity tests on it.
+
+Unless you want to dedicate a TB on each and every server, you have
+to either make the ROM available across the network or use a centralized
+authentication server.
+
+Making it available across the network opens it for theft from any
+compromised system, whereas a central authentication server comes
+with its own problems in the form of passwords being sent across
+networks etc.
+
+Obviously there is a market opportunity here:  Sell batches of data
+media with identical copies of a random 1TB ROM.
+
+The only three technologies I can think of which are suitable right
+now are USB flash devices, harddisks and optical disks (ie: Sony's
+new 1TB "AD - Archival Disk")
+
+All three are at least two orders of magnitude too expensive to be
+relevant, all three are subject to wear-out mechanisms, and two
+of them probably are prohibitively slow.
+
+That makes a 1TB ROM economically unfeasible, except in installations
+which should have known better than to rely on passwords to begin with.
+
+So, yeah, nice in theory, in practice not so much...
+
+That said, an algorithm which can use a ROM sensibly gets a plus
+in my book, and another plus if it leaves the size/benefit determination
+to the administrator.
+
+Thinking a bit creatively:
+
+A USB stick with an ARM chip can be made for less than $10 in volume.
+
+Putting the entire hashing algoritm on that ARM, including a modest
+size random ROM, even as little as 8K, and offloading all password
+hashing (but not salt generation) to that ARM chip via the USB port,
+means that the ROM can only be stolen by physical access.
+
+And best of all: If you need to hash more passwords than the ARM
+will do, you can just plug in another.
+
+If you're worried about loosing track of the USB sticks, you can
+give them serial numbers and do a secure transaction to a central
+server at startup, to receive the XOR pattern to apply to on-board
+ROM before use.
+
+That's probably what I would do, if I were in charge of a big site
+relying on passwords today...
+
+-- 
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe    
+Never attribute to malice what can adequately be explained by incompetence.
+

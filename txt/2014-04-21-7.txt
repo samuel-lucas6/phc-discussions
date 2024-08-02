@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] Best use of ROM in password hashing
+
+Message-ID: <CAOLP8p7Pv6RM6C_ocG++rjgE1932L3Xu1nbXEoMcBpLAu2=2XA@mail.gmail.com>
+Date: Mon, 21 Apr 2014 09:44:15 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Mon, Apr 21, 2014 at 6:50 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+Of the algorithms that support ROM, so far I only see yescrypt getting
+these details right.
+>
+
+I stated this too harshly.  Gambit uses ROM, and for an algorithm that does
+no password dependent addressing, I see no flaw in the way it uses ROM, and
+it is still better than my scheme of doing a single ROM read in parallel
+with password hashing.  Predictable ROM reads might as well be sequential,
+since we can always reorganize the ROM to be sequential if only predictable
+addressing is done, and Gambit just reads it sequentially.
+
+The down-side to predictable ROM addressing is that you can easily
+distribute the ROM data in parallel to attack nodes, over and over again,
+in sync with password hashing, so the ROM itself doesn't slow down an
+attacker who has a high bandwidth connection between nodes.  Also, the ROM
+cannot be larger than the RAM used in hashing.  I am not sure, but I think
+this style of ROM would not slow down a GPU attack.
+
+I remain a fan of password-dependent addressing, especially in a hybrid
+architecture with a cache-timing resistant first loop.  Without password
+dependent addressing, I think it is more important to have some runtime
+hardening, with either multiplication chains, or maybe AESINC chains,
+because we can always speed up predictable memory reads.
+
+Bill
+
+
+

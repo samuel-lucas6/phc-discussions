@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] blakerypt sequential memory-hard function
+
+Message-Id: <B0808218-CAD3-41CD-A157-11D0B176A53B@touset.org>
+Date: Wed, 4 Dec 2013 23:16:44 -0800
+From: Stephen Touset <stephen@...set.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+
+On Dec 4, 2013, at 5:26 PM, Andy Lutomirski <luto@...capital.netwrote:
+
+I like it.  Will this be integrated into the blakecrypt algorithm or
+will it be something that users are supposed to do?
+
+Yes! I have some code for this written, but it’s not yet finished, and I wanted to put the memory-hard function out to get feedback since I’m happy with its current construction.
+
+A couple comments on blakecrypt:
+
+Using 2^f_time as the iteration count seems unnecessarily restrictive
+-- is there any reason not to just use f_time?
+
+I wanted the “cost factors” to all work on the same scale. Having CPU scale exponentially may be overkill, but at the same time, it doesn’t seem to be all that useful in practice to ever increase a cost factor by less than double. If you can tolerate some CPU cost `x`, but not `2x` is being able to fine-tune it to a cost of `1.3x` really a big deal?
+
+For password hashing on multicore client machines, using available
+parallelism seems valuable.  Would it make sense to have an extra
+parameter for parallelism?
+
+Actually, I had code for this in an earlier revision. The multiple threads all read from the same ROM in an order randomized from the session key and a thread ID. My code was dependent upon libdispatch and GCD, which limited its portability. I considered OpenMP and C11 threads, but neither are currently supported by the version of clang I have.
+
+In the end, I removed it on the suggestion of some colleagues, but I’m definitely open to suggestions for putting that code back in.
+
+— 
+Stephen Touset
+stephen@...set.org
+
+

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] An argument for Catena-2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/01/26/9">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/01/26/9">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALW8-7LYfG-kC1fm7EUC4XBSbWmnBsDMLguruxaP-aqzvFBHRQ&#64;mail.gmail.com&gt;
+Date: Mon, 27 Jan 2014 14:34:13 +0100
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] An argument for Catena-2
+
+Hi Bill,
+
+it seems that your 10X estimate is a bit pessimistic. If you have only half
+of memory available, you can split it in half and store every 4th point
+(v_i) from the first two rows in memory. Hence while computing the second
+row, you need on average 1.5 steps on the first row from a distinguished
+point to the immediate predecessor, and 2.5 steps on average in total.
+Having spent G steps for the first row, you need 2.5*G for the second row.
+
+The same holds for the third row, where for each new node you need on
+average 1.5 steps on the second row. As they cost 2.5 on average, you will
+need 2.5*1.5+1 = 4.75 steps on average for the third row, or 4.75*G in
+total. Overall, you need about (4.75+2.5+1)G=8.25G steps, which should be
+compared to 3G with the full memory available. Thus the penalty is 8.25/3 =
+2.75 .
+
+I have applied this algorithm to the example graph with g=3 from the Catena
+presentation, and obtained 66 steps, which perfectly matches the above
+estimate.
+
+
+In general, if you have 1/q of memory available, this algorithm gives G for
+the first row, ((2q-1)/2+1)G for the second row, and
+(((2q-1)/2+1)(2q-1)/2+1) for the third row, or (q^2+3q+2.25)G in total,
+which should be compared to 3G. The overall penalty is quadratic of q, but
+grows not so fast. At q=10 the penalty is 44X. The second row calculation
+can be further optimized.
+
+Best regards,
+Dmitry
+
+
+On Sun, Jan 26, 2014 at 9:32 PM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+
+&gt; I've done some more work on my pebbling program, and tested Catena-2
+&gt; against Catena-3.  Catena-3 does have a much higher penalty for
+&gt; attackers using a TMTO, however, I think Catena-2 may be good enough.
+&gt;
+&gt; When I save 1 memory location for Catena-2, I get a 50% recalculation
+&gt; penalty.  No one is going to try and save 1 memory location against
+&gt; Catena-2.  When I try something reasonable, like half, then I get a
+&gt; recomputation penalty of over 10X.  Compute cores are cheap compared
+&gt; to memory, so maybe I can run parallel cores and reduce the runtime
+&gt; penalty, but I doubt I can get that 10X to run enough in parallel to
+&gt; get the recomputation time to below 2X.  I should write some more code
+&gt; to determine how much parallelism is available in the recomputations.
+&gt; My guess is it is not enough to make it worthwhile.
+&gt;
+&gt; I benchmarked Catena-2, and it is running 3.4X faster than Scrypt,
+&gt; compared to 2.6X faster for Catena-3.  It's still 2.6X slower than
+&gt; NoelKDF for the same memory, which is right in the middle of the
+&gt; theoretical range of 2X to 3X.  It does 2 reads and 2 writes to every
+&gt; memory location, compared to 1 read and 1 write for NoelKDF, which is
+&gt; where the 2X lower bound comes from.  When memory bandwidth limited,
+&gt; we should see a 2X difference.  For compute limited situations,
+&gt; Catena-2 does 3X more computation than NoelKDF for the same memory
+&gt; size, which is where the 3X upper bound comes from.
+&gt;
+&gt; Performance does matter.  I'll do some more analysis on the chances of
+&gt; a parallel attack against Catena-2 succeeding, but for now I'm leaning
+&gt; towards Catena-2 for a cache-timing attack resistant algorithm.
+&gt;
+&gt; Bill
+&gt;
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

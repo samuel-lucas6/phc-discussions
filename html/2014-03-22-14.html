@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Transforming hash to different cost setting</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="13">[&lt;prev]</a> <a href="15">[next&gt;]</a> <a href="13">[&lt;thread-prev]</a> <a href="15">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-Id: &lt;131F54BE-599B-4FB0-B7C5-D1B1F9D2E8C9&#64;bolet.org&gt;
+Date: Sat, 22 Mar 2014 09:33:38 -0400
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+
+On 2014-03-22, at 4:57 AM, Krisztián Pintér wrote:
+&gt; so far, i have heard only one reason for offline cost upgrade, and it
+&gt; is the problem of abandoned passwords. however, for that problem, we
+&gt; have the obvious solution of simply deleting old passwords.
+
+It is a balance, which depends on the usage context.
+
+For instance, suppose that you use the password hashing function in order to hash the passwords for prospective customers who may log in your Web site. I know I have a lot of such accounts on many Web sites, and I don't use them often -- some have been dormant for some years.
+
+In order to cope with the unrelenting pace of technological progress, there is a need to regularly (not often, but regularly) increase the hash cost, because cheaper and faster hardware makes the task easier for the attacker. Namely, when you buy a new server (which runs faster) is a good time for cost upgrade, because then you can afford a higher cost.
+
+The generic method for cost upgrades, which can be applied to any password hashing function, is to wait for the password owner to come back, type his password as part of a standard login process, and then rehash it with the new cost parameter. That method has the following drawbacks:
+
+ - It requires the login process to be able to process two kinds of hashed passwords, with the "old" and the "new" cost factors. This implies that there must be some extra old/new flag stored along with the hash value. The login process must also read that flag and use it.
+
+ - It requires the login process to contain the re-hash logic. This is not hard, but that's still extra code and complexity in a piece of software which is rather critical for security.
+
+ - Rehashing upon login means that the login system must pay the cost for the old hash AND the new hash. This can have non-trivial consequences on the average load and its consequence, namely the responsiveness of the server. The rehashing cannot be delayed too much since any delay implies storing the password somewhere, and we use password hashing precisely because we do not want to store the plaintext password anywhere.
+
+ - The upgrade process is then spread over time; a given password will be upgraded only when the owner comes by next, which can take a few months or years.
+
+Deleting old passwords is a method meant to limit the spreading, i.e. solving the fourth point. However, it has its own cost, namely that the user, if he evers come back, will need to go through the hoops of the forgotten password process. In a way, old password deletion pushes the extra complexity unto the users themselves.
+
+As a rule, users don't like these password things; they came by to buy, not to play elaborate chase-the-password games. Most of them will nonetheless comply, but a few may then decide that they will shop elsewhere. Depending on the context (including average user behaviour), old password deletion may imply a business cost (lost sales) which can be intolerable. Of course there are situations where deleting old passwords is fine because the extra security (no password with too low a hashing cost) is worth more than the loss implied by exasperated users who simply move away. But there also are other situations where the balance tilts towards the other side.
+
+"Offline cost upgrade" is a feature that some password hashing functions may provide. IF the password hash offers it, THEN it is possible to use it to avoid the four issues described above: password hashes are upgraded en masse, so the login process needs not handle "old" and "new" hashes simultaneously; the rehashing is done as an administrative task without any extra complexity for the login process; the rehashing can be done late at night, when the machines are most idle and have cycles to spare; and the upgrade is "instantaneous" so the issue does not linger around for months. We must note that, in some situations, offline cost upgrade only reduces the issues without solving them (e.g. if you have one million password hashes to rehash, then the rehashing may be too expensive to be done within one night).
+
+None of these issues is critical, and, as I explained, this is mostly a question of where the inconvenience will be placed. A password hashing function can be deemed "very good" even if it does not offer that feature; after all, there are usage contexts where the notion of offline cost upgrade does not even apply (key derivation for hard disk encryption comes to mind). Yet it is a nice and desirable feature, and should be accounted for as such.
+
+
+	--Thomas Pornin
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

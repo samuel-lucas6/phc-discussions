@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150926181101.GA14598&#64;openwall.com&gt;
+Date: Sat, 26 Sep 2015 21:11:01 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+&gt; The hash output size for password verification should be fixed
+&gt; (otherwise, if people have to choose that length, it is unavoidable that
+&gt; some will do something stupid).
+
+Unfortunately yes, but OTOH for attack (e.g. in JtR) or non-initial uses
+(where someone else has already made the determination on output length
+anyway), it is desirable to have a canonical encoding to which such
+weird hashes could be converted.  e.g. JtR will have to encode those
+hashes in john.pot somehow, and preferably in a deterministic way.
+
+So maybe the output length limits should be relaxed to apply to new
+hashes only.
+
+A concern, though, is that outlen is yet another risky parameter in
+terms of DoS attacks e.g. on httpd via .htpasswd files, if it is
+encoded, along with m_cost and t_cost (and whatever hashing scheme
+specific parameters those correspond to).  That's not just "new hashes",
+but also processing of existing untrusted hashes.  (Similar attacks on
+JtR are also possible.  This issue was brought up a few times between
+JtR jumbo developers, but we made no decision on how to deal with it yet.)
+
+Since it's "yet another" risky parameter rather than the only one, I
+think the concern above might not be a sufficient reason not to have
+(encode/decode) that parameter.  We need a workaround or a solution for
+all of them anyway (e.g., some API to determine would-be memory and time
+costs of computing a hash, in units that e.g. httpd or JtR could check
+against configured limits).
+
+Static buffers e.g. for crypt(3) return value may limit what outlen
+values a given implementation would support, and it may be fine for many
+to support only 256-bit.
+
+Encoding outlen if it's a non-optional parameter is easy - just encode
+another number.  The smallest supported value can be way below 256-bit
+then (with unreasonably low values being to have a canonical encoding
+for attacks on existing weird hashes).
+
+However, encoding outlen if it's optional, yet having the encoding
+deterministic by definition, is not so easy.  With my proposal for
+omitting default values, we can only omit a default if it's the smallest
+valid value.  Omitting a default in the middle of valid range is
+error-prone.  So if we make 256-bit the default (I agree that we
+should), then we only have a straightforward way to encode values of
+256-bit or higher, and we have no canonical encodings for shorter
+hashes for attack use.  This is a dilemma I don't yet have a good
+proposal for.  Any ideas?
+
+&gt; While collisions are not a concern, it
+&gt; would probably be a good marketing move to use an output size which is
+&gt; "naturally" immune to collisions, i.e. 256 bits. This is what SHA-256
+&gt; outputs, and is larger than the 192 bits of bcrypt. A 32-byte output is
+&gt; not too huge with regards to the rest of the string, and also with
+&gt; regards to existing hash strings that rely on SHA-256 crypt or, even
+&gt; more so, SHA-512 crypt. While a 128-bit output would save some resources
+&gt; and make more sense (cryptographically speaking), a 256-bit output
+&gt; should ensure wider acceptance by the user base.
+
+I agree with this reasoning.
+
+&gt; I limit the salt length for Argon2 to a maximum of 48 bytes (64
+&gt; characters after B64 encoding) so as to help decoders (stack buffers
+&gt; again...). Argon2 can process much longer salts, but that does not make
+&gt; a lot of sense for password verification, where a 16-byte salt (say, an
+&gt; encoded UUID) is already fine.
+
+We may stipulate some limits on salt length for defensive
+implementations, but we should also define canonical encodings for
+arbitrary salt lengths for attack use.  Luckily, this is trivial.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

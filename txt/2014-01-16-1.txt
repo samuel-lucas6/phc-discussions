@@ -1,0 +1,33 @@
+phc-discussions - Using multiply (Re: [PHC] A must read...)
+
+Message-ID: <1345877941.847663.1389841367009.open-xchange@email.1and1.com>
+Date: Wed, 15 Jan 2014 21:02:46 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Using multiply (Re: [PHC] A must read...)
+
+On January 15, 2014 at 11:45 AM Bill Cox <waywardgeek@...il.comwrote:
+>
+I like the idea of floating point, but I doubt it's worth the excess
+trouble we'll run into. 32x32 -32 Integer multiply seems solid and
+pervasive enough. Besides that, it's fast in our devices even
+compared to a custom ASIC, and it's a great operation for mixing bits,
+at least when one op is odd.
+
+Have you thought about doing 4 (or more) multiplies in parallel:
+4 multiplies with SSE4.1 (PMULLD _mm_mullo_epi32)
+8 multiplies with AVX2 (VPMULLD _mm256_mullo_epi32)
+16 multiplies with AVX-512 (VPMULLD _mm512_mullo_epi32)
+
+You can reorder the values in any order in SSE2 with PSHUFD
+(_mm_shuffle_epi32). Reordering the values in AVX2 and AVX-512 is
+trickier and may need multiple instructions.
+
+SSE4.1 has been on pretty much every Intel CPU since 2008. AVX2
+just came out last year with Haswell. I think integer AVX-512 will be on
+Skylake in 2015. They could delay integer operations until the next
+iteration in 2017 like they did with AVX/AVX2. AVX-512 should probably
+be considered since this competition will end when AVX-512 is
+estimated to be available or on the horizon.
+
+

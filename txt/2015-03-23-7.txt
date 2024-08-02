@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] PHC: survey and benchmarks
+
+Message-ID: <20150323182415.GA24876@bolet.org>
+Date: Mon, 23 Mar 2015 19:24:15 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] PHC: survey and benchmarks
+
+On Mon, Mar 23, 2015 at 05:18:20PM +0100, Jakob Wenzel wrote:
+This might be ok. But they also wrote:
+
+"We contribute to the final selection of the winners by highlighting
+the efficiency of each finalist in terms of execution time, memory
+consumption and code size."
+
+Which does not make much sense since only the current versions are
+considered for the choice of the winner(s).
+
+I second that for code size. Existing implementations were submitted for
+reference, and in some cases for speed optimization, but I doubt any of
+them was optimized for code size.
+
+I know for a fact that the code I wrote for Makwa was deliberately
+fattened with a lot of extra functionalities (e.g. Base64-like encoding,
+salt generation...) and relies on OpenSSL for better portability (and
+this implies non-neligible RAM usage, even though Makwa itself does not
+need that much RAM). A Makwa optimized for RAM and code size, while
+still maintaining decent speed optimization, will fit in about 5 kB of
+code (maybe less) and less than 2 kB of RAM.
+
+I'll wager that all the other candidates can fit in less than 10 kB code
+size each. For instance, Argon uses some AES rounds, and AES encryption
+can be reasonably efficiently implemented with 4 kB worth of tables; and
+with AES-NI, it will use a lot less. Looking at the pseudo-code, I am
+confident in claiming that Argon can be done in less than 2 kB assembly
+code on recent x86 hardware. Nevertheless, the article benchmarks its
+code size at a whooping 82 kB...
+
+
+Of course, I can only applaud at some independent analysis on the PHC
+candidates. I also quite like the "survey" part, and the efforts put
+into that paper are highly commendable. I am a bit less enthused at the
+"benchmark" half, because I don't really see what is measured when they
+talk about speed (what sense does it make, for functions with a
+configurable time cost and that aim at being slow, not fast ?), and
+when code size is measured, the methodology is flaky. For a true code
+size benchmark, at the very least, a common API should be defined AND
+implementers should make a modicum of effort at reducing code size, e.g.
+by providing an implementation for _only_ that common API.
+
+
+	--Thomas Pornin
+

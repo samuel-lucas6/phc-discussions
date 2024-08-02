@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.
+
+Message-ID: <CAMtf1HvqeuzNZu3EDJQ=oeaVzScrTEbjDJxcBxUusAok4pSBSg@mail.gmail.com>
+Date: Sat, 13 Dec 2014 09:11:59 +0800
+From: Ben Harris <ben@...rr.is>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.
+
+On 13 December 2014 at 06:38, Gregory Maxwell <gmaxwell@...il.comwrote:
+
+A third is that some applications must support small memory embedded
+devices. For example, hardware wallets with 128kbytes ram. Cost, power
+usage, durability against sidechannels, etc. all contribute to memory
+limitations on these devices. Additional ram is not an option, the
+option is to instead use a malware infested desktop PC or smartphone
+or not use a KDF.
+>
+These devices are never themselves going to support KDFs with compute
+or memory hardness beyond snake-oil levels.  I am saddened that none
+of the proposals supported delegation scheme with
+information-theoretic security ( which are possible,
+https://bitcointalk.org/index.php?topic=311000.0 ) but not surprised
+since I was unable to come up for a construction for one which
+achieved the memory hardness properties which are currently
+fashionable for KDFs.   Even lacking that, any of these devices will
+need a delegation scheme of some kind. If one isn't supported they
+will either reject the strong KDF or achieve one informally via
+pre-processing.  e.g. H1||H2 = HMAC(salt,password)   Key =
+H(StrongKDF(H1,user)||H2) .   It would be be preferable if such
+delegation were specified explicitly rather than applications rolling
+their own incompatible and potentially less secure versions.
+>
+
+Thanks for the well developed question exploring a variety of areas. For
+the embedded side, the option is to have the PasswordBasedKDF either on the
+device or off the device. From what I have looked at, the common solution
+is to securely store the output of the PBKDF on the device and just have
+the device use it in a KDF to generate the output keys. Some entries, like
+Catena (https://password-hashing.net/submissions/specs/Catena-v2.pdf),
+include the second part in their specs (page 48).
+
+Handling the PBKDF on the device might be the ideal situation, but as you
+say it is a harder problem.
+
+
+

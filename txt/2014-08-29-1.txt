@@ -1,0 +1,171 @@
+phc-discussions - Re: [PHC] Re: A review per day - Yescript
+
+Message-ID: <20140829005157.GA4886@openwall.com>
+Date: Fri, 29 Aug 2014 04:51:57 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: A review per day - Yescript
+
+On Thu, Aug 28, 2014 at 07:04:15PM -0400, Bill Cox wrote:
+I really would prefer that you keep YESCRYPT_PARALLEL_SMIX, and
+YESCRYPT_RW.  Reading an unpredictable prior location and mixing it
+into the state is the best way to defend against Scrypt's current TMTO
+problem.
+
+I will definitely keep YESCRYPT_RW since it deals with TMTO attacks that
+reduce attacker's cost, even when measured as theoretical space*time,
+by up to 2x or 4x (and sometimes much more so in practice).
+YESCRYPT_PARALLEL_SMIX is less valuable since it deals with TMTO attacks
+that do not reduce the theoretical space*time (but may reduce actual cost
+on real-world hardware).
+
+So maybe YESCRYPT_PARALLEL_SMIX should remain part of the full yescrypt,
+but be excluded from a cut-down partial implementation.
+
+On 08/28/2014 05:37 PM, Solar Designer wrote:
+On Thu, Aug 28, 2014 at 04:05:32PM -0400, Bill Cox wrote:
+>- - OPENMP support is required for current version to run in
+>parallel
+
+Oh, that's a mere implementation detail.  To me, OpenMP-using code
+is cleaner and smaller than pthread-using code, but it's easy to
+switch it to using pthreads in a fork of the tree, or to include
+both versions, if you want to.  I just don't want to add the
+complexity of including both.
+
+Why do you find it a drawback?  OpenMP has been around for years,
+and it hides some of the complexity and removes room for some
+potential bugs.
+
+It's not really a drawback now days.  I do worry that OpenMP is not
+doing a good job starting and merging your threads though.  When I run
+TwoCats in Ubuntu 14.04, it runs at almost the same exact speed every
+time.  Yescript gives me more variation in runtime.  I worry OpenMP is
+the culprit.
+
+OpenMP implementations tend to be extremely sensitive to any other load
+on the system, unless you're using OpenMP with fewer threads than the
+system has logical CPUs.  You had mentioned you run a Minecraft server
+on that machine.  Even if that server consumes only a few percent of CPU
+time, it can have a much bigger impact on OpenMP performance unless you
+take measures to prevent that - e.g., try "export GOMP_SPINCOUNT=10000"
+or "export OMP_NUM_THREADS=7" (leave 1 logical CPU for the machine's
+other load).  YMMV.  So, yes, I see what you mean now.
+
+So, you divided the number of memory elements N by 3*p^2, where p is
+the parallelism, to determine how many unpredictable writes to do, and
+this happens to be the optimal solution to your time*cost maximization
+under a TMTO attack...
+
+Not exactly.  I thought I had just explained it to you differently.
+OK, this stuff is a bit complicated.
+
+N/3 for SMix2 is the optimal point you mention.  No, it's not "under a
+TMTO attack" - on the contrary, it assumes no efficient TMTO exists.
+(Otherwise it's somewhat below the would-be TMTO-aware optimal point.)
+
+The division by p^2 for the unpredictable writes is because:
+
+With p=1, all of the N/3 iterations in SMix2 t=0 involve unpredictable
+writes.  Now let's increase both N and p by a certain factor, let's call
+it n.  Since p originally was 1, now p equals n.  To avoid potential
+counter-intuitive TMTO surprises, we want to keep the number of
+unpredictable writes (at least) the same, in absolute terms.  Since N is
+now n times higher than it was, that same number of unpredictable writes
+is now represented by (N/3)/n or (N/3)/p (since p=n).  Now recall that p
+is the number of threads we run.  The number of unpredictable writes per
+thread is then (N/3)/p^2.  Yet it's still the exact same number of total
+unpredictable writes by all threads combined, in absolute terms.  So
+we've ensured that we're not making this part of the anti-TMTO defense
+(unpredictable writes) any worse, in absolute terms, when we increase
+both m_cost and p proportionally.
+
+Have I explained it better this time?
+
+This is why it's hard to read your code!
+
+I spent a lot of time thinking, "Why did he do that?", when reading
+your code.
+
+I think this is because I've packed a lot into those lines of code.
+Perhaps I should write more comments, but the resulting lengthy source
+files might not necessarily become easier to read overall.  I think
+source code comments should be mostly for implementation detail, whereas
+design rationale belongs mostly in accompanying documentation.  Yes, I
+should improve the latter (a lot) as well.
+
+I don't expect you to change the code in any way... maybe put in a
+comment about the N/(3*p^2) thing?
+
+Maybe, or a reference to a specific place in a design rationale document.
+
+I actually have worked with a few
+guys who see the code as self-documenting, almost regardless of the
+complexity.
+
+This is certainly my preference for code I work with, where practical.
+When given a choice between writing a comment and rewriting some code to
+make it self-documenting, I prefer the latter.
+
+The main problem we're facing here is that design rationale isn't only
+about code, and mostly not about our defensive code.
+
+Similarly, scrypt source code, that I based yescrypt's on, didn't
+contain scrypt design rationale comments, nor was self-documenting in
+that respect.  (It was mostly self-documenting as it relates to its own
+implementation detail, which is how it should be in my opinion.)
+I doubt that scrypt source code would be any easier to read if it were
+"inflated" with scrypt design rationale comments.
+
+I'm doing benchmarks at the moment with Yescrypt through the PHS
+interface.  I just set the parallelism #define to 4, which is optimal
+on my test machine.
+
+In my testing, setting yescrypt's p to the machine's logical CPU count
+is almost always optimal, on an otherwise idle system.  So I'd expect
+the optimal p on your machine to be 8, or 7 if you leave that Minecraft
+server running.
+
+I did most of my testing through yescrypt's native interface, though,
+with memory (de)allocation being out of the loop except for one-off
+multi-GB hash computations and ROM initialization.
+
+When invoking yescrypt with p=8 via the PHS() interface, I noticed
+average CPU usage of around 650% instead of the usual 799% or so (as it
+is in the kind of testing mentioned above), on an otherwise idle
+i7-4770K.  I think this loss of 1.5 logical CPUs, on average, is because
+of computation being stalled during memory (de)allocation.
+
+>However, it looks like Nloop_rw is set to N/(3*p^2).  It looks
+>like it only does N/(3*p) total random read/writes, followed by
+>N/3 - N/(3*p)) random reads.  Is it supposed to be this way?
+>This seems OK for p == 2 or p == 3, but what about p == 32?  Why
+>would I want fewer random writes as a total fraction of memory as
+>I increase parallelism?
+
+Everything you describe in here is on purpose.  The random writes
+exist for p>1 at all only to keep yescrypt's absolute TMTO
+resilience (against whatever fixed TMTO attack) for p>1 at p times
+higher total memory no worse than it is for p=1 at correspondingly
+less memory, with no surprising gap.  It would be rather nasty if
+e.g. going from 1 GB p=1 to 2 GB p=2 or even to 32 GB p=32 would
+potentially allow for an efficient attack in a smaller amount of
+memory than on the 1 GB p=1 hash.  This extra magic with division
+by p^2 removes that risk.  For 32 GB p=32, it feels irrelevant as
+it's unlikely you could find an efficient attack at < 1 GB on a 32
+GB hash, and as you point out this random writes portion becomes
+almost negligible, but for e.g. 2 GB p=2 the risk of an efficient <
+1 GB attack could be for real.
+
+Makes sense.
+
+Oh, maybe you simply didn't read this far before starting to reply to
+the paragraphs above.  This explains why you misunderstood me at first.
+Makes sense. ;-)
+
+In general I would prefer that the code documented any magic :-)
+
+Yes... but it gets tricky when it's design rather than code magic.
+
+Alexander
+

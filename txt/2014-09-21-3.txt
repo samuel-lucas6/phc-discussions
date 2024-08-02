@@ -1,0 +1,72 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <541EC935.5020802@ciphershed.org>
+Date: Sun, 21 Sep 2014 08:48:53 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/21/2014 02:39 AM, Brandon Enright wrote:
+Instead of having 4 (or N) fixed branch paths each with a fixed
+number of instructions for each path, I suggest the following logic
+would defeat the selective NOPing ability by making the worst case
+too bad:
+
+while (coinflip()) { do_some_work();
+
+while (coinflip()) { do_some_more_work() {
+
+[...] [...]
+
+
+I really hope there's something good here.  I would love to see a
+really good anti-SIMD moving forward, not that my opinion counts.
+
+Can I rewrite your code this way?
+
+depth = 0
+while true:
+    if coinFlip()
+        depth++
+    else
+        depth--
+    if depth <= 0:
+        return
+    switch depth:
+    case 1:
+        do_work_1()
+    case 2:
+        do_work_2()
+    ...
+    case N:
+        do_work_N()
+
+Each thread needs to have a state machine to update the switch
+statement's expression.  So long as each thread can update the state
+machine efficiently, I think I can do a switch statement like this,
+regardless of the structure of the program.  State machines to emulate
+programs built with if-statements and goto-statements are generally
+pretty simple.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUHskxAAoJEAcQZQdOpZUZSAMQAIiy43DGrXegw8FIx5ru/Dt4
+6LKP1RqBLoTLMxWI6k9BSCFU29HwpXybdp3pMWjmMMWndkLUhTUFT5TGH8aK6cej
+rhmwyG9Y8XRvRETl/oo/M0kT6b1c7pE774oRoJ4Y49EZg5xSpC8szROwx0NuFsbW
+QCxVAQIhOYl6uuXwmL6Rjnayx/CPI5eWUM4vAuVTglgn8Jp/rUu7u5uoOZOWrvJJ
+yfn3+NPsFGPDZP7h/Ow+MQidn9jqem3yMnOxKn5O0rR4dL+lQi6Cg4SaZTBQRs49
+NFLGvo3vUkgSkoZB0Aff8PGyjNAIgQdUKjNecqwiBxdtkian6/+ESvGRjyDqkpf4
+JOxEgmyttyMVHyI78EnheXy+TD8wtSrAx3LnRyNvckR7CTA5ooZgKZUcASRXxL0Q
+ZHVj9mHoRZ7OItH6a83U3Vbqg6jIoTR0oIhb9jafy/zIUpZwvnixAFq6eaHcFoIz
+9eS3kSxpaX3bvTlYsAE1IMHIG3RgS9NFl4zwIWDbcSgIUXc+JGol5coecjz5u6VZ
+UVp6hd0Z+ST7pRksSWU77sQQwVjm+YyixnO9DoTqgv6HqnBIXFmh7wQnpPz1f1ov
+Wzkp1Tz6KDo8HyZCTyckfTM74aijxh4NqcTSfu/frWiIt4VSvAxLM3OylakKtQ0V
+c/Rd4xkhQ3V48DD1lPZQ
+=3NH8
+-----END PGP SIGNATURE-----
+

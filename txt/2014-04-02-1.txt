@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] On the topic of attacking designs, not authors
+
+Message-ID: <CAOLP8p5s_E819za2_o-N_Vj6DFt9tvMLnH5EWZXL018YGa24nQ@mail.gmail.com>
+Date: Tue, 1 Apr 2014 20:44:59 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On the topic of attacking designs, not authors
+
+On Tue, Apr 1, 2014 at 6:07 PM, Brandon Enright
+<bmenrigh@...ndonenright.netwrote:
+If you're concerned about picking on the AntCrypt author then skip
+ahead from A to O or some other letter :-)
+>
+Brandon
+
+I didn't skip ahead, but I finally got to OmegaCrypt.
+
+First, I'm excited to see another author filling memory with something
+other than the direct output of a cryptographic hash function.  That
+alone puts OmegaCrypt among my favorites so far.
+
+It kills me to see entries write H(mem[a] || mem[b]) to memory,
+feeling that the cryptographic security of H improves their algorithm.
+ I ... uh ... feel bad about picking on Catena, given how much they
+seem to have inspired everyone, but publishing early means I know it
+in much better detail than the others.  Catena memory is trivially
+seen to be Catena data.  For the first row, just compute H(mem[i]) and
+see if it's equal to mem[i+1].  If it is, bingo, non-random data,
+probably Catena.  Why do they bother with the cryptographically secure
+hash when they didn't secure memory?  A fast hash function more like
+yours is the way to go, IMO.
+
+Your scheme of calling different hashes depending pseudo-random values
+is something I considered, and abandoned only due to increased
+complexity.  It gives you another knob for improving the security of
+your hash function without slowing it down.  Kudos!
+
+I haven't read the whole paper.  It looks to me like it's susceptible
+to cache timing attacks.  You may have mentioned it in your paper, but
+I haven't finished it.  I like the way you padded the variable length
+parameters.  I was doing the same until I found there seemed to be
+little interest in this detail, partly because the block hash
+functions all seem to do some padding for us.
+
+I haven't read your security section, but your initial key derivation
+seems ... what did that guy call it?  Strongly secure?  You hashed all
+the inputs, including lengths, with no leaks around it.
+
+I think my code will run faster per thread (a dumb benchmark I'm
+tracking).  Solar Designer kept bugging me to improve it, so I did,
+but my earlier code was more similar to this.  I think I may have just
+spent more days on it... I started with a simpler PHS like this, but
+then added features until I'd probably added too many.
+
+Like Catena, your entry seems best when running in cache, and may be
+able to get to a decent level of cache-bandwidth based runtime
+hardness vs ASICs (faster than Catena, due to your non-cryptographic
+memory hashing).  Unlike Bcrypt, you used enough memory to upset ASIC
+attackers, since several MiB of cache isn't cheap.  Still, with an
+entry this fast, yet cache bound, you'll either have to run a lot of
+iterations, or avoid running for longer times, like a second.  Still,
+I'd use something like this for quick cache bound key stretching.
+
+So, pretty sweet entry overall, in my still somewhat ignorant opinion.
+ I don't see any glaring goobers in a quick read.
+
+Bill
+

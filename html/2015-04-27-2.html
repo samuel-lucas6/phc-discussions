@@ -1,0 +1,296 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] yescrypt AVX2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2015/04/25/12">[&lt;thread-prev]</a> <a href="../../../2015/04/30/12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150427094838.GA31232&#64;openwall.com&gt;
+Date: Mon, 27 Apr 2015 12:48:38 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] yescrypt AVX2
+
+On Sat, Apr 25, 2015 at 11:09:59AM +0300, Solar Designer wrote:
+&gt; So far, the best I achieved when going from AVX to AVX2 yet insisting on
+&gt; 128-bit S-box lookups is:
+&gt; 
+&gt; AVX:
+&gt; enchmarking 1 thread ...
+&gt; 930 c/s real, 930 c/s virtual (1023 hashes in 1.10 seconds)
+&gt; Benchmarking 8 threads ...
+&gt; 3410 c/s real, 433 c/s virtual (7161 hashes in 2.10 seconds)
+&gt; 
+&gt; AVX2:
+&gt; Benchmarking 1 thread ...
+&gt; 710 c/s real, 710 c/s virtual (1023 hashes in 1.44 seconds)
+&gt; Benchmarking 8 threads ...
+&gt; 3580 c/s real, 458 c/s virtual (7161 hashes in 2.00 seconds)
+&gt; 
+&gt; at 2 MB per hash on i7-4770K, with otherwise currently default yescrypt
+&gt; settings (PWXrounds=6, etc.)  As you can see, single thread performance
+&gt; went down by 24%, and 8-thread went up only by 5%.
+&gt; 
+&gt; It's good news that attackers probably also can't use Haswell to attack
+&gt; yescrypt hashes tuned for older CPUs (with 128-bit S-box lookups) much
+&gt; faster.  It's bad news that defenders can't benefit from Haswell either.
+&gt; 
+&gt; It looks like I might introduce separate pwxform settings for AVX2,
+&gt; using 256-bit S-box lookups.  Maybe I'll try 512-bit as well, and see if
+&gt; it becomes much weaker than bcrypt on Haswell or not (maybe target L2
+&gt; cache with the S-boxes, then).  (256-bit would definitely be fine in
+&gt; terms of bcrypt-like anti-GPU on Haswell.)  If it's fine then 512-bit
+&gt; would be preferable in order to avoid introducing yet another
+&gt; combination of settings for MIC and AVX-512.  Note: all of this fits
+&gt; into yescrypt and pwxform as currently specified.  We're only talking of
+&gt; adjusting the PWX* compile-time settings (and possibly making them
+&gt; runtime tunable), deviating from the current defaults, and producing
+&gt; optimized code for those (the -ref will run fine with only #define's
+&gt; changed).
+
+I went ahead and tried 512-bit S-box lookups right away.  While keeping
+the total pwxform lanes width at 512 bits as well, I got for 8 KB
+S-boxes and at 2 MB m_cost like before and on the same machine as above:
+
+Benchmarking 1 thread ...
+974 c/s real, 974 c/s virtual (1023 hashes in 1.05 seconds)
+Benchmarking 8 threads ...
+4068 c/s real, 530 c/s virtual (7161 hashes in 1.76 seconds)
+
+That's with new AVX2 code.  In -ref and -opt, I only needed to change
+#define's to:
+
+#define PWXsimple 8
+#define PWXgather 1
+#define PWXrounds 6
+#define Swidth 6
+
+In -simd, I obviously needed to write the corresponding AVX2 code
+(easy).  As we can see, there's finally a speed improvement from AVX2.
+For 1 thread, it's limited by the total pwxform parallelism being too
+low (only two parallel 256-bit SIMD MULs - not enough to cover their
+latency).  For 8 threads, we almost bump into memory bandwidth:
+
+2 * 4/3 * 2 * 4068 * 2^20/10^9 = 22.75 GB/s RAM+L3
+
+Theoretical peak for i7-4770K's two memory channels is 25.6 GB/s.
+There's significant L3 cache hit rate at 2 MB/thread, though.  At 128 MB,
+the speed is much less:
+
+$ ./userom 0 128
+r=8 N=2^17 NROM=2^0
+Will use 0.00 KiB ROM
+         131072.00 KiB RAM
+'$7X$F6..../....WZaPV7LSUEKMo34.$5jAouu5o7JVdj66ayBIDvinfivvXzIGkqELDufjuGK5'
+Benchmarking 1 thread ...
+12 c/s real, 12 c/s virtual (15 hashes in 1.18 seconds)
+Benchmarking 8 threads ...
+39 c/s real, 5 c/s virtual (45 hashes in 1.14 seconds)
+
+128 * 4/3 * 2 * 39 * 2^20/10^9 = 14 GB/s RAM
+
+(Curiously, reducing PWXrounds from 6 to 1 improves this speed only from
+39 c/s to 40 c/s.  I'm not sure why this machine doesn't reach higher
+memory bandwidth usage here.  Also curiously, for the 2 MB test going to
+PWXrounds=1 achieves 2700 c/s for 1 thread, but makes little difference
+for 8 threads.)
+
+Now to try hitting L2 cache, still at 2 MB m_cost and PWXrounds=6 as in
+most tests above:
+
+32 KB:
+Benchmarking 1 thread ...
+763 c/s real, 769 c/s virtual (1023 hashes in 1.34 seconds)
+Benchmarking 8 threads ...
+3562 c/s real, 447 c/s virtual (7161 hashes in 2.01 seconds)
+
+64 KB:
+Benchmarking 1 thread ...
+643 c/s real, 643 c/s virtual (1023 hashes in 1.59 seconds)
+Benchmarking 8 threads ...
+3330 c/s real, 430 c/s virtual (7161 hashes in 2.15 seconds)
+
+128 KB:
+Benchmarking 1 thread ...
+568 c/s real, 568 c/s virtual (1023 hashes in 1.80 seconds)
+Benchmarking 8 threads ...
+2578 c/s real, 331 c/s virtual (3069 hashes in 1.19 seconds)
+
+So up to 64 KB/thread is within consideration.  I was hoping it'd be up
+to 128 KB/thread, since the CPU has 256 KB of L2/core, but no luck.
+(I could introduce a change to alter Swidth every other pwxform round or
+between the two S-boxes, but that would be a deviation from yescrypt as
+currently specified, and extra complexity.  Alternatively, I could
+increase pwxform's total parallelism beyond 512 bits per thread, which
+is a mere change of the #define's in -ref and -opt, but then we'd need
+to consider the effect of the extra parallelism on attacks.)
+
+So with 64 KB/thread / 128 KB/core being rapidly hit, we still get almost
+the same speed (3330 c/s vs. 3410 c/s we had with AVX and 8 KB/thread),
+and our total bandwidth usage from/to RAM and the caches is:
+
+2 * 4/3 * (2 + 2*6) * 3330 * 2^20/10^9 = 130 GB/s RAM+L3+L2
+
+The 2*6 is two S-box lookups per pwxform round, and 6 pwxform rounds per
+sub-block.  We add this to 2, which we had before and which is one read
+and one write per sub-block.  (Not counted here is read bandwidth of the
+previous block, which is assumed to be in L1 and read sequentially, and
+write bandwidth when initializing the S-boxes.)
+
+In terms of GPU local memory attacks, this is no worse than we had
+before: the frequency of S-box lookup groups is roughly the same, so
+just as bcrypt-like as before.  Or actually 8x better, since 8x fewer
+instances will fit.
+
+However, in terms of GPU global memory attacks this is different.  On
+one hand, the frequency of individual S-box lookups is now 4x less (but
+they're 512-bit rather than 128-bit, and they go from larger S-boxes).
+On the other hand, the total bandwidth usage is so high that it's just
+~2.5x less than what modern GPU cards have total.
+
+The previous AVX with 128-bit S-box lookups code version (as submitted
+to PHC) achieves comparable bandwidth usage:
+
+2 * 4/3 * 2 * 3410 * 2^20/10^9 = 19.07 GB/s RAM+L3
+2 * 4/3 * (2 + 2*6) * 3410 * 2^20/10^9 = 133 GB/s RAM+L3+L1
+
+but its S-boxes are in L1 cache.  OTOH, it means that if trying to
+attack it with a GPU with a 512-bit bus and placing the S-boxes in
+global memory, it'd need 4x more bandwidth (wasting 3/4 of it), which is
+more than a current GPU card has.
+
+So I'm not sure.  Either approach looks sane to me - not using AVX2, or
+using it as 512-bit.  Indeed, using it as 256-bit (which it is natively)
+would be even better, but it feels too specialized to this intermediate
+vector size, which is why I am experimenting with jumping over it.  But
+perhaps I'll try plain 256-bit next.
+
+For reference, the settings for 64 KB/thread are:
+
+#define Swidth 9
+
+#define PWXsimple 8
+#define PWXgather 1
+
+and the code is:
+
+#define PWXFORM_SIMD_0(X, x, s0, s1) \
+        x = EXTRACT64(_mm256_castsi256_si128(X)) &amp; Smask2; \
+        s0 = *(const __m256i *)(S0 + (uint32_t)x); \
+        s1 = *(const __m256i *)(S1 + (x &gt;&gt; 32)); \
+        X = _mm256_mul_epu32(_mm256_shuffle_epi32((X), _MM_SHUFFLE(2,3,0,1)), X); \
+        X = _mm256_add_epi64(X, s0); \
+        X = _mm256_xor_si256(X, s1);
+
+#define PWXFORM_SIMD_1(X, x, s0, s1) \
+        s0 = *(const __m256i *)(S0 + 32 + (uint32_t)x); \
+        s1 = *(const __m256i *)(S1 + 32 + (x &gt;&gt; 32)); \
+        X = _mm256_mul_epu32(_mm256_shuffle_epi32((X), _MM_SHUFFLE(2,3,0,1)), X); \
+        X = _mm256_add_epi64(X, s0); \
+        X = _mm256_xor_si256(X, s1);
+
+#define PWXFORM_ROUND \
+        PWXFORM_SIMD_0(X0, x, s00, s01) \
+        PWXFORM_SIMD_1(X1, x, s10, s11)
+
+#define PWXFORM \
+        { \
+                uint64_t x; \
+                __m256i s00, s01, s10, s11; \
+                PWXFORM_ROUND PWXFORM_ROUND \
+                PWXFORM_ROUND PWXFORM_ROUND \
+                PWXFORM_ROUND PWXFORM_ROUND \
+        }
+
+(in -ref and -opt, the code remains unchanged).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

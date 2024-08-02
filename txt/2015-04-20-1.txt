@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Message-ID: <20150420031649.GA10714@openwall.com>
+Date: Mon, 20 Apr 2015 06:16:50 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+On Sun, Apr 19, 2015 at 08:40:06AM +0300, Solar Designer wrote:
+On Tue, Apr 14, 2015 at 04:13:30PM +0200, Dmitry Khovratovich wrote:
+Adding both things to Argon2 would not be a problem. Actually, we
+already considered replacing our Blake2b round with BlaMKa (or any
+other modification that employs a low-latency high-throughput
+instruction). The S-boxes we did not consider yet.
+
+I now think it'd be best to use the same approach I had suggested and
+Bill implemented for TwoCats.  Since you're already fully loading the
+SIMD units with BLAKE2b rounds, use the scalar units for a single
+pwxform lane chain.  This wouldn't really be pwxform - it would be
+neither parallel, nor wide since it'd be locked to just one lane.  So no
+tunable parallelism there.  But other than that, it'd be the same thing,
+and by tuning the total number of rounds for this un-pwxform that you
+perform per your 1 KB block, you'd achieve the equivalent of the desired
+tunable latency and parallelism limitation.  All with just one parameter.
+And no need to introduce data dependencies between your BLAKE2b rounds,
+then.  So this replaces my two-bit tunable parallelism idea.
+
+I've tried implementing and benchmarking this - please see the attached
+patch.  For latency hardening equivalent to yescrypt current defaults -
+so with 6 un-pwxform rounds per each of Argon2's BLAKE2b rounds (of
+which it has 16 per 1 KB) - the performance impact on FX-8120 (whatever
+I happened to test on) at 1 GB is only 15% for 1 thread, 5% for 8
+threads.  In fact, even at double the latency hardening (12 un-pwxform
+rounds per BLAKE2b round), the performance impact is 40% for 1 thread,
+but only 10% for 8 threads (relative to original Argon2).  This is for
+benchmarks inclusive of the memory allocation overhead, though.  The
+impact would be relatively higher with overhead excluded.
+
+I think these numbers are very good.  I recommend that this change be
+completed (need to initialize the S-boxes properly, and decide on which
+state[] elements and how are passed through this chain) and merged in
+(also need to implement it into the non-SIMD version).
+
+Not being a full pwxform - not parallel, nor wide - this does not
+utilize wide S-box loads, nor SIMD multiplies.  So the total amount of
+processing is less than yescrypt's.  But it should do the job of latency
+hardening fine anyway.  The anti-GPU may be weaker than yescrypt's: the
+S-box lookups are 4x less frequent and are 2x narrower each, although
+this is partially mitigated (for local memory attacks, but not for
+global memory attacks) by the parallelism also being 4x less.  This may
+optionally be further mitigated by increasing the rounds count beyond
+yescrypt's.
+
+Maybe several round count settings should be supported: e.g., 1, 3, 6,
+12 per BLAKE2b round.  Or maybe 0, 3, 6, 12 to allow for simpler
+cut-down implementations (skipping S-box initialization) and for code
+sharing with Argon2i.
+
+I've also included some unrelated changes in this patch, which I needed
+while testing.  Most notably, I fixed the previously broken --threads
+option support (and the default of 4 threads, which didn't take effect).
+
+Due to the S-boxes, this is only suitable for Argon2d.  You'll need to
+use BlaMka or some S-box-less variation of un-pwxform for Argon2i.
+In fact, you may also use BlaMka for Argon2d, along with un-pwxform, to
+improve the tradeoff latency.
+
+BTW, while at it, I suggest that these XORs:
+
+                ref_block[i] = state[i] = _mm_xor_si128(state[i], ref_block[i]);
+
+                state[i] = _mm_xor_si128(state[i], ref_block[i]); //Feedback
+
+be replaced with 64-bit ADDs or SUBs, for a slight latency increase for
+the attacker.  (I kept XORs in such places in yescrypt, but that's only
+for consistency and potential code sharing with its legacy scrypt mode.)
+
+Alexander
+
+View attachment "Argon2-latency-hardening.diff" of type "text/plain" (6285 bytes)
+

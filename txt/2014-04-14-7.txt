@@ -1,0 +1,140 @@
+phc-discussions - Re: [PHC] Re: The best of the best, IMO
+
+Message-ID: <CAOLP8p4M_rzYusRE7dBcR+aWDz=9cd77fH+FKAoJOi1_zTxj1w@mail.gmail.com>
+Date: Mon, 14 Apr 2014 09:06:50 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: The best of the best, IMO
+
+On Sun, Apr 13, 2014 at 9:11 PM, Steve Thomas <steve@...tu.comwrote:
+
+On April 12, 2014 at 8:33 PM Bill Cox <waywardgeek@...il.comwrote:
+>
+By Script inspired, I mean algorithms that bust out of cache and do a
+*lot*
+of memory hashing, like Script.  To do that, an algorithm requires a
+strategy for mitigating cache-miss penalties.  Some entries look to me
+like
+simplified versions of Script, but those that dropped Script's ability to
+efficiently bust out of cache I put in the Bcrypt-like category.  I think
+it makes more sense to compare them against algorithms like Pufferfish
+and
+Battcrypt than against large memory capable algorithms like Lyra,
+Yescript,
+EARWORM, and TwoCats.
+>
+Battcrypt should scale linear with memory usage. Since it encrypts blocks
+of 2 KiB at a time and the 4 KiB of s-boxes should stay in cache. The only
+problem is that Blowfish is slow compared to other algorithms. I think it's
+max speed is going to be around 185 MiB/s (3.5 GHz).
+>
+Centrifuge would also be able to bust out of cache if they made "out"
+larger then once it's done shrink it down. Since this probably will have
+similar speeds to RC4 it will be 2.6 times faster than battcrypt because
+Blowfish takes 18 clocks/byte* vs 7 clocks/byte**. This is outdated since
+both of those were measured on a Pentium. Although Centrifuge doesn't swap
+for every byte of output, every block of "out" it swaps based on "t_cost"
+then encrypts "out" with AES. I'm guessing with AES-NI it might be a little
+slower than RC4.
+
+
+I am surprised at how few entries have a strategy for running in larger
+memories than what fits in cache, Centrifuge included.  Like several
+others, simply making the hash length parameter larger, like >= 1KiB, would
+allow it to run efficiently in external DRAM.  It's the same situation for
+Catena and others.  There seems to be a strong correlation between authors
+who feel strongly that the full un-shortened encryption algorithm be used
+on all memory written, and authors who only seem to intend to run in cache.
+ This is very confusing to me, but since so many brilliant authors are
+following this pattern, there must be something to it.
+
+I got some time this morning to go back and carefully read Centrifuge.
+ Centrifuge will be speed limited by it's reliance on AES-cfb, rather than
+it's swapping loop.  It uses the full 10-round CFB version, which on the
+latest CPUs will take at least 60 cycles per 16 bytes if I'm not mistaken
+(6 cycle latency per AESENC, 10 sequentially).  This agrees well with this
+paper:
+
+https://www.cosic.esat.kuleuven.be/ecrypt/AESday/slides/Use_of_the_AES_Instruction_Set.pdf
+
+It's the CFB mode that causes the long compute time.  Also, contrary to a
+statement in the paper, Centrifuge's swapping loop is somewhat
+parallelizable.  We get 16 bytes in parallel coming from AESENC, and by
+guessing that the swaps can be done independently, and backing off and
+doing it sequentially when we're wrong, we can often perform all 16 swaps
+at once.  This small state size (2048 bits) is easily built in registers
+rather than RAM, so modifying them all at once is reasonable.  Optimized
+logic could do dependency detection and some number of non-dependent swaps
+simultaneously, leading to at least a few swaps per clock on average, much
+faster than the AES-cfb loop.  I would advise switching to non-CFB mode,
+but doing so would allow attackers to speed up the algorithm more than the
+defender can.
+
+As p_time increases, Centrifuge memory bandwidth to the M memory array goes
+to 0, and with a default recommended value of 256, attackers will have no
+trouble keeping up.  For ASIC attacks, with a tiny 256-byte S box and
+essentially zero large memory bandwidth, Centrifuge seems highly
+parallelizable to me.  Maybe the frequent small memory swaps in the S-box
+will be a problem for GPUs, but ASICs will tear through Centrifuge hashes,
+doing many in parallel per die, sharing a single cheap external DRAM for M
+storage.
+
+I have a similar problem with my t_cost parameter in TwoCats.  I use it to
+balance external memory bandwidth and internal cache bandwidth, ideally
+maxing out both at the same time to provide two levels of defense.
+ However, if used to run a long time hashing only a small amount of memory,
+it will hash the same two blocks together many times before writing the
+result block, lowering external memory bandwidth to nearly 0.  I could have
+made t_cost repeat the entire memory hash operation like several entries
+do, but then I could not use it to balance cache and external memory
+bandwidth at the same time.  Also, some users may prefer to have TwoCats
+avoid maxing out external memory bandwidth, and this gives them a knob to
+do that.  Rather than confuse users with two separate time cost parameters,
+I chose to keep only the one I find of higher value.  As a work-around, a
+user could just call TwoCats repeatedly, providing his own outer loop.  The
+same can be done with Centrifuge, with t_cost set to 0, substantially
+increasing it's memory bandwidth.  However, in CFB mode, and writing only
+to on-chip cache, Centrifuge cannot approach maxing out cache memory
+bandwidth, regardless of settings.
+
+Some more thoughts on Centrifuge: The author may not be aware that doing
+256 random swaps on S does not perform a random shuffle.  It has a slight
+bias in the result.  It's no biggie, however.  He only uses the S state as
+an input to AES_CFB, and he could feed in all 0's and still get secure data
+out.  All that matters is that an attacker has to do the work of updating
+S, not that S hold cryptographically random data.  Centrifuge does memory
+dependent addressing from the beginning, making it more Bcrypt-like than
+Catena-like.  I prefer the Bcrypt-like algorithms, so this is just an
+observation rather than criticism.  Another observation is that the entire
+Seq array could be compressed to 256 bytes and get the same result, so in
+case the updating of S somehow became compute intensive, we'd still need to
+deal with keeping attackers from just compressing Seq.  In the first loop
+for filling M, the output bytes fed into AES are never equal, so the input
+to AES has a strong non-random-looking bias.  Again, this is not a big deal
+because the AES output appears perfectly random even when encrypting all
+0's.
+
+Centrifuge, like several others, did not encode input lengths, and has
+input collisions as a result.  In this case, I think appending 0 bytes to
+either password or salt, up to a total of 16 bytes, has no effect on the
+result.  I feel like we almost need a separate input hashing step where we
+properly hash all inputs to derive a pseudo-random key, and that this key
+is what we should pass to the various PHC entries, since so many of them
+did not pay attention to this detail.  If I write a common API for the PHC
+entries that is usable in real systems, I might do just this.  That would
+also give me a place to clear the password before passing it to the PHS
+call, and I could provide an init/update/final interface as well for people
+with extra input data.
+
+On the positive, Centrifuge appears secure to me, though it's time*memory
+cost is low.  It's rapid small random reads might do well against GPU
+attacks.  I'm not sure if it's 256 byte state is enough to thwart GPUs,
+though.  Data it writes to memory is also cryptographically pseudo-random.
+ It is a nice simple KISS algorithm.  Having the ability to increase beyond
+256 bytes would harden this algorithm against GPUs and also provide a way
+to bust into external memory efficiently.
+
+Bill
+
+
+

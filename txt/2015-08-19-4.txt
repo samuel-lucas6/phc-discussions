@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Message-ID: <20150819160644.GA16884@openwall.com>
+Date: Wed, 19 Aug 2015 19:06:44 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Hi Dmitry,
+
+On Wed, Aug 19, 2015 at 12:13:06PM +0200, Dmitry Khovratovich wrote:
+thank you for the benchmarks! We are still working to produce new code
+(enhanced + Maxform) that can be used for future testing. Please feel free
+to ask for specific code change that might favor GPU portability.
+
+Thanks.
+
+What do you mean by GPU portability here?  Simplifying OpenCL
+implementations for testing, or for actual defensive use of GPUs?
+
+So far, our intent has been mostly to discourage attack use of GPUs, so
+we compare the different schemes with this in mind.  It is also possible
+to efficiently use GPUs defensively e.g. with Litecoin-like parameters to
+scrypt (and thus to yescrypt in scrypt compatibility mode) and high p,
+but I think Argon2's different thread-level parallelism model
+discourages reaching that level of efficiency at defensive use of GPUs.
+
+I have several questions:
+
+1) Would you attribute these results to the existing Argon2 parallelism in
+the compression function (8 x parallel Blake2)? Do you already exploit this
+feature? If yes, then we already have a more sequential pattern in mind,
+that would be great to test with or without Maxform.
+
+We don't yet exploit this (except possibly to a very limited extent that
+an OpenCL compiler and the hardware might), so I wouldn't attribute the
+current results to it.  I've been thinking of communicating suggestions
+on how to try exploiting this to Agnieszka today.  So we'll likely try.
+If successful, this should let us pack more concurrent instances of
+Argon2, and should provide much speedup over the results so far (as
+we're not yet bumping into memory bandwidth, by far).
+
+I attribute the faster attacks on Argon2 than on Lyra2 on the NVIDIA GPUs
+so far primarily to Argon2 having a smaller internal state (Lyra2 was
+benchmarked with 24 KiB blocks).  yescrypt also has more internal state
+due to the pwxform S-boxes, plus the pwxform operations themselves slow
+GPUs down.
+
+2) How do you get these extrapolation numbers for Titan X? What are these
+numbers in the denominator?
+
+3072 and 640 are the total "shader" or "CUDA core" counts (32-bit SIMD
+vector elements) for the two GPUs (Titan X vs. 960M).  Since it's the
+same architecture, we could also compare SMM counts: 24 vs. 5, leading
+to the same ratio.
+
+1000 and 1096 are the base clock rates in MHz for the two GPUs (actual
+clock rates should be slightly higher for both).
+
+Combined, these result in Titan X being 3072/640*1000/1096 = 4.38 times
+faster.  In case memory bandwidth ever becomes the limiting factor (as
+we optimize the code more), it's similar too: 336/80 = 4.2 times faster.
+
+Potential results for GTX Titan X:
+>
+2480/(1861*3072/640*1000/1096) / (4736/419) = 0.027
+7808/(4227*3072/640*1000/1096) / (4736/419) = 0.037
+>
+or:
+>
+4736/419 / (2480/(1861*3072/640*1000/1096)) = 37.1
+4736/419 / (7808/(4227*3072/640*1000/1096)) = 26.8
+
+Alexander
+

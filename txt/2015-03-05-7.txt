@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] The PHS API
+
+Message-ID: <CA+hr98GsyEVfqRwQH+4QNbQqZ-nSJzx3bippyw53cufqfu5DYw@mail.gmail.com>
+Date: Thu, 5 Mar 2015 16:06:08 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] The PHS API
+
+On Thu, Mar 5, 2015 at 2:09 PM, Sascha Schmidt
+<sascha.schmidt@...-weimar.dewrote:
+
+I think that the wish for a standard API, as brought up by Marsh Ray,
+makes it necessary to discuss the PHS API.
+
+i have said that already, but maybe worth repeating. i would advise
+against allocating memory or using the stack to store secret-dependant
+data. rationale: there might be a way on the platform that allows a
+more secure allocation of memory. for example the operating system
+might support non-swappable memory, while obviously the heap does not.
+for this reason, it might be a good idea to separate the API to two
+layers:
+
+layer 1 would take every buffer as parameter:
+
+void lowlevelPHS(char* pwd, int pwdlen, char* mem, int memlen, ...
+
+layer 2 would be a helper that calls the layer 1 function with malloc
+(or some smarter) allocated buffers.
+
+obviously, layer 1 must be public as well. in some cases, layer 2 can
+even be omitted.
+

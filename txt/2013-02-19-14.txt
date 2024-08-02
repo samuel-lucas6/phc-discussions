@@ -1,0 +1,88 @@
+phc-discussions - RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Message-ID: <001e01ce0e49$f6b08c90$e411a5b0$@acm.org>
+Date: Mon, 18 Feb 2013 18:36:45 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Now I am more puzzled than I am by Larry's comment about presumed order.
+
+I am going to risk over-stating the obvious just to make certain that I, as
+a newcomer, am on the same page about what the tacit understanding is
+concerning what PHS( ) effectively operates on.
+
+ - Dennis
+
+TL;DR
+
+ 1. Let me look at it another way.  I presume that the each of the byte
+arrays (in[inlen], out[outlen], etc. can be viewed as a canonical string of
+bits, e.g, in[0]||in[1]||...||in[inlen] where each byte 
+has its bits laid into the string as b[7]||b[6]||...||b[0], exactly as the
+bits weigh into interpretation of the byte as an unsigned integer, are
+expressed in hexadecimal, etc.  The expression of in[] in hexadecimal is
+simply the concatenation of the hexadecimal digits of the bytes, in their
+standard order.  (If one were operating on strings of bits whose length is
+not a multiple of eight, it would be left-justified in the byte array and
+any padding would start in the unused low-order positions of the last byte.)
+  The hexadecimal-notation expression of test vectors and the expected
+results conforms to this abstraction.
+
+ 2. The algorithm of a PHS( ) can be defined abstractly as operating on such
+structures, however organized into blocks, padded, and computed over, with
+the results of the same form.   When operating on wider units, there may be
+collection into binary words, use of (modular) arithmetic and logical
+operations, etc.  Those operations will assume a particular way of chunking
+and ordering the material in widths larger than one byte.  That's how I
+understand the algorithmic specifications of the NIST FIPS 180-n Secure
+Hashing functions.
+
+ 3. Any differences in how a particular platform provides its way of
+chunking and ordering and operating on various word-sized chunks should not
+be visible to any user of the API -- that is, the order at the API is
+sustained and the result is indistinguishable from it being carried out via
+(2) regardless of what is actually done to accomplish that.  That's what I
+see various implementations of NIST FIPS 180-n Secure Hashing Functions
+accomplishing, and their APIs are consistent with that.
+
+Is what is being said here tantamount to the same thing, but not so
+long-winded?  
+
+PS: I agree that the size_t, int, and unsigned int values represent numbers
+in exactly the way that is done on the platform running the PHS( ) code and
+their memory structure is not of concern in the implementation of PHS( ).  
+
+PPS: I'm assuming serialization/deserialization of the cost parameters in
+input-output is an outer-protocol consideration (likewise for the password,
+salt, and hash) but the reference implementation, PHS( ) would not reflect
+any of that.  I am also using the ordering of in[0],in[1],...,
+in[i],in[++i],...,in[inlen-1] (likewise for the salt and hash byte arrays)
+as being the canonical ordering, regardless of how that is achieved in a
+particular processor's storage organization.
+
+
+
+-----Original Message-----
+From: Solar Designer [mailto:solar@...nwall.com] 
+Sent: Monday, February 18, 2013 16:54
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Coding of the in[inlen] array for PHS( )
+
+On Mon, Feb 18, 2013 at 03:57:21PM -0800, Larry Bugbee wrote:
+On Feb 18, 2013, at 3:00 PM, Solar Designer <solar@...nwall.comwrote:
+In PHS(), we deal with bytes.
+
++1
+
+...and said bytes/byte strings/byte arrays should be specified to be in
+network byte order.
+
+No, byte order does not make sense for the password and salt inputs, and
+the numeric inputs are just numbers (in the PHS() interface, they're
+just size_t and unsigned int variables that have the correct values in
+the host's native representation).
+
+Alexander
+
+

@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+Message-ID: <20150330163011.GA30841@openwall.com>
+Date: Mon, 30 Mar 2015 19:30:11 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+On Mon, Mar 30, 2015 at 05:05:52PM +0200, Dmitry Khovratovich wrote:
+I doubt that you really need to store <depthof indices. Of course,
+this depends on an implementation of TMTO, but in a naive one that I
+have in mind needs only one stored index per missing block. Suppose
+that you store M[0],M[1], M[3],M[4], but M[2] and M[5] are missing
+(picture attached). Then instead of M[5] you store the block address
+needed to recompute M[5], i.e. \phi(5) = 2 (in this example). You look
+up for M[2], it is missing too, so you go for M[0] and retrieve it.
+
+You're right.  I think I got confused by my sim-tmto.c sometimes needing
+to store multiple indices per block, but that's because it is dealing
+with potentially multiple overwrites - that's not the same as depth in
+your report.  So in what I wrote the multiplier shouldn't be depth as in
+your report, but rather number of other direct dependency blocks and
+previous contents that a not stored block depends on, on average.
+
+Thus I do not understand why the block size is different before and
+after TMTO in your calculations...
+
+Oh, it was not that.  Perhaps I was unclear.  The block size stays the
+same, but I tried to infer what it should be to meet a certain goal.
+
+Alexander
+

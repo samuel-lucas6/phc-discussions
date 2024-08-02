@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] Quick gripe... in case there's ever another contest
+
+Message-ID: <20140405181410.GA7809@bolet.org>
+Date: Sat, 5 Apr 2014 20:14:10 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Quick gripe... in case there's ever another contest
+
+On Sat, Apr 05, 2014 at 01:12:21PM -0400, Bill Cox wrote:
+I'm having fun compiling all the various schemes, but I have had to
+hand-modify most of them to get them to be compatible with my main.c.
+It's no biggie, but a bit of a pain.  If you guys influence future
+competitions, could you please include a main.c and possibly even an
+example project that successfully builds using it?  Maybe we should
+have required linux compatible makefiles, and that make PHS generate
+an executable using the shared main.c file?
+
+For SHA-3, NIST had published a specific API:
+  http://csrc.nist.gov/groups/ST/hash/documents/SHA3-C-API.pdf
+and also the source code for a generator for test vectors:
+  http://csrc.nist.gov/groups/ST/hash/sha-3/Submission_Reqs/test_vectors.html
+which uses that API. Thus, the code from submitters HAD to compile
+with that common, specific program.
+
+This did not result in portable and easily reusable code, though. NIST
+had defined a single "reference platform", which was Windows Vista
+Ultimate, on an Intel Core2 CPU, in 32-bit and 64-bit mode, and the
+compiler was Microsoft Visual Studio 2005. Alas, not everybody has such
+hardware or software; a lot of researchers have Unix-like workstations,
+in particular Linux, so no Visual Studio; they developed with gcc. This
+implied some issues when NIST tried to compile the code, because the
+developers had unwillingly used gcc extensions that Visual Studio 2005
+does not support, or supports differently (and a few of these
+"extensions" are actually very standard constructions, but Visual Studio
+is known to lag quite a lot when it comes to standard conformance).
+
+The same problem occurred in the opposite direction: code which compiled
+and ran properly with Visual Studio could fail to compile, or produce
+incorrect output, when processed with gcc.
+
+More insidiously, some candidate codes used "dangerous" code patterns
+which resulted in breakage when used on a big-endian machine, or when
+compiled with different optimisation flags (C's strict aliasing rules
+are rarely well understood). Also, a number of candidate implementations
+used static read-write variables, resulting in code which was not
+thread-safe, or even stateful code (hash the same buffer twice from the
+same program, and you don't get the same output...).
+
+
+Bottom-line is that people who are good at designing cryptographic
+algorithms are not necessarily good at implementing them into sane,
+portable, no-surprise library code. It is a different set of skills.
+Even the NIST API somehow compromised that goal, by requiring all
+candidates to define functions with the same names, thus precluding
+compilation of several candidates within the same binary (and the PHC
+API also has the same issue, since it requires all candidates to define
+a function called PHS()).
+
+Bottom-line of the bottom-line is that if you want such implementations,
+you often have to do it yourself. There is value in producing portable
+implementations with a unified API, that are friendly to library usage.
+I did such a work for SHA-3:
+   http://www.saphir2.com/sphlib/
+but it took me quite some time and effort. I don't exactly intend to
+do it again for PHC...
+
+
+(In fact, my opinion is that a _reference_ implementation, meant to test
+other implementations for correctness, should be done in a language
+which does NOT have undefined or architecture-dependent behaviour. C
+should be banned for that; reference implementations should be in Java
+or C#, or ideally something even stricter because even Java or C# may
+offer non-portable behaviour when using floating-point types.)
+
+
+	--Thomas Pornin
+

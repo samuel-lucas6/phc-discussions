@@ -1,0 +1,47 @@
+phc-discussions - RE: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+Message-ID: <004301cf50ed$f0834640$d189d2c0$@acm.org>
+Date: Sat, 5 Apr 2014 09:41:47 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+   -----Original Message-----
+From: Poul-Henning Kamp [mailto:phk@....freebsd.dk] 
+Sent: Saturday, April 5, 2014 07:34
+Subject: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+[ ... ]
+
+We are not, we are in the business of making sure that entropy is
+not lost, and we do not care if an algorithm spits out 100 bits
+with full entropy or 1000 bits each with only 1/10th bit of entropy.
+
+So one of my ideas for "mechanical tests" was to use compressors
+as measurement entropy, and run sanity-checking test along the
+general scheme of:
+
+	Generate_test_data file1
+	candidate_algorithm < file1 file2
+	gzip -9v file1 file2
+
+Any algorithm where file2.gz can be smaller than file1.gz is toast.
+
+  --- Reply ---
+
+I think that tests for compressibility are great.  Finding a compression sets an upper-bound on the entropy of the given "message" and that relates directly to the definition of information-theoretic entropy.  One can also evaluate the limitations of the compressibility determination method.
+
+However, I am suspicious of the gzip usage, especially for short messages and possibly-shorter hashes.  In fact, one could argue that, given the hash of a transform as well as the message, the upper-bound of the entropy of the original message might be better estimated by min(len file1.gz, len file2.gz).  The bigger problem is short inputs being poor candidates for production compression utilities.
+
+I still think compressibility is a very good idea, although one might want to rip out the part of a compressor that determines compressibility and simply report compressibility (or efficiency) directly, without the overhead of creating the compressed file with its associated tables and codings.  It would then also be possible to do bit-level rather than byte-level analysis, and use compressibility methods that consider the entire message and are not progressive.  That is, the compressibility estimation need not satisfy the performance requirements that make compression utilities practical and one could take the greater compressibility determination of a few different approaches.
+
+I am wary about the 1000 bits with 10 times the compressibility of a 100-bit form too.  Coding a hash in hex, or Base64, or anything but the original bits does add compressibility (diminish efficiency) of course.  The original password already has that problem if it is a common plaintext encoding.  The problem is determining whether the 1000 bits (or the 100) carry any information leakage from the original message or not.  
+
+In short, a compressibility anomaly might raise a flag for further scrutiny, but I think the detailed considerations have to be more nuanced.  For example, I can imagine wanting to demonstrate to some level of confidence that the compressibility of the input and of the hash are not correlated in any way.  But this is just a simplification of wanting to not have effectively-detectable correlation altogether.  Likewise, ensuring that a set of hashes produced from some set of inputs has no effectively-detectable structure as a set, no matter the detectable structure of the input set.  But this seems to me, all off the top of my head, to be getting into common security arguments and their application to an actual procedure.
+
+I remain in favor of compressibility analysis as a sniff test.  But not exactly a security blanket [;<).
+
+ - Dennis
+
+
+

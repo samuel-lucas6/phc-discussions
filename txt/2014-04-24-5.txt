@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] Dumb fast file digest idea...
+
+Message-ID: <CAOLP8p7KPu7p8O7UU5jk+8DtV-0_vefvDVFrAy-igYAsW8z3oQ@mail.gmail.com>
+Date: Thu, 24 Apr 2014 17:48:00 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Dumb fast file digest idea...
+
+On Thu, Apr 24, 2014 at 4:30 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Bill,
+>
+this is not the way the things are done in symmetric crypto. As you see,
+one can invent hundreds of hash functions per day, many of them being very
+fast and seemingly secure. However, the cryptanalysis resources are
+limited, so the entire community can properly study only a handful of
+functions per year. Hence it's designer's job to select one (rarely two) of
+many possible alternatives, study it himself, publish the analysis and
+motivation (10+ pages usually), implement it and only then invite the
+others to look at the design.
+>
+
+You convinced me to try harder and prove something before posting the next
+version.  I already defeated my scheme with the encryption/decryption thing
+above.  I defeated the next three versions I came up with as well, but
+finally came up with one I believe I have proven works.  Here's how to do
+it:
+
+Given a "secure" one-way hash function built with multiple rounds, and one
+more special ability, called for now "chosen message secure", a fast secure
+hash function can be built using only an average of two round calls per
+message block, regardless of the number of rounds required by the original
+hash function for security.
+
+Let R(S) -S' be a round function which is a permutation.  Let M be the
+input message composed of block-sized values: M = m1, m2, ... mN.  Define
+H(M, S):
+
+    H(M, S) = R( ... R(R(R(state ^ m1) ^ m2) ^ m3) ... ^ mN)
+
+H is "chosen message secure" iff H is "secure" for every value of M.  H(M,
+S) is "secure" for a given value of M if no input collisions can be found,
+and if H acts like a random permutation of S.  An input collision happens
+when, for a given M, we find two different states S1 and S2 such that H(M,
+S1) == H(M, S2).
+
+Given R, a secure one-way hash function can be built using this
+"hashSuperBlock" function, using a "super block" of at least N^2 blocks in
+size.  It calls R only twice per block of message data:
+
+hashSuperBlock(M, S) {
+    S1 = S
+    S2 = secureHash1(S) // A known cryptographically string hash of 1 input
+    for(i = 0; i < BLOCKLEN; i++) {
+        S1 = R(S1) ^ M[i]
+        S2 = R(S2) ^ M[reverse(i, blocklen)]
+    }
+    return secureHash2(S1, S2) // A known cryptographically strong hash of
+2 inputs
+}
+
+The "reverse" function is the bit-reversal function.  BLOCKLEN should be a
+power of 2 and >= N*N.
+
+Theorem: hashSuperBlock is secure, with no message input collisions
+attackers can find.
+
+Proof:
+
+Suppose we wish to find an input collision between messages by specially
+crafting two input messages, M1 and M2.  Call
+
+the sequential track T1, and the bit-reversal track T2.  Consider the last
+message blocks of M1 and M2.  To make S1' the
+
+same for M1 and M2, we need:
+
+    ml1 ^ ml2 = S1_1 ^ S1_2
+
+Where S1_1 is the second to last state of S1 when hashing M1, and S1_2 is
+for M2.  For S2' to be the same for M1 and M2:
+
+    ml1 ^ ml2 = S2_1 ^ S2_2
+
+This implies:
+
+    S1_1 ^ S1_2 == S2_1 ^ S2_2
+
+This property must be engineered before the last message block.  However,
+any change made to a prior message in the last
+
+N message blocks on T1 will be more than N back on T2, unpredictably
+scrambling S2, making it impossible to guess values that achieve this
+condition.  Therefore, it is not possible for an attacker to choose the
+last N messages to achieve this condition.  Any messages he changes more
+than N back are too far to enable the attacker to engineer anything.
+ Therefore, the only hope for the attacker is to have the last N message
+blocks of M1 and M2 be the same, and to engineer a change before the last N
+message blocks which cancel each other out.  However, for two message
+changes to influence each other in any useful manner, they must be less
+than N appart, meaning the changes will be more than N apart on the other
+track, and once again, it becomes impossible for him to engineer both
+tracks changes cancelling each other at the same time.
+
+I think that may actually be a real proof.  It's an evil little algorithm
+:-)  I can't say it's secure until guys who do this all the time agree that
+it is secure.
+
+Now I'll go code it, starting with Lyra2's Blake2 code.  The performance
+should be close to what I posted yesterday, though I will need to write a
+fast bit-reversal function, possibly using a lookup table.
+
+Bill
+
+
+

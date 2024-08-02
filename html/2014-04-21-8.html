@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: EARWORM speed and improved defense</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="../../../2014/04/20/1">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p73XDTpO54qzcsA-WJF7MQiwEKLH4tGUyhOsMO79sjZvA&#64;mail.gmail.com&gt;
+Date: Mon, 21 Apr 2014 13:50:12 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: EARWORM speed and improved defense
+
+On Sun, Apr 20, 2014 at 9:59 AM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+
+&gt; Here's the raw data when calling EARWORM's PHS function:
+&gt; PHC&gt; time ./phs-earworm $((1 &lt;&lt; 20)) 10000
+&gt; Creating arena
+&gt; Allocating 268435456 bytes
+&gt; Hashing password
+&gt; count:1048576
+&gt;
+&gt; 7b 46 5d db ff b2 ef 85
+&gt; 25 af 9a 5a 0c 65 76 74
+&gt; 78 62 ff 52 92 e0 ca 1e
+&gt; d5 6f 59 15 fc 40 10 d2      32 (octets)
+&gt;
+&gt;
+&gt; real    1m25.882s
+&gt; user    1m25.907s
+&gt; sys     0m0.017s
+&gt;
+&gt; It spent at least 2 seconds creating the "arena" which is a shared ROM.
+&gt;  Subtracting that out, and I get:
+&gt;
+&gt; Total memory hashed: 1 TiB
+&gt; Time: 83 seconds
+&gt; Bandwidth: 12.3 GiB/s
+&gt;
+&gt; This is the highest memory bandwidth I've measured, though I've factored
+&gt; out memory allocation, and if I did that with Yescript and Lyra2, they
+&gt; might be close to this.
+&gt;
+&gt; Bill
+&gt;
+
+I reran EARWORM with some tweaks.  I set the "width" to 512, and the
+"depth" to 2, leaving each work unit as 1MiB, but increasing the internal
+scratchpad size to 8KiB from 512 bits.  I also had to comment out some
+calls to prf, since they were slowing down the algorithm considerably.  The
+modified code does:
+
+14.48 GiB/s
+
+Wow!  That's the new record.  This tweaked version has better ROM bandwidth
+hardening, because an attacker splitting the ROM into N pieces will have to
+transmit 4KiB of scratchpad data between nodes every time it updates a
+scratchpad state, and the new node will only be able to hash 4KiB of data
+into the scratchpad state before it has to be transmitted again.  However,
+it has worse runtime hardening, because all 256 AESINC hashes can be
+computed in parallel.  This is likely also why the bandwidth increased.
+
+I put back the constants the way they were originally, made the scratchpad
+array EARWORM_CHUNK_AREA+4 in size, and then I chained the AESINC
+computations in 4 lanes, with a simple hack, and now I get:
+
+12.44 GiB/s
+
+This version has both large enough state size and compute time hardening.
+ My modified code is:
+
+  /* Main loop */
+  for(d = 0; d &lt; EARWORM_WORKUNIT_DEPTH; d+=2) {
+    __m128i *s = scratchpad;
+    for(l = 0; l &lt; EARWORM_CHUNK_LENGTH; l++) {
+      for(w = 0; w &lt; EARWORM_CHUNK_WIDTH; w++) {
+        s[4] = _mm_aesenc_si128(*s, arena[arena_index_a++]);
+        s++;
+      }
+    }
+    memmove(scratchpad, scratchpad + EARWORM_CHUNK_AREA, 4*sizeof(__m128i));
+    arena_index_a = to_index(scratchpad[0], m_cost);
+    _mm_prefetch(&amp;arena[arena_index_a], _MM_HINT_T0);
+
+    s = scratchpad;
+    for(l = 0; l &lt; EARWORM_CHUNK_LENGTH; l++) {
+      for(w = 0; w &lt; EARWORM_CHUNK_WIDTH; w++) {
+        s[4] = _mm_aesenc_si128(*s, arena[arena_index_b++]);
+        s++;
+      }
+    }
+    memmove(scratchpad, scratchpad + EARWORM_CHUNK_AREA, 4*sizeof(__m128i));
+    arena_index_b = to_index(scratchpad[0], m_cost);
+    _mm_prefetch(&amp;arena[arena_index_b], _MM_HINT_T0);
+  }
+
+I think this is on the right track.  In particular, EARWORM in its current
+form can be attacked both in terms of cost per guessing node (reducing the
+ROM per node by a factor of N) and how many guesses can be computed in
+parallel on each node, attacking both the time and cost dimensions of
+EARWORM's defense.  With only 512 state bits per ongoing password hash, and
+a 1TiB ROM split 256 ways, it is reasonable for each node to have 100
+million or more password guesses stored in local RAM, giving us an
+opportunity for 100 EARWORM hashing cores to work in parallel per node.
+ This modification above seems to harden EARWORM's time dimension against
+attacks that split the ROM N ways.  With this change, each node will only
+be able to do about one EARWORM hash at a time.
+
+There's still a simple attack to reduce an attacker's ROM cost per node,
+but it's not EARWORM specific, so I'll post it on another thread.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Client Side Token Exploits (was RE: [PHC] Any "large verifiers" on the panel?)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/02/25/5">[&lt;prev]</a> <a href="../../../2013/03/21/1">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;007c01ce1454$0c4f3910$24edab30$&#64;acm.org&gt;
+Date: Tue, 26 Feb 2013 11:04:01 -0800
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Client Side Token Exploits (was RE: [PHC] Any "large verifiers" on the panel?)
+
+I mentioned that, if cryptographic-quality tokens (derived keys) are derived/preserved client side, there needs to be mitigation against pass-the-hash and similar exploits if one of them is discovered.  For example, it should not work the way that Google "Application Specific Password" works/worked:
+&lt;<a href="https://blog.duosecurity.com/2013/02/bypassing-googles-two-factor-authentication/" rel="nofollow">https://blog.duosecurity.com/2013/02/bypassing-googles-two-factor-authentication/</a>&gt;.
+
+If the ASPs were subject to an additional transformation that mixed in some invariant with respect to the "application" (specific authentication context), the substitution of a key issued for a different application of the same user would fail in any reuse for something as critical as account administration.  And some actions should probably not ever bypass the two-factor auth as a defense against compromise of the key and/or the derived value retained by the authentication system.
+
+ - Dennis
+
+-----Original Message-----
+From: Dennis E. Hamilton [mailto:dennis.hamilton&#64;....org] 
+Sent: Monday, February 25, 2013 10:44
+To: discussions&#64;...sword-hashing.net; 'Marsh Ray'
+Cc: 'Jeffrey Goldberg'; Stefan.Lucks&#64;...-weimar.de
+Subject: RE: [PHC] Any "large verifiers" on the panel?
+
++1
+
+That's very appealing.  It is not necessary for a client-side F( ) to be disclosed in any way to the authenticator so long as the submitted binary string (which is what the authentication service retains a hash of), a password-independent key, is indistinguishable from random and has enough bits to make a meet-in-the-middle attack on it computationally infeasible in the event that the authentication service's retained form is disclosed.
+
+Furthermore, the client procedure should be such that the same key is never reused for a different account/authentication, so even if there is a compromise, there is no "password" that can be reused with another system.  The chance of collisions with keys for other users should be negligible.  (This can be aided by having something locally-unique mixed into the server-side transformed value, confounding reuse of disclosed server-carried authentication data.
+
+This puts all of the great secrets (such as cryptographically-random salts, and any user-memorable password used in the scheme) in the custody of the user.  Now the problem is providing an user agent of some form that will be used, keeps the generated data secure, and is recoverable in the advent of misadventure on the client side.  This is far more than a technical problem.  
+
+I've been noodling about this for a while.
+&lt;<a href="http://nfoworks.org/notes/2012/08/n120801.htm" rel="nofollow">http://nfoworks.org/notes/2012/08/n120801.htm</a>&gt; 
+   for considerations and principles
+&lt;<a href="https://www.oasis-open.org/committees/document.php?document_id=46218" rel="nofollow">https://www.oasis-open.org/committees/document.php?document_id=46218</a>&gt; 
+   for a particular instance (all work being "client-side")
+   (some small cleanups are about to be posted)
+&lt;<a href="https://tools.oasis-open.org/version-control/svn/oic/Advisories/00009-ProtectionKeySafety/trunk/description.html" rel="nofollow">https://tools.oasis-open.org/version-control/svn/oic/Advisories/00009-ProtectionKeySafety/trunk/description.html</a>&gt; 
+   for a higher-level discussion that motivates the particular instance
+
+ - Dennis
+
+
+
+
+-----Original Message-----
+From: Stefan.Lucks&#64;...-weimar.de [mailto:Stefan.Lucks&#64;...-weimar.de] 
+Sent: Monday, February 25, 2013 05:34
+To: Marsh Ray
+Cc: Jeffrey Goldberg; discussions&#64;...sword-hashing.net
+Subject: RE: [PHC] Any "large verifiers" on the panel?
+
+[ ... ]
+
+Ideally, given a (slow, memory-hard, or whatver) function F and a 
+cryptographic hash function H, the password hash should be X := 
+H(F(password, salt, ...)). Now, the client could compute Y := F(password, 
+salt, ...), and the server would only have to compute H(Y). So the server 
+would neither need many CPU cycles, nor much memory -- and still, 
+password, cracking would not get any simpler.
+
+The only assumption is that F cannot be so slow or memory-demanding that 
+it would not run reasonably fast on the client at hand.
+
+So long
+
+Stefan
+
+P.S.: Sorry for my late response. I had been on a vacation last week.
+
+
+-------------
+(*)  I understand that it is not really "your" site, of course. ;-)
+(**) I'd prefer to call them Password Scrambling Functions, but that is
+      just me and my taste.
+
+--
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     &lt;<a href="http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html" rel="nofollow">http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html</a>&gt;
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

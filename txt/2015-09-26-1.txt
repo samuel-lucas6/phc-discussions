@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150926020600.GA11236@openwall.com>
+Date: Sat, 26 Sep 2015 05:06:00 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Fri, Sep 25, 2015 at 04:32:01AM +0300, Solar Designer wrote:
+For example, by value of first B64 char:
+
+ 0 to 47 - 1 char, range 0 to 47
+48 to 55 - 2 chars, range 48 to 559 (using 3+6 bits of the two chars)
+56 to 59 - 3 chars, range 560 to 16943 (2+12 bits)
+60 to 61 - 4 chars, range 16944 to 541231 (1+18 bits)
+62       - 5 chars, range 541232 to 17318447 (0+24 bits)
+63       - 6 chars, range 17318448 to 1091060271 (0+30 bits)
+
+Attached is an implementation of the above.  There are two functions:
+
+char *encode64_uint32(char *dst, size_t dstlen, uint32_t src);
+const char *decode64_uint32(uint32_t *dst, const char *src);
+
+encode64_uint32() encodes the number in src into the string pointed to
+by dst, and returns a pointer to right after the encoded number.
+
+decode64_uint32() decodes the number in the string src into dst, and
+returns a pointer to right after the encoded number.
+
+Both functions return NULL on error.
+
+As you can see, the encoding/decoding functions are quite simple.
+
+The program also includes unit tests for these functions, including
+testing them exhaustively on the 32-bit range (yes, including beyond the
+expected valid range, making sure the failures outside of that range are
+as expected).  All of these tests pass for me.  (I should also add tests
+of decode64_uint32() on invalid inputs.)
+
+Build and run the program with:
+
+gcc sim-encode.c -o sim-encode -s -O2 -march=native -fopenmp -Wall && ./sim-encode
+
+The output for a handful of special values is:
+
+0       .
+47      j
+48      k.
+559     rz
+560     s..
+16943   vzz
+16944   w...
+541231  xzzz
+541232  y....
+17318447        yzzzz
+17318448        z.....
+1091060271      zzzzzz
+1091060272      couldn't encode
+2147483647      couldn't encode
+2147483648      couldn't encode
+4294967295      couldn't encode
+
+I chose to use a big-endian order, which felt consistent with use of the
+first character to specify the magnitude of the number.
+
+Any comments?
+
+Alexander
+
+View attachment "sim-encode.c" of type "text/x-c" (4701 bytes)
+

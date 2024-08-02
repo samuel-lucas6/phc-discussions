@@ -1,0 +1,129 @@
+phc-discussions - Re: [PHC] Lyra,
+      Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <3039f15b6d11c0775c24f26d5ef52383.squirrel@webmail.larc.usp.br>
+Date: Thu, 9 Jan 2014 16:21:52 -0200 (BRDT)
+From: "Marcos Simplicio" <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra,
+      Password Key Derivation Based On The Sponge Construction
+
+Hi, everyone.
+
+Some thoughts below. I'm a bit late answering (or maybe you were too fast
+doing so :-) ), so I'm answering to the original post hoping to add some
+ideas.
+
+
+Both points are indeed relevant if the attacker has access to the KDF's
+partial memory and access patterns, and I do believe Catena does a
+wonderful job protecting against such attacks. Seriously, I do not think I
+could do better. The only protection I see in Lyra is the fact that the
+memory changes along the way, so the attacker needs to get the initial
+values for getting any useful advantage (but, since there are potentially
+many unchanged values if the memory usage is high, this is not a very
+strong argument).
+
+However, from a "risk analysis" point of view, I still think that the main
+threat to KDFs is the usage of many processing cores and personalized
+hardware performing brute force attacks. The reasoning is:
+
+A) As far as I can tell, the attacker needs to be inside your system
+*while you input the password* to access the internal memory used by the
+KDF. Otherwise, how will he/she be able to see the reading patterns or the
+memory initialized with the real password? So (1) this will not be a
+majority of attackers and (2) what exactly is preventing him/her from
+getting the plain password from the very start, since it will inevitably
+be placed in memory at some point or be readable from an I/O device?
+Protecting against this threat is definitely useful, but I believe that
+treating this has lower priority than treating (B).
+
+B) GPUs and FPGAs are a very serious threat already, especially because
+brute-forcing a password does not require access to the system while the
+password is being entered. All that is needed is the final KDF result,
+obtained from a local storage (invaded at any time) or from an unprotected
+communication channel. This is and will probably continue to be the most
+likely attack venue against passwords. The only way I see to avoid such
+attacks from being performed fast enough is to raise the associated costs
+(number/power of GPUs and chip area of FPGAs)
+
+There is an important difference with plain RC4 here, because RC4 normal
+usage does provide the attacker with its internal state from the start as
+its key stream, while KDFs never do so (the only thing the attacker gets
+is the final result). Hence, KDFs are more similar to the (AFAIK, still
+considered secure) RC4_Drop[n], in which the internal state is "worked on"
+before it is provided to the outside world. Unless, of course, you are
+considering threat (A) in your attacker model, in which case the "dropped"
+data is available to the attacker.
+
+Another thought is: if you build a KDF that always have the same (possibly
+salt-dependent) visitation pattern, what prevents the attacker from
+building a custom hardware that saves part of the memory states on a
+cheaper memory devices (e.g., hard disks) and pre-fetches them when (and
+only when) they are needed? I mean, the attacker knows what he will need
+and when, so it should not be too hard to overcome the bandwidth
+limitations of cheaper devices (something discussed both in Lyra and
+scrypt's paper). I may be wrong, but it seems to me that protecting
+against threat (A) by using password-independent visitation patterns
+actually reduces the KDF's strength against threat (B)...
+
+Well, those are my two cents :-)
+
+BR,
+
+Marcos.
+
+>
+In message
+<CAOLP8p5wwnaOpPGW0rA+Q9nz-jYtKhEL0aujMALuRuG=8zQtRg@...l.gmail.com>
+, Bill Cox writes:
+>
+>>Thanks for this very interesting link.  Lyra first fills a matrix with
+>hash
+>>data which is derived from the password, and then randomly picks a "row"
+>>and for each location it updates the hash state from the location's
+>value,
+>>and then XORs into the location the next output of the hashing engine.
+>
+Two things worry me about the general approach Lyra takes.
+>
+My first thought was that this sounds vulnerable to the same issue
+RC4 suffers from:   It takes more entropy to "randomize" it properly
+than is typically available for the purpose.
+>
+Lack of entropy is a major issue in any password context, and therefore
+I think it is wise to pay attention to the:
+>
+	bits of entropy
+	---------------
+	bits of state
+>
+ratio not getting too low.
+>
+The second thought is that a large memory footprint, desirable for
+all the reasons the Lyra presentation mentions, vastly increases
+the ways and means to discover what is going on through covert
+channels.
+>
+So as a general principle, I'm personally not going to be very
+impressed by claims on the general form:
+>
+	"The ${datestructure} can be sized however large you like"
+>
+even if it comes with a mathematically proof of ${something}, unless
+it also comes with plan for how it gets initialized with only limited
+entropy being available, and analysis of to what extent the access
+patterns may reveal its state.
+>
+Poul-Henning
+>
+--
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe
+Never attribute to malice what can adequately be explained by
+incompetence.
+>
+
+
+

@@ -1,0 +1,41 @@
+phc-discussions - RE: [FORGED] [PHC] Argon2 using memset still
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4AEC36C@uxcn10-5.UoA.auckland.ac.nz>
+Date: Mon, 31 Aug 2015 11:53:48 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [FORGED] [PHC] Argon2 using memset still
+
+Bill Cox <waywardgeek@...il.comwrites:
+
+>g++ has a habit of optimizing calls to memset away.  I doubt that Argon2
+>succeed in it's attempts to clear memory.  I copied this function from Blake2:
+
+You could also use environment-specific functions to do this:
+
+#if defined( _MSC_VER ) && VC_GE_2005( _MSC_VER )
+  /* This is just a mapping to RtlSecureZeroMemory() (via WinBase.h) which 
+     is implemented as inline code implementing a loop on a pointer declared 
+	 volatile, but unlike the corresponding RtlZeroMemory() there's a 
+	 contract that this will always zeroise memory even in the face of 
+	 compiler changes that would otherwise optimise away the access */
+  #define zeroise( memory, size )	SecureZeroMemory( memory, size )
+#elif defined( __STDC_LIB_EXT1__ )
+  /* C11 defines a function memset_s() that guarantees that it won't be
+	 optimised away, although this is quite well obfuscated in the spec,
+	 "the memory indicated by [the memset parameters] may be accessible in 
+	 the future and therefore must contain the values indicated by [the
+	 value to set]", hopefully the implementers will know that this equates
+	 to "the memset_s() call can't be optimised away" */
+  #define zeroise( memory, size )	memset_s( memory, size, 0, size )
+#elif defined( __OpenBSD__ )
+  /* The OpenBSD folks defined their own won't-be-optimised-away bzero()
+	 function */
+  #define zeroise( memory, size )	explicit_bzero( memory, size )
+#else
+  #define zeroise( memory, size )	memset( memory, 0, size )
+#endif /* Systems with distinct zeroise functions */
+
+Peter.
+
+

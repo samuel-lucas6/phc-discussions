@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Message-ID: <CAJ9ii1FaMkDOWtK6nkXJSO=TTNXy9KKwaRWV5u63sQawALnAtg@mail.gmail.com>
+Date: Thu, 15 Mar 2018 16:22:33 -0400
+From: Matt Weir <cweir@...edu>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Thanks for the link Solar, as I was missing a lot of the context about
+the question.
+
+As Solar mentioned, if you are accepting of false positives then the
+Bloom Filter is likely the closest realistic approach you could take
+with limited disk space.
+
+If you want to avoid false positives, you could look at encoding the
+data as a non-deterministic finite automaton (NFA).
+
+https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
+
+You will also have better luck compressing the data if you operate off
+plaintexts vs the Sha1 hashes. Aka compressing random data ... doesn't
+work too well. Still, NFAs aren't magic. For a 500 million input list,
+even an optimized NFA will be significantly larger than a bloom filter
+with a reasonable false positive rate.
+
+Matt
+
+On Thu, Mar 15, 2018 at 3:21 PM, Solar Designer <solar@...nwall.comwrote:
+On Wed, Mar 14, 2018 at 06:24:33AM -0500, denis bider wrote:
+>What I am looking for would be exactly like a Bloom filter in concept, but
+>with:
+>>
+>- radically less memory use;
+>>
+>- computational cost could be increased by orders of magnitude to construct
+>the filter;
+>>
+>- but the computational cost of using it should remain reasonable.
+>>
+>Is anyone aware of any work involving such tradeoffs?
+>>
+>And if not, where would be the right place to ask this question? Would the
+>"passwords" list be any more likely to have this answer? :-)
+>
+I wouldn't expect the "passwords" list to be any more likely to have the
+answer, but feel free to try asking in there as well, if you include
+your explanation of the use case relevant to passwords and perhaps refer
+to this thread for what's already been discussed.  You can refer to this
+thread via:
+>
+http://lists.openwall.net/phc-discussions/2018/03/13/
+>
+(The thread is broken in a few places perhaps because some of the
+messages were off-list, hence linking to the day rather than the thread.)
+>
+Alexander
+

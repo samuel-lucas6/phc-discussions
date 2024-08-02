@@ -1,0 +1,34 @@
+phc-discussions - swollen versions of existing algos
+
+
+Message-ID: <198287740.20130510232139@gmail.com>
+Date: Fri, 10 May 2013 23:21:39 +0200
+From: Krisztian Pinter <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: swollen versions of existing algos
+
+hello,
+
+i'm not smart enough to actually develop a proposal, but i got this idea, and i'd like to get some feedback.
+
+could we use bloated versions of existing algorithms? like for example:
+
+1. keccak with extreme lane sizes, like 256k instead of 64 bit.
+
+the problem with this is to find rotation constants for the rho step. all the other constants are defined for large w, so they are not a problem (if we take some care). however, rotational constants, as defined, go only up to 300 bits, which is not enough to mix in the z direction. but if we release the 0<=t<24 limitation, maybe it is possible to find appropriate constants. time can be tuned up with extra rounds.
+
+2. RC4 with larger word size.
+
+an obvious choice is 16. the state would be 128K + 4 byte. it does not lend itself to fine tuned memory footprint, and any other word size is rather awkward. however, we could chain together such units, observing that the password feeding and extracting phase of rc4 are actually the same: when no password feeding happens, the input is a stream of zeros, and when there is no extraction, we discard the output. so we could use the output of one rc4-16 to feed the next one. doing so, the memory requirement is tunable in ~128K increments. time tuning is easy with skipping the an arbitrary length of the output.
+
+
+both ideas have the property that they can not be further optimized, can not be done in fewer operations, nor in smaller memory. they are quite slow though. ten megabytes of state space would mean a minimum calculation time of many hundreds of milliseconds.
+
+both implementations can be used to generate large amount of data. the keccak variant can produce as many bits as the state size has. the rc4 variant can produce a practically infinite stream of data at a relatively high rate.
+
+both methods accept huge inputs. password size is pratically unlimited, and there is no need to preprocess it in any way.
+
+looking forward to hear some feedback on these ideas,
+Krisztián
+
+

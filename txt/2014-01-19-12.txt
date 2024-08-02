@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <CAOLP8p6ka4TH599_-p2zQ2SM6gpZxAcE2yjUiYzJm4==e7rsSg@mail.gmail.com>
+Date: Sun, 19 Jan 2014 12:43:52 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Sun, Jan 19, 2014 at 12:02 PM, Christian Forler
+<christian.forler@...-weimar.dewrote:
+On 19.01.2014 13:47, Bill Cox wrote:
+>
+[...]
+>
+>Catena focuses on an unrealistic weak attack against Scrypt: aborting
+>the second loop early using cache timing.
+>
+We never claim that the cache-timing attacks against scrypt are practical.
+
+I hope I didn't imply otherwise.  It is a very interesting attack, I
+enjoyed reading it, and it is now something I worry about in looking
+at a KDF, where before I didn't.  It was quite educational.
+
+>However, an attacker still has to execute the full compute
+>intensive first loop, so we're not talking about speeding anything up,
+>just saving memory.
+>
+False.
+>
+The regular cost to check an password candidate is
+    T(n) = O(N^2) / S(n).
+>
+>
+Our attack allows to check password candidate with
+        T(n)  =  O(N)/ 1.
+>
+This is an dramatic improvement and it invalidates the memory-hardness
+assumption of scrypt. It enables  a GPU attacker to test password
+candidates in an "very efficient" way.
+
+I appreciate your taking the time to correct me, and sorry for posting
+mistakes.  What I said was only true (to within a small constant) only
+for an attacker using the same amount of memory as Scrypt per core (S
+== G), and who is CPU limited, not memory bandwidth limited.  Your
+cache timing attack allows him to perform thousands of guesses in
+parallel on graphics cards, where before he would have been memory
+bandwidth limited otherwise.  It's a brutal attack when cache timing
+is obtainable.
+
+However, each core still has to finish the whole first loop, which
+still takes significant time.  If an attacker gains access to early
+hashed memory, he not only doesn't have to have significant memory per
+core, but he can avoid computing much of the first loop.  It's a lot
+worse in terms of how many guesses a graphics card can compute per
+second, and it's also, IMO, more likely of an attack.
+
+Does Catena have an option for something like Blakerypt's session
+keys?  If the password is first hashed with a "session key", and the
+attacker doesn't know the session key, brute force attacks become
+impractical, even with leaked early memory and cache timing
+information.  I'd hate to see such defense dropped from the
+competition.  Maybe it's already in use all over, but as I said, I'm a
+password hashing noob.  I simply don't know.  It just seems like a
+great defense for servers.
+
+Bill
+

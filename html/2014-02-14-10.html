@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="9">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4iH5zxLz0EXjueNMxUmXbG8vcQRrnUzA57eBbY4eMw5w&#64;mail.gmail.com&gt;
+Date: Fri, 14 Feb 2014 09:00:29 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 6:28 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; Bill,
+&gt;
+&gt; On Fri, Feb 14, 2014 at 03:18:18PM +0400, Solar Designer wrote:
+&gt;&gt; I think we could optimize this better by hand, but as I wrote in another
+&gt;&gt; message we need the random lookups from "prev" (not from "from") anyway.
+&gt;&gt; So we'd need to benchmark and optimize the latter.
+&gt;
+&gt; When the randomly read block is in L1 cache anyway (which won't be the
+&gt; case for "from" in actual usage), randomly reading from "prev" is even
+&gt; slower, because the function becomes even more sequential:
+&gt;
+&gt;     for(i = 1; i &lt; numblocks; i++) {
+&gt;         uint32_t j;
+&gt;         for(j = 0; j &lt; blocklen; j++) {
+&gt;             uint32_t *from = mem + j;
+&gt;             value = (value * (*(prev + (value &amp; mask)) | 3)) + *from;
+&gt;             *to++ = value;
+&gt;         }
+&gt;         prev += blocklen;
+&gt;     }
+&gt;
+&gt; This may be partially repaired by changing it to:
+&gt;
+&gt;             value = ((value | 3) * *(prev + (value &amp; mask))) + *from;
+&gt;
+&gt; but it's still slower than original.
+
+Actually, my little test loop above always has *from in L1 cache
+because it it always points to the first block of mem.  The actual
+loop in NeolKDF does read from a random previous block.
+
+I am not yet able to explain this.  I compared the generated assembly
+code, and the loops are very similar, with only scalar instructions
+generated.  The mask operation comes right after the multiply where it
+seems like it should happen in parallel.  When I iterate the inner
+loop 10X to amplify the impact of this effect versus memory
+allocation, I see that changing the from pointer to mem + (value &amp;
+mask) versus (mem + j) results in almost a 2X slowdown.  This is nuts!
+
+When I switch to randomizing the "prev" address, the same slowdown
+happens, but just a bit worse, likely due to the increased sequential
+work required.
+
+&gt; You might want to decouple the multiply latency hardening from random
+&gt; reads (make it two separate chains, only joined at end of block).
+&gt;
+&gt; Alexander
+
+I see you've suggested this multiple times :-)  It's a fantastic idea,
+and I am going to play around with it.  I agree that with this idea,
+it should be possible to max out bandwidth while having solid
+multiplication-time hardening, at least for CPUs with SSE.  On CPUs
+without SSE, the multiplication hardening would be diminished, but as
+you suggested, this may be a good thing, since those older CPUs may
+have inefficient multiplication anyway, and we'd likely be better off
+going for max memory bandwidth in that case.  Throwing in a
+cryptographic hash after every block hash is another great idea I will
+play around with.  That's a good way to combine the multiplication
+chain and SSE chains.
+
+You're simultaneously suggesting how to max out the bandwidth,
+alleviate what is likely to be seen by the PHC as a serious weakness
+(billion non-crypto-hashes in series), how to address bcrypt, and
+GPUs.  I guess I've said before that it's hard for me to claim being
+the primary author of NoelKDF, rather than the code monkey
+implementing the great ideas from SolarDesigner and Christian Forler.
+However, I'm a pretty good code monkey.
+
+This small random read runtime penalty is driving me crazy.  If it
+were just my Ivy Bridge processor, I could maybe explain it as a weird
+Intel/gcc quirk.  I just don't see how to explain this happening on
+both Intel and AMD processors while the assembly code looks about
+right.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+phc-discussions - RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <76baae165d0a438c8fb759c6a0770160@BY2PR03MB074.namprd03.prod.outlook.com>
+Date: Fri, 14 Feb 2014 01:44:14 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+I just have trouble empathizing with a sys-admin who can't even allow for 1ms and 1MB for
+authentication.  When I think of harnessing GPUs for authentication, I imagine many cores
+per user authentication and high values of pepper, rather than 1 tiny wimpy core for a
+whole password hash.  It just seems a bit cheapskate-ish to me, but I really don't know
+anything about the world of high volume traffic data centers.  If they're really that
+cheap, it seems to me they should be doing the server-relief thing.
+
+One word: "cloud". Virtualization and multi-tenant hosting has been around forever, but it's only increasing for the forseeable future. Today it's common for web apps to share a single physical server with a few - to dozens - of other datacenter customers. The most economical hosting plans oversubscribe CPU cores many times over (i.e., you get what you pay for). This provides great gains in economic and energy efficiency most of the time.
+
+You can imagine what happens if every customer starts running functions that contend for the memory bus for measurable amounts of time. The occasional 1 ms login might not be too bad (better than an initial SSL/TLS handshakes actually), but as that increases at some point the latency goes all hockey-stick. So admins should be forgiven in advance if they seem reluctant to tune their work factors based on performance under ideal conditions.
+
+But of course, this is all by design of PHC. If there were some way that the operation could be made more efficient for the defender running on special datacenter hardware, then the attacker could opt to use that too. So it seems the best we can do is ensure everyone suffers equally to a degree chosen by the admin :-)
+
+- Marsh
+----------------------------
+My own opinions, usual disclaimers apply.
+
+
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Thursday, February 13, 2014 2:36 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:52 PM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 13, 2014 at 12:21:40PM -0500, Bill Cox wrote:
+>What is it about bcrypt's memory access pattern that is hard for GPUs?
+>
+Very frequent unpredictable 4-byte lookups.  If they go to external 
+memory, they'd incur very high latency and fetch entire cache lines 
+(wasteful).  Even with local memory, latency is pretty high (compared 
+to
+L1 cache on CPU).  Normally, the latency would be hidden by having 
+more instances run in parallel, but there's currently not enough local 
+memory to run even the bare minimum needed to keep all execution units 
+in use at all (thus, many are 100% idle).  So it's a combination of factors.
+
+I just tested the impact of unpredictable lookups on NoelKDF's hash function.  Instead of hashing:
+
+    value = value*(*prev++ | 3) + *from++;
+    *to++ = value;
+
+I tried:
+
+    value = value*(*prev++ | 3) + *(from + (value & mask));
+    *to++ = value;
+
+This makes the next "from" address unpredictable and dependent on the next value of value (I really need to rename this).  It slowed down single-threaded hashing of 2GB from 0.76 seconds to 2 seconds.  If instead of unpredictable, all I need is pseudo-randomized, I got about
+0.95 seconds when I replaced *from++ with *(from + (*prev & mask)).
+
+It looks like there is a penalty to pay for unpredictable lookups.  Is (*prev & mask) enough to cause problems for GPUs, or since *prev is calculated many cycles earlier, do I really need (value & mask)?
+
+I think custom ASICs could eliminate the delay caused by using either (value & mask) or (*prev & mask) when reading out of on-chip cache.
+It just needs the value at this address by the time the 3-cycle multiply finishes.  I was surprised that (value & mask) caused my Ivy Bridge CPU so much grief.  I thought 3 cycles would be enough to do the mask operation and load from L1 cache.  Apparently not...
+
+>What I currently do for GPUs is to allow for memory sizes as low as 
+>1MB,
+>
+How is this something you do "for GPUs"?
+
+Knowing almost nothing about GPUs, I assumed they had at least 1MB of cache per core... this is obviously wrong, so I'll change it to KB instead of MB.  Is this fine enough, or should I have the user specify the block size and number of blocks instead?
+
+>with block sizes as low as 4 bytes, and if that hashes to quickly, 
+>there is a repetition factor that increases the inner loop 
+>calculations to run as long as you like.
+>
+Oh, so you support block sizes this small.  Good.  What's not so good, 
+though, is that such small block sizes at total sizes exceeding CPUs' 
+L1 cache are slow on CPU - you have that same problem with fetching 
+entire cache lines, etc.  They're only good for L1 cache.
+>
+>I guess my 1MB may be too
+>coarse, but below 1MB just seems like giving up on memory hardness.
+>
+Yes, giving up on memory hardness for ASICs - but not on let's say 
+local memory hardness for current GPUs yet.  There may be use cases 
+where the defender would want such low settings for other reasons, and 
+it's our job to provide no-worse-than-bcrypt security at those low settings.
+>
+>Is something like this what is required?
+>
+Yes, but I think we need at least 2 levels: one is with tiny 
+bcrypt-like accesses to a block of data that fits in L1 cache on 
+defender's systems, and the other with larger block-sized accesses.  
+An easy way to do that would be to treat each block as the arena for a 
+bcrypt-like algorithm, and to have that algorithm inside our 
+BlockMix-alike.  However, this is suboptimal in that an optimal block 
+size in terms of TLB misses is something like 1 KB, whereas an optimal 
+bcrypt-like arena size is in the range of 4 KB to 32 KB (currently).  
+I am playing with 12 KB or 16 KB for the bcrypt-like S-boxes, which 
+lets me run two threads/core and still fit in 32 KB L1 cache, along with the current ~1 KB'ish blocks.
+>
+Alexander
+
+I see.  This explains better why you suggested a while back that I do hashing from randomized locations within  a block.  I thought you were just concerned about mixing data better, and I care little about that, so long as an attacker still has to do everything I do.
+
+It's interesting how we come to different solutions based on what we know... I'm still not completely sold on doing randomized lookups within a block if it slows the defender down 20-30% for addresses computed much earlier, and 2X for addresses computed just in time.
+This wont slow down FPGA and ASIC based attackers at all, but it will hurt the defender... just my point of view coming from a world where FPGAs and ASICs are the most important things in life :-)
+
+However, I do see your point were we should be better than bcrypt in most real-world situations.  I've read criticism of Scrypt compared to bcrypt for very low memory applications.  I just have trouble empathizing with a sys-admin who can't even allow for 1ms and 1MB for authentication.  When I think of harnessing GPUs for authentication, I imagine many cores per user authentication and high values of pepper, rather than 1 tiny wimpy core for a whole password hash.  It just seems a bit cheapskate-ish to me, but I really don't know anything about the world of high volume traffic data centers.  If they're really that cheap, it seems to me they should be doing the server-relief thing.
+
+Bill
+

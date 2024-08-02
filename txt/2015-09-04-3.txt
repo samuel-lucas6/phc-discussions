@@ -1,0 +1,60 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <CAOLP8p6_wUZnGQ=_H3dmbE8iXGyKQEbdPD9d+hPmBA9dvAvQNg@mail.gmail.com>
+Date: Fri, 4 Sep 2015 16:51:31 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Fri, Sep 4, 2015 at 4:34 AM, Dmitry Khovratovich <khovratovich@...il.com>
+wrote:
+
+I think you're mistaken in squaring the difference factor: area is the
+same but the time differs, so cost is only 3.5x (or how much?).
+>
+
+It goes as the square for external DRAM bandwidth limited ASIC attacks.
+For an on-chip RAM 4MiB ASIC attacks, it depends on the
+computation-hardness * hashing speed.  TwoCats has about a 2X better
+compute-time hardness for L3 caching than Argon2ds, and about a 3.5X better
+memory hashing speed.  I did more accurate benchmarks below, but the actual
+memory * time difference was very close to 9.1X.
+
+I assume MAXFORM will be used in the final Argon2d, and that speed
+improvements will get it to the point that it can hash 4MiB in 2.5ms.  I
+assume this below.  This is decent speed, though I happen to be comparing
+to an algorithm that is about 3X faster, and need to argue that Argon2 is
+better.
+
+For on-chip hashing, Argon2d without any multiplies would not be latency or
+bandwidth bound, but computation bound.  The attacker can run Bake2b maybe
+16X faster, and Argon2's free 8x parallelism increases that to 128X faster
+for the attacker.  This is worse than Scrypt, but this was the case for
+Argon2d v.1.1.  You guys have upgraded the algorithm, improving it's
+defense a lot.  The Blake2 version with multiplications will leave the ASIC
+attacker with a maybe a 4X speed improvement in computation speed, but the
+free 8X from parallelism increases that to maybe 32X benefit to the
+attacker.  That's not terrible, but with MAXFORM, I estimate the attacker
+will be limited to about 4X faster.  TwoCats limits the attacker to about
+2.6X faster, assuming the same speed multipliers on the ASIC and CPU.
+
+Here's some more benchmark numbers I ran.  I'm using Argon2, not Argon2ds
+but I think this will be pretty close once Argon2ds is tuned up a bit:
+
+Argon2d memory for 1.2ms hash: 2200 KiB
+Serial multiplies: 2200*96 = 211,200
+ASIC attacker speed using 1ns multipliers: 0.211ms
+area-time product: 0.465 s-KiB
+
+TwoCats memory for 1.2ms hash: 8192 KiB
+Serial multiplies: 526336
+ASIC attacker speed using 1ns multipliers: 0.526ms
+area-time product: 4.31 s-KiB
+
+It looks like TwoCats will have about 9X improved time-area defense, when
+we take into account the multiplication chains.
+
+Bill
+
+
+

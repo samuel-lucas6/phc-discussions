@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] hash encryption</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="../../../2016/04/02/1">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="../../../2016/04/02/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20160324201700.GA12935&#64;openwall.com&gt;
+Date: Thu, 24 Mar 2016 23:17:00 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Wed, Mar 23, 2016 at 02:09:18PM +0100, Thomas Pornin wrote:
+&gt; On Wed, Mar 23, 2016 at 09:45:10AM +0100, Kriszti?n Pint?r wrote:
+&gt; &gt; what is the rationale to encrypt the hash?
+&gt; 
+&gt; Though I do not know exactly why Alexander adds such a support, I
+&gt; know of a rationale for that.
+
+Thank you for posting this, Thomas!  This is part of my rationale.
+
+&gt; Now, it so happens that some common methods by which attackers can learn
+&gt; password hashes are limited in scope. If the attacker steals a complete
+&gt; backup of the machine, he gets all the data; but if he uses a SQL
+&gt; injection, then he may get a read access to the server's database only.
+&gt; Hence the idea of using, in the password hashing process, an additional
+&gt; secret key that will not be stored in the database (in practice, it
+&gt; would be in a configuration file on the application server).
+
+This is a common scenario, yes, but there's another scenario I am
+targeting first: a larger deployment, where multiple machines (or even
+multiple clusters, possibly in multiple datacenters) are involved.  With
+the secret being only on authentication servers (or even on dedicated
+password hashing servers, with the database not directly accessible from
+those servers), the compromise scenarios where an attacker will have
+only the database or only the secret, but not both, are not limited to
+SQL injections and the like, but also include native code execution on
+or having copies of backup dumps of just some of the machine types.
+
+&gt; There are basically four ways to do some peppering over an existing
+&gt; password hashing function:
+&gt; 
+&gt;  1. Encrypt the password with key K, then hash the encrypted password.
+&gt;  2. MAC the password with key K, then hash the MAC output.
+&gt;  3. Hash the password, then encrypt the hash output with key K.
+&gt;  4. Hash the password, then MAC the hash output with key K.
+&gt; 
+&gt; What Alexander wishes to implement is method 3. Among all four methods,
+&gt; it is the one which is most easily applied to, and removed from, an
+&gt; existing system. For the core functionality of verifying passwords,
+&gt; they are equivalent, but for maintenance, they somewhat differ:
+
+There may also be a need to re-encrypt to a different key.  This is
+removing and then re-applying the encryption.
+
+For example, this is needed when merging two databases of yescrypt
+hashes, which originally used different keys, without having to store
+a key ID along with each hash.
+
+Changing the key may also be needed if the old key somewhat likely got
+compromised, so that newly set passwords are not put at unjustified
+risk by continuing to use the same key (and so that key IDs don't have
+to be stored per-hash), as well as so that full database leaks that
+occur after the key change are not affected by the previously
+compromised old key.  (Only leaks of old backups of the database would
+still be affected.)
+
+&gt; Personally I tend to favour MAC-based constructions, because the MAC is
+&gt; a no-brainer: just use HMAC.
+
+This was my favorite choice for this purpose a few years ago, but I've
+since realized how important the advantages in maintenance are from use
+of encryption, and how they may translate to improved security too.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

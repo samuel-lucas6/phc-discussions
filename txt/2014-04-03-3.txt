@@ -1,0 +1,60 @@
+phc-discussions - Re: A weak password attack against PolyPassHash
+
+Message-ID: <CAMVss_oE7s++4CdPh6mL0ddLd2CNRgOC2pujuPUZKEN=k=sBig@mail.gmail.com>
+Date: Wed, 2 Apr 2014 20:19:15 -0400
+From: Justin Cappos <jcappos@....edu>
+To: Andy Lutomirski <luto@...capital.net>
+Cc: discussions <discussions@...sword-hashing.net>, 
+	santiago torres <sat417@...dents.poly.edu>
+Subject: Re: A weak password attack against PolyPassHash
+
+>
+First, a question: how do you verify that you've correctly recovered
+the global secret?  If you can't check that, then won't *any* set of
+passwords appear valid?  I'll assume that the server stores a hash of
+the constant term.
+>
+
+What you say will work perfectly fine.   In the C implementation, I believe
+the code places a secure hash of the secret in the last few bytes of the
+constant term, but your solution is fine too.
+
+
+Second, an attack, based on the observation that the distribution of
+passwords is, in practice, far from uniform:
+
+
+
+Suppose that k shares are needed to unlock the database.  Select, at
+
+random, k users.  For each of them, calculate H(salt, "123456").  Then
+
+try unlocking the database.  Repeat until you succeed.
+
+
+
+<snip>
+
+
+
+Mitigating this type of attack may be difficult, unless defenders are
+willing to choose a rather large value for k.
+>
+
+Your point here is well taken.   PPH shouldn't have *threshold keys* that
+are weak, if at all possible.   However, for *thresholdless keys* (which
+would likely be generated for random outside users upon demand), this does
+not pose a problem.
+
+We do assume that many people that have administrator passwords use
+reasonable security.   The paper talks about how effective PPH is on a
+leaked database from Sony that has very weak passwords for admins (like
+Password1).   PPH still dramatically improves the security in this case,
+but is not a panacea for extremely weak admin passwords.
+
+Thanks for the hard questions!   Ask more!   :)
+
+Justin
+
+
+

@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Why protect against side channel attacks
+
+Message-ID: <CAOLP8p6oiGPLe0BrJ+sa6vmr60Tt+H3Q+08VizeriyBG8he1+Q@mail.gmail.com>
+Date: Wed, 24 Jun 2015 18:15:02 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Wed, Jun 24, 2015 at 5:40 PM, Peter Maxwell <peter@...icient.co.uk>
+wrote:
+
+​Yeah, but on balance a constant-time implementation is still preferable
+to even the remote possibility of opening up a new attack vector that
+hadn't existed before... would be somewhat embarrassing for the PHC if a
+few years down the line ​it turned out that password data could be
+recovered from a local timing attack that an unsalted md5 password hash
+isn't vulnerable to :-)
+>
+
+I think you have a common point of view, which is reasonable until certain
+additional data is known.
+
+​Admittedly, I'm still not convinced on the utility of most memory-hard
+PDFs anyway.  Put it this way, I'm working on a project just now that may
+end-up serving a reasonably high load of login requests and will choose
+something *far* more light-weight for the password hash than has been
+generally proposed on this list -- memory and compute cycles aren't free.
+You get far more bang for your buck by giving users a swift swift kick up
+the rear-end and forcing them to pick marginally better passwords.
+>
+
+First, forcing users to pick difficult to remember passwords doesn't work.
+Just Google it.  There's lot's of research backing this up.  You can
+require 10 character passwords, upper case, lower case, digits, and
+punctuation, and what you get is a ton of Password1!  Worse, users wont
+remember Password1!, because they'll be trying password, and when that
+doesn't work, they'll reset their password and go through that 5-minute
+e-mail process, just to choose Password1! again when they see all the crazy
+rules.  They really enjoy doing that several times a week :-p
+
+Regardless of the password rules, your median user will pick passwords that
+are typically found in a dictionary containing somewhere from 2^21 to 2^26
+entries.  There's no way to protect these users with just password hashing,
+and there seems to be no good way to force these users to choose better
+passwords.
+
+I recommend you avoid angering your users and marketing department, and
+just allow users to use passwords they can remember.  If you need more
+security, add layers, such as a pin, security question, track their MACs
+and other signals, and for any real security, add a second factor, such as
+an SMS message to their phone.
+
+If you can't afford the compute effort required by a modern password
+hashing algorithm like Scrypt, then secure your password hashes with
+additional layers.  For example, consider keeping your salt separate from
+your password hashes.  If you can afford a decryption oracle server and the
+RPC latency, consider having a well secured oracle that hashes in it's
+secret key into the password hash before writing it to the disk.  That way,
+an attacker with the database also needs the oracle's key to make any use
+of the database.
+
+Or you can just do what everyone else always does, and attempt to make
+users choose really strong passwords.  Good luck with that :-)
+
+
+

@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] PolyPassHash is broken
+
+Message-ID: <CAMVss_pOCs1HKFEegObgw1wQHDfKSsUoP1TZNTFwy6KgenTwJA@mail.gmail.com>
+Date: Sun, 14 Sep 2014 18:05:24 -0400
+From: Justin Cappos <jcappos@....edu>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] PolyPassHash is broken
+
+I agree with your point, if _admins_ choose very weak passwords (<32 bits
+of entropy).  However, if admins are choosing passwords with very low
+entropy, then brute force over the network is also a big risk though.
+
+Will any hashing scheme protect an admin account that chooses 'password' or
+'abc123' as their password?  (At least PPH protects thresholdless accounts
+even with these horrid passwords.)
+
+Making admins choose passwords that aren't completely broken seems to be a
+viable task.  Many organization already try to require this for all users
+by requiring some numbers / letters / min length, etc.
+
+As always, the feedback / discussion is appreciated...
+Justin
+
+
+On Sun, Sep 14, 2014 at 5:11 PM, Bill Cox <waywardgeek@...hershed.org>
+wrote:
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+>
+>
+>
+On 09/14/2014 03:45 PM, Justin Cappos wrote:
+We have some discussion about the points list in our paper
+(Sections 5.2.3 and 6 for example). However, I'll be more explicit
+and direct here.
+>
+Method 1
+>* get partial hash from DB * find partial hash collision *
+>crash/restart server * login
+>>
+>
+Sure you can do this.  Once a threshold is reached, the attack will
+be detected because the full password hashes will not match.  That
+is, unless the attacker is fortunate enough so that the partial
+hash collision is the actual full hash / password.
+>
+I have to agree with Steve that the Partial Validation feature needs
+work.  I was convinced the scheme proposed in the paper was secure
+until I read that section, which puts security in doubt.
+>
+Revealing even two bytes of the password hash is dangerous.  For
+example, if there are 4 administrators, and two of them have passwords
+with only 32 bits of entropy, meaning that they exist in my 4-billion
+entry dictionary, and if only 2 shares are needed, then without the
+Partial Verification feature, I still have to try up to 2^64 guesses
+to find the master key, once I've chosen the right two admin accounts.
+However, with 16 bits of the hash from two password hashes, in 4*2^32
+hashes I can easily build dictionaries for all of them containing only
+matching hashes, which would be about 2^16 each.  I then only need to
+try 2^32 combinations for each of the 4 possible pairs to find the
+key.  Essentially, what this does is make it just about as easy to
+attack the database as if PolyPassHash were not in use.
+>
+In general, I think most admins always want to be able to log in.
+This is a significant problem for wide-spread adoption of
+PolyPassHash, without the Partial Verification feature.  However, this
+seems to need work.
+>
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+>
+iQIcBAEBAgAGBQJUFgRuAAoJEAcQZQdOpZUZUNQP/3BwhmbICmXv3Fp+ylnBp0zP
+zlHKBPiYK65he9anRRI9grMg12euAQX0iwXT2UMaDwct9q7MGuZFfd08b5zb+m6m
+wDWY8btsyJ8ZNG0t0KIv7YEsDQnPxfGTXccNUaS3JxPUth3s/zvcvYl+XLpS0xli
+kbg1mLLQTXeQu8cDLFbJPBcYibWhGmQc34aLFCRoaTLEGYh1is1B9bhuBJgjCmwa
+zR4iIdUj7HsZxW++TJ+ot3WBn6ZrMRXLY3w/0HLpOfWE0aHNVQQW84r9w4cgo3i/
+H77J+baVRiLBG1X6PXWnacnXliv5cmvGA1epP/BPFl2QKnmhsp/LVvYX06tjlA2A
+UCJ2iS1eH9GNCZezExJeEOeD6q9zbsenFFDXoGTDaQWr9syf+xTWStGxUWv1o8Xx
+wLukKxYlb6MB8H4ZgpUvDGdyxPIZUjmbeNvEyXXDSCUezEOxvITa0so+7P9nbRI7
+gc172oNc1YinMqwyFCWanAQf/dhr1bnGw3jS3c4HTAYzi+tTV5IflBSwOmKCa/hT
+JSBHwi/e0qHI6QWiUU9P2MnrCvKsnp1mlnO4dgPJMrWVWADDWNFxSOSXaiUsmheV
+y17wzBjdV/lJTPbm2DzvS6R+BaQjAskoGVdakasnturFGKKuUT0NrmOMFmkIfslZ
+T3TcmYIMs1QwI9SXZFi3
+=kk0q
+-----END PGP SIGNATURE-----
+>
+
+
+

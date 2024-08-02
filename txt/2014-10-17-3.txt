@@ -1,0 +1,166 @@
+phc-discussions - Re: [PHC] POMELO
+
+Message-ID: <20141017142238.GA12937@openwall.com>
+Date: Fri, 17 Oct 2014 18:22:38 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] POMELO
+
+Hi Hongjun,
+
+On Fri, Oct 17, 2014 at 07:03:28PM +0800, Hongjun Wu wrote:
+Thank you for the analysis and comments!
+
+Thank you for your prompt response!  One of the primary reasons why I
+brought this to the discussions list was so that you could comment,
+especially in case there was any misunderstanding on my part.
+
+1)  In your mail, "POMELO claims to be resistant to SIMD attacks. First, I
+think we need to clarify: this may only apply if the hardware lacks
+efficient gather"
+
+      Be more accurate, POMELO is resistant to SIMD attacks if the hardware
+lacks efficient gather and scatter.
+
+You're correct.  That's another aspect where your read-writes (as opposed
+to bcrypt's reads) may help.
+
+      Fortunately (or unfortunately), currently there is no efficient
+gather/scatter for random data accesses (according to what I know. Maybe I
+am wrong here).   On the GPUs with dozens of parallel data processor, the
+gather/scatter for random data access has very long latency.
+
+Actually, on some recent GPUs that latency appears to be no higher than
+it is for most other instructions (which is generally pretty high).
+Specifically, from the speeds we're getting for bcrypt on HD 7970, it
+appears that instruction latencies for this code are on the order of 10
+cycles, which is not high for a GPU.  The limiting factor is the low
+number of bcrypt instances that fit into local memory, preventing us
+from hiding this latency (and in fact, from utilizing more than 1/4th of
+the computing resources at all).
+
+Even on the
+latest Haswell CPU, it seems that the gather/scatter is implemented in
+sequential rather than in parallel (taking around 10 cycles for gather the
+data in L2 cache).
+
+Yes, Haswell's SIMD gather loads are no faster than the corresponding
+scalar code is.  (And IIRC there's no scatter in AVX2.  There is scatter
+in the Larrabee, Xeon Phi, AVX-512 line.)
+
+It is reasonable since parallel gather/scatter for
+random data access requires much more extra circuits for accessing memory.
+
+Of course.  Yet AMD GCN GPUs (and judging by bcrypt benchmarks, possibly
+NVIDIA Maxwell as well) appear to implement gather/scatter surprisingly
+well - better than Haswell and Knights Corner do.  On the slides
+introducing GCN 3 years ago, it is said that each CU has 64 KB of "32
+bank Shared Memory" supporting "Index Mode", servicing up to 32 x 32-bit
+lanes per clock cycle with "direct decoupling return to VGPRs" and
+"hardware conflict detection with auto scheduling" (this refers to bank
+conflicts).  This is slide 21 in 2620_final.pdf (SHA-1
+e84f120753dfcfe02f0008e19b7b2ce34d0c627b).  Then in
+AMD_Southern_Islands_Instruction_Set_Architecture.pdf Revision 1.0 from
+August 2012 (SHA-1 c64c24077eab93b070d291da3624a8d988d70d5d) Chapter 9,
+Data Share Operations describes some of this in more detail, but
+unfortunately appears a bit contradictory/ambiguous.  This chapter
+starts with: "LDS permits high-speed write-to-read re-use of the memory
+space (full gather/read/load and scatter/write/store operations)."
+One additional detail is that each bank is two-port, allowing for 1 read
+_and_ 1 write per clock cycle.  This is more ports per kilobyte (1 read
++ 1 write per 2 KB) than we see in modern CPUs for L1 cache (2 reads + 1
+write per 32 KB).
+
+Chapter 9 referenced above also mentions that "extended instructions,
+read2/write2, can be 64-bits each", but it does not clarify whether or
+not the effective number of LDS ports for these is halved (since each
+64-bit access would access two banks' ports at once).  Probably it is,
+which reduces the port count advantage over CPUs (where the few ports to
+L1 cache are wide).
+
+Another surprising detail of AMD GCN is that it has indexed access, and
+even scatter/gather, also for VGPRs - and the total size of these is 4x
+that of LDS (64 KB per SIMD unit, with 4 SIMD units per CU, as opposed
+to just 64 KB of LDS per CU).  (Un)fortunately, a work-item can access
+only at most 256 VGPRs, whether directly or by indices coming from
+another VGPR, so at least under a typical programming model e.g.
+bcrypt's S-boxes do not fit.  (As a test, we tried using this for one
+half of one out of 4 S-boxes of bcrypt, and got only moderate slowdown
+compared to an LDS-only implementation, due to the associated overhead
+in "comparing" the index against 128 and choosing the right "code
+path", which is actually done with either exec masks or bitmasks on the
+data itself.)  So far, I was not able to find a conclusive answer as to
+whether this limitation is bypassable by lower-level programming.  I was
+able to find that it is at a level lower than OpenCL - page 165+ in
+SI_3D_registers.pdf (SHA-1 6a2d869d49fddeba54349c497acf176204f32c22)
+includes things such as "Number of VGPRs, granularity 4. Range is from
+0-63 allocating 4, 8, 12, ... 256" - a certain 6-bit value at a certain
+address (memory-mapped register?)  This might answer, negatively, the
+question on whether we can go beyond 256 VGPRs for a single work-item.
+But I am not certain.  While the 256 VGPRs limit is obvious from
+instruction encodings for instruction forms that reference specific
+VGPRs directly, there's nothing in the instruction encodings preventing
+indexed access to higher-numbered VGPRs.  So maybe this is bypassable
+e.g. with custom firmware and low-level APIs.  Anyway, this would be
+just a nice extra - like I said, scatter/gather exists for LDS with no
+such limitations, it's just that total LDS size is (un)fortunately more
+limited than total VGPRs' size.
+
+(The above might sounds like I'm into GPUs.  That's not the case.
+I merely happened to look into these specific aspects.)
+
+2)  In your email, "I think POMELO partially fails at anti-SIMD, despite of
+claims in its specification document.  It defeats SIMD for defense (if we
+don't consider hashing multiple passwords within one instance, which is
+cumbersome and is a risk), but not as much for attack. "
+
+     You are right here.  This partial failure affects the security.  But I
+think that the effect on security is also partial.  The random data
+read/write in H remains the bottleneck, and it cannot be easily bypassed in
+SIMD, especially on GPU.
+
+I am not so sure.  For example, on Haswell we can pack four F's per SIMD
+vector, then every four invocations of F we'll have to incur the
+overhead of accessing the four instances' data-dependent S elements
+sequentially (whether using Haswell's gather load instructions or not).
+Despite of this overhead, we can still achieve most of SIMD's usual
+speedup.  The overhead of accessing four elements sequentially may be
+roughly the same as computing the 4-way SIMD F one more time, so the
+total run time is only like 5/4th of what would be possible with fast,
+hardware gather/scatter.
+
+I think your "especially on GPU" happens to be true not because of
+defeating SIMD on GPUs (which might not be the case, as I explained
+above), but because of the limited local memory size on GPUs combined
+with high instruction latencies typical for GPUs (not just for
+gather/scatter).  The same would be true for a MIMD device with similar
+local memory size, instruction latencies, and only a wide bus to global
+memory (no way to access individual global memory banks).
+
+3)  I think that your tradeoff (one table lookup in every step) is
+interesting.  That is my old design before optimization.  As you have
+noticed, this tradeoff has some advantage, also some disadvantage.
+
+     The rationale for the current POMELO version (one table lookup in 4
+steps) is to achieve certain balance between table lookup and the
+computation of F when the data is not in L3 cache (for the current desktop
+CPUs).
+
+      (The best optimization is to set different parameters for different
+table sizes.  But the design would become too complicated,
+
+Yes, this would certainly add complexity.
+
+and inconvenient to the users.)
+
+Why?  You can hide this detail within POMELO specification (and
+implementations), although this means you'd have to hard-code the
+relationship between m_cost and frequency of data-dependent lookups.
+
+I think this might be the way to go.  In fact, you could even have
+separate settings for G and H (where H would generally perform the
+lookups more frequently), without adding to user inconvenience if you
+hard-code both as step functions of m_cost.
+
+Alexander
+

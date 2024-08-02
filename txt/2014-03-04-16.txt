@@ -1,0 +1,109 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <531658D4.3010007@dei.uc.pt>
+Date: Tue, 04 Mar 2014 22:51:00 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On 04-03-2014 18:54, Solar Designer wrote:
+>
+Thanks.  If you send me a complete test program that I can compile and
+run on Linux, I'll test on P2, P3, P4.  (No renaming on P1.)
+>
+Alexander
+
+This should be good enough:
+
+#include <stdio.h>
+#include <stdint.h>
+
+#if   defined(__i386__)
+static unsigned long long cpucycles( void )
+{
+  unsigned long long result;
+  __asm__ __volatile__
+  (
+    ".byte 15;.byte 49"
+    : "=A" ( result )
+  );
+  return result;
+}
+#elif defined(__x86_64__)
+static unsigned long long cpucycles( void )
+{
+  unsigned long long result;
+  __asm__ __volatile__
+  (
+    ".byte 15;.byte 49\n"
+    "shlq $32,%%rdx\n"
+    "orq %%rdx,%%rax"
+    : "=a" ( result ) ::  "%rdx"
+  );
+  return result;
+}
+#endif
+
+void code1(uint32_t iters)
+{
+  __asm__ __volatile__
+  (
+    "mov %0, %%ecx\n\t"
+    "sub $1, %%ecx\n\t"
+    "1:\n\t"
+    "mul %%ebx\n\t"
+    "mov %%eax, %%esi\n\t"
+    "mov %%ebx, %%eax\n\t"
+    "mul %%ebx\n\t"
+    "mov %%eax, %%edi\n\t"
+    "mov %%ebx, %%eax\n\t"
+    "sub $1, %%ecx\n\t"
+    "jnz 1b\n\t"
+    :
+    : "r"(iters)
+    : "eax", "ebx", "ecx", "esi", "edi"
+  );
+}
+
+
+void code2(uint32_t iters)
+{
+  __asm__ __volatile__
+  (
+    "mov %0, %%ecx\n\t"
+    "sub $1, %%ecx\n\t"
+    "1:\n\t"
+    "mul %%ebx\n\t"
+    "mov %%eax, %%esi\n\t"
+    "mul %%ebx\n\t"
+    "mov %%eax, %%edi\n\t"
+    "sub $1, %%ecx\n\t"
+    "jnz 1b\n\t"
+    :
+    : "r"(iters)
+    : "eax", "ebx", "ecx", "esi", "edi"
+  );
+}
+
+
+int main(int argc, char **argv)
+{
+  double n = 1UL << 28;
+  if(argc == 2) n = 1ULL << strtoul(argv[1], 0, 10);
+  uint64_t t;
+
+  t = cpucycles();
+  code1(n);
+  t = cpucycles() - t;
+  printf("%f\n", t / n);
+ 
+  t = cpucycles();
+  code2(n);
+  t = cpucycles() - t;
+  printf("%f\n", t / n);
+ 
+  return 0;
+}
+
+
+

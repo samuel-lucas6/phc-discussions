@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <CALW8-7JHGBp-JjVqs2JLQ-GeSn6eVe9u3ViTsmpbxvsxd1sreQ@mail.gmail.com>
+Date: Fri, 4 Sep 2015 13:34:08 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+We are still exploring various optimizations. A pure C implementation may
+also improve in performance, as for these small memory sizes some C++
+artifacts may come into play. For example, I just realized that the memory
+was value-initialized by 0, which is now disabled with ~10% performance
+gain.
+
+On Thu, Sep 3, 2015 at 11:53 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+>
+Here's a speed comparison of single-thread hashing of 4MiB between Argon2,
+Yescrypt-2p, and TwoCats on my Xeon E5-1650 CPU running at 3.50GHz:
+>
+Argon2d: 2.6 ms
+Yescrypt-2p: 1.8 ms
+TwoCats: 0.72 ms
+>
+Assuming the attacker is L3 memory bandwidth bound, he will have a 13X
+higher area*time cost if attacking TwoCats instead of Argon2.
+>
+
+I think you're mistaken in squaring the difference factor: area is the same
+but the time differs, so cost is only 3.5x (or how much?).
+
+
+A natural solution is to use more threads.  However, those other cores are
+likely running threads of their own:
+>
+Argon2 v1.1.1 4 threads:  0.68 ms
+TwoCats 4 threads, no multiplies: .35 ms
+>
+Wasn't Alexander getting something like 4,000 Yescrypt 4 MiB hashes per
+second?  If true, this is very impressive.
+>
+What can be done to Argon2 to improve L3 hashing performance?
+>
+>
+ Maybe another multithreading approach?
+
+On my 1.8 GHz machine I get sharp speed increase when switching from 1 to 2
+threads: 4-5x for 1,2,4, even 8 MB.
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

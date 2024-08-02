@@ -1,0 +1,132 @@
+phc-discussions - GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical"
+ tests (ROUND2))
+
+Message-ID: <554B8DED.7090205@larc.usp.br>
+Date: Thu, 07 May 2015 13:08:13 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical"
+ tests (ROUND2))
+
+Hi, again.
+
+It took some time, but we finally completed the GPU benchmarks mentioned
+in the e-mail below, both for Lyra2 and yescrypt. We did not use djm34's
+yescrypt GPU implementation mentioned in another thread, though, because
+while Lyra2 has been in their repository for a few months, we had
+already adapted the yescrypt-opt version when we learned the news a few
+days ago... Some optimizations made there might apply to our code too,
+so we will take a look.
+
+Anyhow, the partial results indicate that Lyra2 is actually more
+GPU-resistant than yescrypt for a memory usage of 256 kB to 2 MB, at
+least for our GPU (GeForce GTX TITAN), in all test scenarios we
+considered, namely:
+
+1) Different block lengths (C=128 and C=256 for Lyra2, yescrypt's
+defaults), degrees of parallelism (1, 2 or 4, for both algorithms), and
+passes through memory (T=0 and 2 for yescrypt, T=1 for Lyra2, since this
+corresponds both to minimal and "same number of passes through memory"
+for the schemes).
+
+2) Different attack geometries, scripting to find the best GPU
+throughput (i.e., the number of parallel guesses that resulted in the
+lowest time taken per test) and also testing the number of threads per
+warp that would give the best results (32 threads per warp means full
+warp occupation, but the best throughput is obtained with 8 threads per
+warp and one warp per block).
+
+The numbers in the GPU are equivalent for Blake2b and BlaMka, so we
+included just the former here (note: since BlaMka is slightly slower
+than Blake2b in the CPU, the advantage of the GPU over the CPU when
+BlaMka is employed should be slightly higher too, but the GPU still
+loses in most scenarios).
+
+Since the results may change to other GPUs, we placed the code employed
+in our git (https://github.com/leocalm/Lyra/tree/master/GPU_attacks ),
+so anyone can confirm/refute our numbers. Also, any bug report or
+optimization suggestion is very welcome! We tried a few tricks and
+checked the test vectors, but we may have missed something.
+
+BR,
+
+Marcos.
+
+On 26-Mar-15 15:24, Solar Designer wrote:
+On Thu, Mar 26, 2015 at 02:29:29PM -0300, Marcos Simplicio wrote:
+>On 26-Mar-15 13:27, Solar Designer wrote:
+>>On Thu, Mar 26, 2015 at 12:27:04PM -0300, Marcos Simplicio wrote:
+>>>>Lyra2 is less suitable for low sizes like this.
+>>>>
+>>>Just for the sake of clarity: why exactly?
+>>>
+>>Because at too low sizes it's likely weaker than bcrypt at least
+>>against GPU attacks.  What exactly is "too low" is to be determined, and
+>>will vary by likely attacker's hardware.
+>>
+>Hum... That makes me think we need to include bcrypt in our GPU
+>benchmarks and see what happens.
+
+Yes, and in your CPU benchmarks too, so you'd be comparing GPU attacks
+on Lyra2 vs. bcrypt at the same defensive running time for them (on CPU).
+
+We did not include bcrypt to the benchmarks because we wanted to have
+comparisons against a memory-hard scheme, so we did so for yescrypt.
+
+It is still unclear if there is a point in which yescrypt becomes more
+GPU-resistant than Lyra2, but it does not appear to be at 256 KB or
+higher, at least for our GPU.
+
+Alexander: is there a memory range in which the table look-ups are
+expected to make a large difference? I mean, we are testing smaller
+ranges now, but since the tests take quite some time due to the search
+for the best attack geometry, your suggestions on where to start would
+be welcome.
+
+
+>I'm not a GPU specialist, but we do
+>have a person working with the GPU implementations and the results shown
+>in our report (Sec. 7.3, Figure 20) are that, in the best conditions
+>from an attacker's perspective and for a memory usage of 2.3 MB, the
+>GPU-based implementation was 4.5 times slower (in terms of throughput)
+>than in the CPU.
+
+OK, this may suggest the threshold at ~0.5 MB, which is quite close to
+my guess of 1 MB.
+
+(For scrypt, it's trickier due to needing to adjust its TMTO factor, but
+for Lyra2 I expect this to be almost linear.)
+
+The only situation in which we got Lyra2 running faster on our GPU than
+on our CPU was for p=1 and 8 threads per warp (for 256KB). For yescrypt,
+that happened in most of our tests (see graphs in the third column:
+anything below 1 means that the GPU is winning).
+
+
+>Obviously, there may be some optimization missing or maybe we need have
+>tests with an even lower memory usage, but so far I cannot say I agree
+>with that impression (which does not mean you are wrong, of course).
+[...]
+>We will try going down from 2.3 in steps of ~1/2 and see what happens.
+>I'm actually very curious to know :)
+
+Yes, please.  I am also very curious.
+
+Well, that started to happen at 256 KB for 1 thread, but way after it
+was observed for yescrypt for all parameters tested...
+
+Actually, we did some testing with yescrypt code (e.g., commenting some
+lines) and it appears that the table lookups do not make much difference
+on this range, but what is hurting the GPU is rather the memory
+transference from/to the X and Y buffers. We would have to execute a
+runtime analyzer to be sure, though, which is in our TODO list.
+
+
+Download attachment "8threadsPerWarp_C-128.png" of type "image/png" (440629 bytes)
+
+Download attachment "32threadsPerWarp_C-128.png" of type "image/png" (438870 bytes)
+
+Download attachment "8threadsPerWarp_C-256.png" of type "image/png" (440199 bytes)
+
+Download attachment "32threadsPerWarp_C-256.png" of type "image/png" (441164 bytes)
+

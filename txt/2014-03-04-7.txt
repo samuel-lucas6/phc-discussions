@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <53157568.40106@dei.uc.pt>
+Date: Tue, 04 Mar 2014 06:40:40 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On 04-03-2014 05:58, Solar Designer wrote:
+On Tue, Mar 04, 2014 at 04:04:30AM +0000, Samuel Neves wrote:
+>Poly1305 used the full x86 64-bit mantissa [1, Section 4]. So did
+>curve25519 [2]. According to Agner Fog, the floating-point and integer
+>multipliers in the Pentium III share the same circuitry (and the
+>floating-point multiplication has one extra cycle of latency), so the
+>only advantage here would appear to be register usage. Register renaming
+>does help there.
+So if I do a MUL, immediately save EDX:EAX to other registers, and
+follow that with another similar MUL, the second MUL would be able to
+proceed out-of-order, before the first one completes, correct?  (As long
+as there's no data dependency between the two MULs, indeed.  Only the
+same ISA registers used, which a renamer might resolve.)
+
+Correct. Here's an example where it is clearly visible:
+
+    mul rbx
+    mov rsi, rax
+    mov rax, rbx
+    mul rbx
+    mov rdi, rax
+    mov rax, rbx
+
+When put in a loop, this sequence consumes ~3.75 Sandy Bridge cycles per
+iteration. If you remove the 'mov eax, ebx' lines, it grows to ~6.5 (due
+to dependencies). There is still some overhead involved: a perfect loop
+should only require ~2 cycles per iteration. Haswell comes very close,
+at 2.12 (due to register moves also being eliminated at the renaming
+phase). I have no old Pentiums around to check how well renaming works
+there, though.
+
+
+
+

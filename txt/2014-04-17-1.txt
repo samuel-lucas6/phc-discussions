@@ -1,0 +1,102 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <20140417124631.GB8732@openwall.com>
+Date: Thu, 17 Apr 2014 16:46:31 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Wed, Apr 16, 2014 at 04:54:58PM -0400, Bill Cox wrote:
+On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+4.41 GiB/s DRAM bandwidth
+
+I made a mistake on the memory bandwidth computation.  I forgot to add in
+the 2 reads and 2 writes on average per location in the wandering phase.  I
+should have multiplied by 7 instead of 3!  The fixed numbers are:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+10.3 GiB/s DRAM bandwidth
+
+That bandwidth is close to maxed out for one thread on my machine.  12GiB/s
+seems to be about the limit (EARWORM maxes out at 12GiB/s, with a far
+simpler inner loop).
+
+Bill, this sounds cool, but let's not forget that maximizing single
+thread's memory bandwidth usage is a goal only in a subset of use cases
+(in 1 out of 3 categories, as I tried to explain earlier), whereas in
+others it's actually a drawback (it means that other resources are not
+fully made use of for defense when the defender is running more than one
+thread).  yescrypt's defaults (most notably, pwxform rounds count) have
+been tuned such that it achieves nearly its highest memory bandwidth
+usage only when the number of concurrent threads gets close to what is
+supported in hardware.  I think it makes sense to make the rounds count
+tunable, so that it'd be possible to maximize single thread's memory
+bandwidth usage when desired - but this isn't made a tunable parameter
+in the currently submitted yescrypt yet.
+
+When comparing against scrypt or yescrypt in terms of single thread's
+memory bandwidth usage, I think we need to compare against reduced
+rounds versions of scrypt and yescrypt.  This means scrypt with 2 rounds
+of Salsa20 (just delete 3 out of 4 uses of SALSA20_2ROUNDS from
+SALSA20_8_BASE in yescrypt-simd.c) and yescrypt native mode with 1 round
+of pwxform (just delete 5 out of 6 uses of PWXFORM_ROUND in PWXFORM).
+
+A hashing scheme pretending to win solely(?) in these terms would need
+to show that it outperforms these trivial modifications of [ye]scrypt.
+And there's not a lot of room to outperform them, even when we do, as
+we're getting quite close to the available bandwidth.
+
+I don't think single-thread performance is such a good metric for
+comparing default settings (including hard-coded parameters) of the
+different hashing schemes now.  Easy to achieve, but why and what's
+next?  I can answer the "why" for a subset of use cases, though.
+
+It is a better metric for comparing the potential of reduced-round
+versions of the different hashing schemes, to see how we may tweak them
+for use cases where optimization in these terms is desirable.
+
+For context, here's an excerpt from a message I wrote last month:
+
+---
+Date: Sat, 8 Mar 2014 06:27:18 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+[...] I think all 3 of these cases are important, and
+should be considered when designing a KDF/PHS:
+
+1. Single-threaded, single instance runs.  This is what happens in apps
+that choose not to use threads for whatever reason (or lack thereof) and
+need to generate a key for en/decrypting some data.
+
+2. Multi-threaded, single instance runs.  This is what happens in apps
+like above, but which do enable threads.
+
+3. Single-threaded, multi instance runs.  This is what happens on
+authentication servers.  The multiple instances may be threads in the
+authentication service, or they may be separate processes, or they may
+even be in different VMs.  Whatever they are, the settings of our
+password hashing scheme should be chosen such that sufficient capacity
+for concurrent authentication attempts is achieved.
+
+Maybe optimizing for multi-threaded or/and multi-instance case (#2 or #3
+above) is more important than for single-threaded, single instance case
+(#1 above), because this is two use cases vs. one.
+---
+
+I would actually be (somewhat) interested if you do this sort of
+comparison for Lyra2 vs. scrypt with Salsa20/2 vs. yescrypt with 1 round
+of pwxform (and, if you like, also with Salsa20/2 instead of /8 for the
+final, real crypto sub-block per block).  I wrote "somewhat" because I
+expect all of these to be similar, since we're getting close to full
+memory bandwidth available from one thread in hardware. ;-)
+
+Thank you for helping review PHC candidates!
+
+Alexander
+

@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140112164311.GA12379@openwall.com>
+Date: Sun, 12 Jan 2014 20:43:11 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sun, Jan 12, 2014 at 10:44:41AM -0500, Bill Cox wrote:
+This look is executed 4 times for Sasla20/8.  Tracing the data path
+for x[0], I see a depth of 4 32-bit additions and 4 32-bit XORs, per
+loop, and there are 4 loops for a total depth of 16 add/xor stages.
+
+This does not look as challenging to compute as a 32x32 multiply.  An
+Intel CPU does a 64x64 multiply in 3 clocks.  This should be doable as
+fast, I think.
+
+Sounds reasonable.
+
+So, hand-optimized Salsa20/8 in 20nm is maybe is 3 clocks at 3.5GHz.
+That's my best guess.  A multiplier designer could probably be more
+accurate.
+
+OK.  So if we use Salsa20/2 instead of /8, we might be saving the ASIC
+attacker one or two cycles of latency.  If the attacker has extremely
+fast memory, then Salsa20 rounds might make a difference.  Otherwise
+they probably won't.
+
+And yes, I was already thinking of throwing in some multiplies.  We can
+easily do several of them one after another while waiting for data to
+arrive.  If each is 3 cycles latency not only on our CPU, but also on
+custom ASIC, then we can achieve a delay of roughly the same number of
+cycles for the attacker that we normally incur because of our memory
+latency.  The attacker's memory might have lower latency, but with the
+multiplies the attacker will be forced to slow down and match our speed.
+
+Alexander
+

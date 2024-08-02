@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Client-side hashing (was side-channel stuff)
+
+Message-ID: <CALiR+uPUmmGyeLTEhbv+0R4jtYspzpJd8OYdTN9Tt8wmXTYocw@mail.gmail.com>
+Date: Fri, 24 Apr 2015 17:01:37 +0200
+From: Sascha Schmidt <sascha.schmidt@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Client-side hashing (was side-channel stuff)
+
+Server relief, keyed hashing and client-independent updates are all
+important features. The problem is that one can only have two of the
+three at the same time. It maybe possible to get them to work
+together, but this will result in a lot of different code branches
+depending on the number of updates and so on.
+Taking client-independent updates out of the equations seems reckless
+in most scenarios. You would basically put an expiration date on the
+password hashes.
+In the end it probably depends on the scenario or if you see a reason
+for keyed hashing at all.
+For the Web case we are probably looking at Javascript for the client
+side and I'm not sure if this wouldn't introduce sidechannels on the
+client.
+
+Sincerely
+Sascha Schmidt
+Student of  Computer Science and Media M.Sc.
+matriculation number: 80037
+
+
+2015-04-24 16:00 GMT+02:00 Bill Cox <waywardgeek@...il.com>:
+On Fri, Apr 24, 2015 at 1:25 AM, Krisztián Pintér <pinterkr@...il.com>
+wrote:
+>>
+>On Fri, Apr 24, 2015 at 1:38 AM, Bill Cox <waywardgeek@...il.comwrote:
+>If you compute H(salt || domain || password) when
+>talking to a remote URL, and send an ASCII hash digest instead of a
+>password, you gain a lot of protection, regardless of what hashing
+>algorithm
+>the remote server uses.
+>>
+>it is a very good client side password management option, but you need
+>a costly H to be secure. developing such a H is our task here :)
+>
+>
+True enough.  I remain a fan of client-side memory-hard password hashing,
+and server relief as Catena calls it.  Server-side, you are lucky to get
+more than a few milliseconds or enough memory to bust out of cache.  I'll
+take 200ms of client-side hashing any day, even if the client is a
+smart-watch.
+>
+Here's a simple upgrade to password hashing that I wish every company would
+support: If a password is in a specific long format that appears to be the
+output of a hash function (20 hex digits?) then skip the password hashing
+except for the last hash (as done with Catena's server relief), because the
+client already did it for you.  That way, you can support legacy clients
+that send the password without hashing, while reducing server load and
+improving security for everyone else.
+>
+Bill
+

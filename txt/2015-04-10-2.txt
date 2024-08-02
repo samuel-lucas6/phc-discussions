@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] On type aliasing and similar issues
+
+Message-ID: <20150410141925.GA9077@openwall.com>
+Date: Fri, 10 Apr 2015 17:19:25 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+BTW, Samuel replied to me off-list suggesting that the php_mt_seed
+example is most likely an icc bug, still present in icc 15 - he found
+that the miscompile goes away by simply "swapping the order of vtype and
+uint32_t []" in the source code, and that OTOH it still occurs even with
+-fno-strict-aliasing.  Thanks, Samuel!
+
+However, there being an icc bug doesn't tell us anything conclusive
+about whether the source code is standards-compliant or not.
+
+On Fri, Apr 10, 2015 at 03:59:05PM +0300, Alexander Cherepanov wrote:
+The direct use of member names is relatively clear -- it's alllowed and 
+it's plainly spelled out in a footnote in 6.5.2.3p3 (C99 and C11). The 
+use through pointers is also relatively clear -- it's prohibited, which 
+is plainly spelled out in gcc doc[1].
+[...]
+Everything becomes more complicated when a member of a union is an 
+array. It's somewhat in-between these two cases and I'm not sure how 
+it's supposed to be treated.
+
+What about uses like this:
+
+typedef union {
+	struct { uint32_t a1, a2; } a;
+	uint64_t b;
+} any_t;
+
+void copy2(uint32_t *dst, uint32_t *src)
+{
+	((any_t *)dst)->b = ((any_t *)src)->b;
+}
+
+There's no access to members of the union through a pointer (nor even
+through an array), but there's expected to be access through uint32_t *
+pointers in the caller of copy2().  Would a compiler inlining copy2() be
+guaranteed to do what the programmer expected (copy two 32-bit values,
+potentially faster and assuming 64-bit alignment)?
+
+Or with the opposite uses of the two integer types:
+
+void add32x2(uint64_t *dst, uint64_t *src)
+{
+	((any_t *)dst)->a.a1 += ((any_t *)src)->a.a1;
+	((any_t *)dst)->a.a2 += ((any_t *)src)->a.a2;
+}
+
+where the caller is expected to access through uint64_t * pointers.
+
+(Of course, this example is sensitive to byte order - or rather, to the
+order of 32-bit halves in a 64-bit word.)
+
+Side note: not much have changed between C89 and C99 in this question. 
+Accessing a wrong member in a union is an implementation-defined 
+behavior in C89 but a footnote in 3.3.2.3 implies that the reason for 
+this is indeterminate byte order. OTOH this behavior is defined in C99 
+but the byte order is still not specified. Hence a strictly conforming 
+program shouldn't use it anyway.
+
+There are many use cases where byte order does not matter, such as when
+implementing a maybe-faster memset() or memcpy() alike that would use a
+wider data type (as long as alignment and total size permit).
+
+Thanks!
+
+Alexander
+

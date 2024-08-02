@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <20140915172103.GA4426@openwall.com>
+Date: Mon, 15 Sep 2014 21:21:03 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+On Wed, Sep 10, 2014 at 08:06:53AM -0400, Bill Cox wrote:
+On 09/09/2014 11:15 PM, Solar Designer wrote:
+On Tue, Sep 09, 2014 at 03:45:28PM -0400, Bill Cox wrote:
+>On 09/09/2014 01:36 PM, Bill Cox wrote:
+>>I just started it up on my testing server (yes, my son's 
+>>MineCraft server).  With your patch it does up to 3,100-ish 
+>>hashes/second, slightly below what your processor does.  It
+>>has mined 1,388 BSTY so far.  I'm rich! :-P
+
+Sorry to disappoint you, but it appears they have another nasty
+bug in there (and probably more).  It looks like some systems (all 
+64-bit?) mine a different blockchain from 32-bit ones (which are 
+apparently the majority, due to Windows binary wallet).  I
+reported it and provided some detail, so I hope they'll figure this
+out and deal with it somehow.
+
+Haha!  That's pretty funny.  I let my son's MineCraft server keep
+running, and it's happily mining away on the wrong block chain.
+
+My initial guess is not confirmed: I've just pulled the revised wallet
+code with some unrelated(?) changes made to it (including my changes to
+enable the SIMD code), and its 64-bit build works just fine on the same
+system where a 64-bit build previously failed for me.  So I guess the
+bug was different (and I guess it's still in there and might show up
+again in some builds or after some more changes).  I've e-mailed the
+developer with these observations.
+
+I'll leave it running for the entertainment value :-)
+
+Actually, it is possible that you mined those 1,388 BSTY just fine, if
+your build was luckier than mine.  I only have 0.01 BSTY from a faucet
+now (in the new wallet), as well as tens of thousands of fake BSTY in
+the unlucky-build old wallet (which only some other nodes were willing
+to confirm - perhaps the similarly unlucky ones).
+
+Perhaps it's some out-of-bounds memory access problem, or maybe it's
+padding of fields in a struct (whereas other portions of code use the
+struct as if it were packed, with no field alignments), or similar.
+
+I am not willing to spend time debugging the wallet.  Someone else may.
+
+Meanwhile, there's standalone minerd:
+
+https://github.com/noncepool/cpuminer-yescrypt
+http://forum.globalboost.org/index.php?topic=197.0
+
+which works fine for me (and the rebuilt new wallet happens to work,
+too).  It does 11.03 kh/s on 2x E5-2670, and 3.47 kh/s on i7-4770K.
+(I built it with "-O2 -fomit-frame-pointer -march=native" on each.)
+
+There are also several pools (3 of them so far?)  This one works for me,
+along with minerd above:
+
+http://bsty.altpooler.com
+
+Alexander
+

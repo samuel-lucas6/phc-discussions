@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <560DD7D1.6000901@openwall.com>
+Date: Fri, 02 Oct 2015 04:03:13 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-09-30 04:59, Peter Gutmann wrote:
+Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.comwrites:
+>
+>@Thomas: let's copy the updated source code on a new shared doc https://docs.google.com/document/d/13bv-3HarFpQOD1PayJ2hMvRtVIs5QPu1FZ5XonEv57c/edit?usp=sharing ?
+>
+I've waited awhile after seeing this but I'm still just getting a blank page,
+is there supposed to be content there?  I was curious to compare the final
+version with my code, which is (in part):
+ >
+	/* Process the numeric string */
+	for( value = 0, i = 0; i < strLen; i++ )
+		{
+		const int valTmp = value * 10;
+
+It's hard to guarantee it without seeing a full program but this 
+multiplication very much looks like a signed integer overflow which is 
+undefined behavior (UB).
+
+		const int ch = byteToInt( str[ i ] ) - '0';
+>
+		if( ch < 0 || ch 9 )
+			return( CRYPT_ERROR_BADDATA );
+		if( value >= ( MAX_INTLENGTH / 10 ) || \
+			valTmp >= MAX_INTLENGTH - ch )
+			return( CRYPT_ERROR_BADDATA );
+		value = valTmp + ch;
+		if( value < 0 || value MAX_INTLENGTH )
+			return( CRYPT_ERROR_BADDATA );
+		}
+
+The last check seems to be superfluous or at least ineffective. If 
+"value" is overflown UB is already triggered. To put it another way 
+optimizing compilers will probably remove it anyway. Are you compiling 
+without optimizations?
+
+-- 
+Alexander Cherepanov
+

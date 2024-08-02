@@ -1,0 +1,30 @@
+phc-discussions - Let's not degenerate when if the PRF is too narrow for desired output
+
+Message-Id: <DF7B5B1F-9E74-42CB-955B-C928E073AAEE@goldmark.org>
+Date: Tue, 16 Apr 2013 22:59:11 -0500
+From: Jeffrey Goldberg <jeffrey@...dmark.org>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Let's not degenerate when if the PRF is too narrow for desired output
+
+This is mostly me whining. I just got bitten by the fact that PBKDF2 does weird stuff if you ask for more derived data than is natural for the PRF you give it.
+
+If you give it HMAC-SHA1 but ask for more than 20 bytes of data, it effectively computes two runs of PBKDF1 in parallel. Normally, this overhead should hit the attacker and the defender the same way. But if the defender is splitting the 32 bytes in half, and if the attacker can do stuff with just one half or the other, this gives the attacker a 2x advantage over the defender.
+
+Sad to say, I now know precisely where this can be a problem. In the Agile Keychain Format for 1Password we used (this was put together back in 2008) PBKDF2-HMAC-SHA1 but asked for 32 bytes.  The first 16 bytes became the IV for AES-CBC and the second 16 bytes the key. Only the AES key (and not the IV) is needed to check whether you have a working AES key (with high probability) assuming that you've got standard padding in the last CBC block.
+
+This means that a clever attacker (and the hashcat people are certainly that) can skip half of the compressions.
+
+See
+
+  http://hashcat.net/forum/thread-2238.html
+
+for details.
+
+Cheers,
+
+-j
+
+–- 
+Jeffrey Goldberg
+Chief Defender Against the Dark Arts @ AgileBits
+http://agilebits.com

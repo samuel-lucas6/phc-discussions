@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="../../../2015/09/22/5">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150926173453.GA14407&#64;openwall.com&gt;
+Date: Sat, 26 Sep 2015 20:34:53 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+&gt; The SHA-256 crypt format (and other similar formats) use _optional_
+&gt; parameters. When the parameters are not specified, then a default value
+&gt; must be used; that default will either be hardcoded (FreeBSD uses 5000
+&gt; as default value), or configured through a system file (Solaris'
+&gt; crypt.conf). In my opinion, a configurable default can only lead to
+&gt; trouble: if you have an existing hash string that was computed with the
+&gt; default number of rounds, but without recording that value in the
+&gt; string, and the default is changed in the system configuration file,
+&gt; then the string is broken.
+
+Agreed.
+
+&gt; Conceptually, a function could specify a hardcoded (non-configurable)
+&gt; default value for each parameter, and use that value if the parameter is
+&gt; omitted from the string. This may make strings shorter; however, this has
+&gt; two drawbacks:
+&gt; 
+&gt;    -- Omitting the parameter decreases readability, because the human
+&gt;    reader must then know the default values instead of simply reading
+&gt;    them.
+
+True, but this doesn't apply if we opt for a compact rather than a human
+readable encoding for other reasons anyway.
+
+&gt;    -- If we want a deterministic output, then the encoder must
+&gt;    systematically omit the value when it matches the default, which
+&gt;    makes that code slightly more complex.
+
+Here's a way around this: for parameters where our desired default value
+is also the minimum valid value, omit them when the default would have
+been used, and encode them as value-(minimum+1) otherwise.  This forces
+encoders to provide deterministic output - there's simply no other way a
+given value could be encoded.  Indeed, this is incompatible with human
+friendly encodings, where it'd defeat the purpose of e.g. using decimal
+(since the values encoded wouldn't be the actual parameter values), but
+it appears OK for compact encodings.
+
+In fact, encoding as value-minimum (if we have no defaults and never
+omit anything) or as value-(minimum+1) (with the approach above) also
+lets the decoder skip the check for "&lt; minimum", because such invalid
+values have no encodings corresponding to them.
+
+For example, either of these approaches would work for scrypt's r=1,
+p=1, and yescrypt's flags=0, t=0, g=0.  For r in particular, maybe we
+don't actually want r=1 as the default (although IIRC Cisco uses that in
+$9$), so maybe we simply encode it as r-1 (so that the invalid r=0 can't
+be represented, if our encoding is such that only non-negative numbers
+can be represented), but for the rest of these having the smallest valid
+value as the default makes sense to me.  (It's a bit weird to encode the
+flags bitmask as flags-1, yet in a compact encoding that's fine.)
+
+The "- minimum" doesn't need to be explicit for every parameter;
+instead, the "encode a number" and "decode a number" functions could
+accept the minimum (and for decode, maybe also the maximum) valid value
+(and would take care of subtracting/adding the minimum, and of checking
+against the maximum).
+
+&gt; For these reasons, I declare that parameters are non-optional.
+
+For my compact encoding experiments, I haven't decided on that yet.
+
+A question is how to indicate that a parameter is (not) omitted in a
+compact encoding.  My current idea is to prefix the optional parameters
+with a "have" bitmask (a number encoded like any other), where each bit
+would correspond to an optional parameter that does (not) follow.  The
+parameters would then be encoded in the same order as the corresponding
+bits in "have".
+
+Further, when no optional parameters are specified at all, "have" itself
+may(*) be omitted (saving one char), if we do include a '$' between
+parameters and salt anyway.  And to ensure deterministic output, "have"
+is to be encoded with a minimum of 1 (thus as have-1) when it is present
+(this also lets us encode "have" up to 48 rather than up to 47 in 1 char).
+
+(*) By "may", I mean we may choose to specify so, and it'd be a MUST if
+we do choose so.
+
+The description above might sound complex, but it's actually very simple
+in code.
+
+So for (ye)scrypt we could have:
+
+$7X$Nr$salt$hash
+
+or:
+
+$7X$Nrhp$salt$hash
+
+or:
+
+$7X$Nrhpftg$salt$hash
+
+where "N" is encoding of N-1, "r" is encoding of r-1, "h" is encoding of
+have-1, and "p", "f", "t", or/and "g" are encodings of p-2, flags-1,
+t-1, g-1 if those are non-default and indicated as present in "have".
+
+This is also extensible for adding more optional parameters (up to 30
+total optional parameters) without changing the prefix.  For example, we
+could add a parameter for outlen, shown encoded as "o" here:
+
+$7X$Nrhpftgo$salt$hash
+
+or e.g.:
+
+$7X$Nrho$salt$hash
+
+Decoders MUST refuse to process encodings where any of the reserved bits
+(not understood by a given decoder) in "have" are set.
+
+BTW, I use single characters to show each parameter in the encodings
+above - and they will in fact end up being single characters with my
+proposed numeric encoding most of the time, yet it's also possible to
+encode values of up to over 1 billion in each of them.
+
+Also, we could easily make the '$' before the salt optional (and save 1
+char) if "have" is present (since it indicates exactly how many optional
+parameters are included, and each of them indicates how long it is), but
+I think including it is good for some kinds of incomplete parsing
+(extract just the salt or just the parameters without care for actual
+parameter values), as well as for some very limited human friendliness
+(being able to determine roughly how many parameters are included, and
+the exact salt size).  It's also consistent with bcrypt, where a '$' is
+included after the cost value.
+
+&gt; A system-wide configuration may still exist, that provides default
+&gt; values for parameters then the salt is generated -- application code
+&gt; does not have to manually provide such values. But once the salt has
+&gt; been generated, the parameters are always encoded with the salt string.
+
+Right.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

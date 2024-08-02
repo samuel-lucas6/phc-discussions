@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] What is "basic cryptography" ?
+
+Message-ID: <543CDEA9.2060107@riseup.net>
+Date: Tue, 14 Oct 2014 10:28:25 +0200
+From: beloumi <beloumi@...eup.net>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What is "basic cryptography" ?
+
+On a (not so) related note, I was surprised when Bill mentioned (not)
+keeping things in memory (I don't recall the exact wording) as falling
+under "basic cryptography". To me, it does not. It may be a property
+of the hashing scheme - that is, the scheme is such that sensitive
+data is naturally overwritten early on with no processing cost
+overhead compared to performance-optimized evaluation of the hash -
+which is nice, but typically has drawbacks for some use cases (it
+typically implies slower memory usage growth than would be possible
+with a slightly different design). Or it may be a property of an
+implementation (explicit zeroization or e.g. self-test performed after
+actual hash computation). I think neither of these cases falls into a
+category overlapping with "basic cryptography". In fact, the latter -
+property of an implementation - is irrelevant to PHC at this point
+(can be taken care of later), although the PHC relevant aspect is that
+it's not as safe as the former (but might not have the drawback I
+mentioned).
+
+Data are more or less sensitive and the password is maybe the most
+sensitive data, because it might be used in other applications too.
+There are data which easily allow to finish the key derivation and also
+data which only reduces the cost of an attack (for example a part of the
+memory hard vector of scrypt). Zeroization of a memory hard vector has
+performance drawbacks, but zeroization of the password doesn't.
+
+I think this is not only a property of the implementation. For example
+bcrypt uses the password nearly the whole execution time, so the scheme
+does not allow early zeroization of the password (as I can see this also
+applies to scrypt and PBKDF2).
+
+This is surely not a main topic, but especially password hashing schemes
+have long execution times and uses large amounts of memory, so a cold
+boot attack or the risk of swapping is more relevant than for other
+crypto topics.
+
+

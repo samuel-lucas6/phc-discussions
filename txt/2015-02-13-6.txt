@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Message-ID: <CAOLP8p7nH3QnkEcCU_VqjXhFw_eXf3yxgaUwr88KKp9PQ0NNtg@mail.gmail.com>
+Date: Fri, 13 Feb 2015 11:36:58 -0800
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Interesting analysis.  I actually wrote code yesterday almost the same as
+your generic attack.  It's a good algorithm.  I have some comments:
+
+- Yescrypt is the fastest remaining entry in the PHC, not Lyra2.  Lyra2 is
+the second fastest.  They are the only 2 entries that are faster than
+Scrypt.
+
+What data do you have showing Lyra2 is faster?  In particular, for a given
+amount of memory hashed, Lyra2 is always slower than Yescrypt, even on one
+thread, and when Yescrypt's multi-threading option is used as intended,
+Yescrypt can be several times faster.  Also, while Lyra2 uses one Blake2
+reduced round (a good choice, IMO), Yescrypt uses 6 of it's new round
+function.  When using Yescrypt in production, I can easily change 1 line
+and improve it's performance greatly for single-threaded applications.
+Lyra2 is already using only one round, and I will not have that flexibility.
+
+- You're notion of "memory*time" cost in this paper is wrong, leading to
+bizaar and wrong conclusions about Lyra2
+
+You claim Lyra2 has a time*memory cost of 0.28 when using a 1/4 memory
+TMTO.  Here's what GPU attackers think that means:  they use 1/4 the
+memory, and they will only have to do 12% more computations.  Yet you say
+the wandering phase for a 1/4 TMTO requires 1876X more computation.  There
+is simply no way you found a 0.28X memory*time attack against Lyra2 by any
+normal use of the memory*time metric.
+
+What you found is that recomputations can be done in parallel.  While this
+parallelism can help an attacker, time is not equal to the computation tree
+depth.  This depth is simply the theoretical minimum latency for
+recomputing a value, assuming infinite computation resources and power.
+
+Your generic attack is a good algorithm.  I think I can improve it, but I
+have not yet tried this.  At some point, we may discover that there are
+several rows referring to a previous row R which we keep having to
+recompute.  Instead of making all those new rows have high recomputation
+cost, leading to several of them being kept in memory, we can decide
+instead to store R.  The point where we should do that should not be too
+hard to track.
+
+In your generic attack, for TMTO 1/2, for each new value computed, a
+significant percentage of all prior values must be recomputed, leading to a
+computation effort proportional to N^2, where N is the number of original
+computations without a TMTO.  I like that your Table 6 does not claim
+improved memory*time based on tree depth, and instead simply reports both
+recomputations and depth.  However, Table 6 is heavily dependent on N,
+which is not stated.  For very large N, even the 1/3 TMTO attack will have
+very high recomputations.  Maybe state N?
+
+Bill
+
+
+

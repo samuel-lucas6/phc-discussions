@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] POMELO fails the dieharder tests
+
+Message-ID: <CAOLP8p5Kx=+df+Cw1x63Wkyg51_1LR76XUX2q_9joCcdAggMQQ@mail.gmail.com>
+Date: Sat, 5 Apr 2014 11:57:59 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] POMELO fails the dieharder tests
+
+On Sat, Apr 5, 2014 at 11:40 AM, Bill Cox <waywardgeek@...il.comwrote:
+I'm trying to figure out what the problems are in PAMELO.  The first
+one is simple.  There's a bug on line 47:
+>
+    // load salt into S
+    for (i = 0; i < saltlen; i++)   ((unsigned char*)S)[i] =
+((unsigned char*)salt)[i];
+>
+It should read:
+>
+    // load salt into S
+    for (i = inlen; i < saltlen; i++)   ((unsigned char*)S)[i] =
+((unsigned char*)salt)[i];
+>
+The salt is overwriting the password.  I fixed that in my version, but
+the output is still massively non-random.  I printed the output for
+several passwords in dieharder format, and found that output values
+get repeated a ton.  There's at least one more bug in there.
+
+My fix needed some fixing:
+
+    // load salt into S
+    for (i = inlen; i < inlen + saltlen; i++)   ((unsigned char*)S)[i]
+= ((unsigned char*)salt)[i];
+    for (i = inlen + saltlen; i < 160; i++) ((unsigned char*)S)[i] = 0;
+
+This works better.  With the modified, code, POMELO now passes the
+first test, the Birthday test.  This is, I believe, similar to
+Alexander's favorite test of counting collisions in small integers,
+such as 32-bit integer outputs.  Any PHS that passes the Birthday
+test, if then run through a cryptographically strong hash such as
+SHA2, will then pass any test for randomness.  That's why I consider
+it the most important test, since most PHS entries will pass their
+output one last time through a cryptographic hash.  If you pass the
+Birthday test, and use a cryptographic final hash, you're golden so
+far as output randomness goes.
+
+Bill
+

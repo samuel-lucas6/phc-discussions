@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Modified pseudo-random distribution in NoelKDF
+
+Message-ID: <CAOLP8p5MbDypYTzX2pFuvdZu1JzsDYtJnYDUfqhEZ51Rz4f3rQ@mail.gmail.com>
+Date: Wed, 22 Jan 2014 07:43:53 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Modified pseudo-random distribution in NoelKDF
+
+On Tue, Jan 21, 2014 at 11:36 AM, Bill Cox <waywardgeek@...il.comwrote:
+I've tried many combinations, including random placement, weighted
+random (more pebbles based on incoming edge density), weighted even
+spacing, covering nodes pointed to by edges below a certain length,
+and covering nodes with multiple edges pointing at them.  I've also
+tried combinations of evenly spaced with these other schemes.  Nothing
+seems to improve over evenly spaced so far.
+
+I tuned a pebbling combination consisting of:
+
+- evenly distributed pebbles
+- pebbles on nodes with more incoming edges
+- pebbles on nodes pointed to by short edges
+
+I also lowered memory size to 1,000,000 locations, which may still be
+on the high side.  The penalty increases more than linearly, so larger
+is better for the defender.  I found the following is close to an
+optimal combination of pebbles that add up to 25% against my
+random-cubed graph:
+
+- 1 pebble every 12 locations
+- pebble every node pointed to by >= 3 edges
+- pebble every node pointed to by an edge <= 680 length
+
+This reduced the 25% coverage attack to 24.5X penalty for a 1% cheat
+killer pass.  I did the same for the sliding window.  I increased the
+minimum edge length to pebble a node to 22,500 to keep it at 25.0%
+pebble coverage, and the penalty dropped to 0.88X for my 1% pass.  A
+100% pass would have a penalty of 88X.  Also, a 20% pass (pebble every
+16 instead of 12, and edge length <= 10,000) gets 10X penalty for 1%,
+or 1000X penalty for 100% coverage.
+
+It still looks pretty good to me, though the cubed distribution seems
+stronger in defense.
+
+I'm thinking about what improvements can be made to an attacker's
+optimal pebble placement.  He can put more pebbles early in memory,
+cover pebbles with more incoming nodes, block short edges by pebbling
+their source or destinations, and evenly or randomly distribute some
+pebbles.  Maybe he could take into account some aspects of 2 or more
+pebbles in sequence, like incoming edges, and edge lengths, but I'm
+running out of features to consider in an attack.  These graphs are
+pretty uniform everywhere, they're too fat to attack with full cuts,
+and partial cuts of short edges isn't enough.
+
+So, I think I've proven computationally that an attacker with a pebble
+placement function that looks like this fails:
+
+P(position % N == 0, degree, in-lengths, out-lengths, rand())
+
+What I mean is the attacker only takes into account the position
+information for uniform distribution purposes, and he can choose N.
+He can take the incoming degree into account, as well as incoming and
+outgoing edge lengths.  He can also do something random.  This is a
+pretty large space of variables, but I've optimized the OR of these
+combinations manually, and found what appear to be global minimums.
+
+I am convinced no pebble function of this form can be written that is
+more effective against the rand-cubed distribution than a 24X penalty
+for 25% pebble coverage, when testing only a random 1% of memory (or
+2,400X for testing it all).
+
+What other sorts of inputs to the pebble placement function could help
+an attacker?
+
+Bill
+

@@ -1,0 +1,39 @@
+phc-discussions - RE: [PHC] further limitation: not writing secret to memory
+
+Message-ID: <5c5086da436e40d18eaaff4f4ba6eb16@BLUPR03MB166.namprd03.prod.outlook.com>
+Date: Fri, 20 Sep 2013 19:25:12 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] further limitation: not writing secret to memory
+
+From: Tony Arcieri [mailto:bascule@...il.com]
+>
+Windows is the real problem here. It supports a proprietary API
+called VirtualLock to accomplish the same thing:
+>
+http://msdn.microsoft.com/en-us/library/windows/desktop/aa366895(v=vs.85).aspx
+
+What part of
+
+   // "Locks the specified region of the process's virtual address
+   // space into physical memory, ensuring that subsequent access
+   // to the region will not incur a page fault." - MSDN
+   BOOL success = VirtualLock(void * base, size_t size);
+
+is particularly problematic?
+
+Locking large portions of memory for non-negligible periods of time
+is generally a bad idea on any virtual memory OS. Most servers
+are on hypervisors these days, so it's not even guaranteed to be
+meaningful.
+
+IMHO, the PHC should consider virtual memory an implementation issue and
+not a requirement for candidate functions. But if there were some
+function submitted that had an innovative approach to the issue,
+it would be interesting to hear about it.
+
+- Marsh
+
+
+
+

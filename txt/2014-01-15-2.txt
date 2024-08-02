@@ -1,0 +1,84 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <CAOLP8p7R-+N2yqRRLPQX3qJ0VMmQkjxSZSqSM=MVRhUcqb0ZXA@mail.gmail.com>
+Date: Tue, 14 Jan 2014 21:45:11 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Tue, Jan 14, 2014 at 5:45 PM, Marsh Ray <maray@...rosoft.comwrote:
+Since Rand(i) % i doesn't depend on anything specific to the candidate password, couldn't it be precomputed? Or computed and fed to a large number of processors performing the rest of the loop in parallel.
+>
+It looks like all memory accesses are predictable, therefore a custom external memory subsystem could be constructed which accepts streaming data as fast as you can you can move it on and off the chip (IO pin count * clock rate * DDR perhaps). But presumably the defender would not be able to utilize such an architecture, so it would represent an advantage to the attacker.
+
+Yes, the predictable memory addressing presents a problem.  For the
+actual current code, feel free to check out:
+
+https://github.com/waywardgeek/noelkdf
+
+It may or may not compile at any moment, since I'm actively working on
+it and check in code regularly.  Here's my current documentation on
+the algorithm, which does not deal with multi-threading, but otherwise
+I think it's accurate.
+
+Given an a user's password x, salt, an optional session key, a
+cryptographic hash function H wrapped with PBKDF2, an array of m
+memory locations v, and a cheat-killer speedup factor K, the algorithm
+for NoelKDF is:
+
+Input: x, salt, sessionKey, H, m, blockLen, K
+Output: y
+
+y = H(x, salt, sessionKey)
+v[0 .. blockLen-1] = H(y)
+prevV = 0
+for i = 1 .. m/blockLen - 1
+    addr = blockLen*(i + (Rand(i) % i))/2
+    for j = 0 .. blockLen-1
+        v[i] = MultHash(v[i-1], v[addr], prevV)
+        prevV = v[addr]
+for(i = 0; i < m/K; i++)
+    addr = Rand(prevV) % m
+    y ^= v[addr]
+    prevV = v[addr]
+output y
+
+
+function MultHash(v1, v2, prevV2):
+    return v1*(v2 | 1) + prevV2
+
+function Rand(v):
+    return v*1103515245 + 12345
+
+The second loop I believe forces an attacker who tries to compute the
+key without keeping all the memory to recompute most of the missing
+values, and if he has much less than 1/4th of the memory, I think he
+pays O(m^2/K) recomputation penalty.  I still have to prove that,
+though.
+
+The first loop is difficult for an attacker to compute faster because
+of the multiply operation.  It takes most of the runtime.  The second
+loop leaks cache timing information, and could be used to abort an
+incorrect password, but that wont significantly help an attacker
+because he's already spent most of the time required to complete the
+password guess.
+
+You are correct that a sophisticated attacker could prefetch memory
+better than my CPU because of the fixed addressing in the first loop.
+However, with a block size of 4K bytes, I'm not seeing any significant
+memory latency issues.  Hashing 2GB in .4 seconds will still require
+an attacker move 4GB (one read, one write), over more than half of
+that .4 seconds.  I am only able to get to about 10GB/second with two
+threads, though, and I would prefer to do better.  An SSE version
+could be written that might increase to more like 20GB/second, but I'm
+frankly not sure that will work.  The idea would be that instead of 4
+threads working on 4 separate fragments of memory, I'd interleave the
+memory and execute 4 instructions in parallel on 4 words in parallel.
+If that works, it should get close to maxing out my memory bandwidth
+while still providing the multiplication computation time-hardness.
+
+Thanks again for the feedback.  I feel like this multiplication thing
+is the right way to go, but I'm not 100% sure.
+
+Bill
+

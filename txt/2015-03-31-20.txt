@@ -1,0 +1,27 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <20150331153530.GA4523@openwall.com>
+Date: Tue, 31 Mar 2015 18:35:30 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 03:04:43PM +0100, Samuel Neves wrote:
+On 31-03-2015 14:30, Solar Designer wrote:
+>>        blake2b_update(&BlakeHash, (const uint8_t*)&lanes, sizeof(lanes));
+[...]
+>
+Surely blake2b_update() then uses its own choice of integer or SIMD
+types for this data.
+
+The BLAKE2 code does not treat input bytes as anything other than bytes. Whenever there is a need to convert bytes to
+integers, this is done in a standards-compliant way (using either memcpy to a local variable, or plain load-shift-or).
+
+Thanks!  Yes, blake2b_update() appears to always hit a memcpy() on "in".
+
+Perhaps that's the way to write such functions these days, although there
+must be a performance hit from this when running on an architecture such
+as x86 that would permit you to access integers in "in" directly.
+
+Alexander
+

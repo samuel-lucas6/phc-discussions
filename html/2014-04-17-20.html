@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="19">[&lt;prev]</a> <a href="21">[next&gt;]</a> <a href="19">[&lt;thread-prev]</a> <a href="21">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7ZP+ege3DgA=C7U3WDmR1CnVi0pbKU39gMjG1JPGRUmw&#64;mail.gmail.com&gt;
+Date: Thu, 17 Apr 2014 16:36:55 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 4:10 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+
+&gt; &gt; I tried r=32, and here are the results:
+&gt;
+&gt; Thanks!  Did you also try r=16?  In some of my tests, r=16 was actually
+&gt; faster than r=32, although that was with 2 threads/core.  r=32 needs
+&gt; about 16 KiB of L1 cache per thread, because it's 4 KiB for current
+&gt; block (X or V_i), 4 KiB for random block (V_j), and 8 KiB for pwxform
+&gt; S-boxes, so we're bumping into 32 KiB L1 cache size with 2 threads/core.
+&gt; This is not yet the case with 1 thread/core, though.
+
+
+I just tried it: r=32 is faster than 16 (0.6s vs 0.644s).  r=64 is also
+slower, since it begins to have cache misses.
+
+
+&gt; &gt; Lyra2:
+&gt; &gt; Peak memory/second: 1.52 GiB/s
+&gt; &gt; Average memory/second: 1.14 GiB/s
+&gt;
+&gt; These look correct to me, given the Lyra2 algorithm on page 11 in
+&gt; Lyra2ReferenceGuide.pdf for T=1.
+&gt;
+&gt; &gt; Memory bandwidth: 10.64 GiB/s
+&gt;
+&gt; This assumes a total of 7 reads plus writes per location, which I'm not
+&gt; sure is correct.  Looking at the algorithm, it might be even more, but
+&gt; that would push the memory bandwidth usage even higher, which would be
+&gt; surprisingly high.  It might be 4 r/w per iteration in Filling Loop, and
+&gt; 5 r/w per iteration in Visitation Loop, so 9 total.  If this is correct,
+&gt; we'd see 13.68 GiB/s here.  This might be realistic because, if I
+&gt; understand correctly, the same rand is reused with and without rotW(),
+&gt; which halves the amount of crypto-like processing per memory access even
+&gt; compared to reduced round TwoCats and yescrypt.  (If one round of
+&gt; pwxform is crypto-like, whereas one bit-rotate is not.)
+&gt;
+
+I think for DRAM bandwidth, 7 is the right number.  The first loop calls
+this for each memory location sequentially:
+
+    reducedDuplexRowSetup(state, memMatrix[prev], memMatrix[rowa],
+memMatrix[row]);
+
+memMatrix[prev] is still in cache, but this function does a read and write
+to memMatrix[rowa], and a write to memMatrix[row].  This loop causes 3 DRAM
+accesses.  The second loop calls:
+
+    reducedDuplexRow(state, memMatrix[prev], memMatrix[rowa],
+memMatrix[row]);
+
+This function reads from all three and writes to two, but memMatrix[prev]
+is in cache, so I only count two reads, for a total of 4 accesses.  If
+Lyra2 were running in cache, I'd count the cached reads and use a 9X
+multiplier.
+
+BTW, yescrypt at zero rounds of pwxform might well be a reasonable thing
+&gt; to use, if we're to maximize memory bandwidth usage while not even
+&gt; trying to keep any compute time hardening (besides the occasional Salsa20).
+&gt; I just haven't studied it enough to recommend it as an option, and I am
+&gt; not aware of a use case where zero compute time hardening would be good.
+&gt; When making the rounds count tunable (and encoding it in the flags
+&gt; field), I am not sure if I should make zero a supported value.
+
+
+I think having a mode that is not explicitly compute-time hardened would be
+a good thing.  My SkinnyCat subset of TwoCats has no multiplication chains,
+and only has memory bandwidth to force attackers to take a while.  For
+machines without a dedicated multiplier, this might be a better mode for
+them to run.
+
+I don't know what skipping pwxform calls does to security, though.  I'm
+sure you can deal with that.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Is somebody working on a ANSI-C (or non C++11) implementation of Argon2 / Considerations
+ with respect to memory allocation and fragmentation.</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;OF8DB8E57F.BE472CB2-ONC1257EB9.0046999C-C1257EB9.004A57AD&#64;endress.com&gt;
+Date: Mon, 7 Sep 2015 15:32:01 +0200
+From: bjoern.haase&#64;...ducta.endress.com
+To: discussions&#64;...sword-hashing.net
+Subject: Is somebody working on a ANSI-C (or non C++11) implementation of Argon2 / Considerations
+ with respect to memory allocation and fragmentation.
+
+
+
+Hello,
+
+we are considering to use the PHC winner argon2 in our application. I have
+seen some remarks on the list and the argon2 homepage concerning a plain
+ANSI C port. In our setting using of such a port might be preferential.
+Namely, the current implementation of ARGON2 seems to rely not only on C++
+but C++11 which might make the code even less portable than conventional C+
++.
+
+Could you give me the information wether somebody is actually working on a
+C port? Since our company has decided to separate crypto stuff from our
+main applications and we decided to provide the crypto implementations
+under CC0 as open source, we might be joining efforts.
+
+Also if I see correctly, the large memory array used by argon2 for hashing
+will currently be allocated in one single chunk which might turn out to be
+difficult in systems where malloc has to deal with a lot of memory
+fragmentation. I'd like to raise the question whether it would be helpful
+to have a setting where the memory chunks are allocated not in one huge
+contigeous area but rather smaller entities of, say 1 Mbytes each. I.e. one
+would have the blocks of 1 kByte size, "chunks" of say 1 Mbyte and the
+whole state of say 256 MByte?
+
+Best regards | Mit freundlichen Grüßen
+
+Björn Haase
+____________________________________________________________________________
+E+H Conducta GmbH + Co. KG | Dieselstr. 24 | 70839 Gerlingen | Germany
+
+
+
+_________________________________________________________________________
+
+Endress+Hauser Conducta GmbH+Co.KG
+Amtsgericht Stuttgart HRA 201908
+Sitz der Gesellschaft: Gerlingen
+Persönlich haftende Gesellschafterin:
+Endress+Hauser Conducta
+Verwaltungsgesellschaft mbH
+Sitz der Gesellschaft: Gerlingen
+Amtsgericht Stuttgart HRA 201929
+Geschäftsführer: Dr. Manfred Jagiella
+__________________________________________________________________________
+
+Disclaimer:
+
+The information transmitted is intended only for the person or entity to
+which it is addressed and may contain confidential and/or privileged
+material. Any review, retransmission, dissemination or other use of, or
+taking of any action in reliance upon, this information by persons or
+entities other than the intended recipient is prohibited. If you receive
+this in error, please contact the sender and delete the material from any
+computer.
+
+__________________________________________________________________________
+
+<a href="http://www.conducta.endress.com/" rel="nofollow">http://www.conducta.endress.com/</a>
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

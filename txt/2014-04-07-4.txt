@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Re: Yarn issues
+
+Message-ID: <CAOLP8p5AstsBkJ=oQaP1ZKc-rF-p9k7+Uk8=U+CsQTXgLU9YGQ@mail.gmail.com>
+Date: Mon, 7 Apr 2014 05:38:19 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Yarn issues
+
+Because of the bit of debugging I had to do in Yarn, I've taken
+another look and have some more thoughts:
+
+Yarn inherits the same GPU-friendly parallel cache-timing attack as
+Script.  See the end of the Catena paper for details, but basically,
+the first loop for filling memory is cache-timing resistant, but once
+it starts reading/writing memory in an unpredictable way based on data
+derived from the password, an attacker can in theory abort a bad guess
+if he is in possession of cache timing information.  If the first loop
+did predictable reads from memory in addition to writes, it would
+defeat this parallel attack.
+
+Yarn is tightly integrated with Blake2d in the reference.  It would
+not be trivial to switch from Blake2d to something else, like SHA512
+for example, without changing a lot of code, and this would be
+error-prone for most coders.  Could Yarn be "tweaked" to have a
+simpler interface to it's cryptographic hash function?  This wouldn't
+have to change functionality significantly.
+
+The design of Yarn seems to be intended to run in cache, rather than
+external DRAM (up to maybe 16MiB or so).  I infer this from the lack
+of a strategy to mitigate cache miss penalties.  There are several PHC
+entries that also seem cache-bound, so clearly there is interest in
+such algorithms.
+
+I think the default value of 72 for m_step is too high.  The README
+says that m_step should be chosen to maximize both memory bandwidth
+and AES encryption speed at the same time.  If 6 AESENC instructions
+can execute in parallel, say at 3.4GHz (the speed of my testing
+machine), that's only about 1.5GiB of total memory bandwidth (16
+bytes, 1 read, 1 write, every 72 cycles).  EARWORM on one thread reads
+12GiB/s from external DRAM, and uses AESENC to hash all of that data.
+For a cache bound algorithm, I think one thread can sustain over
+100GiB/s to L1 cache.  I suspect that the right value for m_step is 1.
+ However, this might lead to weaker hashes being written to memory,
+which likely could be detected as Yarn output rather than random data.
+ This is only an issue if memory is somehow leaked to an attacker.  My
+personal feeling is that this is not a big deal, but most entries seem
+to be careful to only write the output of well respected cryptographic
+primitives to memory.  It seems to me that Yarn can have either high
+performance, or write only cryptographically pseudorandom data to
+memory, but not both at the same time.
+
+There is a mismatch between the code and the README spec in how AESENC
+is used to update state[0].  The code uses state[1] as the key 71
+times followed by addr one time, while the README uses block each
+time.
+
+Bill
+

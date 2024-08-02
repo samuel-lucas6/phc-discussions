@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <8f9433543414ea78f4b368528a08a883.squirrel@www.bolet.org>
+Date: Thu, 27 Feb 2014 13:41:14 -0000
+From: pornin@...et.org
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+Are my numbers right?  My Google-fu is failing me this morning.  I
+could not find a table of NVDA or ATI GPU instruction latencies.  I
+did find one post suggesting to use 24x24 multiplication because it's
+only 4 clocks, but there was no mention of 32x32 latencies.
+
+In older times, I did some experiments on my GPU (it was Nvidia GTX 9800+,
+i.e. an older architecture, that I bought in 2009); latency for _any_
+instruction (including the 24x24 multiply, but also simpler things like a
+bitwise XOR) was around 22 clock cycles. Each core could issue one
+instruction per cycle, but you had to intertwine at least 22 distinct
+individual computations to keep the cores busy. Of course, each
+computation used its own registers, and the local RAM block was shared, so
+such intertwining was not necessarily easy to achieve.
+
+Newer core architectures are supposed to have a lower latency, but 4
+cycles might be overoptimistic.
+
+A "4-cycle" delay was found in my GPU but designated something quite
+different. The 128 cores were actually 32 "multicores" and each multicore
+could run 8 operations in parallel, provided that operations came in
+batches of 32 identical operations. I.e., once every 4 cycles (here is the
+delay), an instruction was issued to the multicore, and the multicore
+would execute 32 times that instruction, on 32 different sets of
+registers. However, that does not mean that at the end of the 4 clock
+cycles the 32 results were available. Indeed, if any of the next few
+instructions tried to use the result, then stalling would occur. Stalling
+would also occur for non-parallel instructions, e.g. most memory accesses.
+Such stalling is automatic, but degrades performance when it occurs. With
+the 22-cycle delay, you can see that you have, in general, to run 6*32 =
+192 parallel computations on each multicore in order to keep all cores
+busy (in practice, there appeared to be rounding issues in the instruction
+scheduler, meaning that you had to go up to 8*32 = 256 per multicore, i.e.
+4096 parallel computations for the whole GPU).
+
+I think newer Nvidia chips could run 16 instructions in parallel in a
+multicore, for a latency down to about 11 cycles, but I have not tried it.
+
+In the context of password cracking, this means that if the computation
+can run entirely in registers (e.g. PBKDF2 with any of the SHA-2
+functions), then it is easy to use the GPU at full speed, by just running
+sufficiently many instances in parallel. This would apply to use of
+multiplications too; however, GPU are usually not very good at integer
+multiplications (not as good as CPU); e.g. my GPU could do 24x24 in one
+instruction, not 32x32.
+
+If you want to make things awkward and difficult for GPU, good methods
+include using a very large state (the number of free registers in a GPU is
+large but not infinite), or to force memory usage (e.g. with accesses at
+irregular addresses, like in RC4 encryption: these cannot be easily mapped
+to registers; actual RAM must be used). Each multicore has access to some
+"local RAM" (like 4 kB) that supports parallel access to some extent, but
+all intertwined computations must share that amount: if you need to run
+192 parallel instances on a multicore, then each instance only has 20 or
+30 bytes to play with efficiently; everything beyond will incur accesses
+to external RAM, and these won't be parallel.
+
+All of the above is only a rough, simplistic description, and figures must
+undoubtedly be modified for newer GPU.
+
+        --Thomas Pornin
+
+
+

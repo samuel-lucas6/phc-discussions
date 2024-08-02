@@ -1,0 +1,211 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Best use of ROM in password hashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140421095939.GC25527&#64;openwall.com&gt;
+Date: Mon, 21 Apr 2014 13:59:39 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Sun, Apr 20, 2014 at 04:24:38PM +0000, Poul-Henning Kamp wrote:
+&gt; You cannot generate that TiB algoritmically and keep the algorithm
+&gt; around, that would defeat the purpose, it has to be based on
+&gt; randomness.
+
+The above is true only for a rather narrow definition of "the purpose".
+
+Even with the ROM generated algorithmically and even with the seed
+having been stolen, there's still a penalty on attack nodes that don't
+have that much fast local storage available to them.
+
+yescrypt's current ROM initialization algorithm is meant to work for the
+anti-botnet purpose (with botnet nodes much smaller then the defender's
+authentication servers), even if the seed is stolen.
+
+[ As a bonus, it also limits the ability to reconstruct the entire ROM
+from a partial stolen ROM, in case an attacker only manages to steal a
+part of the ROM and not the seed.  Specifically, reconstruction is
+possible given 1/2 of the ROM, but not given significantly less than 1/2.
+There's room for improvement here (can bring it closer to requiring the
+full ROM for reconstruction).  I expect that a typical setup would have
+some privsep between ROM-in-RAM initialization (done on authentication
+server bootup) and the authentication service.  For example, the
+included initrom demo program would run as a pseudo-user different from
+the one that the userom demo program would run as.  Indeed, this sort of
+privsep local to an authentication server is quite weak (a local root
+bug would bypass it, unless the attacker only had Heartbleed-like access
+to the authentication service, in which case we're "fine"), but it's a
+nice extra nevertheless.  An attacker with only the ROM itself and not
+the seed would have to distribute half the ROM size to attack nodes to
+make them useful.  Not a major obstacle, but a cost component nevertheless. ]
+
+&gt; Unless you want to dedicate a TB on each and every server, you have
+&gt; to either make the ROM available across the network or use a centralized
+&gt; authentication server.
+
+No problem having 128 GiB RAM per authentication server.  It even costs
+~4x less than the rest of the hardware in those servers (so 1/5 of the
+total hardware cost).  Currently, 128 GiB RAM costs about as much as one
+8-core or better E5-2600 series CPU, and you'd put two of those CPUs in
+a server.  Plus the chassis, PSUs, and motherboard cost about as much as
+the two CPUs do.
+
+Yet this little cost increase deals with the botnet threat for a few
+years.  (And I expect that similar ratios will be valid later, just not
+the same hardware.)
+
+&gt; Making it available across the network opens it for theft from any
+&gt; compromised system, whereas a central authentication server comes
+&gt; with its own problems in the form of passwords being sent across
+&gt; networks etc.
+
+For the ROM, I am considering primarily use cases where there are
+already central authentication server(s).  Most likely many of them.
+
+&gt; That makes a 1TB ROM economically unfeasible, except in installations
+&gt; which should have known better than to rely on passwords to begin with.
+
+Oh.  Really?  I think you're wrong about both of these points.
+
+You expect e.g. the major social networks would fully abandon passwords
+in the next few years?  I don't.
+
+What about banks?  Even if they don't "rely" on passwords, they should
+nevertheless continue to use passwords as one of the authentication
+factors.
+
+&gt; So, yeah, nice in theory, in practice not so much...
+
+Everything has its limitations.  I think there are realistic use cases
+here, and I think we'll see deployments soon.
+
+&gt; That said, an algorithm which can use a ROM sensibly gets a plus
+&gt; in my book, and another plus if it leaves the size/benefit determination
+&gt; to the administrator.
+
+OK, we're in agreement here.  In yescrypt, the ROM is optional, its size
+is tunable, and its access frequency is tunable (thus, the device type
+can vary e.g. between RAM, SSD, HDD, and arrays of these).
+
+&gt; Thinking a bit creatively:
+&gt; 
+&gt; A USB stick with an ARM chip can be made for less than $10 in volume.
+&gt; 
+&gt; Putting the entire hashing algoritm on that ARM, including a modest
+&gt; size random ROM, even as little as 8K, and offloading all password
+&gt; hashing (but not salt generation) to that ARM chip via the USB port,
+&gt; means that the ROM can only be stolen by physical access.
+&gt; 
+&gt; And best of all: If you need to hash more passwords than the ARM
+&gt; will do, you can just plug in another.
+
+Sure, but there's no benefit from a ROM lookup table here.  Just one
+non-retrievable crypto key is enough.  It's just an HSM, much like
+YubiHSM (priced at $500, but that's still "low" for HSMs).  In my YaC
+2012 talk, I suggested using YubiHSM's HMAC function for that.  I now
+think that using YubiHSM (or any decent HSM) to reversibly encrypt
+hashes could work better, in that it allows for changing of the key.
+(Which would need to be backed up e.g. on paper in a physical safe.)
+
+&gt; That's probably what I would do, if I were in charge of a big site
+&gt; relying on passwords today...
+
+I had discussed pros and cons of the HSM vs. ROM-in-RAM vs. ROM-on-SSD
+approaches, and their combinations, with a big site.  Their current
+preference is ROM-in-RAM, mostly for the ease of logistics.  I expect
+that this will vary, though.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

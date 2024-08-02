@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140828140331.GA570&#64;openwall.com&gt;
+Date: Thu, 28 Aug 2014 18:03:31 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation
+
+On Thu, Aug 28, 2014 at 01:59:08PM +1000, Rade Vuckovac wrote:
+&gt; One recommendation to remedy some of
+&gt; the timing leaks is to keep everything in cache, which in practice is not a
+&gt; trivial task. The guess is that mentioned remedy can be similarly obtained
+&gt; if everything is kept outside of cache. That option is far from optimal in
+&gt; AES case. However in the password hashing realm (optimisation is not
+&gt; imperative) non-cacheable memory option may be proven effective:
+&gt; 
+&gt; 1st it is relatively easy to allocate non-cacheable memory (comparing to
+&gt; keeping everything in cache).
+
+"Relatively" easy, maybe.  But not easy at all, except as a
+proof-of-concept running on a specific machine, under a specific OS, and
+with specific privileges.
+
+&gt; It is not portable but it seems that every major OS supports that option.
+
+This also involves hardware support, which might or might not be present
+and usable for our purpose.
+
+Non-cacheable memory is generally for things such as DMA, so it should
+guarantee non-cacheable semantics, but not necessarily timings.  There
+might still be some caching as long as it's transparent semantics-wise
+with respect to DMA to/from off-CPU components on a given platform.
+
+Then, what about TLBs?  There may still be TLB hits/misses for the pages
+even if the data on those pages is not cacheable.  "TLB timing attacks",
+anyone?  This could be worked around by using exactly one "huge page",
+which can be up to 1 GB on x86-64, but again this is hardware platform
+specific and it requires OS support, configuration, and privileges.
+
+&gt; 2nd From attacker and defender point of view, a memory accessed randomly
+&gt; significantly larger (scrypt recommendation for example) than available
+&gt; caches, non-cacheable memory allocation might be more optimal than using
+&gt; cache and frequently swapping cache with RAM.
+
+I'd expect this to help only in terms of avoiding cache thrashing, which
+is relevant if you have other frequently accessed data in the caches.
+Normally, this is what you'd use "non-temporal" loads and stores for,
+instead of going for non-cacheable memory.  To clarify: no, use of
+non-temporal loads and stores doesn't guarantee cache timing attack
+resistance, as it bypasses only some rather than all levels of caches,
+and also as it's merely a hint, which CPUs are free to honor or ignore.
+
+(yescrypt uses non-temporal loads for the "ROM", to help keep portions
+of the "RAM" cached.  In my testing, this provides a speedup on AMD, but
+not on Intel CPUs.  For the "RAM", there's no speedup from non-temporal
+loads given yescrypt's access pattern, on the CPUs I tested.)
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

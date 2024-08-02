@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140214111818.GA9159@openwall.com>
+Date: Fri, 14 Feb 2014 15:18:18 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 11:00:11PM -0500, Bill Cox wrote:
+        for(j = 0; j < blocklen; j++) {
+            uint32_t *from = mem + (value & mask);
+            //uint32_t *from = mem + j;
+            value = (value * (*prev++ | 3)) + *from;
+            *to++ = value;
+        }
+[...]
+I can't explain why using value to compute the next address is taking
+longer.  It doesn't make sense to me.  Do you see any problems in my
+test code?
+
+I took a look at code that gcc generated for me from your test program.
+The problem is that on 2-op archs such as x86, "value & mask" either
+involves an extra MOV, which gcc is reluctant to produce in this case,
+or it has to be done after the IMUL.  gcc chooses to do the latter, which
+adds latency (the read of *from has to be initiated after the IMUL
+instruction is issued, albeit without waiting for the IMUL to complete).
+
+I think we could optimize this better by hand, but as I wrote in another
+message we need the random lookups from "prev" (not from "from") anyway.
+So we'd need to benchmark and optimize the latter.
+
+Alexander
+

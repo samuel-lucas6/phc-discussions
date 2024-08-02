@@ -1,0 +1,26 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20140104081910.GA3013@openwall.com>
+Date: Sat, 4 Jan 2014 12:19:10 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Thu, Jan 02, 2014 at 09:44:20AM -0500, Bill Cox wrote:
+I've done some hand optimization, and gotten the speed to be only about
+2.2X slower than memmove when copying 2GB over itself.  To get the speed, I
+stopped reading randomly from the "from page", and read it linearly
+instead.  This seemed to help the optimizer quite a bit
+
+I think what helped the optimizer is your addition of lots of
+parallelism (way too much for current CPUs, in fact).  The sequential
+nature of reads allows PAGE_LENGTH to be beyond L1 data cache size.
+
+I think it'd be better to have random reads, keep PAGE_LENGTH*3*2 within
+L1 data cache size, and have just enough parallelism for current and
+near-future CPUs (preferably, have it tunable).  Also, make it SIMD
+friendly (tricky with random reads - would need to make them the size of
+a SIMD vector, so that you don't require gather loads).
+
+Alexander
+

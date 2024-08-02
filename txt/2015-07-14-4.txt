@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-ID: <CAOLP8p7=8xiE7qfgxNiAvnAUWNObs4u+HsUh2D=xWiyht_C3rA@mail.gmail.com>
+Date: Tue, 14 Jul 2015 10:02:08 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+On Mon, Jul 13, 2015 at 9:06 PM, denis bider <pwhashing@...isbider.com>
+wrote:
+
+So the problem addressed in this discussion is how to defend against
+ASIC mining.  You have to find something that a CPU and/or a GPU can
+do well that an ASIC wont do much better.  Requiring a lot of memory
+and serial computation of the data you use to fill it makes the
+algorithm memory-hard, but if you fill memory slowly due to slow
+cryptographic hash computations, and ASIC will beat you on speed.
+This seems to be where we are with current algorithms, IMO.
+>
+And I think the solution to that is going to be WebAssembly.
+>
+Generate a bunch of relatively random, yet still application-like, and
+platform-independent code. Execute it in WebAssembly sandbox. See who runs
+it faster, custom ASIC or CPU.
+>
+
+I agree, especially for PoW, where we're less concerned about an attacker
+trying to PWN your computer.  Executing random machine code seems like a
+reckless thing to do in password authentication, but it would bother me
+less in a PoW system.
+
+While we can probably defend well against ASIC miners, just by using
+something like Yescrypt or a random machine code engine, we still have the
+problem that verifying the block chain is too computationally expensive.
+There is an argument that having block verification that takes 1 second
+is OK, because most clients would only verify new blocks they see every few
+minutes.  However, I think this verification issue is what has held back
+good memory-hard PoW systems so far.  Even the one based on Yescrypt we
+already see is using far too little memory.
+
+A similar problem exists for ROM based PoW with fast verification (what I
+have been calling CPU Hash for lack of a better name).  A CPU Hash
+algorithm based on Yescrypt would be very fast, and GPU resistant as well
+as ASIC resistant.  With a large ROM, say 32 GiB or more, it is even fairly
+botnet resistant, which is super cool.  However, for verification, every
+client needs the whole ROM, which means they need a ton of memory.
+
+Is there is a trade off that could make CPU Hash verification acceptable?
+For example, let's say the ROM is 32 GiB, meaning efficient miners need
+that much memory.  This ROM should not be actual random data, because that
+would require transmitting the whole ROM to each client.  What if instead
+we generate it from a memory-hard hash function in counter mode?  For
+example, we could use Yescrypt to generate 128 MiB memory blocks.  A client
+would only need to compute 2 of these per verification, and it would only
+do this now and then.  A miner, or advanced client which wants to verify
+the whole block chain would generate all 32 GiB and keep it in memory,
+vastly accelerating block-chain verification.
+
+What do you think?  Would something like this be close?
+
+Bill
+
+
+

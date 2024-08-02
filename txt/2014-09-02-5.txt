@@ -1,0 +1,92 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <540585B6.705@ciphershed.org>
+Date: Tue, 02 Sep 2014 04:54:14 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Clearly I was wrong to simply bypass Schvrch.  It has multiple flaws
+which if not fixed render the algorithm not worth further discussion,
+IMO.  That, plus seeing the author defend the flaws rather than
+correct them lead me to believe we should spend our time focusing on
+other algorithms.
+
+For example, the author defends his decision to only use 2KiB of
+memory during the entire time that t_cost is applied.  This is a
+critical flaw, which mostly eliminates the utility of t_cost for
+password defense.
+
+Here is how I would attack Schvrch's t_cost parameter:
+
+A user wants to protect his password.  He decides to use a 1 second
+Schvrch hash, and 4MiB of memory, hoping that the 4MiB scrambling for
+a whole second will do a decent job without interfering too badly
+hogging external DRAM bandwidth.  An attacker sometime later obtains a
+copy of the password database, and attempts to crack his password.  I
+understand ASICs better than GPUs, so I'll assume the attacker has a
+custom ASIC for cracking Schvrch.
+
+In this case, the ASIC can have a similar cache capable of holding the
+4MiB.  It is the largest part of the die by far.  Fortunately for the
+attacker, he wont have to waste a whole second per guess of his
+valuable large cache guessing this password.
+
+Instead, the attacker executes 200 revolve cores in parallel, using a
+total of only 400KiB of memory, which is small compared to the main
+cache.  Ever 5ms, his cores generate a new state ready for attack
+using the main cache.  Fortunately for the attacker, the rest of
+Schvrch accesses his large cache only a few times, less than 8, and he
+completes each 4MiB hash at a rate of over 1 byte per clock, which is
+easily done given the 8-byte data paths.  Even with a 1ns latency to
+his cache, his memory intensive portion only takes 4ms.
+
+This simple device does a password guess every 4ms, compared to a
+defender's 1 second.  No external DRAM is required.  Each board would
+probably have 100 of these ASICs, generating guesses at a rate of
+20,000 per second.
+
+Compared to Scrypt, this is more than 10X worse.  The flaw seems to be
+that the author does not understand the concept of memory*time
+password defense.  You only get to count the memory for the time it is
+required.
+
+For a 117 line program Schvrch packs a in a lot of mistakes.  I
+haven't even finished describing problems with the t_cost loop.  In
+reality, an attacker would not bother implementing the whole revolve
+loop in hardware, because it can be considerably simplified.  I'll
+describe that in another post.
+
+I hope it is clear that flaws like this are not acceptable.
+
+If the author refuses to acknowledge this major flaw in his t_cost
+implementation, and continues to defend it, we should simply stop
+discussing Schvrch and move on, IMO.
+
+Schvrch has several flaws, and I literally will have to write 4X more
+lines of email than the program has lines.  I was hoping to avoid
+that.  I will describe the next flaw in another email, so we can keep
+the threads per flaw separate.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBYWzAAoJEAcQZQdOpZUZlOMP/13CZKr8kJ22T0BAnEdRBk1E
+0SxmNXNr9qVX8hCFoAsj7QmqxanSSbsz3tcoSdQtqFBTiMdZhAljhBDraR7Hzr1V
+vxtFeCVUYBwjjqZVQkQfI4Ai0NAK40tJr9YuyDGfqR0wTsWg89mW7AvQaK151mds
+O0aU7AuFFfRXwZopjt5njiiQZAYY89D0VZ6g3WlgrwkOkSdLfgttpVyWPFOm6UPr
+oKWO4ppsx71LadvwbZrOJHZ6/nk6GqZROma0MFePXDaiT/FFZ1pw7OIfAu67MCJr
+DJ5JDQwyxqQMZEciFHxMW69EPW82HE12ONhBms1tMFr08KGRGuFI5ahC3peCUBSx
+qqE8ynwcRqCpUeVsUjWl3eqv2uLRhTEzr4jMixcDTjR7ZJepcsfKNaajOOMSwtwh
+XH/DjsQMkXT0s8kxASyuP2awFdEiMOT/r9Xp2AotK7B9X3J4VVdD4FY5vf9ttaDn
+7ZQGcyAtGaqupsIUQKwE68/+2zt5v4mmi+oNwpGSUXlH8ADMJ3feu3QqWf5e1uN8
+eS+oXAZ3viexefiZm1Ddnk4Qs29Gjsx6YOfcgCeCOwPUS+34vKDDXPJao/gMz6DD
+qEqpF9UDzCNvVlx8I/A01FvYV8a2YJotPlekigMcCz9HM/318oLpN41GBs8B9Alg
+9l3P7q2DdDjRM+r6ophY
+=aYnq
+-----END PGP SIGNATURE-----
+

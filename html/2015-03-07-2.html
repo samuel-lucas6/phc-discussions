@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] PHC output specifics</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-Id: &lt;E1YU9iP-0005RJ-Br&#64;login01.fos.auckland.ac.nz&gt;
+Date: Sat, 07 Mar 2015 21:04:05 +1300
+From: Peter Gutmann &lt;pgut001&#64;...auckland.ac.nz&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: RE: [PHC] PHC output specifics
+
+Marsh Ray &lt;maray&#64;...rosoft.com&gt; writes:
+
+&gt;So how about this wording:
+&gt;
+&gt;        "For best interoperability of credentials, character data
+&gt;        SHOULD be a UTF-8 encoded sequence of [cite: ISO 10646] characters.
+&gt;        [cite: Unicode] aware applications that wish to perform normalization
+&gt;        SHOULD normalize to [normalization form TBD] before UTF-8 encoding."
+
+I don't even know if a SHOULD will make much difference.  The people
+implementing the crypto are highly unlikely to be the ones providing the
+passwords to the API, so from the crypto-implementer point of view a password
+is a { void *password, int length } combination, and from the user of the
+password-processing function it's whatever they want it to be (ASCII, UTF-8,
+Unicode, etc).  Consider for example Windows (CryptoAPI -&gt; stunnel -&gt; web
+browser) or Android (OpenSSL? -&gt; Dalvik -&gt; app developers), in both cases the
+consumers of the functionality are two levels away from the ones implementing
+the password-processing function.  Adding a note alerting users at the
+password end of the chain to the issue is a good idea, but trying to tell
+developers at the low-level crypto API end of the chain what to do when they
+themselves have little to no control over what's being passed to them probably
+isn't useful.
+
+Another consideration is, how much of a problem is this in practice?  I've
+seen this issue come up for debate in the past, and the general approach has
+always been that there's lots of hand-wringing, no-one can agree on what's
+best, some token words are added to a spec somewhere and near-universally
+ignored, and then life goes on as normal without the world ending.  So you
+could just say:
+
+  Implementers should be aware of potential interoperability problems due to
+  character-representation issues and, if cross-platform portability for a
+  wide range of character types is an issue, use appropriate encodings such as
+  Unicode or UTF-8.
+
+That's good enough, it alerts developers to the potential issue but leaves it
+up to them as to how they want to deal with it.
+
+Peter.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

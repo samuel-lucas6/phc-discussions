@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <CAOLP8p52KWn25JHEO_PjsGb=YkwerMaYPxdc8ixjkHs5oa_vGw@mail.gmail.com>
+Date: Fri, 17 Jan 2014 06:50:57 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+On Thu, Jan 16, 2014 at 1:30 PM, Gary W. Hvizdak
+<gary.hvizdak@....rr.comwrote:
+On Wednesday 25 Dec 2013 at 1411, Bill Cox wrote . . .
+>
+"Second, I only used the salt to initialize the RNG, hoping that I could
+better protect the password in case the large memory array got cached to
+disk.  I'm not that comfortable having 1GB of MARC4 data out there to be
+analyzed to try and guess the key. ... So, how do I force the entire memory
+to depend on the password without risking some attack on the stream itself?
+... Or would it be better just to keep the password from impacting what we
+write to DRAM at all, and accept the improved attack?"
+>
+--
+>
+Hi Bill,
+>
+I'm a total newbie and am curious how/why "this" is of greater concern than
+the password itself being swapped to disk?  Is it that only heap space ever
+gets swapped whereas stack/local memory never does?
+
+Hi, Gary.  I'm a password hashing newbie, too.  I added another
+parameter called clearPassword, and when it's true, I overwrite the
+password with 0's once I've computed the PDKDF2_SHA256 of it.  That
+way, at least the plain text password is in memory for a minimum
+amount of time.
+
+You are right that everything gets swapped.  Alexander pointed out a
+number of problems with clearing passwords, so it's not really as safe
+as I would like.  The reference version is likely to fail to actually
+clear it, but it will at least make some attempt.
+
+My current strategy for filling memory (subject to change) is the addition
+of a "seed" parameter to PHC().  Kind of like a "pepper" except that it
+wouldn't necessary need to be secret.  As you point out, an attacker need
+only generate the fill pattern once.  However, if the amount of memory we
+fill is sufficiently large, and well fill it quickly enough, the attacker
+will still suffer some overhead to keep a second pristine copy on hand.
+(I'm assuming memory will be modified as part of the "waking" process.)
+
+If I understand correctly, you fill memory based on a parameter
+similar to the salt, which is not secret, but then do password-derived
+writes?  Something like that might work OK.
+
+P.S.  Although my scheme is not yet implemented, my seed parameter will be
+combined with the salt and/or password in some way, to seed the PRNG that
+ultimately fills memory.  This way at least an attacker will have to redo
+the calculation for each password.
+
+I'm currently filling memory based on password, salt, and an optional
+session key derived data.  If there's a secret session key,
+everything's in great shape.  When there is no session key, or when an
+attacker knows it, then an attacker can eliminate much of the time it
+takes to do an incorrect password guess.  I consider this the most
+serious weakness in all the schemes I've seen so far.
+
+Bill
+

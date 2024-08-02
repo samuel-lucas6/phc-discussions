@@ -1,0 +1,136 @@
+phc-discussions - winner selection
+
+Message-ID: <20150413151121.GA29402@openwall.com>
+Date: Mon, 13 Apr 2015 18:11:21 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: winner selection
+
+Hi,
+
+Similarly to the process the PHC panel used to focus the discussion on
+finalist selection, we just collected votes/comments for winner
+selection from PHC panel members.  (Not all have provided these, but
+many did.)  JP collected these in private, and made them available to
+the rest of the panel yesterday.
+
+This time, panel members with their own submissions were also asked to
+vote or comment, including on their own submissions, but their votes or
+comments need to be made public.
+
+For the sake of transparency, as well as to have any possible
+misunderstanding on my part detected sooner rather than later, I am
+posting my comments in here right away.  (I did not submit any numeric
+votes.)
+
+I initially wrote these on March 29, and revised on April 10 shortly
+before my more thorough review of Pufferfish.
+
+Please note that other panel members' PHC winner preferences may and
+often do differ.  We have not arrived at a consensus yet.  Not even on
+whether there should be one or multiple winners.
+
+---
+Argon - a non-winner: too TMTO-obsessed and thus slow, likely at the
+expense of security against actual attacks.  (As a side note, this is
+something that has been addressed in Argon2, although there's another
+issue in Argon2: currently excessive parallelism.)  The original Argon
+submission, while also being TMTO-obsessed, had the advantage of being
+simple and maybe NIST(?) standardization friendly, for its use of AES
+only.  The tweaked Argon, while addressing some real limitations and
+drawbacks of the original submission, has lost much of its simplicity.
+It now depends not only on AES, but also on Blake2b.  If it addressed
+even more of the drawbacks, it would still be within consideration as a
+potential winner for me, but it did not.  (Argon2 did, and it dropped
+the dependency on AES, but at the same time it has the issue of
+currently excessive parallelism, so I wouldn't recommend it for that
+reason.  And this is non-PHC anyway.)  Very good contributions by the
+Argon team to TMTO analysis of other PHC candidates (and beyond PHC),
+though.  Definitely deserves recognition.
+
+battcrypt - likely winner.  battcrypt wins over Pufferfish at sizes
+over a few MB, per Milan's benchmarks.  Also has the advantage of using
+only standard crypto primitives - SHA-512 and Blowfish - vs.
+Pufferfish's SHA-512 and a Blowfish-alike.  This may provide greater
+confidence, although on the other hand there are voices saying that
+Blowfish is dated and "1990s crypto" (but so what?)  More importantly,
+use of standard Blowfish makes battcrypt efficiently implementable in
+scripting languages, as evidenced by the included implementation in PHP.
+A lengthy comment in there appears to claim there's only a 2x reduction
+in Blowfish blocks processed per second compared to bcrypt.  We'll need
+to verify this.  (And probably the reduction is caused by current PHP's
+implementation of Blowfish being suboptimal, rather than by battcrypt's
+or PHP's overhead.)  If true, and I see no reason why it wouldn't be,
+battcrypt is no more than 2x worse than bcrypt at anti-GPU.  That's very
+good for something implementable in a scripting language.  We'll need to
+verify how it actually behaves in GPU attacks.
+
+Catena - likely winner, especially its Catena-Dragonfly flavor, which is
+actually fast (unlike other 3 default instantiations of Catena).
+The Catena v3 specification document suggests that Catena-Butterfly be
+used for low memory scenarios, because it provides extra TMTO resistance
+"for free" (if the defender couldn't have used more memory anyway).
+This makes sense.  What use are the -Full instantiations, though?
+Paranoia?  Maybe we should verify that there are entropy bypasses via
+the full round count H in Flap?  At first glance, I'm not sure if there
+are.  If not, maybe that should be added (if we introduce a panel
+proposed tweaks phase in PHC).
+
+Lyra2, POMELO, or/and yescrypt - select one or several of these as
+winner(s).  I've already commented on Lyra2 vs. yescrypt on the public
+list, in many separate postings.  I may provide a summary comparison
+between these two or three, if desired.  POMELO v2 is now comparably
+fast, and it differs in that it's much simpler and is self-contained.
+The same may be viewed as a drawback, as confidence in its cryptographic
+security might be lower.  yescrypt's low memory threshold for GPU
+resistance is probably lower than for the other two, but this has yet to
+be confirmed.  It is possible that on current GPU devices Lyra2 and/or
+POMELO perform poorly enough even at low memory, but yescrypt's design
+and tuning provide greater confidence of being no worse than bcrypt.
+In some initial tests, POMELO is slow to attack on GPUs (slower than on
+CPUs) even at low memory.
+
+Makwa - likely select as a winner, but may need more pairs of eyes
+first, who would confirm they have actually reviewed Makwa.  I think
+Steve did?  Anyone else?  I didn't review it, and I think we have panel
+members who are more qualified to review it.  Makwa is a likely winner
+because it provides a unique feature with specific use cases for it,
+it looks good at first glance (but indeed that's not a proper review),
+and it comes from a particularly careful submitter.
+
+Parallel - I am not interested in this one at this time, but I agree we
+needed a scheme like this in PHC.  If we're almost sure it will be
+standardized e.g. by NIST, and no other PHC winner would be, then that's
+a reason to select it as a winner.  Will it mostly replace PBKDF2 even
+if not standardized by any established organization?  Will being a PHC
+winner be good enough for that?  Maybe.  Is Parallel's simplicity alone
+worth making it a winner, for those users who would not implement
+anything more complex properly or at all?  We need to discuss this.
+
+Pufferfish - might be more suitable than battcrypt and possibly than
+POMELO in a rather narrow yet important range of m_cost, perhaps from
+8 KB to ~1 MB.  Is this worth selecting it as a winner?  I'm not sure.
+I think it loses to battcrypt or/and to POMELO at larger sizes.  Also,
+even if POMELO loses to Pufferfish at anti-GPU at low memory currently
+(although it appears to be OK so far), I guess it may be tweaked not to
+lose during my proposed standardization and tweaking-by-panel phase.
+OTOH, Pufferfish could also use some minor improvements.
+
+This most likely gives us between 3 (Catena, Lyra2 or POMELO or yescrypt,
+Makwa) and 7 winners (s/or/and/ and add battcrypt and Pufferfish).
+
+Argon and Parallel are not on my preferred list of winners, but having
+Parallel would make (more) sense to me.
+
+Almost all finalists are in need of having their submission packages
+improved before we possibly encourage their use.  For many, it's the
+big-endian support.  For yescrypt, the specification document needs
+significant improvements.
+
+I wanted to avoid even mentioning yescrypt here, but I could not because
+then I'd have to say that Lyra2 and/or POMELO should or should not be a
+winner unconditionally, which isn't my true opinion.
+---
+
+Alexander
+

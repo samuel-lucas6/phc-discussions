@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140208083106.GA9091@openwall.com>
+Date: Sat, 8 Feb 2014 12:31:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Bill,
+
+On Sat, Feb 08, 2014 at 12:00:30PM +0400, Solar Designer wrote:
+As an option, you might want to reuse the operations and the constant
+used in Mersenne twister's initialization:
+
+#define NEXT_STATE(x, i) \
+	(x) = 1812433253U * ((x) ^ ((x) >30)) + (i);
+
+where "x" is the current state (32-bit) and "i" is the iteration number.
+
+As a less conservative option, you may keep the non-linear operations
+from MT, but replace the constant with your "mem[] | 3" or similar.
+
+If you need to reference two memory locations on each iteration, like
+you currently do, then maybe take this construction from init_by_array()
+from mt19937ar.c:
+
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >30)) * 1664525UL))
+          + init_key[j] + j; /* non linear */
+
+and modify it as follows:
+
+        value = ((value ^ (value >30)) * (mem[prevAddr + i] | 3))
+          + mem[fromAddr + i] + i;
+
+(totally untested).
+
+Alexander
+

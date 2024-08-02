@@ -1,0 +1,86 @@
+phc-discussions - Re: [PHC] [OT] Improvement to Momentum PoW
+
+Message-ID: <CAOLP8p5jRG0NgODw8ZNd-UefpzjrLK2_aaovTM1A0n+TCoja=A@mail.gmail.com>
+Date: Tue, 28 Jul 2015 08:32:06 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] [OT] Improvement to Momentum PoW
+
+On Tue, Jul 28, 2015 at 6:57 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+>
+>
+On 28 Jul 2015, at 15:13, Bill Cox <waywardgeek@...il.comwrote:
+>
+On Tue, Jul 28, 2015 at 4:36 AM, Dmitry Khovratovich <
+khovratovich@...il.comwrote:
+>
+>I am not sure what you're calling by "parallel rho", but the parallel
+>collision search by van Oorschot-Wiener deals exactly with this problem.
+>They call it "golden collision" search in Section 4 of
+>http://people.scs.carleton.ca/~paulv/papers/JoC97.pdf .
+>>
+>The tradeoff in that paper is very favourable to the attacker: when the
+>memory is reduced by P^2, the time grows by the factor of P only, so it is
+>the sublinear growth. Storing only some small range of Hb(i) gives  a much
+>worse, linear tradeoff only.
+>>
+>Dmitry
+>>
+>
+This is incorrect.  This is covered in the paper in the section "Run-Time
+Analysis for Finding a Large Number of Collisions" under finding golden
+collisions on page 9.
+>
+The hash table algorithm uses O(sqrt(n)) memory, for n points, and runs in
+time O(n) to generate all collisions.  Decreasing it by a factor of T,
+causes it to run T times longer to generate all collisions, so memory*time
+= O(n^1.5), regardless of T.  The paper's algorithm runs with w
+distinguished points, using O(w) memory, and runs in time O(sqrt(n^3/w)).
+Memory*time is O(n^1.5*sqrt(w)).  This is far worse than the hash table,
+for all values of w >1.
+>
+>
+I understand it differently. The regular algorithm uses n memory for n
+>points and needs n time, so time*memory is n^2. It is equal to that of
+>dist. points algorithm for w=n, but the latter wins when you decrease w.
+>What is the hash table algorithm that needs sqrt(n) memory and n time?
+>
+>
+>
+Ah, you are right.  I forgot the basics :-p  However, the dist. point
+algorithm is still slower than the regular algorithm for a given amount of
+memory.
+
+The regular algorithm uses O(n) memory, and generates O(n) collisions in 1
+pass.  It's memory*time is O(n^2) and it generates collisions in average
+time of one call to Hb.  The dist. points algorithm if w = n/16, for
+example, will find a dist. point on average every 16 calls to Hb, and then
+resolve that collision on average with another 8 calls to Hb, with a 1/16
+chance of failure, to generate 1 collision.  Using a hash table with only
+n/16 entries requires n/16 calls to Hb to fill it, and then generates a
+collision every 16 calls to Hb on average.  The dist. point algorithm is
+slower for any memory size.
+
+The reason the dist. point algorithm works well normally is we are normally
+searching for a very rare collisions.  This is simply not the case here.
+The paper did not even cover this case.
+
+I know we don't like worrying about small constant factors much, but when
+talking about ASIC defense, we need every 10%.  The regular Momentum
+algorithm leaves itself open to parallel filtering on GPUs, and ASICs would
+be even stronger.  I prefer this version.
+
+In reality, we would not use a simple hash table.  It's too slow due to
+cache-miss penalties.  Instead we would create maybe 1024 4KiB buffers,
+which fit in L3 cache, and do a 10-bit radix sort of hashes into them,
+storing the 26-bit input hash and 16-bit result hash because 10 bits are
+determined by the buffer.  The speed of this radix sort is still pretty
+bad.  I'll see if I can speed it up further with a cache-row sized
+mini-buffer to improve write speeds to the main buffers.
+
+Bill
+
+
+

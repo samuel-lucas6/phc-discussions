@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+Message-ID: <CAHOTMVKb=YiSnussfW8c-+vqV4BTjuUE5dpFM58TL+vrzk+13Q@mail.gmail.com>
+Date: Wed, 7 Aug 2013 00:52:28 -0700
+From: Tony Arcieri <tony.arcieri@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+On Wed, Aug 7, 2013 at 12:45 AM, CodesInChaos <codesinchaos@...il.com>wrote:
+
+1. SHA-256 is very slow at producing a chain, so it takes a long time
+until you reach a significant amount of memory. There is a reason why
+scrypt uses round reduced Salsa.
+>
+
+So use Blake2b, or AES-NI in ECB mode as was discussed earlier/on other
+threads.
+
+
+ 2. `hash.call(salt, chains.join)` isn't parallelizable but takes a
+significant amount of time (A third with SHA-256).
+>
+
+This implementation is clearly naive. In C you could preallocate a large
+buffer where the string could be constructed in place in parallel, and the
+hash function could be run incrementally as more chunks become available
+(assuming you run M threads at a time to compute N chains). I could modify
+the Ruby version to do this as well.
+
+
+3. Your memory access is predictable, so the usual store every sqrt(n)th
+value, regenerate on the fly" technique breaks it:
+>
+For the first step a machine with pmem^{1/2} memory which stores every
+pmem^{1/2}th value. This runs in pmem time and uses pmem^{1/2} memory for a
+total cost of pmem^{3/2}.
+>
+For the second step use a machine with 2*pmem^{1/2} memory, initialized to
+the data produced in step 1. Then regenerate pmem^{1/2} values for each
+step in time pmem^{1/2} and pmem^{1/2} memory. Since there are pmem^{1/2}
+steps, the total time is pmem, and thus the total cost for this step is
+pmem^{3/2}.
+>
+Combined cost of these machines is ptime*pmem^{3/2}. A defender with a
+standard computer has cost ptime*{pmem^2} instead.
+>
+
+I can't say I understand what you're getting at here. Do you have something
+I can read on this topic? (possibly the scrypt paper?)
+
+-- 
+Tony Arcieri
+
+
+

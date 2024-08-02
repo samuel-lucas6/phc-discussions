@@ -1,0 +1,50 @@
+phc-discussions - Re: Another dumb idea: compute hardened KDFs
+
+Message-ID: <CAOLP8p48C920bb-+57szrAuad9y8HsRKYbkPrPYXyCXfTjRXZQ@mail.gmail.com>
+Date: Mon, 13 Jan 2014 21:39:53 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Another dumb idea: compute hardened KDFs
+
+I implemented this today.  My inner loop has a multiply, an OR, and an
+addition.  Here's delay with 1 thread doing 1/2B 32-bit multiplies
+while hashing 2GB of memory on my development machine:
+
+./run_noelkdf
+garlic:0 memorySize:2048 numHashRounds:2048 repeatCount:1 numThreads:1
+pageSize:4
+9D28A128581703F21C1DE198295326C0D3814EDDE3FC8BB045570EA25D3EB90C
+
+real    0m0.711s
+user    0m0.570s
+sys     0m0.140s
+
+With two threads:
+
+./run_noelkdf
+garlic:0 memorySize:2048 numHashRounds:2048 repeatCount:1 numThreads:2
+pageSize:4
+C555B8698F6286C2409E6FD6B2C34F7750C24EF39D16D29C4A9AE697BECADDB6
+
+real    0m0.397s
+user    0m0.640s
+sys     0m0.140s
+
+These runs fill 2GB of memory, reading once and writing once, for 4GB
+total transfer.  The second run used 10GB/s of bandwidth, out of what
+I think is about 25GB/s max, or 40.3% of the possible bandwidth.
+
+At the same time, the 1/4 giga-multiply operation each thread performs
+in series requires .236 seconds, or 3 clocks at 3.4GHz.  That's 59.4%
+of the total runtime.
+
+Combined, my cost*time is hardened to within 24% of the optimum
+possible for my hardware, simultaneously in memory space and compute
+time.
+
+That's a pretty tough KDF to attack with brute force.  There's work to
+be done making it secure, but I'm now sold on multiply based
+compute-hardening of KDFs.
+
+Bill
+

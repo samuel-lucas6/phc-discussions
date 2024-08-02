@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <5121A295.2030601@bindshell.nl>
+Date: Sun, 17 Feb 2013 19:40:05 -0800
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: Daniel Franke <dfoxfranke@...il.com>
+CC: discussions@...sword-hashing.net
+Subject: Re: [PHC] Any "large verifiers" on the panel?
+
+On 2/17/2013 4:25 PM, Daniel Franke wrote:
+Jeremi Gosney <epixoip@...dshell.nlwrites:
+>
+>You have to assume that if the passwords are compromised, the
+>encryption key is as well.
+I'm with all those who say that we shouldn't be granting this
+assumption. An adversary who has completely compromised a web server
+doesn't have to bother cracking password hashes at all. He can just
+capture unhashed passwords as they arrive over the wire. If we aren't
+completely wasting our time having this competition, then we should
+absolutely be thinking about what constitutes a realistic model of
+common partial-compromise scenarios
+
+I'm assuming that those who say that we should not be granting this
+assumption either are not hackers, or do not have an extensive
+background in real-world exploitation and post-exploitation. But that's
+okay, because as JP stated, one of the goals of this competition & list
+is to bring the academic and non-hacker types together with the
+"real-world" types.
+
+We are not assuming a complete compromise (i.e., root access) here.
+We're merely assuming an attacker who is able to execute arbitrary code
+in the context of the web server or webapp.
+
+SQL injection, remote includes, local includes, and straight RCE flaws
+are by and large the biggest ways password hashes are compromised. More
+often than not, these vulnerabilities can be leveraged to view arbitrary
+files, or in the best case scenario, obtain a shell running under the
+context of the httpd or webapp.
+
+A majority of the time, it is not possible to escalate our privileges.
+But what we can do is leverage our context to read any files that the
+httpd or webapp has permission to read. In the case of something like
+encryption, where the webapp has to have access to the key to
+encrypt/decrypt passwords, you too have access to the encryption key.
+
+And this is not an uncommon practice; config files and the webapp source
+code are among the first places we turn to determine exactly how the
+passwords have been hashed or otherwise obfuscated. Even if we dump a
+database and see what appear to be raw MD5 hashes, we still go to the
+code to verify the exact algorithm used. And if we see that the
+passwords were encrypted instead of hashed, we go straight to key. (And
+yes, this does actually happen on the rare occasion we find someone who
+is naive enough to encrypt passwords.)
+
+The same is true for any secrets that are used. If the webapp has
+permission to read them (which of course it does), then we have
+permission to read them too, and they are no longer secret.
+
+Regards,
+Jeremi
+

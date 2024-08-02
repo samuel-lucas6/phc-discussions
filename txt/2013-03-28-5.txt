@@ -1,0 +1,81 @@
+phc-discussions - RE: [PHC] Re: Suggestion: API should include a verifier function
+
+Message-ID: <006f01ce2bc6$f9d4e0c0$ed7ea240$@acm.org>
+Date: Thu, 28 Mar 2013 08:14:41 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+As long as I'm making code samples, I should show how one needs to be careful when working in a programming language.  This can be superior:
+
+   diff = 0;
+   for (i = 0; i < hash.length; i++)
+       {diff |= (hash[i] ^ key[i])}
+   return !diff;
+
+where key is the stored hash to be matched.
+
+This one depends on ^ and | operating in indistinguishable-from-constant time well below the noise by which the processor, run-time, and OS swamp any variation.  (Any variation for !diff doesn't matter of course.)  Again, it is all the more reason that there be a verification API behind which a platform-sensitive solution can be encapsulated.  
+
+The slides linked by Jeremy are valuable in a very important way.  The discovery of even a bit is enough to break a security argument, even about the hash.  In this case, supporting Peter's argument, discovering leading bytes of the hash is providing a progressive narrowing of a search space as part of a dictionary attack using a compilation of known password-hash pairs.  Determined adversaries can find useful heuristics for accelerating discovery in this case.  And the work can be crowd-sourced, of course.  As usual, the weakness of the password is the lever.
+
+Having said all of that, it also appears that the conditions under which the repetitive submissions of timed password tries goes undetected are rather contrived.  That does not mean the door should not be closed.  I think it is wise to assume that information disclosure is always a vulnerability that may become exploitable in some unforseen way.
+
+ - Dennis
+
+-----Original Message-----
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org] 
+Sent: Thursday, March 28, 2013 00:04
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+The problem of the variable string comparison time in naïve hash-match checks is a good reason for the separate Verifier API that Tony suggested.
+
+This problem and its solution is well-known and taught in introductory cryptography courses.  This is the simple example used to demonstrate timing attacks.  (E.g., in the Coursera Cryptography 1 course created by Dan Boneh.) I suppose this might have inspired some of the 100s of thousands who have taken such courses to try exploits.
+
+The best way to ensure that the fixed-time solution is employed is to use a verifier API that does the comparison in constant time and simply reports pass or fail.  It also must compute the hash, and it is desirable that there be no exploitable variation there as well (given the particular set of fixed parameters).
+
+This one is simple:
+
+   good = true;
+   for (i = 0; i < hash.length; i++)
+        {good &= (hash[i] == key[i])}
+   return good;
+
+The verifier must return only pass/fail and not differ in the (measurable) timing in reaching the different conclusions.  Even the above code might leak measurable information in an implementation. A platform-tuned verifier is where that can all be tuned away.
+ 
+ - Dennis
+
+-----Original Message-----
+From: Jeremy Spilman [mailto:jeremy@...link.co] 
+Sent: Wednesday, March 27, 2013 21:21
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+LMGTFY: 
+http://www.security-assessment.com/files/documents/presentations/TimingAttackPresentation2012.pdf
+
+-----Original Message----- 
+From: Peter Gutmann
+Sent: Wednesday, March 27, 2013 8:24 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+Watson Ladd <watsonbladd@...il.comwrites:
+
+>This isn't necessary: a non-constant time comparison at worst reveals the
+>hash, which doesn't give an attacker enough information to break a password
+>anyway if we do our jobs right.
+
+Oh yes it can ;-).  There's a clever attack that was presented at Kiwicon 
+last
+year that turns timing attacks on hashed passwords into partial attacks on 
+the
+original passwords.  It'll appear in the Crypto Corner column of IEEE 
+Security
+and Privacy in (AFAIK) the next issue.
+
+Peter. 
+
+
+

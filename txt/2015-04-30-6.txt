@@ -1,0 +1,100 @@
+phc-discussions - Maximising Pseudo-Entropy versus resistance to Side-Channel
+ Attacks
+
+Message-ID: <alpine.DEB.2.11.1504301247001.30743@debian>
+Date: Thu, 30 Apr 2015 14:43:45 +0200 (CEST)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Maximising Pseudo-Entropy versus resistance to Side-Channel
+ Attacks
+
+Dear all,
+
+In this ideal world, the adversary (say, Mallory) will have to try out 
+different passwords online, by trying to logging onto the defender's 
+system. In this ideal world, cleartext passwords would be fine. 
+Furthermore, passwords with x bit of entropy would be secure from Mallory, 
+if 2^x log-in attempts would be infeasible/impossible on the defender's 
+system.
+
+(Informally, a password has x bit of entropy if Mallory's chance to guess 
+it is at most 1/2^x.)
+
+Password hashing is about offline attacks, where Mallory knows the 
+password file. In this (partly real) world, cleartext passwords would 
+allow Mallory to succeed immediately. Good password hashing functions are 
+about adding y bit of "pseudo-entropy" to all passwords. I.e., trying out 
+2^x passwords would raise Mallory's costs
+
+ 	from 	2^x 	to 	2^x * 2^y = 2^(x+y).
+
+The sum x+y of password-entropy and pseudo-entropy defines the security of 
+the password.
+
+(Note that for different adversaries, using different tools, such as GPUs 
+or ASICs or FPGAs or Bot-Nets for the attack, the pseudo-entropy may be 
+different.)
+
+Obviously, good password hashing functions are about maximising y for the 
+adversaries we anticipate, given a limited "budget" for password hashing 
+on the defender's side. Thus, it is reasonable to focus on performance, to 
+answer the question "How far can we push y?"
+
+Except that there is no law that requires defenders to publish their 
+password files. Given past experience, it would be unwise for the defender 
+to assume the password file will never be compromised. For this reason, the 
+defender must use a good password hash function. On the other hand, is 
+would be just as unwise to assume that the password file will actually be 
+compromised. Without knowing the password file, Mallory would be back to 
+on-line attacking the defender's system. The point I am trying to make is 
+that in such a situation, a password hashing function being vulnerable to 
+side-channel attacks would be a terrible choice.
+
+As an example, let the password hashing function H1 be ten times faster 
+than H2, i.e., if Mallory's costs for H1 are be ten times higher than his 
+costs for H2 (for the same budget on the defender's side). Ten times 
+faster sounds like a big deal, doesn't it?
+
+Well, the H1 would provide log_2(10)=3.32 bit more pseudo-entropy than H2. 
+To compensate for using H2, the defender could choose passwords, with 3.32 
+bit of additional entropy. Just appending one single random digit to the 
+password would suffice.
+
+Even if the defender does not really understand how Mallory might mount a 
+side-channel attack against H1, choosing H1 for the marginal gain of a ten 
+times better performance could be a fatal move, if H2 is resistant to 
+side-channel attacks. The most serious issue are cache-timing attacks, 
+but one should also consider garbage collector attacks, and possibly other 
+attacks as well.
+
+(Note that the situation for password-based key derivation, is different. 
+There, can hardly exclude Mallory from performing off-line attacks. Except 
+when Mallory doesn't have the ciphertext -- but then, why should Mallory 
+care for the key or the password at all?)
+
+
+The consequence for PHC?
+
+If PHC selects a single winner from one of the finalists, it should either 
+be Argon2i or Catena. If PHC selects more than one winner, the set of 
+winners should include at least one of Argon2i and Catena. (Or, if we 
+don't care about forcing Mallory to allocate a large amount of memory, 
+Makwa and Parallel would be alternatives.)
+
+
+So long
+
+Stefan
+
+
+Remark: This is my personal view. Being one of the authors of Catena, I am 
+biased. Nevertheless, I didn't write this to promote Catena.  Quite the 
+contrary, I did write this, because I consider this a vital issue for PHC 
+-- and this is one of the reasons, why Catena is, as it is.
+
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+

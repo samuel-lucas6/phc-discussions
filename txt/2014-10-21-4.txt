@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] simplifying yescrypt
+
+Message-ID: <5445DD52.2050106@ciphershed.org>
+Date: Tue, 21 Oct 2014 00:13:06 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 10/20/2014 10:04 PM, Solar Designer wrote:
+More detail on one of the possible changes:
+
+On Tue, Oct 21, 2014 at 05:58:37AM +0400, Solar Designer wrote:
+>- Drop support for ROM access frequency mask.  In practice, this 
+>will mean no ROM-on-SSD support (only ROM-in-RAM will be 
+>supported).  The reason why I am considering dropping this is 
+>that in most cases where I would have recommended use of 
+>ROM-on-SSD I would _also_ recommend simultaneous use of 
+>ROM-in-RAM, and then it would need to be two ROMs, with
+>different access frequency, resulting in even greater complexity.
+>Perhaps just one mask (only for the ROM-on-SSD) would be enough
+>even in that two-ROMs case, though.
+
+My options are:
+
+1. Leave things as-is, meaning that "large" yescrypt users (on 
+dedicated authentication servers) will have to choose either 
+ROM-in-RAM or ROM-on-SSD, but not both at once (well, except 
+possibly by chaining two invocations of yescrypt, which is a 
+suboptimal hack).
+
+2. Add support for two ROMs at once.
+
+3. Drop support for controlling ROM access frequency (and thus for
+ ROM-on-SSD).
+
+Obviously, only #3 fits the topic of this posting, but I'd like 
+this community's opinions on which option is best.  Technically, 
+I'd be able to introduce #1 or #2 in a superset of yescrypt later 
+even if I go with #3 now, so the question may be whether we want 
+ROM-on-SSD considered a supported feature in PHC context (in the 
+PHC candidate or in a currently existing superset of it).
+
+For ROM-in-RAM, there's normally no reason to use a mask other
+than 1, which means that 1/2 of reads (and obviously none of the
+writes) are from ROM.
+
+Hypothetically, I can imaging going to work for some huge
+corporation... like Google for instance, maybe even in their
+authentication group.  In that case, if I were going to internally
+promote Yescrypt based password authentication servers, it might be
+the case that many of my peers know even less about password hashing
+than me.
+
+I think my first challenge would be to convince people of the value of
+ROM in the first place.  That's easy - it eliminates botnet attacks.
+After that, explaining why we need *two* forms of ROM, and how that
+makes password hashes more secure is actually beyond my skill level
+right now.
+
+Somehow I feel we need to be able to delegate a proper password hash
+with the security of Makwa, while using a 1TiB ROM to defeat botnets,
+and only store a user's public key in the user database.  I was told
+about the idea of only storing user public keys rather than password
+hashes recently, and I think the idea has merit.  However, that means
+there is a private key sitting on an average user's cell phone, and
+that key needs proper pin/password protection with a good password
+hashing algorithm.  I certainly hope we can use a PHC winner for that :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJURd1PAAoJEAcQZQdOpZUZSEoP+wWySQSd+lAp7U1hR91qD1qJ
+I8Gh9PlFfbZVxLebawybZy2FBTAyQonsLvDEWt6BIHw3i6u+1lPgpNJ8xbILZK/5
+uVyG9vEMbMPl/6/ohUZM/YUH4Xe1JipudD/j95Z2Gl1iBOPQky3g03K6NLcuRH3i
+W9/Q+XwN4MsDebaOy0+6p2rrQP1MAt2zW7+Wpcj+bggCI2fgLXPNAJvJZIezh7Ww
+yhg+9A+CIFbDLG9neYxG4RSASZ41o66oSddnSRiYVx9G7fzZEn7Gx264toj7a3Sc
+P3TbqHxIQbW/YWcBGtofbhav0SyG5NwJCb/pdyr8ctSEH8Ef8iyKSuGbeZBS/pOV
+phz1yNmBurA+yjPpCQbgNxdeE2bQhWgS5ATkHYj9Z8KVQ9kg73rmRN15uXzbhgIZ
+/AzueyU/oR1q48KVMSX1nYOke85SVFeRgn72qb7Oq7Y1aT9aITPe+R7iHyoLJ6oB
+PL6LOpFZfyd7CqulgSw6zy+OCR1o9EqB87DzsFKMVsl8fyauoojZppcfEBUwzgbW
+Ald19NczdpFuHfjB0lOBDtzklaCaDqb8Z0tc8DS4XRmufJClrAa/T1UTq9KjmAdZ
+BKp4A2jYDBtWJLfdylsCjHhgDilUVGDVbLUhGyUgqGl9HZEG3n+UwPXQ3RNRI/Cf
+4m+6719qjsy7Pyat0KSL
+=Mbx8
+-----END PGP SIGNATURE-----
+

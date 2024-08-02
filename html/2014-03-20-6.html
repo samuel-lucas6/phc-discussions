@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Supporting AVX2/SSE2 or not with a single binary</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="5">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;829439761.283784.1395283172949.open-xchange&#64;email.1and1.com&gt;
+Date: Wed, 19 Mar 2014 21:39:32 -0500 (CDT)
+From: Steve Thomas &lt;steve&#64;...tu.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+&gt; On March 19, 2014 at 8:09 PM Andy Lutomirski &lt;luto&#64;...capital.net&gt; wrote:
+&gt;
+&gt; On Wed, Mar 19, 2014 at 5:54 PM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+&gt; &gt; One reason I think we see applications running without SSE/AVX2
+&gt; &gt; support is that operating systems don't want to support two versions
+&gt; &gt; of a binary, and they have to support older machines. The Blake2 code
+&gt; &gt; I've read does not provide for a single binary that supports both - I
+&gt; &gt; have to link either to the blake2-ref code or the blake2-sse code. My
+&gt; &gt; TwoCats code has inherited this limitation, since I used the Blake2
+&gt; &gt; code as a roadmap for figuring out how SSE2 works. These guys over on
+&gt; &gt; StackOverflow think they've got code to detect SIMD support and allow
+&gt; &gt; a single binary to support both:
+&gt; &gt;
+&gt; &gt; <a href="http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set" rel="nofollow">http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set</a>
+&gt;
+&gt; That answer is crap. You cannot detect whether AVX is usable using
+&gt; just cpuid -- you need to use (IIRC) xgetbv as well.
+
+Agree.
+
+&gt; On gcc 4.8 and up, function multiversioning [1] is probably the way to
+&gt; go. On Windows (if you want to support MSVC), you'll need to do
+&gt; something different. Of course, function multiversioning has the same
+&gt; bug [2] and no one has fixed it yet.
+&gt;
+&gt; [1] <a href="http://gcc.gnu.org/wiki/FunctionMultiVersioning" rel="nofollow">http://gcc.gnu.org/wiki/FunctionMultiVersioning</a>
+&gt; [2] <a href="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=55307" rel="nofollow">http://gcc.gnu.org/bugzilla/show_bug.cgi?id=55307</a>
+
+Disagree. That's cool and all but worthless: only Linux and buggy.
+
+------
+
+Bill don't try to learn SS*E*/AVX* from the blake2-ref code... besides being
+buggy. It is really hard to read. For me it was actually easier to read code
+(<a href="https://github.com/dchest/blake2b" rel="nofollow">https://github.com/dchest/blake2b</a>) in a language I don't know than to read
+that. I was trying to figure out how Blake2b worked and with the combination
+of bad doc and bad code it was "impossible" (not worth a few hours). Until
+finding a simple  implementation in Go.
+
+The way I' ve been dealing with write "once" compile twice (Linux/Windows)
+run best code "everywhere" is: <a href="http://www.tobtu.com/files/rt-bench.zip" rel="nofollow">http://www.tobtu.com/files/rt-bench.zip</a>
+Specifically:  src/common.cpp (getInstructionSets()),  src/hashfactory.h, and
+src\hash\*. Note there are better ways to do this. This was just one I did
+awhile ago and I am still like well I could change that and it would be better.
+
+Also this is for a different purpose  hash cracking with rainbow tables but
+can be used with hash cracking in general and parallel  hashing. These
+implementations are all single block and are severely  length limited.  Oh
+right it has support for detecting AVX2 but no code is written for it.  Although
+it would be super easy to add it (I just wanted to test it first but at the time
+I
+don't think I knew about Intel's emulator and obviously  AVX2 was not out yet
+[this was all written in late 2011 and early  2012]).  One way to make this
+better is using templates and static inline class  functions to do the minor
+differences in  architectures .
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

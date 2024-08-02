@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140226091413.GB6224&#64;openwall.com&gt;
+Date: Wed, 26 Feb 2014 13:14:13 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?
+
+On Wed, Feb 26, 2014 at 12:31:21AM -0500, Bill Cox wrote:
+&gt; This is probably a case of my being ignorant because I'm new to
+&gt; password hashing.
+
+No, it's not that.  This is a fine question to bring up, by anyone.
+
+&gt; I read this paper because there's a link to it from the PHC FAQ:
+&gt; 
+&gt; Design and Analysis of Password-Based Key Derivation Functions
+&gt; <a href="http://palms.ee.princeton.edu/PALMSopen/yao05design.pdf" rel="nofollow">http://palms.ee.princeton.edu/PALMSopen/yao05design.pdf</a>
+&gt; 
+&gt; There's some very cool stuff there, and the attack on PBKDF2 based on
+&gt; the ability to have the user re-enter his password while an attacker
+&gt; chooses a number of hash rounds is brilliant, and belongs in a paper,
+&gt; but should we take action to defend against this attack, or simply
+&gt; enjoy it's novelty?
+&gt; 
+&gt; In particular, this attack assumes the attacker can choose input
+&gt; parameters other than the password, and then have the user use those
+&gt; parameters and reenter the password.  The hashing then takes place
+&gt; where the attacker can see the resulting hash value, but not the
+&gt; password.  I have difficulty finding the motivation to upgrade my KDF
+&gt; to defend against this scenario.  Is it even remotely possible?
+&gt; 
+&gt; In particular, if an attacker can chose inputs other than the
+&gt; password, why not just make the salt 0 so he can do a dictionary
+&gt; attack?  How does hashing all the input parameters defend against
+&gt; attacker chosen salt?  I read code where the salt length is hashed
+&gt; in... am I being daft (which I often am), or is that as useless as it
+&gt; seems at face value?
+
+The paper uses the word "chosen" for the iteration count, which does
+appear to make the attack a lot less useful in practice, but I think the
+attack also matters when the iteration count is not attacker-chosen, but
+rather when multiple different iteration counts just happened to be used
+by the defender, and those multiple hashes happened to leak.  The paper
+shows that for PBKDF1 and PBKDF2 the leak of 2 or 3 such hashes may
+allow for significantly faster offline attacks.  This is important.
+
+As to attacker-chosen iteration counts, this is not absurd either.  For
+example, a program might be adjusting the iteration count based on the
+system's measured performance, and the performance may vary depending on
+other system load (and on many other factors).  So an attacker with
+access to another account or VM on the same machine as the defender may
+affect the iteration count being used on a given occasion.  If the same
+password is reused to derive multiple keys - or, to make attack more
+likely and relevant, separate hashes to be used for authentication, e.g.
+on separate pseudo-user accounts of the person - then the system may
+happen to store a combination of derived keys or hashes that together
+may be offline-attacked quicker (to crack the reused password) than any
+one of them would be attacked individually.
+
+&gt; Which is more likely of these two possibilities? 1) the KDF designer
+&gt; messed up and has a way to attack his algorithm because he didn't hash
+&gt; in all the input parameters, and 2) a random implementer messed up the
+&gt; hashing of all the input parameters, creating a weakness.
+
+I don't know which is more likely.
+
+As you probably realize, hashing of all the input parameters is not the
+only way to prevent this attack.  A final step may (or may not,
+depending on how it's chosen) also prevent the attack.  (Arguably, this
+translates into hashing of the iteration count anyway, via the iteration
+count indirectly affecting the input to this final crypto hash step.)
+Would this fall under "the KDF designer messed up" (if such a final step
+is missing or does not prevent the attack)?  As a side-effect, having a
+final step like this also prevents hash upgrades to higher iteration
+count, which brings us right to:
+
+If we do support hash upgrades to higher m_cost and/or t_cost, we're
+susceptible to a variation of this attack, almost by definition.  Given
+a pre-upgrade and a post-upgrade hash, the attacker only needs to
+perform the upgrade for each candidate password to test that candidate.
+The attacker does not need to compute either hash fully.
+
+This means that upgrades should be at least by the AT cost of the
+pre-upgrade hash, thus at least doubling that cost for the upgraded
+hash.  If this is not true, then an attacker having obtained both a
+pre-upgrade and a post-upgrade hash gains advantage, compared to them
+having only the pre-upgrade hash.  Then the upgrade is actually a
+tradeoff, making the post-upgrade hash stronger as it should, but also
+making the combination of two hashes weaker than the original.  We'll
+probably want to avoid the possibility of this situation (don't support
+too small upgrades, which we have another good reason not to anyway, as
+previously discussed).
+
+Another observation is that not-yet-upgraded hashes should preferably
+not have any upgrade points in their computation.  This was already
+preferable in order to maximize their effective memory cost, but now
+we're reminded of an extra reason for that.
+
+&gt; Can I just ignore this case?
+
+No, let's keep the above things in mind.
+
+Thank you for bringing this up!
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+Message-ID: <20140124014458.GA13237@openwall.com>
+Date: Fri, 24 Jan 2014 05:44:58 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+On Fri, Jan 24, 2014 at 05:37:52AM +0400, Solar Designer wrote:
+... which leads us to a new concern: what if the same-machine attacker
+without knowledge of the salts does make a likely guess at the password
+(e.g., guesses "123456", which might be correct with 1% probability when
+there's no password policy)?  This attacker can then try to infer salt
+bits, still not knowing whether the password guess was right or not.
+Then, having obtained (via cache timings) the possible salt _assuming_
+that the password was guessed correctly, the attacker can use further
+cache timing attacks to test whether the password guess was in fact
+correct or not.  If not, repeat for second most common password.  Nasty.
+
+Oh, I think this is easily defeated by having a lot of entropy in the
+salt, and it being processed in large enough chunks (or in its entirety
+at once) - not by individual salt bits (or individual salt-derived bits),
+nor other small quantities (e.g. 8-bit would be too small), affecting
+individual lookup indices, but rather the salt as a whole (and never a
+much smaller portion of it) affecting the indices.  Then the attacker
+would have to probe for full salts, and this is too large a space.
+
+Alexander
+

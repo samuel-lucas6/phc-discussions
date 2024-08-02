@@ -1,0 +1,345 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Intentionally increasing password hash collisions</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/12/11/3">[&lt;prev]</a> <a href="../../../2013/12/19/1">[next&gt;]</a> <a href="../../../2013/12/09/5">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOe4Uin1huohnWF=OD7Mx1_Q_36xv=fqVhvsiGj9zUE=XyH1mA&#64;mail.gmail.com&gt;
+Date: Sun, 15 Dec 2013 20:00:48 -0500
+From: Joseph Bonneau &lt;jbonneau&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Intentionally increasing password hash collisions
+
+Sorry to be a week late here. Some very good discussion though, thanks a
+lot for kicking it off Matt.
+
+I've argued unsuccessfully for this change many times with websites
+deploying it. I think Taylor's point #1 about game theory is on the right
+track, though more simply I see two related things:
+*Many sites can't fathom that they might leak their password database and
+hence don't think it's worst investing time/thought into a feature that is
+only useful after a leak.
+*Savvier sites figure that if they were using a collision-rich hash
+function (my preferred term) and they leaked their password database, this
+would be too complicated to come out in news coverage as a mitigating
+factor and hence they would take an equivalent publicity hit anyways, so
+what would this really buy them?
+
+I don't see Taylor's #2 as a major concern. Website users already can't
+manage their own security against all sorts of risks (like how effectively
+websites rate-limit to begin with) so making a smart choice on their behalf
+here is sensible, though it's probably worth having a disclaimer for power
+users.
+
+The other big objection is that the gain here may not be very big in
+practice. Nobody I've talked to would accept less than 30 bit hashes,
+assuming they can hope to keep attackers to 2^20 guesses or thereabouts
+using rate-limiting and they want a security margin, and sometimes I've
+heard 40 bits as the minimum. Given how weak most passwords are, with 40
+bits leaked you're really only protecting pretty serious power users, and
+even they're probably vulnerable with 40 bits leaked + 20 bits
+rate-limiting at a second site where the password has been re-used. Even
+with 30 bits leaked you've effectively given up the majority of your users
+passwords.
+
+So I have supported this approach for a while but I think in the big
+picture it's a pretty marginal improvement. Though it is very easy to
+implement-the hurdle to implementing isn't writing one line of code to drop
+bits, it's not knowing if this is a good idea at all and not wanting to do
+the analysis. If there were a nice write-up and NIST or some other source
+viewed as authoritative officially endorsed this approach perhaps that
+would make a difference.
+
+Cheers,
+
+Joe
+
+
+On Mon, Dec 9, 2013 at 5:25 PM, Matt Weir &lt;cweir&#64;...edu&gt; wrote:
+
+&gt; Thanks Taylor,
+&gt;     So there's another question that I've been thinking about that hits
+&gt; some of the points you brought up. What do you do when systems that most
+&gt; need hash collisions are the ones least likely to implement it? Aka we'd
+&gt; see the largest overall security benefit and least downsides of using this
+&gt; strategy on sites that don't practice strong security and contain low value
+&gt; data.
+&gt;
+&gt; If this proves to be a useful technique, ideally I'd like to see it
+&gt; incorporated into common forum software, (PhpBB, VBulletin, etc), as the
+&gt; default option. Also by default it would only apply the shorter hashes to
+&gt; accounts that do not have administrative privileges. Site administrators
+&gt; would be able to disable this if they choose. That's just like in PhpBB
+&gt; right now where you can choose a more time intensive hash than the default
+&gt; if you want.
+&gt;
+&gt; By including this scheme as the default option of common software it helps
+&gt; address the game theory question you brought up. While it might not be in
+&gt; the site's best interests to go with such a scheme, (side note: In this
+&gt; case a site's interests and a site's users' interests are two different
+&gt; things), it may be in the forum software maker's interests to enhance the
+&gt; security of the community as a whole. Since it would be the default option,
+&gt; sites that spend the time hardening their systems might deem it worthwhile
+&gt; to opt out if they want, but the vast majority of low security sites would
+&gt; end up using this scheme.
+&gt;
+&gt; That's not to say that this should only be applied to low security sites.
+&gt; In higher security sites such a scheme might make lateral movement more
+&gt; costly and easier to detect. Likewise if a site does get popped, using a
+&gt; scheme like this could help provide some PR benefit. All I'm saying is that
+&gt; there's ways this scheme could be deployed to a large enough audience that
+&gt; it could start to make an impact even though the benefits to each site to
+&gt; individually opt into it are low.
+&gt;
+&gt; As to your second point about experienced users not being able to pick
+&gt; their own security, I think it'd be good to define what "experienced user"
+&gt; means. I would argue that in this context "experienced user" would be
+&gt; someone who uses an unique password for the site in question that isn't one
+&gt; of the top 20k most likely passwords. I'm using this definition because
+&gt; those are the advanced users that will see the least benefit from this
+&gt; scheme. I'm focusing on the importance of "unique" since if you reuse your
+&gt; password, even if it's "uncrackable", it might end up in a wordlist someday
+&gt; because the one of the other sites stored the password in plaintext.
+&gt; Likewise, if a user's password is unique, even if it's crackable it would
+&gt; provide very little benefit to an attacker. Aka if the attacker has access
+&gt; to the user's hashes, they probably also have access to their data on the
+&gt; site. I also like this definition because "unique" is much easier to define
+&gt; that "strong" ;p Side note, I'm still struggling with what to call these
+&gt; users since "advanced" or "experienced" carries too much luggage in my
+&gt; opinion. I'm currently leaning towards "password-vault users" since that's
+&gt; pretty much required to choose an unique password per site. The downside is
+&gt; that ignores a user who for whatever reason may deem it important to have
+&gt; an unique password for a particular site which this scheme is applied, but
+&gt; not to others. In that case they don't need to use a password-vault.
+&gt;
+&gt; So the question to then ask is how many users are password vault users,
+&gt; and how prevalent is password reuse? There's some studies on this out
+&gt; there. My favorite is <a href="http://research.microsoft.com/pubs/74164/www2007.pdf" rel="nofollow">http://research.microsoft.com/pubs/74164/www2007.pdf</a>
+&gt;
+&gt; Really though the question is do the negative aspects of this scheme to
+&gt; password vault users outweigh the positive aspect it provides to non
+&gt; password vault users? That takes a little more arguing than I'd like to go
+&gt; into this e-mail, and quite honestly I'm still working on that. My current
+&gt; feeling is that in a lot of cases the answer is "yes". While I can go into
+&gt; the numbers from previous studies like the one I mentioned above, one quick
+&gt; reasoning is that the rate at which we're seeing password reuse attacks
+&gt; occurring in the wild says that this is certainly a problem that needs to
+&gt; be addressed, and the added risk imposed on password vault uses by this
+&gt; scheme is low in a vast majority of cases. Aka most people's accounts
+&gt; aren't worth the investment of a 20k node botnet to crack.
+&gt;
+&gt; To further minimize the risk, and to pull the responsibility off of users
+&gt; to be secure, (we need to take into account how people behave when
+&gt; designing systems), I think it's useful to instead look at the worth of
+&gt; user accounts when determining when to apply this scheme. That's why in the
+&gt; above suggestion the default option would be to not apply reduced hashes to
+&gt; administrator accounts. Those are the accounts that are much more likely to
+&gt; be targeted directly by an online attack where the attacker is willing to
+&gt; invest the resources to obtain a login via collision.
+&gt;
+&gt; Now we can start looking at the overlap in Venn Diagrams of:
+&gt; 1) Systems/Sites that are secure vs hacking attempts
+&gt; 2) Users on those sites that pick passwords that aren't guessable in an
+&gt; online attack
+&gt; 3) Users that would be inconvenienced or harmed if their account on that
+&gt; site was compromised
+&gt; 4) Accounts that would be worthwhile for an attacker to invest the
+&gt; time/resources to find a login via password collision
+&gt; 5) Accounts have the reduced password hash scheme applied to them
+&gt;
+&gt; And compare it to the Venn Diagram of:
+&gt; 1) Systems that will be successful hacked
+&gt; 2) Users who reused password on that site with another site the attacker
+&gt; wants access too. Note in this case reuse doesn't require a direct reuse
+&gt; but variations as well. Aka attackers will often mangle known passwords.
+&gt; Aka if they crack "password1" they might also try submitting "password2"
+&gt; and "password3"
+&gt; 3) Users who had "crackable" passwords given the hashing scheme of the
+&gt; site.
+&gt; 4) Users who would be inconvenienced or harmed if the attacker compromised
+&gt; their account referenced in #2
+&gt;
+&gt; As to your third point about "rate limiting on the internet is hard" I
+&gt; agree with you. On the flip side, a lot of valuable sites, (google,
+&gt; facebook, twitter, etc), do perform rate limiting which can increase the
+&gt; costs of making large number of guesses against them. Aka while the sites
+&gt; that make use of reduced hashes may not employ rate limiting, when
+&gt; attackers attempt to use those collisions vs high value sites it can become
+&gt; expensive thus protecting the users who had accounts on both those sites.
+&gt; Of course your comment mostly was focused on the fact that if rate limiting
+&gt; is not used, or if an attacker devotes enough resources to bypass rate
+&gt; limiting, they will eventually be able to gain access to an account with
+&gt; reduced hashes. I'm not arguing with that so much as saying there's a lot
+&gt; of situations where the cost/benefit ratio of reduced hashes benefits the
+&gt; defender more than the attacker. In situations where it doesn't exceptions
+&gt; can be made for classes of accounts, individual accounts, or entire sites.
+&gt;
+&gt; Matt Weir
+&gt;
+&gt;
+&gt;
+&gt;
+&gt; On Mon, Dec 9, 2013 at 2:05 PM, Taylor Hornby &lt;havoc&#64;...use.ca&gt; wrote:
+&gt;
+&gt;&gt; On 12/09/2013 10:55 AM, Matt Weir wrote:
+&gt;&gt; &gt; 1) If an attacker gains access to the hashes but does not have access to
+&gt;&gt; &gt; the individual user accounts, (an example would be a SQL injection
+&gt;&gt; attack
+&gt;&gt; &gt; with only SELECT privileges), then by cracking the hash they can log in
+&gt;&gt; as
+&gt;&gt; &gt; the user
+&gt;&gt; &gt;
+&gt;&gt; &gt; 2) The attacker is attempting to gain knowledge about user's raw
+&gt;&gt; password
+&gt;&gt; &gt; for use in attacking other sites/services.
+&gt;&gt; &gt;
+&gt;&gt; &gt; The core idea behind this submission is that it may be worth giving up
+&gt;&gt; the
+&gt;&gt; &gt; security in use case 1, as well as making it possible for an attacker to
+&gt;&gt; &gt; log into a site via a collision, with the end goal of making use case 2
+&gt;&gt; &gt; more costly for an attacker. Or to put it another way, there's a lot of
+&gt;&gt; &gt; sites on the internet that are not valuable to users, but are valuable
+&gt;&gt; to
+&gt;&gt; &gt; attackers looking to steal credentials for use in attacking more
+&gt;&gt; valuable
+&gt;&gt; &gt; sites.
+&gt;&gt;
+&gt;&gt; I'm inclined to like this idea, but three objections are always raised,
+&gt;&gt; and never seem to be resolved:
+&gt;&gt;
+&gt;&gt; 1. Game theory: A rational website would not decrease its own security
+&gt;&gt; to make the user's account on other websites (business competitors) more
+&gt;&gt; secure.
+&gt;&gt;
+&gt;&gt; 2. "Experienced" users cannot choose their own level of security. They
+&gt;&gt; are forced to have their security downgraded because other users are
+&gt;&gt; re-using passwords on other websites when they are not. They're using a
+&gt;&gt; 64-character random ASCII password but someone could still log in to
+&gt;&gt; their account after a million online requests. This almost punishes good
+&gt;&gt; user behavior.
+&gt;&gt;
+&gt;&gt; 3. Rate limiting and account lockout across the Internet is hard.
+&gt;&gt;
+&gt;&gt; You can't just sleep(5000) before each authentication request, because
+&gt;&gt; requests can be made in parallel. You can't rate limit based on the
+&gt;&gt; source address, since it's easy to get tons of IPs (botnets, IPv6). You
+&gt;&gt; can rate limit based on the account, but this makes it easier to DoS a
+&gt;&gt; specific user and doesn't stop attackers from sending parallel requests
+&gt;&gt; to many *different* accounts.
+&gt;&gt;
+&gt;&gt; If hashes are 20 bits, and the attacker has 2^20 IP addresses, I don't
+&gt;&gt; see how you could reasonably prevent them from getting into at least one
+&gt;&gt; account without knowing the real password.
+&gt;&gt;
+&gt;&gt; I am very interested to see if you've solved any of these problems.
+&gt;&gt;
+&gt;&gt; This idea was also discussed after I proposed it to the GRC newsgroups
+&gt;&gt; in 2011, there might be something useful there:
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; <a href="https://www.grc.com/x/news.exe?utag=&amp;group=grc.techtalk.cryptography&amp;from_up=6913&amp;from_down=6853&amp;cmd_down=View+Earlier+Items" rel="nofollow">https://www.grc.com/x/news.exe?utag=&amp;group=grc.techtalk.cryptography&amp;from_up=6913&amp;from_down=6853&amp;cmd_down=View+Earlier+Items</a>
+&gt;&gt;
+&gt;&gt; See the thread "Are Short Password Hashes Safer?", which starts with
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; <a href="https://www.grc.com/x/news.exe?cmd=article&amp;group=grc.techtalk.cryptography&amp;item=6849&amp;utag=" rel="nofollow">https://www.grc.com/x/news.exe?cmd=article&amp;group=grc.techtalk.cryptography&amp;item=6849&amp;utag=</a>
+&gt;&gt;
+&gt;&gt; (I am "FireXware")
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; Taylor Hornby
+&gt;&gt;
+&gt;
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

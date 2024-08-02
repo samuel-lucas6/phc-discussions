@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 CPU/GPU benchmarks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150819160644.GA16884&#64;openwall.com&gt;
+Date: Wed, 19 Aug 2015 19:06:44 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Hi Dmitry,
+
+On Wed, Aug 19, 2015 at 12:13:06PM +0200, Dmitry Khovratovich wrote:
+&gt; thank you for the benchmarks! We are still working to produce new code
+&gt; (enhanced + Maxform) that can be used for future testing. Please feel free
+&gt; to ask for specific code change that might favor GPU portability.
+
+Thanks.
+
+What do you mean by GPU portability here?  Simplifying OpenCL
+implementations for testing, or for actual defensive use of GPUs?
+
+So far, our intent has been mostly to discourage attack use of GPUs, so
+we compare the different schemes with this in mind.  It is also possible
+to efficiently use GPUs defensively e.g. with Litecoin-like parameters to
+scrypt (and thus to yescrypt in scrypt compatibility mode) and high p,
+but I think Argon2's different thread-level parallelism model
+discourages reaching that level of efficiency at defensive use of GPUs.
+
+&gt; I have several questions:
+&gt; 
+&gt; 1) Would you attribute these results to the existing Argon2 parallelism in
+&gt; the compression function (8 x parallel Blake2)? Do you already exploit this
+&gt; feature? If yes, then we already have a more sequential pattern in mind,
+&gt; that would be great to test with or without Maxform.
+
+We don't yet exploit this (except possibly to a very limited extent that
+an OpenCL compiler and the hardware might), so I wouldn't attribute the
+current results to it.  I've been thinking of communicating suggestions
+on how to try exploiting this to Agnieszka today.  So we'll likely try.
+If successful, this should let us pack more concurrent instances of
+Argon2, and should provide much speedup over the results so far (as
+we're not yet bumping into memory bandwidth, by far).
+
+I attribute the faster attacks on Argon2 than on Lyra2 on the NVIDIA GPUs
+so far primarily to Argon2 having a smaller internal state (Lyra2 was
+benchmarked with 24 KiB blocks).  yescrypt also has more internal state
+due to the pwxform S-boxes, plus the pwxform operations themselves slow
+GPUs down.
+
+&gt; 2) How do you get these extrapolation numbers for Titan X? What are these
+&gt; numbers in the denominator?
+
+3072 and 640 are the total "shader" or "CUDA core" counts (32-bit SIMD
+vector elements) for the two GPUs (Titan X vs. 960M).  Since it's the
+same architecture, we could also compare SMM counts: 24 vs. 5, leading
+to the same ratio.
+
+1000 and 1096 are the base clock rates in MHz for the two GPUs (actual
+clock rates should be slightly higher for both).
+
+Combined, these result in Titan X being 3072/640*1000/1096 = 4.38 times
+faster.  In case memory bandwidth ever becomes the limiting factor (as
+we optimize the code more), it's similar too: 336/80 = 4.2 times faster.
+
+&gt; &gt; Potential results for GTX Titan X:
+&gt; &gt;
+&gt; &gt; 2480/(1861*3072/640*1000/1096) / (4736/419) = 0.027
+&gt; &gt; 7808/(4227*3072/640*1000/1096) / (4736/419) = 0.037
+&gt; &gt;
+&gt; &gt; or:
+&gt; &gt;
+&gt; &gt; 4736/419 / (2480/(1861*3072/640*1000/1096)) = 37.1
+&gt; &gt; 4736/419 / (7808/(4227*3072/640*1000/1096)) = 26.8
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

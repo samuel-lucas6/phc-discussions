@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] Native server relief support for password hashing in browsers</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="12">[&lt;prev]</a> <a href="14">[next&gt;]</a> <a href="12">[&lt;thread-prev]</a> <a href="14">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;007c01cf153f$c9f36c10$5dda4430$&#64;acm.org&gt;
+Date: Sun, 19 Jan 2014 09:56:31 -0800
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;,
+	'Krisztián Pintér' &lt;pinterkr&#64;...il.com&gt;
+Subject: RE: [PHC] Native server relief support for password hashing in browsers
+
+To test my understanding, here:
+
+ 1. The case of K = H(PBKDF(pwd,salt))
+
+Is equivalent to the use of a client-side password safe or other consistent generator, the idea being that the key communicated, k0, including k0 = PBKDF(pwd,salt), is likely unique and computationally indistinguishable from random.  Basically, the recipient of k0 has no knowledge of its production and there is no evidence for it in K.
+
+ 2. Under the given PHC threat scenario, it is assumed that K is disclosed and the work factor for discovering a k0 (or k0' collision) value by off-line attack is daunting enough and of limited value (i.e., that value is not reused in any other setting).  That work factor applies to H, not the PBKDF.
+
+ 3. It seems to me the critical issues here are (a) the secure maintenance of the k0 source and communication of k0 to the service and (b) the security in which K = H(k0) is derived and k0 is no longer available, and (c) the difficulty in finding a k0' collision for a disclosed K.  Under the conditions of (1), it seems to me that (c) depends most of all on the size of k0 and K in bits more than anything else.  Other things can be done, but the greatest source of exponentially-increasing difficulty against off-line attack is (simply) having more bits in K and k0 along with a cryptographic-quality H().
+
+OBSERVATIONS
+
+The appeal here is that authenticating a given k0 against K is easy in comparison with attempting to determine k0 by brute force, even off-line with significant time and resources.  It would seem this is as good as it gets for a situation in which the persistent K is purloined.  Ideally, the difficulty buys enough time to mitigate the loss of K before knowledge of it can be exploited.  This is the primary security case for password-based authentication, as far as I can tell.  It seems to be a key requirement for PHC.
+
+It is interesting to see the attention on all sorts of other mitigations on this list.  But it seems to me that the critical mitigation is to a well-known and recurring threat, the disclosure of K to an attacker.  The next vulnerability would seem to be the direct disclosure of k0 by some means. (I think this would be the primary vulnerability apart from the fact that it is probably not achievable by off-line means.)
+
+Is that a fair characterization of the situation to which PHC is directed?
+
+ - Dennis
+
+-----Original Message-----
+From: Krisztián Pintér [mailto:pinterkr&#64;...il.com] 
+Sent: Sunday, January 19, 2014 02:55
+To: Solar Designer
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+
+Solar Designer (at Sunday, January 19, 2014, 8:54:37 AM):
+
+&gt; I'd say "secure tunnel" is orthogonal to "client-side hashing", as well
+&gt; as to "better password hashing" in general.  Any of these are somewhat
+&gt; nice to have even without the others, although of course a combination
+&gt; of them is usually preferable.
+
+let me add that all PBKDF-s can be naturally and easily extended to
+support server relief. all we need is to add a final hashing step:
+
+K = H( PBKDF(pwd, salt) )
+
+the server can request the intermediate result, and do the
+hashing only.
+
+also, any PBKDF can be used in advanced schemes, like SRP.
+
+these are all orthogonal to the PBKDF itself.
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

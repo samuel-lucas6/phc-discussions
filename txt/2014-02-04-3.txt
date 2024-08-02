@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+Message-ID: <CAOLP8p4w3tYfL8hCXcSWVMP2mN65RmBJC9OJevQ7RDR7jcNUMQ@mail.gmail.com>
+Date: Tue, 4 Feb 2014 09:42:54 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+On Tue, Feb 4, 2014 at 9:22 AM, Bill Cox <waywardgeek@...il.comwrote:
+On Mon, Feb 3, 2014 at 7:14 PM, Solar Designer <solar@...nwall.comwrote:
+>Bill,
+>>
+>On Sun, Jan 26, 2014 at 12:43:33AM -0500, Bill Cox wrote:
+>>    value = value*(mem[prevAddr++] | 3) + mem[randAddr++]
+>>
+>Note that while this could be a fused multiply-add (FMA) operation on
+>architectures that have one, your choice for which of the three inputs
+>to replace makes it incompatible with some architectures that do have
+>FMA - e.g., with Epiphany, and probably with more.  AMD addresses this
+>by supporting a 4-operand FMA (making the output separate from the 3
+>inputs), Intel addresses this by providing multiple forms of 3-operand
+>FMA (they're currently floating-point only, though), but some archs
+>don't address this issue (at least Epiphany does not, and I expect many
+>more examples may be found if we look for them).  If we want to make
+>this FMA-friendly, then it'd best to replace the same output that is
+>replaced when doing matrix multiplication, since this is what all FMA
+>implementations will support.  e.g. this would work:
+>>
+>        value += mem[prevAddr++] | 3) * mem[randAddr++];
+>>
+>but perhaps it does not meet your other requirements, or does it?
+>
+I should have guessed that modern hardware continues to implement the
+multiply-accumulate primitive efficiently.  I'm testing this modified
+hash function now.  How pissed will the PHC be if I keep re-submitting
+improved version?  Can I blame you :-)
+>
+It's already passed some of the harder dieharder tests, so it looks
+like it will be good enough.  For coding this up for SIMD, I'm
+thinking of doing an 4-way memory interleaved version so that all the
+data in the 1st loop lines up nicely as 128-bit memory accesses.  Is
+this the right approach for making use of SIMD?
+
+There is a problem.  With the multiply-accumulate format for the hash
+function, I can do the whole loop starting with value == 0 ahead of
+time, before knowing value's initial value (poor choice of variable
+name!), and when the initial value is known, I just add it.  So, an
+attacker can start working on the value in the next block as soon as
+the previous value has been computed, defeating the
+multiplication-time hardness.
+
+I need value to feed back through both a multiply and an add to defeat this.
+
+Bill
+

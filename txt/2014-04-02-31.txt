@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Re: New password hashing entry: PolyPassHash
+
+Message-ID: <CAMVss_oyo=WBecncqUjjjWtNRKb-H5EYrsc-WdvkkAOOVn0_XA@mail.gmail.com>
+Date: Wed, 2 Apr 2014 19:26:06 -0400
+From: Justin Cappos <jcappos@....edu>
+To: discussions@...sword-hashing.net
+Cc: santiago torres <sat417@...dents.poly.edu>
+Subject: Re: [PHC] Re: New password hashing entry: PolyPassHash
+
+>
+The main advantage over multiple master keys is that it appears to be more
+flexible.  Threshold accounts would be the administrator accounts, I
+assume, and an attacker would need to compromise a number of those to
+decrypt the database.  But it doesn't require an exact set of keys but
+"anyone who is available."  I can't see an easy way to automatically
+promote a threshold-less to a threshold account, but perhaps I missed
+something from the paper.
+>
+
+Hmm, this wasn't something I implemented (or thought much about).
+
+However, this is really easy to do.   Promoting an account can be done for
+an unlocked data store by: unencrypting the salted hash, choosing an unused
+share number, and then XOR this salted hash with the unused share.   Then
+just store <username, salt, share number, (share XOR salted hash)>, just
+like any other threshold entry.
+
+
+
+Bootstrapping seems to be an issue, because a threshold of administrators
+would have to help with a restart, as opposed to just one engineer
+answering the 2 AM call.  The partial verification required otherwise seems
+scary to me, but maybe that's just paranoia.
+>
+
+If you'd like the system to be authenticated by a single admin, you can do
+that with PPH.   The advantages in this case are that you can revoke access
+as admins leave in a normal way.   Also the admin passwords protect the
+user passwords.   So if the admin chooses a strong password, the user
+accounts can't be attacked.
+
+So, PPH is good here, you just lose some of the extreme cracking resilience.
+
+One other issue I see is that it cannot be used with SRP during the the
+bootstrapping process, since the server won't be able to prove knowledge of
+the keys unless I am missing something.  And that may also preclude SRP
+from being used at all, because a server can just consistently "fake" being
+in bootstrapping mode, negating the advantage of SRP.
+>
+
+I'm not an expert in SRP, so let me know if this is off base.   However,
+other keys can be used to unlock the relevant shares.   So with SRP, the
+server can store a random bitstring that was XORed with the share.   The
+client can store the random bitstring.   After authentication, the client
+can send the random bitstring to the server to let it unlock the share.
+
+Does this make sense?
+
+Thanks,
+Justin
+
+
+

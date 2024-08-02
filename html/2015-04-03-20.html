@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - yescrypt throughput vs. PWXrounds</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="19">[&lt;prev]</a> <a href="21">[next&gt;]</a> <a href="22">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150403180559.GA27352&#64;openwall.com&gt;
+Date: Fri, 3 Apr 2015 21:05:59 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: yescrypt throughput vs. PWXrounds
+
+Bill, all -
+
+FWIW, here's what I am getting on FX-8120 with 2x DDR3-1600 (I should
+probably re-do this on more machines).  The first column is number of
+rounds of pwxform (the current default is 6), followed by throughput in
+hashes/second for 8 threads / 1 thread for 2 MB, 128 MB, and 2 MB RAM +
+2 GB ROM.  For the multi-thread throughput figures, the threads are
+independent (simulating an authentication server) and the total amount
+of RAM is what's shown times the number of threads (so 1 GB for the
+8-thread tests in the 128 MB column).
+
+rounds  2 MB            128 MB          2 MB + 2 GB ROM
+6       2772 / 511      30 / 7          2592 / 486
+4       3653 / 691      32 / 9          3269 / 647
+2       5340 / 1077     33 / 13         4288 / 974
+1       6454 / 1451     33 / 15         4760 / 1255
+
+As you can see, when using only RAM and being out of cache and running
+as many threads as the hardware supports (8 on this CPU), there's only
+a 10% speedup possible from reducing PWXrounds from 6 to 1.  OTOH, when
+the machine is under-loaded, running only 1 thread, there's a 2x+
+speedup possible (7 to 15 hashes/second in 1 thread).  I optimized for
+best behavior when server capacity is reached (because that's what
+limits the cost settings), as well as for multi-threaded KDF use.  For
+this, the choice of 6 rounds still looks good to me.  BTW, looking at
+these numbers another way, it's 3 GB memory filled (and 8 GB of
+bandwidth used) in 1 second, despite of the high PWXrounds setting.
+This can be improved to 3.3 GB (and 9 GB bandwidth usage).  Worth it?
+I'd rather opt for the 10% lower memory and bandwidth usage figure, but
+gain diversity of defense (3x or 6x higher compute hardening).
+
+When much of the RAM portion fits in a cache, there's significant
+speedup from lower PWXrounds, even when running 8 threads.  However, the
+speedup is not enough to keep the compute hardening per time the same.
+For example, 2772*6 / (3653*4) = 1.14, but 6/4 = 1.5, and
+2772*6 / (5340*2) = 1.56, but 6/2 = 3.  So going for PWXrounds = 2 would
+halve the compute hardening per time.  Maybe that's OK, but I wouldn't
+be able to claim that yescrypt achieves bcrypt-like frequency(*) of its
+S-box lookups and thus is at least as GPU-unfriendly as bcrypt even at
+the lowest m_cost settings.  Would being no more than 2x worse than
+bcrypt still be OK?  I'm not sure.  I would be uncomfortable about that,
+even though bcrypt isn't one of the PHC finalists. ;-)
+
+(*) Also considered are parallelism of the S-box lookups and total size
+of the S-boxes.
+
+Should we have PWXrounds (auto-)tuned differently for the
+single-threaded case?  With password hashing use, yescrypt being invoked
+with p=1 doesn't mean there isn't another instance running concurrently.
+In fact, in terms of capacity planning we should assume that there are
+as many such instances as the hardware supports.  Should we have some
+kind of heuristics (or a flag?) to determine KDF use (e.g., size of
+512 MB or more?), and if p=1 then reduce PWXrounds?  This feels like too
+much complexity and unexpected behavior, and yescrypt is too complex as
+it is.
+
+While I don't mind auto-tuning of PWXgather and PWXsimple for the
+current machine (and getting them encoded along with the hashes or e.g.
+with the encrypted filesystem), auto-tuning of PWXrounds is different
+(will vary by other yescrypt parameters and expected system load, rather
+than only by underlying CPU).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: Some KDF stumbling blocks, plus Common </title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="15">[&lt;prev]</a> <a href="17">[next&gt;]</a> <a href="15">[&lt;thread-prev]</a> <a href="18">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;loom.20141213T144613-515&#64;post.gmane.org&gt;
+Date: Sat, 13 Dec 2014 16:28:49 +0000 (UTC)
+From: Adam Back &lt;adam&#64;...herspace.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: Some KDF stumbling blocks, plus Common 
+
+Thomas Pornin &lt;pornin@...&gt; writes:
+&gt;
+
+cool I see you arrived at the idea of delegation via blinding and the 
+same basic mechanism using Rivest-Wagner time-lock.
+
+&gt; On Fri, Dec 12, 2014 at 10:38:05PM +0000, Gregory Maxwell wrote:
+&gt; &gt; I am saddened that none of the proposals supported delegation scheme
+&gt; &gt; with information-theoretic security ( which are possible,
+&gt; &gt; <a href="https://bitcointalk.org/index.php?topic=311000.0" rel="nofollow">https://bitcointalk.org/index.php?topic=311000.0</a> )
+&gt; 
+&gt; Actually, the delegation system described in that page may leak some
+&gt; information. It blinds a message m to hash with:
+&gt; 
+&gt;    r = (g^b)*m
+&gt;
+&gt; where g is a known generator, and b is chosen randomly. The value b
+&gt; tends to be reused 
+
+It is a security assumption of blinding schemes in general that the blinding
+factor, b here, is never reused.
+
+&gt; because the unblinding value y = g^e is expensive to
+&gt; compute
+
+g^e is computed cheaply during the setup phase where the user
+knows the factorisation of n.  I do not assume any trusted party that
+knows the factorisation of n: n is generated by the user.
+
+&gt;  - There is not one secret blinding pair (x,y) (where y=x^e), but 300
+&gt;    public blinding pairs. The client generates a new pair for each
+&gt;    delegation instance by selecting randomly half (or so) of the pairs
+&gt;    and multiplying them together. Compared to the blinding described
+&gt;    previously, the cost for the client is higher (an average of 300
+&gt;    modular multiplications) but still acceptable (it is less than that
+&gt;    of a single RSA private key operation).
+
+I think you are saying this would be slower, take more storage than the
+method I describe.  Do you see some advantage?
+
+&gt; (Minor terminology nitpick: none of the above is "information-theoretic
+&gt; security". That term designates algorithms that remain secure against
+&gt; attackers with unbounded computing abilities. By definition, this cannot
+&gt; apply to password hashing, where exhaustive search always succeeds in
+&gt; the long run. Also, anything involving a non-prime modulus can be broken
+&gt; by factoring the modulus.)
+
+My scheme does provide information theoretic security because all passwords
+are equi-probable due to the random blinding and so no information is leaked.
+
+I think your method loses information theoretic security because the 
+way you generate the blinding factor has number of values 
+c(300,150)&lt;|n|.  With my method b is uniform random from [0,n).
+
+Factoring the modulus does not change this fact it just makes calculations
+faster.
+
+Adam
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+phc-discussions - Re: [PHC] Re: EARWORM review
+
+Message-ID: <CAOLP8p7Nr=DGe8CS_hp5c=uMgDGC7P+YCB48wkop3RsM9SOtYQ@mail.gmail.com>
+Date: Fri, 4 Apr 2014 18:35:27 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: EARWORM review
+
+On Fri, Apr 4, 2014 at 6:03 PM, Daniel Franke <dfoxfranke@...il.comwrote:
+>Solar observed that to split the arena into W=4 sections,
+>and divide it across multiple machines, each of which needs
+>only the first section and one other.
+>
+Grammar fail. That should read "Solar observed that it was possible
+split the arena into W=4 sections and divide it across multiple
+machines, each of which needs only the first section and one other."
+>
+On 4/4/14, Daniel Franke <dfoxfranke@...il.comwrote:
+>On 4/4/14, Bill Cox <waywardgeek@...il.comwrote:
+>>In this case, each ASIC would split up it's portion of the ROM into
+>>4096 1MiB "chunk areas" in external DRAM.  It would also store up to
+>>4GiB/64 = 64Mi password scratchpads, each representing a password
+>>guess in progress.  As it loads it's 4096 chunk areas sequentially,
+>>over and over, it computes all the workunit updates with as much
+>>parallelism as the ASIC can support, maybe 100-ish or even 1000-ish
+>>AESENC cores, pipelined maybe 6 deep.  That would be 600-ish to
+>>6000-ish AESENC executed in parallel per ASIC, or around 150K to 1.5M
+>>in total, applying AES-128 hashing to all of it's 512-bit scratchpads
+>>that are waiting on that specific chunk area to be applied.
+>>
+>This attack seems to be exploiting the grid-aligned structure of
+>EARWORM's arena, in which chunks begin at discrete 1MiB boundaries.
+>There was another thread here in which Solar observed that to split
+>the arena into W=4 sections, and divide it across multiple machines,
+>each of which needs only the first section and one other.  I suggested
+>then that you could prevent this by collapsing the arena's three
+>dimensions into one and making possible for chunks to begin at any
+>point along that dimension.
+>>
+>So instead of
+>>
+>for l from 0 to L-1
+>    for w from 0 to W-1
+>        scratchpad[w] = AESRound(arena[index][l][w], scratchpad[w])
+>index = scratchpad[0] mod 2**m_cost
+>>
+>we'd have
+>>
+>for l from 0 to L-1
+>    for w from 0 to W-1
+>        scratchpad[w] = AESRound(arena[index++], scratchpad[w])
+>index = scratchpad[0] mod (2**mcost * L * W)
+>>
+>and add one extra chunk to the arena (for a size of (2**m_cost + 1) *
+>L * W blocks) so that this doesn't overflow.
+>>
+>I didn't make this change because I didn't view Solar's attack as a
+>threat within my model. This one, however, is a horse of a different
+>color. It seems that the same change would make your attack much more
+>expensive, because if you can't partition the ROM into discrete chunk
+>areas, then the routing complexity increases enormously. Do I have that
+>correct?
+
+This would complicate the attacker's job, but it wouldn't slow down
+the resulting machine much.  Just as you add an extra 1MiB at the end
+so you don't have to worry about overflowing memory, each node would
+just add one more work area at the end of their memory.  Since each
+node has multiple GiB, adding one more MiB is no biggie, though it's
+inconvienient (for example, memory comes in nice 2^n sizes, not 2^n +
+1 sizes).
+
+The hashes all being in lock-step is nice for the attacker, but each
+hash then just has to wait until the memory it needs is finally
+available, and they all start when they're ready.  This does take
+quite a bit more control logic and would slow it down, but it's less
+than 2X-ish, I think.
+
+>>One reasonable defense against this attack would be to do memory-hard
+>>writes as well as reads, to maybe a few MiB per password hash.  This
+>>would cause my evil machine to need maybe 1000X more memory than I
+>>described, memory bandwidth would likely become the bottleneck, and
+>>the hypercube communication network might get overloaded.
+>>
+>This would be a much more substantial change. The resulting design
+>would look more like yescrypt than like the current version of
+>EARWORM. I'm not going to go there, and I wouldn't expect the panel to
+>let me get away with it if I tried.
+
+You're not the first author to feel it would be too much like Solar
+Designer's work to make a nice improvement.  My TwoCats is more his
+than mine at this point.  However, I have no shame :-)
+
+EARWORM is well differentiated from yescript, IMO.  It is a slimmer
+simpler special purpose tool.  The reliance on AESENC instructions and
+the super fast read-only hashing sets it apart.  My theoretical attack
+boarders on a banana attack, but I think it's worth keeping in mind.
+I wouldn't make the change you're suggesting in response to it.  I
+really do like EARWORM the way it is.
+
+I love to consider custom ASIC attacks.  Chip architectures is kind of
+my thing.  However, ASIC attacks are becoming more expensive all the
+time.  Fewer and fewer attackers can afford the latest and greatest
+custom silicon.
+
+Bill
+

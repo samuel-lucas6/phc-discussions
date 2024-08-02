@@ -1,0 +1,159 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p7BReFfAkcPKQmyt3syZX1cEBb3cHT4aVuap4cwdQSxBw@mail.gmail.com>
+Date: Sun, 5 Jan 2014 08:57:52 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Sat, Jan 4, 2014 at 11:06 PM, Solar Designer <solar@...nwall.comwrote:
+
+On Tue, Dec 31, 2013 at 08:46:08AM -0500, Bill Cox wrote:
+I haven't added this to keystretch, but should we have another work
+parameter for how hard to push the CPUs?
+>
+Maybe.
+
+
+I did some more work on noelkdf based on feedback.  One thing I did was use
+t_cost as an outer loop on the whole thing, other than the initial key
+hashing.  This makes it possible to add more rounds later, strengthening a
+password hash, without knowing the password.  This might be useful to
+server admins.
+
+
+I just used the default build on Arch Linux for scrypt. The
+files crypto_scrypt-nosse.c and crypto_scrypt-sse.c are identical,
+>
+Huh?!  No, they're different in scrypt-1.1.6.tgz.
+
+
+Oops... my bad.  I must have goofed my command line diff.  That makes sense
+now.
+
+
+One reason for keeping random writes in L1 cache, other than speed, is to
+reduce information leakage about the key, just in case someone is able to
+detect cache miss timing.
+>
+Do you think random writes are more leaky than random reads?  Why?
+I think these are about the same in terms of cache timing attacks.
+So if you do random reads anyway, you won't defeat cache timing attacks
+by avoiding random writes.
+
+
+No, reads and writes are the same.
+
+I think L2 cache misses that cause us to load from DRAM are more obvious
+than an L1 cache miss, but if we pre-load a "page" into L1, there shouldn't
+be any cache misses there.  The L2 misses are more of a problem, especially
+since I load a random page for each page written to RAM.  If an attacker
+knows the expected sequence of L2 cache misses, he can abort hashing of an
+incorrect password guess early and move to the next guess.  I'm tempted to
+try and insure that every random page loaded causes a cache miss, but I
+haven't figured out how to do that.
+
+Another drawback is the very low probability that the last few V
+elements written will ever be accessed.
+>
+
+I did some more thinking about this.  The last few V are no biggie, but if
+an attacker can drop something significant, like the last 10%, then that's
+an issue.  However, the last 10% is probably quite a few pages, and on
+average, they have a 5% chance of needing pages that the attacker dropped.
+ For example, when hashing 2GB with 16KB pages, there are 128K pages.  If
+an attacker tries not to write the last 1% to RAM, it's 13,000 pages.
+ While generating these last 13,000 pages, each one on average has a .05%
+chance of needing a missing previous page.  He'll almost certainly have to
+recompute most of the missing pages, losing any advantage.
+
+So, I don't think the access pattern is a problem.  It's actually better
+than scrypt, because it's harder for an attacker to gain advantage by not
+storing all the pages in RAM.
+
+- 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+intermediate derived key.
+>
+I dislike this.  It's very wasteful in use cases where our total
+running
+time is very limited.  This may be all running time we can afford (if
+at
+all), not leaving any time for the memory-hard portion.
+>
+
+I made this configurable now in noelkdf.  It's selectable from 1 to any
+32-bit int.
+ Why do we care about the first few milliseconds?
+
+>
+Because there exist real-world use cases where the total duration is
+limited to a few milliseconds.
+
+
+I think for these cases, the server admin can set my new "parallelism"
+parameter to 1, and just do 1 initial SHA-256 hash round.  He wont be able
+to fill much memory, though.  My preference in these cases is to let the
+user's do some hashing in his browser or app as well, to improve password
+security, but clearly that cannot always be done.
+
+NOELKDF is currently worse than bcrypt (at least as it relates to
+attacks with GPUs) at such low running times, though - for reasons
+unrelated to the initial PBKDF2.
+
+
+I've added a "parallelism" parameter as you suggested to address this, and
+I'd love to hear what you think of the scheme.  It hashes "segments" within
+the current "page", and the parallelism parameter just says how big the
+segments are.  Each computation within a segment can be done in parallel,
+but the address of the segment is computed from the current segment, so
+segments have to be computed sequentially.
+
+One mystery is why I continue to gain benefit from more parallelism well
+beyond 16.  64 runs quite a bit faster than 32.
+
+
+You're right in pointing out that even 2048+ iterations of SHA-256 is
+not of much help, though.  So if we do such pre-hashing before starting
+to fill memory for real, maybe we should do something along the lines of
+bcrypt or bcrypt_pbkdf, so that we make use of the L1 cache:
+>
+http://www.tedunangst.com/flak/post/bcrypt-pbkdf
+http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libutil/bcrypt_pbkdf.c
+>
+A drawback is added complexity.  Another drawback is deviating from
+usage of a NIST-approved primitive, unless we do the SHA-256 as well.
+
+
+I really would prefer to keep noelkdf as simple as possible.  That and
+speed are it's two strengths, and I'd hate to lose one of them.  Maybe I
+should make the pre-hash configurable, passed in as a callback function?
+
+I've been using SHA256 to initialize the first page of memory.  I'm going
+to simply copy the intermediate derived key to the first page instead,
+since there are cases where generating 16KB of SHA256 would be too slow.
+
+
+- The derived key does not depend on the number of threads
+>
+... as long as the number of threads is not greater than a
+pre-specified
+maximum.  I can claim this too. ;-)  And scrypt can claim it too,
+although with scrypt there's a reduction in area-time from increasing
+p,
+so it better not be done unnecessarily.
+>
+Good point!  For some reason I though scrypt's result changed with p.
+>
+It does change with p, but so does the result of NOELKDF with change of
+your hard-coded max supported thread count.
+
+
+Yes, indeed.  I have not found a good way to quickly fill memory with
+multiple threads which does not result in a different hash.  I thought my
+spin-lock solution was clever, but it was too slow...  This is definitely
+an advantage of escrypt.
+
+Bill
+
+
+

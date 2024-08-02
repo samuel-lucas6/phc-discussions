@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Re: Suggestion: API should include a verifier function
+
+Message-ID: <51547134.9050203@gmail.com>
+Date: Thu, 28 Mar 2013 17:35:00 +0100
+From: Francois Grieu <fgrieu@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+On 28/03/2013 08:04, Dennis E. Hamilton wrote:
+
+    good = true;
+    for (i = 0; i < hash.length; i++)
+         {good &= (hash[i] == key[i])}
+    return good;
+ >
+ The verifier must return only pass/fail and not differ in the (measurable)
+ >timing in reachingthe different conclusions.  Even the above code might
+ leak measurable information in animplementation. A platform-tuned verifier
+ is where that can all be tuned away.
+
+Then rightly changed his mind toabout
+
+   diff = 0;
+   for (i = 0; i < hash.length; i++)
+       {diff |= (hash[i] ^ key[i]);}
+   return !diff;
+
+
+That's necessary because, on some CPU/compiler (including the one I was
+coding for/with minutes ago), evaluating
+hash[i] == key[i]
+is timing-dependent, and it would be possible to deduce how many matches
+there are by a timing attack, then the key by submitting targeted queries.
+
+
+I can imagine a few other reasons making wreaking things havoc here, even
+with the revised code. In particular, a vectorizing compiler could
+conceivably "speeded up" to something in effect similar to the original
+
+for (i = 0; i < hash.length; i++)
+        if (0 != (hash[i] ^ key[i]))
+             return false;
+    return true;
+
+While I admit I never met the above, I did meet the classic phnomenon where
+explicit zeroizing of automatic (local/stack) variables at the end of a
+function, added for security perposes, is optimized out by the compiler.
+
+[As a marginal aside, there's also side channel attacks other than timing
+attacks, and fault injection near return !diff; ]
+
+For the first reason at least, I am skeptical at universality of a reference
+implementation of bulletproof hash-to-key comparison, and think a reference
+implementation (similar to Dennis E. Hamilton's second example) belongs to
+some reference example uses and test harness, also taking care of giving
+reference values for input in at least a practical subset of UTF-8 (and
+perhaps canonicalizing 16-bit unicode input).
+
+Such reference would be quite useful, I think, and largely common to all
+submissions sticking to the default API:
+
+|    int PHS(
+                     void*   out, size_t  outlen, // hash output
+               const void*    in, size_t   inlen, // password input
+               const void*  salt, size_t saltlen, // salt input
+            unsigned int  t_cost,                 // controlling of time
+            unsigned int  m_cost                  // ||||controlling of memory||
+            ); |
+
+If that API needs extensions, I think the single most useful would be a
+control on how many CPUs should be usable (or perhaps the design challenge
+would bemaking that largely transparent).
+
+
+   Francois Grieu
+

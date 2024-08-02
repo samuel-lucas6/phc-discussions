@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] Password hashing by itself is not enough
+
+Message-ID: <CAMVss_pnxLCAbQZy8dZdHLArWaBuxBgiX=irKYuqqTGEmfHCFQ@mail.gmail.com>
+Date: Fri, 13 Mar 2015 11:41:36 -0400
+From: Justin Cappos <jcappos@....edu>
+To: discussions <discussions@...sword-hashing.net>
+Cc: polypasswordhasher-dev <polypasswordhasher-dev@...glegroups.com>
+Subject: Re: [PHC] Password hashing by itself is not enough
+
+On Fri, Mar 13, 2015 at 9:34 AM, Jeremy Spilman <jeremy@...link.cowrote:
+
+>
+On Mar 13, 2015, at 8:43 AM, Justin Cappos <jcappos@....eduwrote:
+>
+Multiple passwords protect a secret that obscures all of the hashes.
+This makes it so that groups of passwords must be checked together and all
+must be correct to learn if any were correct.
+>
+Or, pull the secret from memory when you steal the hashes?
+>
+
+Yes, but this seems to be uncommon in disclosed password breaches.  There
+are a few studies that have shown that password hash compromises are most
+commonly from attacks that wouldn't give an attacker access to RAM.  For
+example, SQL injection is still the most common vector.
+
+I do think it's a very innovative way to hide a key! How does it compare
+to, say, a pepper which is only kept in RAM?
+>
+
+Thanks!
+
+I'm not sure I understand where that pepper comes from.  Does an
+administrator enter it?  If so, are the admins likely to share the same
+value?  (If so, it feels like operational security becomes an issue.)
+
+In either case you need some admin (threshold account) input when the
+server first boots to ensure all users can immediate start logging in. In
+either case the secret can be stolen over the network from a compromised
+server.
+>
+
+I think we likely get in our own way by saying administrator, non admin,
+etc.  Really, if you have some reason to believe that an attacker cannot
+simply create as many accounts as they like, you can make all of the
+accounts 'protector accounts' (or threshold accounts in our prior draft)
+*so long as you don't use ICB (partial verification) to allow logins before
+a threshold is reached*.
+
+With a threshold like 5, then even if you have a lot of really weak
+passwords, the combinatorial explosion for guessing overwhelms the
+attacker.  For example, let's say that 5 users choose accounts whose
+passwords are approximately the 1000th weakest password.  The attacker
+would need to do 1000^5 checks to crack the password.
+
+Some people have commented to us that a reasonably number of users choose
+password or 123456, so this would be guessable.  For example, .9% of the
+RockYou users chose 123456.   However, since you have to guess *which*
+accounts choose this password, the amount of time also becomes massive.  It
+is basically a .009^5 probability that each guess is correct.  If you use
+tricks like key stretching to make the recombination time long, then this
+operation can also take a very long time.
+
+Note, I copied the wrong cracking number from my previous email.  With a
+threshold of 5 on RockYou, and an attacker checking for 123456, the time
+would be hundreds of years w/ stretch to 1 check per second.  (1 check per
+second is sane because the defender will only need to do this operation a
+small number of times, often once, per reboot.)
+
+The volatile pepper would be just 32-64 byte rand, so either you steal it
+from RAM and you crack passwords as usual, or you don't steal it and you
+crack zero passwords.
+>
+The PolyPass secret key has an effective entropy probably close enough to
+that to achieve the same effect, assuming public users can't stuff the
+database with their own accounts to be able to reconstruct the secret.
+>
+
+Yes, one needs to ensure an attacker cannot create 'protector accounts'.
+However, the security is retained if the created accounts are 'shielded
+accounts' (or thresholdless accounts as our old draft called them).
+
+Thanks,
+Justin
+
+
+

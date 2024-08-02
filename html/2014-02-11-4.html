@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4J3LgxCg0UVtZ-s9sD5Gez3mGg=qBz_gWmOiiGH1WZ6A&#64;mail.gmail.com&gt;
+Date: Tue, 11 Feb 2014 07:47:22 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Tue, Feb 11, 2014 at 2:00 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; VMULPD working on 4 packed 64-bit floats is 5 cycles latency, 1 cycle or
+&gt; better throughput (is listed at 0.63c throughput in
+&gt; GenuineIntel00306C3_Haswell*.txt) on all CPUs supporting it (both Intel
+&gt; and AMD), it seems.  Masking the right bits in inputs/outputs will add
+&gt; some overhead, though.  There's no point in using it on 32-bit inputs,
+&gt; since PMULUDQ is about as fast, is available starting with older CPUs,
+&gt; and avoids the need to mask the inputs.
+
+VMULPD sure sounds good for 64-bit versions.  I was also toying with
+the idea of 8-way 32-bit float operations, since the history of
+graphics cards seems to show we're headed towards caring a lot about
+32-bit float SIMD more than 32-bit ints.
+
+&gt;&gt; I agree unsigned is prefered.  Java can add a few instructions to
+&gt;&gt; emulate unsigned if needed.
+&gt;
+&gt; I think this is not needed - we can simply treat its signed ints as
+&gt; unsigned, as long as we don't do right shift and division.
+&gt;
+&gt;&gt; The hybrid that uses 64-bit memory read/write, but only a 32x32-&gt;64
+&gt;&gt; multiplication had some extra overhead for converting from 64-bit to
+&gt;&gt; 32-bit.
+&gt;
+&gt; Can you show the instructions that were generated for this?
+&gt;
+&gt; Alexander
+
+Here's code for testing the hash function:
+
+#include &lt;stdint.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define MEMSIZE (1u &lt;&lt; 31) // 2GiB
+#define MEMLEN (MEMSIZE/sizeof(uint64_t))
+
+int main(int argc, char **argv) {
+    uint64_t *mem = (uint64_t *)malloc(MEMSIZE);
+    uint64_t value = 1;
+    uint64_t fromAddr = 0, prevAddr = 4096;
+    uint32_t i;
+    for(i = 8192; i &lt; MEMLEN; i++) {
+        value = (uint32_t)value*(uint64_t)((uint32_t)mem[prevAddr++] |
+3) + mem[fromAddr++];
+        mem[i] = value;
+    }
+    uint32_t addr = rand() % MEMLEN;
+    printf("mem[%u] = %u\n", addr, mem[addr]);
+    return 0;
+}
+
+Here's the code generated for the loop with -O2 optimizations:
+
+.L3:
+        movq    32768(%rbx,%rdx,8), %rax
+        movl    %ecx, %ecx
+        addq    $1, %rdx
+        orl     $3, %eax
+        imulq   %rax, %rcx
+        addq    -8(%rbx,%rdx,8), %rcx
+        cmpq    $268427264, %rdx
+        movq    %rcx, 65528(%rbx,%rdx,8)
+        jne     .L3
+
+The "movl %ecx, %ecx" I think is used to clear the high 32-bits.  That
+causes a bit of extra latency in the loop:
+
+time ./bar
+mem[193676647] = 1615625288
+
+real    0m0.528s
+user    0m0.400s
+sys     0m0.120s
+
+Here's the code generated when the casts are removed and we do
+64x64-&gt;64 multiplication:
+
+.L3:
+        movq    32768(%rbx,%rdx,8), %rsi
+        addq    $1, %rdx
+        orq     $3, %rsi
+        imulq   %rsi, %rcx
+        addq    -8(%rbx,%rdx,8), %rcx
+        cmpq    $268427264, %rdx
+        movq    %rcx, 65528(%rbx,%rdx,8)
+        jne     .L3
+
+And the runtime:
+
+temp&gt; time ./bar
+mem[193676647] = 1615625288
+
+real    0m0.457s
+user    0m0.280s
+sys     0m0.170s
+
+The cast is almost free, but we need 0's in both upper registers.  I
+also don't like down-sizing value to 32-bits in the loop, but it's
+more fair for comparing to the 32x32-&gt;32 and 64x64-&gt;64 versions.  When
+I XOR the 64-bit result into value, the loop doesn't slow down
+significantly for the 32x32-&gt;64 version, but it does for the other
+two.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

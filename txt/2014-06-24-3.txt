@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] auto-tuning parallelism
+
+Message-ID: <20140624005501.GA6463@openwall.com>
+Date: Tue, 24 Jun 2014 04:55:01 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] auto-tuning parallelism
+
+On Tue, May 27, 2014 at 07:44:04AM -0700, Andy Lutomirski wrote:
+On Mon, May 26, 2014 at 5:36 PM, Solar Designer <solar@...nwall.comwrote:
+When editing the wiki page at
+https://password-hashing.net/wiki/doku.php/yescrypt yesterday, I added
+this (which has been in my head for months) to "Drawbacks":
+>
+"While pwxform's default 4x 128-bit SIMD parallelism fits SIMD-enabled
+builds running on modern CPUs well, it is excessive for older CPUs and
+non-SIMD builds, making such slower builds of yescrypt weaker than
+similar builds of bcrypt in terms of GPU attack resistance (when
+yescrypt's memory usage is low)
+>
+Using much lower parallelism settings when appropriate should address
+this, but the risk of people (inadvertently?) using a high SIMD- and
+instruction-level parallelism mode in a build not suitable for that will
+remain"
+>
+Here's an idea on how to deal with this: besides possibly supporting
+explicit specification of the desired SIMD- and instruction-level
+parallelism as input parameters to yescrypt, support a magic input value
+or a flag that would request the current build's optimal settings.  When
+invoked like this, e.g. yescrypt-opt.c (scalar) would use settings for
+one 64-bit lane, whereas yescrypt-simd.c would use 4x 128-bit SIMD.
+Indeed, this will affect the computed hash value, so it's only usable
+when setting a new password or initially encrypting some data, and the
+actual parallelism settings would need to be output by yescrypt and
+encoded along with the hash or derived key.
+>
+This fits nicely in the currently defined yescrypt_gensalt*() API -
+they'd generate salt strings optimal for the current build of yescrypt,
+when requested to do that by a flag.  Those salt strings will have the
+actual parallelism settings encoded in them.
+>
+Unfortunately, it doesn't fit nearly as well into other APIs - those
+that don't use ASCII strings for salts+hashes.  Should this feature be
+limited to the crypt(3)-like strings-based APIs, or should it somehow be
+added to (binary) key derivation APIs as well?  I'd do both, but I'm
+concerned it might not be intuitive for non-strings-based APIs.
+
+For the binary case, it might be simpler to have a second function to
+call to ask for good parameters.  Then the caller can, for example,
+call it once, hash a bunch of passwords, and know that they have the
+same parameters (and therefore not store a copy for each password).
+
+I will likely implement that.  Thank you!
+
+Alexander
+

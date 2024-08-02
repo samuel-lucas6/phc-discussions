@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324115748.GA9065@openwall.com>
+Date: Thu, 24 Mar 2016 14:57:48 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 02:27:01PM +0300, Solar Designer wrote:
+On Wed, Mar 23, 2016 at 09:18:41AM -0700, Andy Lutomirski wrote:
+Suppose we ignore the round count variability and further weaken the
+scheme by forcing either one or two rounds (obviously insecure).  Then
+imagine we have two related keys k1 and k2.  k2 = k1 || padding1 || a
+few more bits.  That is, k2 is what you get when you extend k1 by the
+Merkle-Damgard padding you'd have if you fed k1 into your cipher
+followed by some more bits.  (IOW this is a classic length-extension
+setup, assuming I did it right.)
+
+Now an attacker can use the block cipher under k1 as an oracle to
+learn hash values under k1, which gives the attacker the entire
+internal state of the round function prior to hashing in the extra
+bits in k2.
+
+This is obviously a useless attack as is (weird related key assumption
+and only works directly on one or two rounds), but I can imagine
+adaptive chosen plaintext/ciphertext variants extending to an extra
+round or two.
+
+The possibility of this type of attack would go away completely if you
+used a wide-pipe hash or if you hashed in the key length.
+
+Hashing the key length at a fixed offset (rather than only within the
+Merkle-Damgard padding, which is already happening) would remove the
+possibility of this type of attack because the longer k2 would then
+change the initial k1 length's worth of computation as well through the
+necessarily changing full k2 length embedded in that portion.  Going
+from that reasoning, here's another way to achieve the same effect:
+
+Don't hash the key length, but instead hash in the round number after
+rather than before the key.  Since the round number is different for
+each round whereas the key is fixed across all rounds, the round numbers
+used for k1 can't (except for any one of them) be part of the longer k2.
+
+Thinking of it some more, the exception may actually be important, still
+allowing to attack the last 1 or 2 rounds.  So my proposed change isn't
+as complete a mitigation as hashing in the key length would be.
+
+Alexander
+

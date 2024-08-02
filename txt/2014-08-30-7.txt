@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <CAOLP8p6ZjE9tNZQOzEnDHWPfcFiTUFm0OuUAo_=Rf1-9id4LOA@mail.gmail.com>
+Date: Sat, 30 Aug 2014 09:05:23 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] A review per day - TwoCats
+
+On Sat, Aug 30, 2014 at 7:35 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+On Sat, Aug 30, 2014 at 12:50 AM, Solar Designer <solar@...nwall.com>
+wrote:
+>
+>How fast does bcrypt do random reads?
+>>
+>According to that posting I referenced above, it's:
+>>
+>2176000*3072 = 6.7 billion/s per FX-8120 chip
+>2176000*493 = 1.1 billion/s with 1 instance (with other cores idle)
+>>
+>That's for defensive-use bcrypt code, which is what's relevant here.
+>>
+>So your "2.8B 16-byte random reads per second on Ivy Bridge" is very
+>good if it's for 1 thread, but not good enough if it's for entire chip.
+>And you also need to compare the available parallelism vs. bcrypt's.
+>>
+>
+2.8B reads/s was for 4 threads on my quad-core Ivy Bridge processor.  I
+tweaked the inner loop just a bit, and benchmarked it against the simplest
+loop I could write for doing unpredictable reads.  Here's my one thread
+numbers vs what is possible:
+>
+
+I must have made a mistake on the 2.8B reads/second.  The max possible with
+no parallelism on 4 threads should be less than about 2.2B/s with no read
+parallelism.  I also tested 8-way read parallelism.  It was 35% faster at
+doing unpredictable reads than 4-way.
+
+Except for the multiply, my inner loop is also very simple, and can easily
+be done in an ASIC in one clock, probably at 3.4GHz in Intel's process,
+just like bcrypt.  I need at least one multiply for good compute time
+hardening.  Unfortunately, even 1 multiply increases the 1B pseudo-random
+L1-cache read test from 2.3s to 3.6s!  That's not bad compute time
+hardening, though, given that it does 2B serial 3-cycle multiplies, which
+require 1.9s on an ASIC (in Intel's process, using Intel's multiplier).
+
+By increasing my lane size and sub-block size to 256 bits, twice as much
+work gets done serially in the CPU per multiply, and the runtime drops back
+down to 2.4s, but with half the compute-time and unpredictable-read
+hardening.
+
+Bill
+
+
+

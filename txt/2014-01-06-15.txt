@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Representing cost in a formated hash
+
+Message-ID: <2110842680.363068.1389040200377.open-xchange@email.1and1.com>
+Date: Mon, 6 Jan 2014 14:30:00 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Representing cost in a formated hash
+
+On January 6, 2014 at 7:16 AM Krisztián Pintér <pinterkr@...il.comwrote:
+>
+>
+>
+The question is how to represent the cost parameters in the formated
+hash.
+>
+here is what i think. representing the hash is the task of the
+platform, and not the hash function. regular hash functions don't have
+default representation either, they are just bits. it is not even sure
+that we want to include the cost or other parameters at all. it can be
+the case that some platforms (especially embedded or hw
+implementations) will have fixed parametrization, thus there is no
+need to store them at all.
+
+Once this competition is over, the winner will more than likely have an
+encoding like $1$, $2y$, $5$, $6$, $P$... If it is also a KDF then for that
+use it will just output binary.
+
+
+but if we are adamant on giving finer grained exponentially growing
+tuning ability, using constants like sqrt(2) seems to be unnecessarily
+taxing for hw implementations (not very taxing, but unnecessarily
+taxing).
+
+I must not of been clear these two are exactly the same:
+cost = floor(pow(sqrt(2), cost));
+and
+if ((cost & 1) == 0)
+  cost = 1 << (cost >1);
+else
+  cost = 0x5a827999 >(30 - (cost >1));
+Note: 0x5a827999 is floor(pow(sqrt(2), 30));
+
+
+so my minimalist recommendation is the following:
+>
+(0b1000 + m) << e
+>
+where m is a 3 bit number, and e is a 5 bit number. the cost parameter
+thus becomes 8 bits, in eeeeemmm order. the range is from 8 to
+15*2^31, and the increment is below 12.5%. naturally expandable to 13
+bit e, which covers ranges up to unbelievable. also, the number itself
+can be treated as an integer, can be increased, behaves as one would
+expect, etc.
+
+I like this it is just like a custom floating point number. The only thing is,
+it
+is no longer 6 bits. So it can't fit in as one base64 character. Which really
+doesn't matter. If we changed it to eeeeem then it's very similar to the
+second way I purposed. The other way would be eeeeeemmmmmm.
+This makes it easier to calculate because the exponent and mantissa
+would be their own base64 character. Also starting at 64 shouldn't matter
+too much.
+
+

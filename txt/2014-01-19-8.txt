@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] cost upgrades (Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations))
+
+Message-ID: <20140119144906.GA20749@openwall.com>
+Date: Sun, 19 Jan 2014 18:49:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cost upgrades (Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations))
+
+On Sat, Jan 18, 2014 at 09:21:26PM +0400, Solar Designer wrote:
+On Sat, Jan 18, 2014 at 11:27:32AM -0500, Bill Cox wrote:
+I totally stole Catena's update scheme.  All we have to do is add an
+outer loop that iterates "garlic" number of times, computing the hash
+with the user's password.  Inside the loop, at the end, we double the
+memory.  This makes the scheme take 2X longer for the same memory
+usage (for garlic == 3, it does 8*m_cost + 4*m_cost + 2*m_cost +
+m_cost), so it's not ideal, but it is trivial to take the hash for
+garlic = g, and compute the hash for garlic = g+1.  The input to each
+loop iteration is just the output from the previous.
+
+So, for brand spanking new hashes, set garlic = 0, so the user has no
+penalty at all.  As the password hash ages, incrementing the garlic
+can help.
+
+Thank you for explaining this so concisely and so clearly!  In my terms,
+this corresponds to 2x granularity and good design (so never-upgraded
+hashes have their full AT cost).
+
+I was wrong.  It's not exactly what I had meant by "2x granularity".
+My "2x granularity":
+
+Upgrade #	t_cost	AT cost
+0		1	1 (100%)
+1		2	2 (50%)
+2		4	6 (37.5%)
+3		8	22 (34.375%)
+4		16	86 (33.594%)
+
+Catena (as described by Bill above):
+
+Upgrade #	t_cost	AT cost
+0		1	1 (100%)
+1		3	5 (55.556%)
+2		7	21 (42.857%)
+3		15	85 (37.778%)
+4		31	341 (35.484%)
+
+While both converge to 1/3 of AT cost of non-upgradable hashes, Catena's
+upgrades are steeper, which results in slightly higher efficiency, but
+slightly lower flexibility (especially for the very first upgrade: 2x
+vs. 3x difference in t_cost).  I'm not sure which is better.
+
+Alexander
+

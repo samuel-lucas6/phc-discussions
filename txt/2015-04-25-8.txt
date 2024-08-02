@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Client-side hashing (was side-channel stuff)
+
+Message-ID: <761613513.573080.1429982347145.JavaMail.open-xchange@oxuslxltgw07.lxa.perfora.net>
+Date: Sat, 25 Apr 2015 12:19:07 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Client-side hashing (was side-channel stuff)
+
+On April 25, 2015 at 8:46 AM Bill Cox <waywardgeek@...il.comwrote:
+
+On Sat, Apr 25, 2015 at 2:57 AM, Sascha Schmidt
+<sascha.schmidt@...-weimar.de <mailto:sascha.schmidt@...-weimar.dewrote:
+2015-04-25 0:40 GMT+02:00 Steve Thomas <steve@...tu.com
+<mailto:steve@...tu.com>:
+h = fastHash(password, salt)
+for u = 1 to upgrade
+{
+  h = fastHash(slowHash(h, t_cost, m_cost))
+  t_cost = increaseTCost(t_cost)
+  m_cost = increaseMCost(m_cost)
+}
+return encrypt(h, key) // HSM? :)
+>
+You are totally right. I don't know how I missed this. The most
+embarrassing thing is, that this would already be possible with
+Catena. The only thing missing is the server-side finalization with
+encryption.
+I hope I haven't caused any confusion with my previous mail.
+
+In this case, can everything but the last step be done client-side?
+
+Are you saying everything but "encrypt(h, key)". This is bad since if the hashes
+and the key are leaked then they can login as anyone. The sever needs to do
+"encrypt(fastHash(h), key)" to prevent that.
+
+
+Ideally, the salt is a secret known only to the server and client, where the
+client preferably stores it in a security key of some sort.
+>
+
+Cost/benefit: you want a public salt. Also SRP, PAKE, SPAKE2-EE all need a
+public salt and everyone should be moving to those anyway. The only thing that
+sucks about these algorithms is you can't update the cost settings without the
+client. Unless you encrypt the "shared key" for an offline private key, but this
+is super dangerous and should not be done.
+

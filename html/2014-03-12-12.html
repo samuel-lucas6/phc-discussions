@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] attacking and hardening escrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="../../../2014/03/10/3">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140312035953.GA19155&#64;openwall.com&gt;
+Date: Wed, 12 Mar 2014 07:59:53 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] attacking and hardening escrypt
+
+On Mon, Mar 10, 2014 at 01:24:08AM -0700, Larry Bugbee wrote:
+&gt; On Mar 10, 2014, at 12:29 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt; Also, I've been seriously considering using 32-bit lanes.  (This has
+&gt; &gt; some pros and cons.  Among the pros is better compatibility with Salsa20,
+&gt; &gt; where it'd let us ignore SIMD shuffling of 32-bit words.  escrypt
+&gt; &gt; currently has some extra complexity because of this shuffling, yet
+&gt; &gt; having its new sub-block mixing work on 64-bit lanes.)  I think that
+&gt; &gt; with careful design and with use of the variable S-boxes, 32-bit lanes
+&gt; &gt; would be OK in terms of issues described above, but they'd provide a
+&gt; &gt; smaller safety margin.  (Luckily, we're not talking cryptographic
+&gt; &gt; security here, but just attacks that would allow for computation of the
+&gt; &gt; hash with somewhat less resources than intended.)
+&gt; 
+&gt; A na?ve question perhaps, but would 64-bit lanes incur an [unnecessary?] performance penalty for defender's implementations on 32-bit processors like ARM?
+
+N-bit lane width is not the same thing as friendliness to N-bit CPUs,
+although it may be related.  With 64-bit lanes, it is easier to make
+efficient use of 64-bit CPUs without SIMD (or when SIMD is not enabled
+in a given build).  On a single-issue 32-bit CPU this could mean 2x more
+parallelism than is necessary to fully use it, thereby making the hashes
+weaker (since the attacker will make use of the parallelism cheaply and
+without a corresponding increase in memory needs), but as long as we're
+using the multi-cycle latency multiply instructions even those CPUs may
+actually benefit from the parallelism.
+
+Chances are that a CPU with a 32x32-&gt;64 multiply will also have ADDs
+with carry-in and carry-out, so 64-bit addition is simply 2x more
+instructions.  Yes, there's a data dependency preventing parallel
+addition of low and high 32 bits, but any of these may execute in
+parallel with some other nearby instruction (if the CPU has multi-issue
+at all).  For example, if one 64-bit addition is followed by another
+(computing a+b+c, where all 3 of these are 64-bit), the first 64-bit
+addition's ADD-with-carry-in (ADC on x86) may execute in parallel with
+the second 64-bit addition's ADD-with-carry-out (ADD on x86) since a+b's
+low 32 bits are ready by then.
+
+&gt; ...or could/should this be an adjustable parameter the site manager/sysadmin could set?
+
+The number of lanes should be tunable, yes.  The lane width I think is
+fine to fix at either 32 or 64 bits.
+
+For truly weak CPUs (and this does not include modern ARM), the use of
+integer multiplication is much more of an issue.  So maybe a cheaper
+sub-block transformation should be defined for those.  Yet it may use
+64-bit lanes too.  If desired, we can even reduce the parallelism within
+64-bit lanes (in the multiply-less version of the sub-block
+transformation) by intermixing low and high 32 bits within those lanes
+in ways that are not parallelizable (unlike e.g. a sequence of 64-bit
+ADDs is, to refer to the example above).  (And we'd expect that this
+version of the sub-block transformation would typically only be enabled
+when only one lane is in use.)
+
+On 32-bit ARM, the current escrypt will use the UMLAL (scalar) or VMLAL
+(vector) instruction:
+
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/BABIJGJB.html" rel="nofollow">http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/BABIJGJB.html</a>
+
+"The UMLAL instruction interprets the values from Rn and Rm as unsigned
+integers. It multiplies these integers, adds the 64-bit result to the
+64-bit unsigned integer contained in RdHi and RdLo, and writes the
+result back to RdHi and RdLo."
+
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491c/BABDEAGJ.html" rel="nofollow">http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491c/BABDEAGJ.html</a>
+
+Vector multiply accumulate long: vmlal -&gt; Vr[i] := Va[i] + Vb[i] * Vc[i]
+
+uint64x2_t vmlal_u32(uint64x2_t a, uint32x2_t b, uint32x2_t c); // VMLAL.U32 q0,d0,d0
+
+This is actually better than x86(-64), where the addition has to be a
+separate instruction.  The only integer SIMD multiply-add on x86(-64) is
+32x32-&gt;32 + 32, available starting with SSE4.1, whereas x86(-64) has
+lower latency 32x32-&gt;64 multiply across currently relevant CPUs, and it
+is available starting with SSE2, so we use that - but it lacks fused ADD.
+
+So 32-bit ARM is more 64-bit'ish than x86-64 in this respect, and the
+current escrypt sub-block transformation actually favors ARM (slightly).
+Maybe future x86 will gain 64-bit output integer multiply-add too.
+
+We need to produce and benchmark implementations for ARM (both scalar
+and vector), though.  So far, I only checked the instruction sets and
+some published instruction timings.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

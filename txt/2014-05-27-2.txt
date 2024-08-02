@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Re: [Cryptography] The proper way to hash password files
+
+Message-ID: <CAOow+k9kOgQrHSP1g=FhN0evSp2=ibOiuLC=VjD2QnW-=mELFQ@mail.gmail.com>
+Date: Mon, 26 May 2014 20:51:18 -0400
+From: Peregrine <peregrinebf@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: [Cryptography] The proper way to hash password files
+
+Of course, one can simply use an HMAC construction with any normal password
+hashing function. If you have that in a dedicated hardware chip then you
+may gain security, otherwise one should assume that any attack capable of
+getting the hashed-password database is capable of getting any other secret
+data, like private keys. Some of the submissions explicitly support keyed
+password hashing, and with others any secure HMAC scheme should work. Using
+a strong password hashing scheme with a key protects weak passwords, and
+protects strong passwords even if the key is somehow leaked.
+
+Even with a hardware chip one must be careful, as there might be a way for
+the chip to leak the key. They're also not practical for systems using
+virtualized hosting, and potentially insecure if an attacker can access the
+hardware chip (such as in a server at a colocation facility.) It's safer to
+assume everything that gets connected to the internet will be leaked and
+design systems to keep passwords secret with that assumption.
+
+--
+Carl 'SAI' Mitchell
+
+
+On Mon, May 26, 2014 at 5:13 PM, Hongjun Wu <wuhongjun@...il.comwrote:
+
+I think that a general way to protect password file is to hash passwords
+(like the Password Hashing competition).
+>
+But a strong way to protect passwords is to use MAC (much more secure than
+using hash if the MAC operation is done in a separate hardware chip).  I
+have talked about the advantage of using MAC to protect password web
+authentication in my first post in the PHC discussion forum.  My idea is
+similar to that of Phillip Hallam-Baker, except that I think a salt is
+still useful even when MAC is used.
+>
+If MAC is used, even the weak passwords can be well protected (i.e., they
+cannot be recovered directly from the password file).
+>
+Best Regards,
+hongjun
+>
+>
+On Mon, May 26, 2014 at 11:17 PM, Yann Droneaud <ydroneaud@...eya.com>wrote:
+>
+>Le jeudi 22 mai 2014 à 13:09 -0400, Phillip Hallam-Baker a écrit :
+>Lots of sackcloth and ashes as EBay loses a password file.
+>>
+>It occurs to me that most of the time, machines do password files
+>wrong. Rather than using a salted hash, a better approach would be to
+>use a MAC with a randomly chosen key that is never disclosed.
+>>
+>Now this seems obvious but I can't recall ever seeing code set up to
+>do the job this way...
+>>
+>The proper way to hash passwords is at https://password-hashing.net/
+>>
+>(or someone was late to submit her proposal !)
+>>
+>Regards.
+>>
+>--
+>Yann Droneaud
+>OPTEYA
+>>
+>>
+>>
+>
+
+
+

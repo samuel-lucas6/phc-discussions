@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Message-ID: <20150423100520.GA4529@openwall.com>
+Date: Thu, 23 Apr 2015 13:05:20 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Dmitry,
+
+On Tue, Apr 21, 2015 at 05:33:18AM +0300, Solar Designer wrote:
+On Mon, Apr 20, 2015 at 11:08:42PM +0200, Dmitry Khovratovich wrote:
+Regarding your benchmarks, the impact of extra operations on 8 threads
+is so low, I guess, because the bottleneck is the memory bandwidth
+rather than the CPU.
+
+Right.  I expect the impact at low m_cost (where all or a significant
+portion of memory fits in a cache) to be much worse.  We need to run
+such benchmarks as well, and then decide on the un-pwxform rounds count.
+I actually thought of having it vary by m_cost in yescrypt, but decided
+against that so far because it would be non-intuitive.  So I think a
+single default should be chosen for Argon2 as well.
+
+I think that besides memory bandwidth, there's another reason why the
+performance impact of the MAXFORM chain (shall we call it that?) is
+lower when running more threads:
+
+When running 2 threads per Intel's core or AMD's module, the scalar and
+SIMD instructions are mixed within that core's or module's reorder
+buffer more evenly.  While gcc does a pretty good job at instruction
+scheduling, and modern CPUs' reorder buffers are pretty large, there's
+probably room for improvement.
+
+You might have noticed that I experimented with relevant gcc flags in
+the Makefile, leaving it with "-fsched2-use-superblocks
+-fsched-stalled-insns=0" in the patch that I posted.  Those two options
+provide a less than 1% improvement for me, so you should probably not
+include them.  However, you may look into mixing the MAXFORM rounds with
+BLAKE2 ones at a lower level, perhaps introducing them into a revised
+BLAKE2_ROUND macro (which you'd use only in ComputeBlock).  It currently
+includes G1, G2, DIAGONALIZE, G1, G2, UNDIAGONALIZE - giving you up to 6
+convenient opportunities to insert uses of MAXFORM_ROUND in there.  This
+will probably result in a more even mix of instructions in the compiled
+code, helping the single thread performance, as well as in-order CPUs.
+
+Alexander
+

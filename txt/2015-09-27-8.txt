@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <5608752E.4060400@openwall.com>
+Date: Mon, 28 Sep 2015 02:01:02 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On 2015-09-14 19:05, Hugo Landau wrote:
+>I am not using standard Base64 (RFC 4648) for encoding of binary
+>strings, but the "traditional" variant which is already used in some
+>existing hash strings, for the following reasons:
+>
+I'm not convinced by this rationale. Firstly, I'm not aware of any
+base64 functionality provided by programming language standard libraries
+which does line wrapping, etc. The world seems to agree that 'base64'
+has come to mean a certain thing, distinct from 'PEM base64' etc.
+
+In Perl, encode_base64 from the MIME::Base64 module inserts \n by 
+default but it's easy to turn off.
+
+While it's true that RFC 4648 base64 generates padding, this can easily
+be stripped.
+
+Well, you can also fix alphabet used by base64 with a simple 
+substitution by a table, like piping through `tr ./0-9A-Za-z A-Za-z0-9+/`.
+
+So this doesn't seem like a justification for using a
+different 'alphabet' (and IIRC endianness of encoding). In other words,
+this would be a gratuitous difference almost for the sake of
+incompatibility. It seems like an overreaction to use something very
+different because the more common choice is slightly off (but easily
+rectified).
+>
+While it's true that existing crypt() implementations and their base64
+implementation is widespread, RFC 4648 base64 is more prevalent still.
+And consider that the most pressing case for modern password hashing is
+probably not in /etc/shadow, but in the user databases of large, popular
+websites. Developers in this circumstance (or, preferably, people
+developing password hashing libraries) will have RFC 4648 base64
+libraries available to them, but if they have to use crypt() base64 they
+may have to implement it themselves, which creates the risk that they
+will implement it in a subtly buggy or broken fashion.
+
+While I like standard base64 (so that I can easily pipe it through 
+base64(1) or openssl base64) my main concern with base64 is validation 
+of input on decoding. I've just tested php, perl and python2/3. None of 
+them fails on non-alphabet characters by default! In perl, you cannot 
+force strict parsing. In php, you can (with an additional parameter to 
+decoding function) but it will ignore \n even inside input string. In 
+python3, you can too but in my experiment it ignored e.g. superfluous 
+"==\n" appended to the end. And in python2, base64.b64decode is 
+documented as raising an exception on non-alphabet characters but it 
+doesn't do it for me.
+
+And surely, none of them checked that trailing bits are zero if the last 
+group is incomplete.
+
+-- 
+Alexander Cherepanov
+

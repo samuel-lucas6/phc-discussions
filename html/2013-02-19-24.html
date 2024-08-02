@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Coding of the in[inlen] array for PHS( )</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="23">[&lt;prev]</a> <a href="25">[next&gt;]</a> <a href="23">[&lt;thread-prev]</a> <a href="25">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-id: &lt;36E82368-2033-4AC0-AF88-E6DB67EB4B84&#64;mac.com&gt;
+Date: Tue, 19 Feb 2013 00:07:40 -0800
+From: Larry Bugbee &lt;bugbee&#64;....com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Coding of the in[inlen] array for PHS( )
+
+Hi Dennis,
+
+First let me say I agree with the proposed numeric representations, we only deal with bytes, and all encoding transformations happen external to PHS() such that only agnostic bytes are fed to the algorithm.
+
+...to which I would add a requirement the input bytes be in network byte order (big endian) as it is arguably the more neutral byte order (little endian can have several variants).  ...and the exact format of the stored hashes be likewise specified so implementations on other-endian CPUs can safely use the file/DB.  ...and like RFCs and the NIST docs, perhaps we not speak of bytes but octets?
+
+My preference for a specification of a byte order is motivated in part by previous problems when building big endian implementations of algorithms that were specified in terms of 32-bit little endian word operations.  In one case, an encryption algorithm, I got my code to work against the published test vectors, but it failed in the real world.  After a lot of frustration (debugging) the cause turned out to be the vector bytes were *already* in little endian byte order, but unspecified as such.  To make a long story short, I had to fight endianness issues all the way thru the algorithm without the benefit of reliable test vectors or another big endian implementation as a reference.  (Sorry, this was years ago and I do not remember which algorithm.  If it comes to me I'll share.)
+
+That said, internal algorithm details are the province of the designer, but I believe all interface details should be unambigiously specified if we want interchangeability.  
+
+Larry
+
+
+----------------------------------------------------------------------------------
+On Feb 18, 2013, at 6:36 PM, "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt; wrote:
+
+&gt; @Larry,
+&gt; 
+&gt; That makes perfect sense to me but I don't understand the addendum about
+&gt; network byte order.
+&gt; 
+&gt; What does network byte order mean in the context of a C Language array in
+&gt; storage?  Is that the same as ordering in[0], in[1], ..., in[inlen-1] and,
+&gt; with regard to accepting serial input from a byte stream, the array is
+&gt; filled with the first arrival at in[0], the second at in[1], etc.?
+&gt; 
+&gt; I assume this is the mapping that is also sensible with regard to how digest
+&gt; algorithms are specified in terms of storage blocks.  (If there is a
+&gt; big-/little-endian assumption on framing these into multi-byte logical
+&gt; words, that is for the interior of the implementation to deal with, in my
+&gt; understanding.)
+&gt; 
+&gt; Is there something that I am missing in what you are saying?
+&gt; 
+&gt; - Dennis
+&gt; 
+&gt; -----Original Message-----
+&gt; From: Larry Bugbee [mailto:bugbee&#64;....com] 
+&gt; Sent: Monday, February 18, 2013 15:57
+&gt; To: discussions&#64;...sword-hashing.net
+&gt; Subject: Re: [PHC] Coding of the in[inlen] array for PHS( )
+&gt; 
+&gt; On Feb 18, 2013, at 3:00 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt;&gt; In PHS(), we deal with bytes.
+&gt; 
+&gt; +1
+&gt; 
+&gt; ...and said bytes/byte strings/byte arrays should be specified to be in
+&gt; network byte order.
+&gt; 
+&gt; 
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

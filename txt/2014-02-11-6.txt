@@ -1,0 +1,61 @@
+phc-discussions - RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <000c01cf2768$3ed12650$bc7372f0$@acm.org>
+Date: Tue, 11 Feb 2014 12:31:27 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Bill Cox says "It is in volume 2."
+
+Right you are.
+
+The Art of Computer Programming volume 2 section 4.6.3 (pp.461-485!) is all about Evaluation of Powers.  This devolves into an extensive treatment about addition chains, which have certain applications to optimization of arithmetic, including some interesting material about x^n mod w).  Some of this material seems relevant to folks concerned about speed-ups that overcome work-factor-increasing devices.
+
+The use of multiplications and divisions for powers is a case of addition-subtraction chains and the only mention I spotted is in exercise 4.6.3-30.  There are times when the addition-subtraction chains are shorter than the addition chain and the solution mentions some heavy-duty analysis (i.e., by Paul Erdos) and also ties to other material where addition-subtraction chains are workable (although having 1/x available as part of it strikes me as a stretch for integer work, but maybe not for modular arithmetic).  These matter when n is a known constant.  Otherwise the so-called binary method is what works best.
+
+I couldn't find more in any of the Knuth Collected Works papers that I have, and the early paper might be in the Discrete Mathematics volume.  
+
+I did find this in the ACM Digital Library: 
+
+Knuth, Donald E.  Evaluation of Polynomials by Computer.  Communications of the ACM 5, 12 (December 1962), 595-599, <http://dl.acm.org/citation.cfm?doid=355580.369074>.  The special case of y^n introduces the factor method, which sometimes requires fewer multiplications than the binary method.  The Tree method is also introduced.  The end of the paper has an editor's note (from Robert W. Bemer) that shows y^31 by binary method (8 multiplications), factor method (7 multiplications), and add-subtract method (6 operations: 5 squarings and one division).  I don't know if this is what I saw about this or whether there was a letter from Knuth expanding on the note from Bemer.
+
+Tangentially, that Knuth paper received a follow-up from S. H. Eisman, in July, 1963, about some additional optimization (but not for the special case of y^n).  Oddly, I had met all three of the folks involved, though I have only worked directly with Knuth and Bemer.  (I have not the skills of either.)
+
+BOTTOM LINE: The TAoCP section 4.6.3 is more recent and more definitive.  Erdos showed that y^31 is the smallest n for which multiply-divide takes fewer operations.  Bemer was commenting on the opportunity for floating-point arithmetic.  The modular-arithmetic case is also meaningful if y^-1 mod w is handy.  Hmm.
+
+ - Dennis
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Tuesday, February 11, 2014 04:54
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Tue, Feb 11, 2014 at 2:44 AM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+Many, many years ago, Knuth published a paper about exponentiation by integers.  The speed-up he got beyond the standard version (working on bits of the exponent and squarings of the base) was in places where divisions were used instead of multiplications into the growing product for the result.
+>
+I would be surprised if this wasn't in volume 2 of The Art of Computer Programming, probably in one or more of the problems.
+
+It is in volume 2.  I got the full set as a birthday present while in
+college, and it's one of the few dead-tree books I still keep.  That's
+why we knew Knuth would know about the problem.  I only remember my
+own lame contribution to the mathematical work on the problem while we
+were hacking it for days: the 2X possible speedup and proving that
+some values of n approach it.  That's probably like 30 minutes of work
+for a decent mathematician.  The other geeks went off and practically
+invented a branch of mathematics based on the problem, with mind
+boggling theorems I can no longer recall.
+
+I published a Pascal version (without the division speedups) for arbitrary integer exponents in Dr. Dobbs too many years ago.  While I was developing it, Knuth and I had a minor disagreement over what 0 to the power 0 should be.  (He voted for 1, I resolved it by returning 0/0 (by identity with 0 to the power 1-1) and letting the arithmetic of the given compiler and platform decide how to handle it.)
+>
+If you like, I'll see if I can track the Knuth paper and/or the TAoCP location.
+>
+ - Dennis
+
+That would be awesome, but don't go to too much trouble.
+
+Bill
+
+

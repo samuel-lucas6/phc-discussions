@@ -1,0 +1,26 @@
+phc-discussions - Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Message-Id: <DFC0E54D-D19C-47BC-9A88-45523A3A8D9F@gmail.com>
+Date: Wed, 17 Apr 2013 14:46:34 -0400
+From: Matthew Green <matthewdgreen@...il.com>
+To: discussions@...sword-hashing.net
+Cc: "'Jeffrey Goldberg'" <jeffrey@...dmark.org>
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+3.2 In this case, every block but the initial block depends on all of its predecessors.  Making each block also dependent on all of its successors is trickier.  Here this is the same as making every block but the last depend on the final block, but they can't all depend on the final block in a trivial way.  The approach I favor, off the top of my head, is to produce additional HMAC rounds following the production of the last block to generate a series of hashes that are xor-ed back, one each, to the predecessors.  This is tantamount to generating (abbreviated) additional blocks that are then discarded but for their sealing together of the block values that are delivered.
+
+Wouldn't it be sufficient to break the scheme into two portions: 
+
+1. A computation/memory expensive function that has some fixed output length. 
+2. A standard (and reasonably efficient) KDF that stretches this output to whatever length you need?
+
+I suppose you could probably tackle Solar's comments by adding some efficient phase (0) that first hashes an arbitrary-length input, then feeds it to phase (1).
+
+I really don't know if there's a problem with this approach, I just like it because it seems to isolate the parts we have the hardest time evaluating. Thoughts?
+
+Matt
+
+
+
+
+

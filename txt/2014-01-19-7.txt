@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <CAOLP8p5giFedT7vtHSir0P-W-5sAHys9VnTu9GjcukDTUzTKsA@mail.gmail.com>
+Date: Sun, 19 Jan 2014 07:47:49 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Sat, Jan 18, 2014 at 3:59 PM, Stephen Touset <stephen@...set.orgwrote:
+My original idea behind the blakerypt session key was to defeat cache
+analysis.
+>
+However, the Catena guys seemingly have a much better approach than mine,
+which doesn't require the hash to be keyed, so I have effectively bowed out
+of the competition to make room for the professionals here who know what
+they are doing. :)
+
+I would hate to see entries like Blakerypt bow out because of Catena.
+If I drop out, it will be because of excellent real-world work like
+escrypt. Catena has some excellent theoretical work, but until I see
+an implementation that begins to approach the security of Scrypt, I
+don't see it as a real contender.
+
+Being new to password hashing, I'm not familiar with the techniques
+commonly used.  Is your master key scheme which allows re-keying
+without changing session passwords unique, or is that fairly standard?
+ It certainly seems useful to me.  Catena focuses on an unrealistic
+weak attack against Scrypt: aborting the second loop early using cache
+timing.  However, an attacker still has to execute the full compute
+intensive first loop, so we're not talking about speeding anything up,
+just saving memory.  All the entries I've read other than Blakerypt
+are susceptible to leaking early hashing memory, and an attacker can
+use that to avoid both the compute time and memory.  It's a far more
+realistic and strong attack, and while I don't like the thought that a
+session key is *required*, Blakerypt has the best defence I've read so
+far.
+
+The Catena paper blew me away and I stole some of their ideas
+wholesale.  However, it seems like an academic solution at this stage.
+ It has nothing to support modern memory architectures, no useful
+parallelism, and no high performance hashing.  Of course, all of that
+can be added, but until I see a real-world solution, it remains
+theoretical work in my mind.  In comparison, you've addressed the
+worst of the realistic attacks while offering a fast hashing scheme.
+I think it's lame to fill memory with cryptographically random data,
+but I seem to be in a minority.  If real cryptographically strong
+pseudo-random numbers are wanted, Blake2 seems like a very strong
+contender.
+
+Instead of cryptographically random data, I think we would be better
+off filling memory with "ducks cows pigs" and "clowns birds pies"
+randomly, so long as we can force an attacker to do the same.
+
+Bill
+

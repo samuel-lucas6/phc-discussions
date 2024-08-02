@@ -1,0 +1,145 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140119091333.GB17361@openwall.com>
+Date: Sun, 19 Jan 2014 13:13:33 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sat, Jan 18, 2014 at 02:51:23PM -0500, Bill Cox wrote:
+On Sat, Jan 18, 2014 at 9:16 AM, Solar Designer <solar@...nwall.comwrote:
+Another option is making use of a larger "ROM" (multi-gigabyte).  As I
+had mentioned, for busier-than-in-example-above dedicated authentication
+servers, we're currently playing with parameters that give
+7300 req/s/machine on a large(r) machine, using 112 GiB ROM (= 120 GB) +
+1.75 MiB RAM/instance.
+
+Awesome.
+
+BTW, the above was with Salsa20/8.  I think I'll have something faster
+in "final" code.  Without simultaneous use of a ROM, the RAM usage can
+be higher, but I'd rather have the ROM as well.
+
+Benchmarking 1 thread ...
+338 c/s real, 340 c/s virtual
+Benchmarking 32 threads ...
+7300 c/s real, 228 c/s virtual
+
+In terms of bandwidth, the above corresponds to:
+
+7300*1.75*4*2^30/10^9 = ~54.9 GB/s
+
+because both SMix loops are read-write (they read half the data from RAM
+and the other half from ROM, and they write to RAM - the first loop
+writes sequentially, the second loop updates what was written before).
+
+With Salsa20/2, I am getting 9300 c/s:
+
+Benchmarking 1 thread ...
+845 c/s real, 852 c/s virtual
+Benchmarking 32 threads ...
+9300 c/s real, 292 c/s virtual
+
+or 4188 c/s with 3.5 MiB RAM:
+
+Benchmarking 1 thread ...
+429 c/s real, 429 c/s virtual
+Benchmarking 32 threads ...
+4188 c/s real, 132 c/s virtual
+
+7 MiB:
+
+Benchmarking 1 thread ...
+214 c/s real, 212 c/s virtual
+Benchmarking 32 threads ...
+1992 c/s real, 62 c/s virtual
+
+14 MiB:
+
+Benchmarking 1 thread ...
+101 c/s real, 101 c/s virtual
+Benchmarking 32 threads ...
+952 c/s real, 30 c/s virtual
+
+BTW, notice how with Salsa20/8 going from 1 thread to 32 provided a
+22.6x speedup, whereas with Salsa20/2 (at same memory settings) it
+provided only an 11x speedup (this is less than the physical CPU core
+count, which is 16).  This means that at least with Salsa20/2 we're
+leaving many otherwise-suitable execution units idle, waiting for data
+from memory.
+
+Anyway:
+
+9300*1.75*4*2^30/10^9 = ~69.9 GB/s
+4188*3.5*4*2^30/10^9 = ~63.0 GB/s
+1992*7*4*2^30/10^9 = ~59.9 GB/s
+952*14*4*2^30/10^9 = ~57.2 GB/s
+
+L3 cache helps (for the RAM portion), but only a little bit.  The
+slowdown when going from 1.75 MiB/instance (56 MiB total) to 14
+MiB/instance (448 MiB total) may be attributed to L3 cache only keeping
+a significant portion of the data at the lower RAM portion sizes.
+
+To fit in L3 cache, here's 896 KiB (7/8 of a MiB):
+
+Benchmarking 1 thread ...
+1637 c/s real, 1650 c/s virtual
+Benchmarking 32 threads ...
+22250 c/s real, 701 c/s virtual
+
+22250*7/8*4*2^30/10^9 = ~83.6 GB/s
+
+This uses 28 MiB out of 32 MiB L3 cache, but there's possibly some cache
+thrashing by the reads from ROM (even though they're non-temporal, with
+the hint).  Let's try 448 KiB (7/16 of a MiB):
+
+Benchmarking 1 thread ...
+3102 c/s real, 3102 c/s virtual
+Benchmarking 32 threads ...
+57406 c/s real, 1803 c/s virtual
+
+57406*7/16*4*2^30/10^9 = ~107.9 GB/s
+
+Wow, now the L3 cache is fully in effect (we still don't fit in L2
+cache, by far, although perhaps it helps a little bit too), giving us
+twice better overall speed (recall that half the reads are still from
+the 112 GiB ROM).
+
+These very high speeds (above 10k c/s) and their corresponding low RAM
+portion sizes are of little practical use, especially along with the
+ROM (my actual target speeds for such use cases are a few thousand c/s).
+I included them here primarily to show the effect of L3 cache.
+
+I just ran this code in my Chrome browser in 1.4 seconds:
+[...]
+I think it writes 40MB, and reads 20MB.  Maybe twice that if it is
+storing 64-bit floats.  I think this shows we can probably allow users
+to perform hashing in their browsers, offloading the servers.  For
+clients without javascript, just do it on the server, but that's a big
+offload.  This even works on PHP backed servers with no native code
+access.
+
+Great.
+
+Dmitry Chestnykh had implemented scrypt in JavaScript and benchmarked it
+on recent browsers.  With specific optimizations for the different
+browsers, IIRC he got run times of around 1 second for 16 MB.  This is
+very nice, but falling back to doing it on the server (for clients
+without JavaScript and for older/uncommon browsers with much slower
+JavaScript) might not always be affordable.  e.g. I can't run scrypt at
+16 MB on the machine used for the tests above at c/s rates given above,
+yet such high c/s rates may be required for a given deployment.  I am
+compensating for the lower RAM usage per instance by also using a ROM,
+but pre-hashing on the client can't do that.  In order to allow for the
+fallback to processing on the server (e.g. when the same user connects
+from a different device), we'd have to use less RAM, and do so without
+also using a ROM - this is not good.  So maybe the "server relief" for
+such deployments should be partial, leaving a ROM-using portion on the
+server (all the time), or maybe it shouldn't be used for such dedicated
+auth server deployments at all (considering that in the worst case
+scenario, which the maximum supported throughput is meant for, all
+clients connecting at that moment will happen to lack "server relief",
+and that we have no non-authentication use for the server's resources).
+
+Alexander
+

@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] on timing attacks
+
+Message-ID: <CAELGc4UmmjaKDN1rKrmi8coNXnJPGxFdUMYpODTaA+rA3ak_Xw@mail.gmail.com>
+Date: Tue, 29 Apr 2014 12:05:40 +0800
+From: Hongjun Wu <wuhongjun@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] on timing attacks
+
+1.  I think that Thomas Pornin explained well that the secret-based
+indexing is useful to PHS; and Bill Cox explained well that the hybrid
+architecture (combining predictable-memory access and secret-based
+indexing) is useful for PHS. Thank you!
+
+POMELO is a conservative design so that even when the cache-timing attack
+is successful, POMELO can still perform as a strong PHS.  When I was
+designing POMELO, the rationale of using secret-based indexing in POMELO
+is to provide strong resistance against the attacks on GPU and dedicated
+ASIC/FPGA.  The attacks on GPU can be thwarted with the secret-based
+indexing.
+
+2.  Krisztián Pinter mentioned about the secret salt in PHS (I think it is
+a good idea).
+
+Personally, I feel that using a secret key in PHS provides a  practical
+and strong solution to the password web authentication.   The reason is
+that in the current web authentication, password authentication is likely
+under the protection of TLS/SSL.  As long as the web server is able to
+provide secure public key decryption against hacking (for example, in a
+separate hardware decryption chip), we can argue that the web server can
+also protect the secret key used in PHS in a similar way.
+
+I think that using a secret key in PHS, and perform the PHS operation
+in a hardware chip almost solves perfectly the problem of web
+authentication.  Using a MAC (such as HMAC, CMAC) to compress the public
+salt, password and the secret key is enough (if we worry that a hacker may
+take full control of the chip for a period, then adding some delay to each
+PHS session can mitigate the problem).  This solution takes very little
+computation and memory, and retrieving the password image file is almost
+useless to the hackers (if there is enough entropy in the public salt).  I
+wonder whether those large web sites (such facebook) are using this type of
+techniques.
+
+
+
+
+On Tue, Apr 29, 2014 at 12:11 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+IMO, if there are to be multiple memory-hard winners, this is the issue
+that should separate them.  If we can't agree which form is best (which
+seems to be the case), maybe the judges will have trouble too.  In that
+case, they can probably still agree on winners in each class.
+>
+Krisztián Pintér and Thomas Pornin both make good points.  While doing no
+password dependent addressing at all seems like a good thing, it does come
+with two significant costs.  First, a cache-timing resistant algorithms
+have difficulty having strong TMTO resistance until about the 1/4 memory
+usage mark compared to the computation graph size.  To insure the defender
+benefits from this as much as the attacker, the cache-timing resistant
+entries generally recommend that memory be written about 4 times or more.
+ There are some tricks to avoid one of the writes, so this penalty seems to
+be about a 3-4X reduction in possible peak memory usage, and 2X to 3X in
+terms of average memory usage.  When attacking these cache-timing resistant
+algorithms offline, an attacker will gain somewhere from about 2X to 4X in
+guesses per dollar.
+>
+Second, predictable memory access can be sped up dramatically in custom
+hardware, including both FPGA and ASIC implementations.  GPUs may be able
+to speed up predictable memory access as well.  Any cache-timing resistant
+algorithm runtime hardened primarily by memory bandwidth will not succeed
+very well on the runtime portion of the runtime*memory cost.  I would want
+to see some other compute time hardening in any cache-timing resistant
+algorithm.  Hopefully this can be considered a "tweak".
+>
+Combined, offline attackers get a free-ish memory reduction of something >
+2X, and he can run that memory full-bore as fast as it's I/O will allow,
+mostly eliminating memory latency delays, so he wont have to use that
+memory for very long per guess.  That's a reduction on both the time and
+memory axis of the time*memory cost.  I am not a fan of that.
+>
+On the other hand, Krisztián Pintér is right that timing leaks all sorts
+of information, not just information useful for cracking his password
+faster.  If an attacker has a scope probe on the power rails, most entries
+the competition will leak the password length.  They mostly call memcpy,
+and there's a real risk that an attacker with power rail waveforms can
+detect exactly how many cycles memcpy takes.  Both PBKDF2 implementations
+as well as HKDF call memcpy on the password, so there's no help there.
+>
+Even with coarse-grain information such as cache-timing, an attacker may
+gain crucial knowledge.  For example, a drone operator might wait for
+confirmation that a targeted individual has just attempted to log into a
+web account, indicating he is probably at his desk by his computer, before
+launching a missile at him.  Even knowing a person has not logged in for a
+while can be critical information.  For example, did the missile we
+launched last week kill him?  The meta-data gained through a timing leak
+can be more sensitive than the password.
+>
+Which PHS architecture is preferable seems to be strongly a matter of
+opinion, and there are good solid entries with all three architectures.
+>
+Personally, I prefer the hybrid first, because it has nearly the off-line
+defensive strength of a fully unpredictable addressing schemes, while still
+hampering off-line cache-timing attacks on the password.  It's not an
+obvious choice, and I only came to this decision after thinking about it
+for a couple of weeks, and playing with Catena and some other algorithms.
+ The hybrid system is more complex, which can be death for a crypto-system.
+ The simplicity and security of Bcrypt and similar unpredictable algorithms
+will remain most attractive to some.  Better defense against timing attacks
+seems to draw others to cache-timing resistant algorithms.
+>
+This seems almost to be a religious war.  Of course, I'm right and
+everyone else is wrong :-)
+>
+Bill
+>
+
+
+

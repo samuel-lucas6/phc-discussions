@@ -1,0 +1,53 @@
+phc-discussions - A little nit which bothers me...
+
+Message-ID: <54762.1396417155@critter.freebsd.dk>
+Date: Wed, 02 Apr 2014 05:39:15 +0000
+From: Poul-Henning Kamp <phk@....freebsd.dk>
+To: discussions@...sword-hashing.net
+Subject: A little nit which bothers me...
+
+
+There's one little nit which bothers me, and I've spotted it a
+couple of times already so far:
+
+	for some criteria:
+		entropy = HASH( static || entropy )
+
+When the static value goes into the HASH before the entropy,
+it can be integrated into the initialization of the hash function,
+both in hardware and software, trading space for time.
+
+This bothers me because I specifically addressed and commented on
+this little detail in my md5crypt 20 years ago:
+
+        /* The password first, since that is what is most unknown */
+        MD5_Update(&ctx, pw, strlen(pw));
+
+        /* Then our magic string */
+        MD5_Update(&ctx, magic, strlen(magic));
+
+        /* Then the raw salt */
+        MD5_Update(&ctx, sp, sl);
+
+And yes, I realize it's all my own fault for not publishing an article
+about my thinking back then, but as far as I am concerned this is a
+firm rule now:
+
+	Feed data into hash functions in order of decreasing entropy.
+
+If your loop feeds in fixed size data, less than the block size of
+the hash, then the order doesn't matter at all:  You can always
+integrate the static part into the initialization of the hash.
+
+The corollary rule therefore is:
+
+	Feed at least a block-size worth of entropy before static data.
+
+Poul-Henning
+
+-- 
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe
+Never attribute to malice what can adequately be explained by incompetence.
+

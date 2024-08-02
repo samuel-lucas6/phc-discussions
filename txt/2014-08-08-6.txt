@@ -1,0 +1,102 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7Kgjb7UuW4pKOmKChTqRA+uHNieEYQ2CEi_UrvjdnYqbw@mail.gmail.com>
+Date: Fri, 8 Aug 2014 14:40:21 -0700
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: Bill Cox <waywardgeek@...il.com>
+Cc: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, ben@...rr.is
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+On Fri, Aug 8, 2014 at 2:14 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+>
+>
+>
+>3. I do not understand what is "lower bound for low q for Catena".
+>>
+>
+I meant a lower bound on the computation penalty for the kinds of q's
+we've been looking at, like 1/2, 1/4, and 1/8.  If you plug these into the
+Catena lower bound model, it says that at least a small fraction of at
+least one hash will be required :-)  Not a very practical lower bound,
+IMO.  Factors of 2^18 do tend to be important in benchmarks.
+>
+
+Their constants, indeed, do not make much sense for real-world N, but if
+the proof was correct we'd hope for future improvement. Now we suppose
+(until our attack is verified by someone) that the proof is just incorrect.
+
+>
+>
+>4. I can try to break your primary submission, if you give some explicit
+>security claims for your fastest secure set of parameters. This applies to
+>all other candidates, actually.
+>>
+>
+The most secure parameters are those that maximize memory use while
+providing some reasonable compute-time hardening.  This is entirely machine
+dependent, as well as application dependent.
+>
+However, I should be expected to defend the security of my default hashing
+parameters:
+>
+#define TWOCATS_MEMCOST 20 // 1 GiB
+#define TWOCATS_PARALLELISM 2
+#define TWOCATS_BLOCKSIZE 16384
+#define TWOCATS_SUBBLOCKSIZE 64
+#define TWOCATS_TIMECOST 0
+#define TWOCATS_MULTIPLIES 2
+#define TWOCATS_HASHTYPE TWOCATS_BLAKE2S
+#define TWOCATS_LANES 8
+#define TWOCATS_OVERWRITECOST 6
+>
+
+OK, I will see (probably later) what can be done for the memory reduction
+by 8 or so.
+
+
+>
+>
+Your power analysis per guess is very interesting.  You assume power is
+proportional to the amount of memory used (1/q), and give password crackers
+running with a high q highly reduced power.  For your Catena pebbling
+algorithm, you may be able to avoid increasing read/writes to DRAM because
+of predictable read/writes.  However, the Scrypt inspired algorithms that
+spend 50% or more of their time doing unpredictable read/writes cannot
+easily reduce their bandwidth to DRAM through a TMTO.  When a value has to
+be recomputed, it will depend on other values in DRAM, leading to more,
+rather than fewer power hungry read operations.  Memory bandwidth can also
+quickly become a bottleneck in an ASIC attack.  Certainly power will not
+drop proportionally with q.  My guess is that it will increase.
+>
+
+First, I would not suggest DRAM for its rather high power consumption in
+the idle state. We assumed the use of SRAM, this particular design
+http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6193183
+
+As you may noticed, we computed energy cost separately for the leakage
+power consumption and for the memory bandwidth (these numbers are available
+by the link). The energy drops with q up to the point where parallel cores
+consume too much energy.
+
+
+>
+The Argon ASIC has some really awesome DRAM!  I want some of that DRAM
+that let's me r/w 21GiB in 0.02s!  I suspect there's a typo or I'm
+misunderstanding the table...  Also, on my machine, 1GiB hashing using the
+PHS interface to Argon takes 3.5 seconds (t_cost = 3, m_cost = 1024*1024, 1
+thread, Argon PHS defaults).  It seems to be CPU bound rather than memory
+bandwidth bound.  I would expect an ASIC to flip this situation so that it
+becomes memory bandwidth bound.  Please let me know if I've compiled with
+the wrong parameters or such!
+>
+
+This should not be a big surprise even if you do not consider our model
+with 2^16 memory banks. For example, recent GPUs have total memory
+bandwidth up to 400 GB/sec.
+
+
+Dmitry
+
+
+

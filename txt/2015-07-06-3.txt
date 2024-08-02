@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <CALW8-7++aXm0jXPpkmfKQFp9C5bHr-4sQDmRv7y4x8ACPwx0fw@mail.gmail.com>
+Date: Mon, 6 Jul 2015 22:47:44 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+The idea of using ROM for PoW with fast verification has been around since
+2003 http://research.microsoft.com/apps/pubs/?id=65154 (Section 5.1 for a
+simple algorithm). The major problems are 1) this approach needs a long
+initialization phase, and 2) the verifier must have as much memory at least
+for the beginning.
+
+We have recently proposed a new method for a memory-hard PoW with fast and
+memoryless verification, where there is no initialization phase and the
+verifier can be weak. It is in the Argon2 paper
+http://eprint.iacr.org/2015/430.pdf , Section 8. The technique can be used
+with any memory-hard PHC finalist, in fact.
+
+Best regards,
+Dmitry Khovratovich
+
+On Sat, Jul 4, 2015 at 12:56 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+It turns out that Momentum has some devastating parallel attacks, and
+should not be used.  IIRC, Cuckoo is also broken.  So, here's the outline
+for a new algorithm I hope can help fix this situation.  As usual, I'll put
+code on github.  I'm calling it CPU Hash for now.
+>
+The algorithm is motivated from EARWORM, using the fix I proposed to
+defeat distributed ROM attacks (increasing the state size).  It uses a
+large random ROM (maybe 512MiB), and a fairly small RAM (20KiB).
+>
+A large ROM is initialized with blocks of 4KiB each (this overcomes DRAM
+latency issues caused by cache misses).  A fast block hash function
+hashBlocks(digest, nounce, block1, block2) creates a new block from the
+previous two.  I used a multiplication-chain compute-time hardened hash
+function motivated from TwoCats/Yescrypt, followed by a cryptographic hash.
+>
+The initial block is copied from the first block, ROM[0], and the digest
+of the crypto-coin block and nounce (guess for solution to crypto-coin
+block) are copied to the start of the memory block.  Block b[1] is then
+hashed in with hashBlocks.  If the resulting block final HLEN bytes hashes
+(with a cryptographic hash) to less than the difficulty setting, then
+success, a solution is found.  The proof of work is simply the new
+crpto-coin block and nounce that solves it.  Verification simply repeats
+the hash of 20KiB, which runs in constant time.  Since only 20KiB are
+hashed, and 8KiB is usually already cached (ROM[0] and ROM[1]), this should
+be much faster than LiteCoin in blockchain verification,  Also, my block
+hash is wicked fast :)
+>
+The main advantage is that the ROM will large enough to require external
+DRAM, while verification speed is faster than in LiteCoin.  I think this is
+the combination needed to discourage ASIC based mining, and keep mining on
+CPUs.
+>
+Defeating GPU attacks is with the large ROM.  Scrypt achieves parity
+somewhere around 4MiB.  This would be much larger, maybe 512MiB.
+>
+Highly parallel distributed ROM attacks using custom ASICs would be
+defeated by hashing random blocks three times, which would require that two
+of the blocks be transmitted from one node to another other over a
+network.  The network routing for 2 blocks should be slower than a CPU
+reading 3 blocks from DRAM.  Hashing more than one block is required,
+because with just one block the index could simply be transmitted to the
+node owning the ROM block, and computation could be done entirely by the
+destination node.
+>
+The code is coming along, though the idea is only a few of hours old.
+Maybe I'm too sleepy to think straight, but it seems to me that this is a
+nice upgrade to the various crypto-coin PoW that are trying to make use of
+memory-hard password hashing algorithms.  I'm too sleepy to see the flaws
+at the moment.  Do you guys see any in this outline?
+>
+Thanks,
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

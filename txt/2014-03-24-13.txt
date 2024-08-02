@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <532FFF4A.7020408@bindshell.nl>
+Date: Mon, 24 Mar 2014 02:47:54 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On 3/24/2014 2:11 AM, beloumi wrote:
+>>2. Instead of replacing the s-box entries, wouldn't it be easy to expand
+>>them to a memory-hard vector and use them piece by piece in the last
+>>encryption step (that means: using a different s-box for each of the 64
+>>encryptions or - more experimental - for each blowfish round)?
+>>Please excuse that I write a comment although I have not fully reflect
+>>the algorithm...
+>Depending on the m_cost, doing so could break the memory hardness. Since
+>only one s-box would be needed at a time, the attacker could hold each
+>s-box in global memory and swap them into local memory when they are
+>needed. Using each s-box simultaneously prevents this from occuring.
+You are right. And I think using the s-boxes simultaneously would not be
+an easy solution as I expected.
+
+This is what the f-function does, and as you can see from the code it is
+not that complicated.
+
+Blowfish's f-function is as follows:
+
+f(x) = ( (S[0][shr(x,24)] + S[1][shr(x,16) & 0xff] )
+     ^ S[2][shr(x,8) & 0xff]) + S[3][x & 0xff]
+
+And pufferfish's f-function is:
+
+f(x) = ( (S[0][rotr64(x61)%words] + S[1][rotr64(x,22)%words] )
+     ^ S[2][rotr64(x,53)%words]) + S[3][rotr64(x,33)%words]
+
+
+But I agree to Bill, that increasing the memory cost of Pufferfish would
+achieve more confidence, even if it is much less than other memory-hard
+schemes.The authors of bcrypt thought (1999) of 14 KB as a „moderate“
+memory amount. Maybe in this time „moderate“ means something like 1 MB.
+I like Bcrypt and I would be glad if we could extend this algorithm for
+the current requirements.
+
+I think you meant 4KB, not 14KB. But yeah, this is what the m_cost
+parameter is for. If you want to use 1 MiB, then just set m_cost to
+1024. This will generate four s-boxes of 256 KiB each.
+
+
+Good luck, Jeremi!
+
+Thank you! :)
+
+

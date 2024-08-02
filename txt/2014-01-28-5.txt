@@ -1,0 +1,32 @@
+phc-discussions - catena.c
+
+Message-ID: <20140128031714.GA958@openwall.com>
+Date: Tue, 28 Jan 2014 07:17:14 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: catena.c
+
+Christian,
+
+I guess the 128 constant in the snippet below was meant to be H_LEN,
+since otherwise behavior will differ for H_LEN != 64, and it could even
+be over-read beyond the malloc()'ed memory.
+
+For the current H_LEN == 64, which is valid for both BLAKE2b and
+SHA-512, this change is obviously a no-op.
+
+diff --git a/src/catena.c b/src/catena.c
+index 5486709..8c84f82 100644
+--- a/src/catena.c
++++ b/src/catena.c
+@@ -66,7 +66,7 @@ void LBRH(const uint8_t x[H_LEN], const uint8_t lambda,
+     __Hash2(r + (c-1)*H_LEN, H_LEN, r, H_LEN, r);
+     p = r + H_LEN;
+     for (i = 1; i < c; i++, p += H_LEN) {
+-      __Hash1(p - H_LEN, 128, p);
++      __Hash1(p - H_LEN, 2 * H_LEN, p);
+     }
+   }
+
+Alexander
+

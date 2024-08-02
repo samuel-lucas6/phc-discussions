@@ -1,0 +1,113 @@
+phc-discussions - Re: [PHC] Fastest algorithm shootout with threads...
+
+Message-ID: <20150430144424.GA25205@openwall.com>
+Date: Thu, 30 Apr 2015 17:44:24 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Fastest algorithm shootout with threads...
+
+On Thu, Apr 30, 2015 at 04:12:54AM -0700, Bill Cox wrote:
+On Wed, Apr 29, 2015 at 9:13 PM, Solar Designer <solar@...nwall.comwrote:
+Cool!  How many sequential MULs does TwoCats have per 1 KiB in that test?
+
+By default, it does 2048 sequential multiplies in the integer unit in
+parallel with hashing a 16KiB block in the SIMD unit, and then hashes all
+the results together with a full Blake2s.  So, that's 128 sequential
+multiplies per 1KiB block.  However, this is tunable.
+
+128 MULs per 1 KiB is impressive.  yescrypt only does 96, so 3/4 of
+that, at PWXrounds=6.  I guess it's primarily the separation of the MUL
+chain onto scalar units that helps achieve this (as well as the lack of
+S-box lookups in that chain), and this has its pros and cons as
+previously discussed.
+
+16 KiB block size is problematic wrt the Argon team's attack on iterated
+block functions.  I guess Catena suffers from this badly, too?  1 KiB is
+about the maximum that's sort of safe without sub-block shuffling (and
+I'll likely experiment with sub-block order reversal, either if further
+tweaks are permitted in PHC, or if yescrypt isn't selected).
+
+The problem is most apps and users won't run additional benchmarks to
+choose the optimal number of threads, and even if they do they'd likely
+need to be computing the same derived key on an upgraded machine later,
+where the old thread count would no longer be the most optimal one.
+
+This depends on the use case, I think.   For FDE or volume encryption, an
+automt datic parameter generator should run, just like Scrypt does today.
+
+Fair enough.
+
+For authentication servers, these would also be well tuned.
+
+No.  That's uncommon.
+
+With authentication servers, it's usually one thread per hash, and the
+number of concurrent threads is equal to the number of concurrently
+processed requests from the clients.  It's just higher-level threads or
+even separate processes, not those we could have spawned from PHS().
+
+And with non-dedicated servers and especially with VMs we have no
+control over the number of threads+processes at all: we don't even know
+how many might be running in adjacent VMs.
+
+So we should plan that in the worst circumstances - and that's when high
+performance from our code is needed the most - the maximum number of
+threads supported in hardware will actually be running concurrently
+(perhaps with more waiting to be scheduled by the kernel).
+
+Unless I misunderstand something, Argon2d at lowest t_cost only goes
+through memory once (when filling it), without the extra 33% you
+mentioned for yescrypt.  So it could have reached TwoCats' speed, but
+somehow did not.  I guess the intermediate writes to state[] between the
+two groups of 8 BLAKE2b rounds might hurt even with write-back caches.
+Are those writes occasionally getting to higher-level caches or RAM?
+
+I did a few manual tests to see if I could get Argon2d and Yescrypt-2pw-sse
+to run at TwoCat's speed.  I succeeded for the single-thread case, but for
+multiple threads, the 1KiB block size used by Argon2d and Yescrypt slows
+them down.  I was able to slow TwoCats down similarly by useing a 1KiB
+block size.
+
+OK.  Somehow I haven't found larger block sizes to be much faster for
+yescrypt.  IIRC, it was a bit faster at 2 KiB, and slower at 4 KiB and
+more.  I guess that's because I'm already using 8 KiB for the S-boxes.
+
+Anyway, larger block sizes would be problematic for TMTO and memory
+latency dependency.
+
+To get Yescrypt there, I commented out the multiplies in the PWX
+transform.  The fact that this runs as fast as TwoCats is impressive, given
+that Yescrypt was doing 33% more I/O operations.  It looks like even with 2
+rounds instead of 6, Yescrypt-2pw-sse is still computation time bound.
+
+I think there are times when it's computation time bound, and there are
+times when it's memory bound, depending on prefetch and such.
+
+To get Argon2d-sse there, I commented out half of their 16 reduced Blake2b
+rounds.  It seems Argon2d is also computation time bound on this machine.
+
+I guess it's similar to what I said above: it varies over time.
+
+Also, when you commented out half of Argon2d's BLAKE2b rounds, I guess you
+removed the temporary writes to state[].  If these were wasting any
+memory bandwidth before, they no longer would after your changes.
+
+Obviously, it's not a change that could be acceptable outside of an
+experiment like this.
+
+This would enhance Argon2d's TMTO
+defense and Yescrypt could probably not run the second loop at all when
+t_cost == 0.  That would make Yescrypt-2pw-sse nearly as fast as TwoCats
+when running with enough threads.
+>
+Yes, perhaps.  It's a pity that TwoCats' TMTO wasn't studied by the
+Argon team.  Maybe we should have made TwoCats a finalist just for that
+privilege.  Then we would have greater confidence about your approach.
+
+It's not too late to study the distance-cubed distribution (or something
+similar).  The current Argon2d distribution is on the weak side.
+
+I agree.
+
+Alexander
+

@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="17">[&lt;prev]</a> <a href="19">[next&gt;]</a> <a href="17">[&lt;thread-prev]</a> <a href="19">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140213175236.GB6622&#64;openwall.com&gt;
+Date: Thu, 13 Feb 2014 21:52:36 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:21:40PM -0500, Bill Cox wrote:
+&gt; I was under the impression that bcrypt was difficult for a GPU due to
+&gt; it's memory size requirement, and that soon with increased L1 cache
+&gt; sizes, bcrypt may be fast to hash on GPUS.  Some paper I read said so,
+&gt; and papers are never wrong :-)
+
+It's local memory (in OpenCL parlance) rather than L1 cache, but yes -
+having more of it will enable more bcrypt instances to run in parallel,
+helping to put more execution units to use and helping hide latencies.
+
+bcrypt uses only 4 KB.  We're lucky that right now, with this specific
+unpredictable access pattern, it's (barely) sufficient to defeat GPUs.
+We should improve upon that by allowing for scaling that portion up to
+larger sizes while maintaining the access pattern.
+
+&gt; What is it about bcrypt's memory access pattern that is hard for GPUs?
+
+Very frequent unpredictable 4-byte lookups.  If they go to external
+memory, they'd incur very high latency and fetch entire cache lines
+(wasteful).  Even with local memory, latency is pretty high (compared to
+L1 cache on CPU).  Normally, the latency would be hidden by having more
+instances run in parallel, but there's currently not enough local memory
+to run even the bare minimum needed to keep all execution units in use
+at all (thus, many are 100% idle).  So it's a combination of factors.
+
+&gt; What I currently do for GPUs is to allow for memory sizes as low as
+&gt; 1MB,
+
+How is this something you do "for GPUs"?
+
+&gt; with block sizes as low as 4 bytes, and if that hashes to
+&gt; quickly, there is a repetition factor that increases the inner loop
+&gt; calculations to run as long as you like.
+
+Oh, so you support block sizes this small.  Good.  What's not so good,
+though, is that such small block sizes at total sizes exceeding CPUs' L1
+cache are slow on CPU - you have that same problem with fetching entire
+cache lines, etc.  They're only good for L1 cache.
+
+&gt; I guess my 1MB may be too
+&gt; coarse, but below 1MB just seems like giving up on memory hardness.
+
+Yes, giving up on memory hardness for ASICs - but not on let's say local
+memory hardness for current GPUs yet.  There may be use cases where the
+defender would want such low settings for other reasons, and it's our
+job to provide no-worse-than-bcrypt security at those low settings.
+
+&gt; Is something like this what is required?
+
+Yes, but I think we need at least 2 levels: one is with tiny bcrypt-like
+accesses to a block of data that fits in L1 cache on defender's systems,
+and the other with larger block-sized accesses.  An easy way to do that
+would be to treat each block as the arena for a bcrypt-like algorithm,
+and to have that algorithm inside our BlockMix-alike.  However, this is
+suboptimal in that an optimal block size in terms of TLB misses is
+something like 1 KB, whereas an optimal bcrypt-like arena size is in the
+range of 4 KB to 32 KB (currently).  I am playing with 12 KB or 16 KB
+for the bcrypt-like S-boxes, which lets me run two threads/core and
+still fit in 32 KB L1 cache, along with the current ~1 KB'ish blocks.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

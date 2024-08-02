@@ -1,0 +1,436 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="../../../2015/04/05/1">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5522AFC0.3040502&#64;larc.usp.br&gt;
+Date: Mon, 06 Apr 2015 13:09:36 -0300
+From: Marcos Simplicio &lt;mjunior&#64;...c.usp.br&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi again.
+
+Apologies for the delay: I had almost no Internet access this weekend.
+
+On 03-Apr-15 08:12, Solar Designer wrote:
+&gt; Hi Marcos,
+&gt; 
+&gt; Thank you for running these benchmarks.  They're very helpful.
+&gt; 
+&gt; On Thu, Apr 02, 2015 at 06:22:38PM -0300, Marcos Simplicio wrote:
+&gt;&gt; - For 1 thread ("p1"), when both yescrypt and Lyra2 have the exact same
+&gt;&gt; number of passes through memory (Lyra2 with T=1 and yescrypt with T=2)
+&gt;&gt; and use an underlying hash with similar compute-time hardening (12 MULs,
+&gt;&gt; 12 ADDs and 12 XORs given by 1.5 BlaMka and pwxform) , then the lines
+&gt;&gt; almost overlap;  so I believe we are near to a draw.
+&gt; 
+&gt; This is nice to know.  It's kind of a sanity check for both designs.
+&gt; 
+&gt; There's a difference, though: I guess yescrypt's pwxform S-box lookups
+&gt; are much more frequent than Lyra2's equivalent (is there one?)  
+
+No, there is no table look-up or anything of the sort in any Blake
+variant I'm aware of.
+
+
+If so,
+&gt; yescrypt actually performs more attack-discouraging work in the same
+&gt; amount of time here.  Can you compare Lyra2 and yescrypt in this respect?
+
+Well, I must confess I did not study pwxform in detail, so I'm not sure
+I can provide a fair comparison (everything I said about pwxform so far
+was based on what you said about it in terms of number of MULs :) ).
+
+OTOH, what I can say is actually a question: the S-box lookups are
+attack-discouraging when you look at GPUs, right? At least that is what
+I grasped from previous discussions on pwxform:
+
+- Multiplications are to limit speed-ups on ASICs, since CPUs have
+highly-optimized hardware for this task (I'm not sure about GPUs).
+
+- Look-up tables (LUTs) are GPU-unfriendly operations, at least in
+theory, but are in principle very fast in hardware.
+
+So far we were discussing hardware-oriented protection, so LUTs would
+not count much in the comparison. Of course, I may be missing something!
+
+BTW: we are still trying to verify the above assumptions on GPU- and
+FPGA-oriented unfriendliness with actual experiments. The GPU graphs
+should be ready shortly (we have a GPU specialist working on that),
+while FPGAs should take a little longer (a colleague professor allocated
+a student to work on that).
+
+
+&gt; 
+&gt; Also, I never understood why you chose two full passes through memory as
+&gt; the minimum for Lyra2.  Is this arbitrary?  For yescrypt, the 4/3 can be
+&gt; shown as being the optimal stopping point assuming no AT-reducing TMTO,
+&gt; so it's not arbitrary at all.
+
+OK, that is our fault: that should be clearer on our documentation...
+The rationale is a little long, so please bear with me.
+
+In regular executions with large amounts of memory, memory latency and
+bandwidth are expected to (and, experimentally, they do) play an
+important role. The result is that using much faster computation
+hardware in attacks may end up being of little use: it will not
+accelerate the attack by much, just like increasing the number of rounds
+10 times in a legitimate platform does not slow down the execution 10
+times either...
+
+Now, attackers could combine faster computation hardware with faster
+memory technology, thus taking full advantage of the former to
+accelerate attacks, in which case computation hardening indeed becomes
+an important requirement. However, using fast memory technology for a
+PHS with a high memory usage (e.g., 1GB of high-speed registers) is
+probably unrealistic, as it would become very expensive to test a single
+password, let alone several passwords in parallel. It would probably be
+more reasonable to buy more (less expensive) hardware and get a higher
+password testing throughput simply with parallel tests.
+
+On the other hand, using fast memory is very reasonable for accelerating
+operations that involve only a small amount of memory. This is exactly
+what a legitimate user's cache is for, so maximizing cache usage on the
+legitimate platform is (at least from this perspective) a good approach:
+attackers should have at least the same amount of cache to get the same
+speed-ups, while having much more cache only helps if the data to be
+processed is in that part of memory (e.g., if the required data can be
+prefetched, something reasonable in deterministic, cache-timing
+resistant schemes/passes, or, again, if the whole memory is a huge cache).
+
+There is, however, another situation that involves only small amounts of
+memory and, thus, in which attackers can benefit from faster memory
+technology: recomputations during a TMTO attack. After all, whether the
+scheme/pass is deterministic or password dependent, recomputations
+become password-independent as long as the attacker stores the sequence
+of rows required after seeing them in original computation; those rows
+can, thus, be prefetched and stored in cache-like memory. As a result,
+while the original computation of a block V_i (discarded) from a set of
+blocks \phi{V_i} took, say, 20\sigma (where \sigma accounts both for
+memory- and processing-related costs), a hardware acceleration of 10x
+combined with a 10x faster memory could bring the cost of recomputations
+to approximately 1 if \sigma is 50% memory and 50% processing;
+parallelism and pipelining, if possible, may allow recomputations to
+occur even faster. The lesson here is that, even though at first sight
+the time*memory cost would appear to the around 20, in practice it might
+be much lower than that. That is why computing the actual time*memory
+cost is tricky, especially without experiments to verify them, and why I
+believe TMTO resistance should involve a reasonable security margin
+(something that Argon and Lyra2, for example, try to achieve with their
+minimum settings). It is more or less like Rijndael adopting 10 rounds
+even though the Wide Trail Strategy upon which it was constructed would
+suggest 8 rounds as being enough (given that the 2 extra rounds may end
+up adding 5 active S-Boxes to attacks, only 10% of the 50 provided by 8
+rounds).
+
+This desire for a security margin is what motivated Lyra2's t_min=1,
+which can be considered "arbitrary" but not "random": it was based on
+the security analysis we tried to provide together with the algorithm's
+documentation. Based on what we have seen as effective attacks, I
+believe that (and, again, that is open to debate!):
+
+1) Running Lyra2 with a 1/3 pass after the memory is filled (i.e., with
+"T=1/3") is probably not as TMTO-resistant as yescrypt with similar
+settings (i.e., for "T=0"). The reason is that Lyra2's first pass (Setup
+phase) is cache-timing resistant and, thus, more vulnerable to TMTO
+attacks, while yescrypt's first pass trades cache-timing resistance for
+better TMTO resistance. The only caveat here, and the reason why I
+prefer to say "probably not", is that the extra writes done by Lyra2
+during Setup may compensate at some extent this lower TMTO resistance.
+If that means that Lyra2 with "T=1/3" is comparable with yescrypt with
+"T=0", however, I cannot tell without further studies (and, preferably,
+experimental results!).
+
+2) If Lyra2 adopted a first pass that was not cache-timing resistant
+(i.e., if the "row^0" indices were picked in a password dependent
+manner, just like in the Wandering phase), then it would probably be
+able to run with a lower value of T than yescrypt and still be as TMTO
+resistant. The reason here is that Lyra2's extra writes and reads are
+more likely to lead to recomputations in a TMTO attack. For example, if
+the memory has 1/2 of all rows required (assuming they are all updated):
+there is only a 25% chance that both row^0 and row^1 will be in memory,
+so recomputations will occur 75% of the time; if recomputing any row
+takes from 0 to \alpha (or \alpha/2 on average), recomputing two rows
+(i.e., 25% of the time) takes 3\alpha/2 on average; at least 2 rows are
+updated per call to the underlying sponge, so "keeping 1/2 of all rows
+required (assuming they are all updated)" does not mean an actual memory
+usage of 1/2, but that plus intermediary states. Yescrypt does have
+similar features, but it does not try to be as TMTO resistant. Hence, a
+"Lyra2d" (borrowing Argon2's notation to indicate a non-cache resistant
+variant) in principle would achieve TMTO resistance faster than
+yescrypt. Then, it *might* be fair to compare, say, Lyra2 with 7/6
+passes through memory ("T=1/6") versus yescrypt with 4/3 passes through
+memory ("T=0").  Again, that does not necessarily balance the scale
+toward Lyra2, as it may very well be wasting cycles with memory-related
+operations trying to provide TMTO resistance, when it could be less
+TMTO-resistant per hashing operation and simply do more hashes.
+Nevertheless, this design choice was taken after we observed that Lyra2
+could achieve high speed even with good TMTO resistance, which also
+means exploring a resource that has lower probability to be explored
+better (e.g., with faster technology) by attackers than by legitimate
+users: memory.
+
+Without further experimentation, however, I do not feel comfortable
+speculating further on potential drawbacks of each approach, though. I
+can only say that we do pay a price in terms of performance trying to
+provide some cache-timing resistance, while it might be better to go
+with Argon2's approach of separating things in "d" and "i" (explaining
+the difference to users, however, may not be very easy).
+
+Anyhow, I do not think t_min is critical for any scheme during the
+competition itself: a better understanding on attacks may motivate
+authors to set it higher or lower, and the final decision of what should
+be the minimum is probably something that needs to be discussed and
+sanctioned by the PHC panel together with the authors and the community
+in general. SHA-3's capacity is an example of such after-competition
+effort: although it is probably a bad example due to the debatable
+choices NIST tried to push, the idea of "fixing some knobs" after a
+scheme was selected is not bad per se. And that is also why comparisons
+with a similar number of passes through memory are useful, even if not
+definitive to say which scheme is "the best".
+
+&gt; 
+&gt; I currently recommend that yescrypt be used with t=0 unless more time
+&gt; can be spent and more memory can't be in a given case.
+&gt; 
+
+That is reasonable. I'm just not sure what is the "security margin" in
+practice (again, because computing time*memory cost is
+technology-dependent). Just to avoid misunderstandings: no FUD intended
+here! Unless someone can come up with an effective attack, there is no
+reason to think yescrypt's assumptions are wrong, so t=0 may be
+perfectly safe.
+
+&gt;&gt; - For 1 thread ("p1") with different passes through memory: say,
+&gt;&gt; yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+&gt;&gt; while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+&gt;&gt; MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+&gt;&gt; = 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+&gt;&gt; difference, the reason is probably related to bandwidth usage, because
+&gt;&gt; Lyra2 purposely uses more bandwidth in this scenario: namely, it makes 2
+&gt;&gt; writes per call of the underlying hash instead of 1, and 4 reads (2 from
+&gt;&gt; cache and 2 from memory) instead of 2. I'm not sure if that is good or
+&gt;&gt; bad, but improvements on memory bandwidth are usually slower than on
+&gt;&gt; computation power, so I would rather say it is good in terms of attack
+&gt;&gt; resistance, as it limits an attacker's parallelism ability.
+&gt; 
+&gt; This makes sense, but you also need to factor in yescrypt's S-box lookups.
+
+I agree this factor is likely to play a role. However, Bill reported a
+long time ago speed-ups of ~20% if Lyra2 reduced its number of memory
+writes when no parallelism is employed. We preferred not do so in the
+1-threaded version, however, because we _wanted_ attackers to run into
+memory bounds as soon as possible (again, because users and attackers
+are likely to have access to the same memory technology).
+
+Nevertheless, that discussion and further tests motivated a bandwidth
+reduction for higher p, which justifies the better results for p &gt; 1:
+the extra cores provide both the higher bandwidth usage we wanted and
+similar TMTO security margins. The side effects are, however:
+
+1) It does become memory bound with degrees of parallelism higher than ~4
+
+2) More parallelism allows better performance of attacks using GPUs
+(e.g., the highest throughput of GPU-based attacks reported in the
+Reference Guide is for p = 4, the maximum p we tested)
+
+All in all, it is quite possible that Lyra2 is not as good at using the
+whole budget of processing cores as schemes with a lower bandwidth
+usage, unless further tweaking is done (outside the competition, of course).
+
+&gt; 
+&gt;&gt; - For 2 threads ("p2"), Lyra2 is faster for similar compute-time
+&gt;&gt; hardening and also for higher compute-time hardening. That (and a very
+&gt;&gt; old e-mail by Bill) is why we think bandwidth is likely to be at play
+&gt;&gt; for p=1: we reduce the number of writes to 1 per thread during the
+&gt;&gt; Wandering phase when more threads are active.
+&gt;&gt;
+&gt;&gt; - For 4 threads ("p4"), Lyra2 is again faster for similar compute-time
+&gt;&gt; hardening, and also faster for higher compute-time hardening.
+&gt; 
+&gt; OK.  I expect yescrypt's S-box lookups come into play here.  In fact,
+&gt; they also affect the 1 thread case, so I'm lucky yescrypt didn't appear
+&gt; to run slower there.
+&gt;
+&gt; 
+&gt;
+&gt; What machine is this, for these benchmarks?
+
+Sorry: I forgot to mention... It is a Intel Xeon
+E5-2430, with 48 GB of DRAM, running Ubuntu 14.04
+LTS 64 bits
+
+(Note: this is the same computer used for the benchmarks in our
+reference guide. The number of physical cores is 6, however, not 12 as
+reported there: 12 is the number of threads)
+
+
+&gt; Would you also benchmark Lyra2 vs. yescrypt for the maximum number of
+&gt; threads supported in hardware on your machine, please?
+
+Sure! Attached are the graphs for 1-14 threads (more than 12, just to
+see what happens).
+
+As mentioned above, Lyra2 gets memory bound after ~4 cores, so there is
+little difference in performance between Blake2 or BlaMka with a
+different number of rounds.
+
+Yescrypt appears to scale better with more cores, apparently because it
+does not get (much) memory-bound. We notice that the performance gains
+seem to be more expressive up to the point the maximum number of
+physical cores is reached, although it may be a coincidence.
+
+One question here is: does yescrypt design tries to make attackers
+memory-bound too? I mean, it clearly takes better advantage of the
+"processing cores" budget, but cores are something that attackers are
+likely to have access more easily than defenders, while "better memory
+technology" not so much. This logic may be completely wrong (especially
+without experimental results to back it up), but, for better or for
+worse, that is something we considered when designing Lyra2.
+
+&gt; Are both Lyra2 and yescrypt
+&gt; built for the same SIMD intrinsics (and which)?
+
+Not really: Lyra2 uses SSE2 ("-msse2" flag), while yescrypt was built
+with the default makefile, with its "-march=native" flag. So, in the
+words of my student who run the benchmarks, "yescrypt is running SSE4.1
+and/or AVX".
+
+I will have to check in more detail to avoid saying anything wrong, but
+it appears we are running yescrypt with more help from SIMD instructions
+than Lyra2...
+
+BTW, we have not yet used the suggestion by Samuel Neves regarding NORX
+tricks ("We used this trick (replacing + with ^, * with &amp;) in NORX (pg.
+23 of <a href="https://norx.io/data/norx.pdf" rel="nofollow">https://norx.io/data/norx.pdf</a>); it does noticeably
+improve latency."). We will try and see what happens.
+
+&gt; 
+&gt; There's significant room for improvement for yescrypt with AVX2, which I
+&gt; haven't added yet.  In fact, on pre-AVX2 CPUs the compute hardening can
+&gt; be doubled by reducing the parallelism from 512-bit to 256-bit, with
+&gt; only a moderate slowdown, so the hardening per defensive running time
+&gt; would likely be improved by 50% or so - but I preferred the defaults to
+&gt; be balanced, with newer and near future CPUs in consideration as well,
+&gt; and also with CPU attacks considered (where an attacker could bring the
+&gt; extra parallelism in from having multiple candidate passwords to test).
+
+That sounds reasonable. One caveat, though, is that if we really are
+going to take into account more limited platforms (e.g., 8- or 16-bit
+microcontrollers) as a possible use case, then fixing the underlying
+hash to pwxform may not be the best approach (possibly a "pwxformLite"
+would be necessary).
+
+&gt; 
+&gt; Thanks again,
+&gt; 
+&gt; Alexander
+&gt; 
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/1" rel="nofollow" download>Lyra2xYescrypt_p6.png</a><strong>" of type "</strong>image/png<strong>" (106645 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/2" rel="nofollow" download>Lyra2xYescrypt_p8.png</a><strong>" of type "</strong>image/png<strong>" (97051 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/3" rel="nofollow" download>Lyra2xYescrypt_p10.png</a><strong>" of type "</strong>image/png<strong>" (97303 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/4" rel="nofollow" download>Lyra2xYescrypt_p12.png</a><strong>" of type "</strong>image/png<strong>" (92039 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/5" rel="nofollow" download>Lyra2xYescrypt_p14.png</a><strong>" of type "</strong>image/png<strong>" (104917 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/6" rel="nofollow" download>Lyra2xYescrypt_p1.png</a><strong>" of type "</strong>image/png<strong>" (153311 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/7" rel="nofollow" download>Lyra2xYescrypt_p2.png</a><strong>" of type "</strong>image/png<strong>" (127943 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/8" rel="nofollow" download>Lyra2xYescrypt_p4.png</a><strong>" of type "</strong>image/png<strong>" (115293 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

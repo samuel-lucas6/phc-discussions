@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <CAOLP8p4Ht+Z1d59kxx0LtU8hZ69MN__YUF4ryfpp36Aea_7wMg@mail.gmail.com>
+Date: Thu, 26 Mar 2015 09:30:24 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 8:27 AM, Marcos Simplicio <mjunior@...c.usp.br>
+wrote:
+
+>
+>Or more generic question: what about embedded world?
+>>
+>PHC seems to be mainly about online services, where you have some big
+>Intel server hosting behind it but I would like to not forget about
+embedded
+>systems.
+>
+You simply scale down the cost settings accordingly.  yescrypt is
+designed to achieve decent attack resistance even at low settings (of
+course, I mean decent for those settings), including below 1 MB.
+>
+Alternatively, there are PHC finalists that are well-suited specifically
+for such uses - that's Pufferfish and maybe POMELO - but yescrypt has
+the advantage of being a single scheme that is well-suited across the
+range from KBs to TBs (and beyond, when relevant).
+>
+Lyra2 is less suitable for low sizes like this.
+>
+>
+Just for the sake of clarity: why exactly? One can use Lyra2 with
+small-state sponges (e.g., Blake2s or even something smaller), for
+example, and the Lyra2 wrapper around this sponge would provide similar
+protection against attacks involving TMTO (if that is relevant) or
+parallel attacks (e.g., with bandwidth usage).
+>
+I mean, without further arguments, I'm not sure I can provide
+counter-arguments... :)
+>
+Anyhow we do have some research initiatives in our department in which
+we are planning to use Lyra2 on embedded systems and see interesting
+parameters/underlying sponges.
+>
+>
+Marcos.
+>
+
+I need to go carefully read the latest version, but IIRC, Lyra2 still does
+no small random reads in it's inner loop, right?  Once you get down to L1
+cache sized hashing, GPUs will dominate over CPUs, unless we do something
+GPUs are not good at.  While this may not always be true, currently GPUs
+are very slow at doing rapid small unpredictable reads.  The 64-byte block
+size of Blake2b is as small a read as Lyra2 can do, isn't it?  Also, there
+are repeated accesses in a row to the same address which GPUs do well, if
+I'm not mistaken.  This is why I rated Yescrypt stronger at GPU defense in
+general, but this is especially true at L1-cache sized hashes.  For larger
+hashes, GPUs loose anyway.  For Scrypt, the parity point is around 4MiB.
+For Yescrypt, I suspect it's closer to 16KiB.  Where is the parity point
+for Lyra2?
+
+By the way, I am a fan of Lyra2.  It's excellent work, and as I said
+before, I will not be upset at all if Lyra2 is selected as the winner.
+However, Yescrypt does gain improved defense for it's additional complexity.
+
+Bill
+
+
+

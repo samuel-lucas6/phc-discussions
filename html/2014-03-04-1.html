@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - wider integer multiply on 32-bit x86</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/03/01/3">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140304021339.GA6500&#64;openwall.com&gt;
+Date: Tue, 4 Mar 2014 06:13:39 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: wider integer multiply on 32-bit x86
+
+Hi,
+
+Normally, on 32-bit x86 without SSE2 (thus, on Pentium 3 and older, or
+when code is compiled such that SSE2 is not enabled) the widest integer
+multiply available is 32x32-&gt;64, via the [I]MUL instruction.  There are
+two problems with this: the instruction uses the specific EDX:EAX
+registers, so we can't have more than one such multiply in progress
+until we've read/replaced at least the EAX contents(*), and 32x32-&gt;64 is
+not very wide.
+
+(*) Does register renaming (on CPUs that have it) help avoid stalls
+here?  Maybe.
+
+I looked into using x86 FPU instructions to get around one or both of
+these limitations.  The attached program implements 31x31-&gt;62 and
+63x63-&gt;63 using the FPU.  This does force us to use memory (L1 cache)
+instead of registers, but x86 is register starved anyway, so with 2+
+interleaved instruction streams dealing with bigger than 32-bit values
+we'd have register spills to memory anyway.  We can have 2 interleaved
+instruction streams by having one use the regular [I]MUL and the other
+the FPU, and we can probably have more than 2 by also using FXCH (which
+is normally free starting with the original Pentium).
+
+I think 4 instructions, including the loads and stores, for a 63x63-&gt;63
+multiply is rather good.  Without this trick, it'd take 4 _multiplies_
+to implement the equivalent via 32x32-&gt;32 (or perhaps 3 multiplies if we
+also use the 32x32-&gt;64).  Some bigint library could use this trick,
+perhaps for some nice speedup on those older CPUs/builds (does any use
+it already?)
+
+Now, if we only wanted 32x32-&gt;64 without the EDX:EAX limitation on
+interleaving, things are not as nice.  We'd have to define our KDF so
+that one or both source operands is at most 31-bit (not 32).  (And we
+wouldn't be taking full advantage of the support for 63-bit source
+operands.)  I can think of some ways to do that without an explicit mask
+in the inner loop.
+
+Why bother with interleaved instruction streams, given that one stream
+is enough for the latency hardening, and the ASIC die area difference
+from more complete use of just a handful of multipliers is negligible?
+
+My thinking is that more complete use of our CPUs' multiplication
+throughput is desirable for not allowing for much room for speedup in
+attacks by other CPUs and similar, which _would_ interleave multiple
+instruction streams for multiple candidate passwords (e.g., we do this
+in JtR for many hash types).  (Of course, those other CPUs will need to
+have sufficient cache and memory bandwidth to be able to benefit from
+the extra parallelism.  So not all will.  But many may.)  Thus, it is
+somewhat desirable to constantly feed our SIMD multipliers on SSE2+, and
+when we do that it is then desirable not to incur too much of a
+performance hit in pre-SSE2 builds.  Is this worth the complexity (even
+if in optimized implementations only)?  I'm not sure.  Yet I thought
+I'd share.
+
+Output from widermul on a P3 (should be same on other CPUs):
+
+00000000 * 00000000 = 0000000000000000 0000000000000000 0000000000000000
+00000001 * 00000000 = 0000000000000000 0000000000000000 0000000000000000
+00000000 * 00000001 = 0000000000000000 0000000000000000 0000000000000000
+00000001 * 00000001 = 0000000000000001 0000000000000001 0000000000000001
+00000010 * 00000010 = 0000000000000100 0000000000000100 0000000000000100
+000003e8 * 000003e8 = 00000000000f4240 00000000000f4240 00000000000f4240
+00001000 * 00001000 = 0000000001000000 0000000001000000 0000000001000000
+00010000 * 0000ffff = 00000000ffff0000 00000000ffff0000 00000000ffff0000
+00010000 * 00010000 = 0000000100000000 0000000100000000 0000000100000000
+00100000 * 00100000 = 0000010000000000 0000010000000000 0000010000000000
+000f4240 * 000f4240 = 000000e8d4a51000 000000e8d4a51000 000000e8d4a51000
+12345678 * 78765432 = 0890f2a4d5e84370 0890f2a4d5e84370 0890f2a4d5e84370
+12345678 * 7fffffff = 091a2b3bedcba988 091a2b3bedcba988 091a2b3bedcba988
+7fffffff * 7fffffff = 3fffffff00000001 3fffffff00000001 3fffffff00000001
+80000000 * 80000000 = 4000000000000000 4000000000000000 4000000000000000
+80000000 * 80000001 = 4000000080000000 3fffffff80000000 4000000080000000
+80000000 * ffffffff = 7fffffff80000000 0000000080000000 7fffffff80000000
+00000001 * 80000000 = 0000000080000000 ffffffff80000000 0000000080000000
+00000001 * 80000001 = 0000000080000001 ffffffff80000001 0000000080000001
+12345678 * 98765432 = 0ad77d73d5e84370 f8a326fbd5e84370 0ad77d73d5e84370
+7fffffff * ffffffff = 7ffffffe80000001 ffffffff80000001 7ffffffe80000001
+ffffffff * ffffffff = fffffffe00000001 0000000000000001 8000000000000000
+
+The three results are: 32x32-&gt;64 (computed without FPU) followed by
+31x31-&gt;62 and 63x63-&gt;63 (but with 32-bit inputs only in this test).
+As you can see, when we exceed the allowed size of inputs or output for
+the latter two functions, we get incorrect results (as expected).
+As long as our inputs to 31x31-&gt;62 are at most 31-bit, it works fine.
+As long as the output fits in 63 bits, our 63x63-&gt;63 works fine.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/1">widermul.c</a><strong>" of type "</strong>text/x-c<strong>" (1217 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

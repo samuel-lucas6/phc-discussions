@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20131231052321.GA20701@openwall.com>
+Date: Tue, 31 Dec 2013 09:23:21 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Tue, Dec 31, 2013 at 08:23:57AM +0400, Solar Designer wrote:
+If your "pages" do not correspond to a whole number of physical pages,
+you'll run into false sharing between your threads when they happen to
+write into the same page.  This can truly kill performance, and this
+effect and its worst case extent won't be easily predictable.  Slowdowns
+by many orders of magnitude are possible.
+
+http://en.wikipedia.org/wiki/False_sharing
+
+Correction: normally, false sharing refers to accesses to the same cache
+line rather than merely the same page.  However, I've seen a very
+similar effect with same-page accesses by multiple threads, although
+that was with 4 KiB pages (on x86).  I think this may have to do with
+TLB implementations on specific CPUs.  I do not have a full
+understanding of this, haven't seen it documented by others (for memory
+accesses that are not to same cache line), don't know under what exact
+conditions it will manifest (except that same-page accesses at least one
+of which is a write, is a prerequisite), and whether it can be seen with
+accesses to addresses that are far apart yet within the same huge page.
+
+It is possible that my guess when I had run into this issue (outside of
+PHC submissions context) was wrong.  Maybe the similar symptoms had a
+different explanation.  But the workaround of moving the threads'
+accesses to be to different pages worked well for me.
+
+Alexander
+

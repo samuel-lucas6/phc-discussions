@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <1097130714.49129848.1429652167619.JavaMail.root@larc.usp.br>
+Date: Tue, 21 Apr 2015 18:36:07 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 modulo division
+
+----- Mensagem original -----
+
+De: "Krisztián Pintér" <pinterkr@...il.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Terça-feira, 21 de Abril de 2015 14:01:29
+Assunto: Re: [PHC] Argon2 modulo division
+
+Bill Cox (at Tuesday, April 21, 2015, 5:48:31 PM):
+
+>Generally, small integer division algorithms that are not
+>constant-time...
+I do not consider this to be a limitation of Argon2d, though Lyra2
+(and TwoCats) does protect against related attacks with it's
+password independent first loop. However, there are some tin-foil
+hat attacks
+
+this is unfortunately not the first time i hear such unscientific
+arguments on the list. it would be a good time to stop that.
+
+side channel attacks not only bypass the computational hardness. it
+is
+false that in case of a succesful attack, the hashing scheme reverts
+back to a single hash, or a half-hash if there are two phases. side
+channels are much more sinister. it is possible to steal the password
+in situations when it was not at all possible without them.
+
+the scenario is really simple. consider a system that is well
+protected agaist evesdropping, and the attackers have not managed to
+steal the password hash either. but the system is vulnerable to some
+sort of power/timing analysis. an attacker can gain absolutely zero
+knowledge if the hashing scheme is resistant against that type of
+attack. but they might learn enough information to recover the
+password, if the scheme is vulnerable to the attack.
+
+whether such attacks are actually feasible is very hard to tell in
+advance, but given the vast number of possible attack vectors, and
+the
+resent upsurge in successful side channel attacks, calling it
+improbable is totally bad science. the best you can say is we don't
+know, but we also didn't think very hard, honestly. if something is
+possible, it is only a matter of time before it becomes feasible.
+
+While I do agree that side-channel attacks can be nasty and that the actual vectors are hard to foresee, we also have to consider the attacks we know (?) to be feasible already. Namely: 
+
+- If the memory accesses are all password-dependent, then it is easier to discard guesses even before the memory is filled. 
+- If the memory accesses are all password-independent, then it is easier to eliminate memory latencies from the attack costs even with cheap memory (just prefetch what you need soon before you use it). 
+
+What we tried to do in Lyra2 is to provide protection against both issues: the attacker is expected to have the memory filled during the first pass, before any guess can be discarded in a cache-timing attack (e.g., for T=1, this corresponds to half the execution of the algorithm), while in the second pass attackers cannot avoid memory latencies better than legitimate users. That kind of protection is probably what Bill was referring to in his e-mail. 
+
+I'm not sure Lyra2's hybrid approach is the answer, nor if Argon2's "d" and "i" options are better (as we may be pushing the problem to users without understanding the problem completely). What I do believe is that cache-timing and similar side-channel attacks should be taken into account, but we should also consider which are the consequences of protecting against them, i.e., if doing so does not favor other attack venues. 
+
+Marcos. 
+
+
+

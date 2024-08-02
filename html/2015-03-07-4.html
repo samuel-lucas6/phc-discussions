@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] PHC output specifics</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="../../../2015/03/09/1">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="../../../2015/03/09/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150307143807.GA16043&#64;bolet.org&gt;
+Date: Sat, 7 Mar 2015 15:38:07 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] PHC output specifics
+
+On Sat, Mar 07, 2015 at 09:04:05PM +1300, Peter Gutmann wrote:
+&gt; Another consideration is, how much of a problem is this in practice?
+
+The problem arises in practice when:
+ - the user chooses a password that contains a character (or glyph) which
+   admits two or more representations as sequences of Unicode code points,
+ - the user enters the password on two distinct systems,
+ - and these systems don't agree on the representation used for the
+   problematic character.
+
+Therefore, the problem is not very common: most users will use a single
+system (always the same browser on the same OS, for instance), and, even
+when they use two distinct systems, most user interfaces follow NFC
+normalization naturally (they represent "é" as U+00E9, not as U+0065
+followed by U+0301). So I'd say that once you have said "UTF-8" you have
+avoided most of the problems (unless one of the systems takes it upon
+itself to add a BOM...).
+
+UTF-8/UTF-16 confusions tend to be solved quite fast since they break
+pure-ASCII passwords. Bugs that still lurk around are usually related to
+non-Unicode encodings: one system uses UTF-8, another uses one of the
+various monobyte codepages (e.g. Windows-1252); these bugs can remain
+undetected for quite some time because it takes a non-American tester
+(or an inordinately creative American tester) to find them.
+
+Another point is that most users will type passwords "blindly" (the GUI
+displays dots or stars, not the actual glyphs), so they will naturally
+stick to characters that minimize typing errors -- they tend not to use
+Alt+NNN combinations.
+
+I have no idea how such things fare in practice for users with non-latin
+scripts. Especially for scripts where glyphs tend to morph depending on
+their situation in a word and their neighbours (Arabic, Hangul...).
+
+
+
+I still think that implementers should be alerted of the issue. While
+the encoding will be addressed elsewhere, the need for an unambiguous
+deterministic encoding still arises from the password hashing function
+itself, so it seems "natural" that the PHS specification says a word
+about it.
+
+
+
+Another point that is to be made is that while a PHS implementation is
+usually written in C or assembly (since speed is its lifeforce), most
+developers will use the function from another language, through
+bindings. In these other languages, character strings are often "Unicode
+aware" in some way (e.g. Java and C# strings are sequences of 16-bit
+code units). The binding implementation will actually decide on the
+encoding.
+
+I think it would be part of the specification job to define API for some
+non-C languages (Java, C#/.NET, Python, even Node.js and PHP), for
+pretty much the same reasons that a standard C API is a good idea. but
+this naturally implies that a "standard encoding" WILL have to be
+decided upon.
+
+
+&gt;   Implementers should be aware of potential interoperability problems
+&gt;   due to character-representation issues and, if cross-platform
+&gt;   portability for a wide range of character types is an issue, use
+&gt;   appropriate encodings such as Unicode or UTF-8.
+
+I cringe at the use of the word "Unicode" to describe an encoding. I
+know that it is a widespread usage in most Windows-related
+documentations, but it still is quite wrong. I'd suggest something like
+that:
+
+    Implementers should be aware of potential interoperability problems
+    due to character-representation issues; they should define and
+    follow unambiguous encoding rules that will cover all character
+    types that will be encountered by the implementation in practice. It
+    is RECOMMENDED that passwords are encoded in UTF-8, with NFC
+    normalization and no BOM [REF-Unicode]. The security properties of
+    PHS are maintained regardless of the used encoding, but using these
+    encoding rules is likely to maximize interoperability.
+
+where REF-Unicode points to a couple of places on www.unicode.org that
+give all the needed information with the proper terminology. That way,
+the developer is alerted about the issues AND learns the adequate
+keywords for further research if he decides to deal with them in a clean
+way (i.e. by not ignoring it).
+
+In general, raw UTF-8 encoding of code points "as received" will be
+enough to make issues rare enough to be ignored or handled manually.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <CAOLP8p7wYTKer3i2Y-pWmNbVAGd2kPdihU7jxemHUgFYi_PN-Q@mail.gmail.com>
+Date: Thu, 13 Mar 2014 17:19:57 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Thu, Mar 13, 2014 at 4:27 PM, Solar Designer <solar@...nwall.comwrote:
+scrypt was designed not to bump into the memory bandwidth, at least
+not when running only one thread.  At 8 rounds of Salsa20, it stays
+below saturating memory bandwidth on typical PC hardware (albeit for
+reasons other than what you give: it tries to have its "time" factor
+based on computation effort rather than on bandwidth).  OK, you said
+"scrypt-like", and yes some scrypt-like PHC candidates will deliberately
+use more memory bandwidth than scrypt does.
+
+I suspect I'm the leading contender for bandwidth hogging per thread :-)
+
+However, that is easily tuned.  One thread on my machine takes up
+about 9GiB/s, on a machine with about 25 GiB/s max.  Two threads take
+12.1 GiB/s, and are fighting each other over bandwidth at that point,
+or they would run faster.  However, with multiplications set to max,
+single thread bandwidth drops to 4.5 GiB/s, and with the repetitions
+parameter, you can switch the load from external memory hashing to
+internal cache hashing smoothly.
+
+However, I do get a kick out of bringing my PC to it's knees with only
+two threads :-p
+
+>(Or, said more succintly: if you want to engage in a sports contest, and
+>you are 5' tall, then don't choose basketball.)
+>
+Makes sense, but I think it primarily means that we shouldn't compete
+with attackers solely in terms of memory bandwidth per se.  The reason
+why TwoCats and escrypt use more memory bandwidth (than scrypt) is that
+they want to use more RAM within the allotted time (and discourage
+TMTO).  More RAM means more ASIC die area.  (For EARWORM, this is
+different.  Being ROM-only, it actually competes solely in terms of
+memory bandwidth, which is a drawback.)
+>
+Alexander
+
+I do think (since we discussed it on this forum recently) that a
+decent defense is to try and hit the internal cache bandwidth.  Maxing
+out L1 cache bandwidth sounds like a great way to compute-time harden
+a PHS.  If an algorithm at the same time uses a significant portion of
+L2/L3, like 10 MiB or more (as Catena originally suggested), you can
+tie up some expensive real estate for some significant time.
+
+I know there are legitimate cases for running as low in memory as
+Bcrypt does, but I would avoid it whenever possible.  Cache RAM is
+expensive by the MiB, but it turns out to be a whole lot cheaper on an
+ASIC by the KiB :-)
+
+Bill
+

@@ -1,0 +1,128 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <op.xc5wkyo1yldrnw@laptop-air>
+Date: Sat, 22 Mar 2014 23:35:12 -0700
+From: "Jeremy Spilman" <jeremy@...link.co>
+To: "Solar Designer" <solar@...nwall.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Sat, 22 Mar 2014 18:57:24 -0700, Solar Designer <solar@...nwall.com 
+wrote:
+
+However, how can you keep "stretching" at this higher level while also
+providing a "memory-hard" underlying function?  Wouldn't the stretching
+need to be inside that function, then?
+
+I think one shortcoming of PBKDF2 is that I don't want to do multiple  
+rounds of hash 'h', I want to do one round of hash 'h1' with cost  
+parameters of 'c1'. An offline upgrade could add an additional round of  
+PHF 'h2' with cost of 'c2'. The subsequent online upgrade would replace  
+with a single round of 'h3' with cost of 'c3', etc.
+
+Depending on how much flexibility you want to give, and what language is  
+being used, this could be extremely clean or a total mess... If you can  
+pass in a lamda which encompasses the hash+cost, and you keep a collection  
+of those in a lookup table, your serialization is easy, the code is pretty  
+simple, and I think you can do better than most 'baked in' solutions.
+
+>
+It's nice to hear you've implemented this by now.  Are your 16 TB ROMs
+on SSDs or on HDDs?
+>
+
+It has taken a lot longer than I anticipated. :-(
+
+Running on SSDs. One extremely nice property is that the larger the ROM,  
+the lower the latency to run a single blind hash, and the more hashes you  
+can run per second.
+
+In other words, while typically with hashing the level of security and  
+latency within a given hash function are negatively correlated, in this  
+case we get a positive correlation.
+
+How do you (re)initialize them?  e.g. are they filled from /dev/urandom
+(meaning you need to transfer 16 TB to each new data center?) or are they
+generated from a seed that you store in a safe place?  In the latter
+case, do you ensure a portion of the ROM can't be used to recompute the
+rest of it?
+
+Filled from /dev/urandom, which is exactly as much fun as it sounds! I've  
+gone back and forth on the seed vs random initialization. Despite the  
+drawbacks, it just seemed to cheat the whole point of security through  
+obesity by using a seed.
+
+On the plus side, trying to transfer the pool over the network sets off  
+all sorts of alarms, as it should, so having this happen semi-regularly to  
+properly test the alarms is not a bad thing.
+
+>
+The multiple data centers are for redundancy, right?  Do you use some
+custom protocol or DNS or anycast or a combination of these to route
+requests to portions of your Service?
+
+Multiple levels of redundancy within each "data pool" -- hardware parity  
+in the SSD, filesystem parity, application layer checksum stored alongside  
+each block, and separate PAR2 files. Multiple SSDs per machine, multiple  
+machines per rack, and finally multiple data centers.
+
+But not just redundancy. There are data pools which exist on all servers,  
+but in the future tere may be data pools which exist only on certain  
+servers, like servers outside the US.
+
+I thought about making the routing transparent, but for now the Site can  
+rank the blind hashing servers based on their expected network latency,  
+and/or the library can do some client-side load balancing if needed.
+
+Anycast would be good for spreading DDoS, which really is the biggest  
+concern. But I haven't gone to ARIN yet for the micro-allocation and ASN.
+
+
+>
+Yes.  With the scheme you've described, which is pretty much what I had
+in mind as well, the Service can also estimate the number of (active?)
+user accounts, by counting different partial hashes.  In an active
+attack, probing for valid usernames might also be possible (depending on
+implementation and whether fake requests to the Service are made for
+unknown usernames).
+>
+
+Active is the key word, since the easiest way to filter invalid attempts  
+would be to try only counting after some number of repeats. That assumes  
+the Site isn't inflating it, and that a user doesn't often try the same  
+wrong password before the right one (which is surprisingly common).
+
+To get any closer you would have to know the ratio of valid/invalid login  
+attempts. You could probably make a pretty good guess, but it's actually a  
+bit harder. It's not just invalid login attempts, but unique invalid login  
+attempts.
+
+Which brings up a point I've been thinking about... can we use the pattern  
+and frequency of invalid login attempts to help detect online attacks?  
+Specifically, when the RIGHT user is trying to remember their password but  
+failing, I would guess there's a discernible pattern to the passwords that  
+they try. Eg. 'secret' <click[FAIL]. Let's make sure I didn't mess that  
+up...  'secret' <click[FAIL].  Hmmm. How about 'Secret' <click[FAIL],  
+no wait, 'Secret12' <click[SUCCESS].
+
+This would differ considerably from a typical online attack which is  
+probably going to guess in order of expected success across all users, and  
+not waste guesses on repeats.
+
+In theory you could store the hash of every invalid password, and detect  
+online attacks from the number of *unique* invalid passwords attempted.  
+This has massive trade-offs, the worst being it increases the value of  
+your database to an attacker tremendously. As in, wait, they didn't just  
+steal one of your passwords, they stole ALL of them!
+
+Another thought... can we keep a running sum score of the invalid  
+passwords that were attempted, where low-entropy guesses contribute  
+exponentially more to the sum? But could keeping this sum around at all be  
+used to target users with low-entropy passwords? Resetting the sum after  
+each successful login would help guard against this, but I'm still not  
+sure I'm comfortable with tracking any kind of meta-data related to  
+invalid login attempts.
+
+Sorry, getting way off topic :-)
+
+

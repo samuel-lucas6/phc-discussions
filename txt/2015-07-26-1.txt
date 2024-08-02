@@ -1,0 +1,116 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Message-ID: <20150726014750.GA1715@openwall.com>
+Date: Sun, 26 Jul 2015 03:47:50 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+On Sat, Jul 04, 2015 at 08:34:08PM +0300, Solar Designer wrote:
+I'd like to let you know that Agnieszka Bielec working with us on
+integrating support for PHC finalists into John the Ripper, including on
+GPU, appears to have achieved a 3x+ speedup for Lyra2 over your CUDA
+code, as currently tested at t_cost=8, m_cost=8, N_COLS=256, nPARALLEL=2
+(your defaults).  I think this corresponds to 192 KiB per instance:
+
+http://www.openwall.com/lists/john-dev/2015/07/04/5
+
+The current choice of 8 and 8 is arbitrary.  We should test with other
+settings as well.  Especially with the lowest t_cost, and higher m_cost,
+and with nPARALLEL=1.
+
+Agnieszka has prepared results for these more practically relevant
+settings as well, tuning for roughly same defensive use performance on
+CPU as is achieved with bcrypt cost 5 (traditionally used for bcrypt
+benchmarks).  An optimized defensive implementation of bcrypt on
+i7-4770K achieves ~4300 c/s cumulative for 8 independent processes or
+threads (as would be the case for password hashing on an authentication
+server).  (FWIW, an attack-optimized implementation, with multiple
+instances of bcrypt combined per thread, achieves ~6600 c/s on this CPU.)
+
+Similar defensive use performance of Lyra2 and yescrypt, both with their
+memory (de)allocation overhead kept out of the loop, is achieved at
+around 1.5 MB (or maybe closer to 2 MB for yescrypt).  We chose to test
+both at 1.5 MB.  For Lyra2, this is achieved by setting m_cost=64 (so
+it's 64 rows of 24 KB each).  For yescrypt, it is achieved by setting
+N=2048 r=6 (so it's 2048 rows of 768 bytes each).  (We could also test
+other combinations, like N=1024 r=12, which I expect would work in
+yescrypt's favor in terms of GPU attack resistance.  We could even go
+all the way up to 24 KB for an interesting comparison.  Agnieszka, feel
+free to try those.  Smaller r may be preferable against attacks with
+other devices, such as where Argon team's TMTO attack is relevant.)
+
+Here are the current results:
+
+Lyra2
+
+i7-4770K - 3808
+GeForce GTX 960M - 506
+Radeon HD 7970 GE (*) - 2438
+GeForce GTX TITAN (**) - 1625
+
+yescrypt
+
+i7-4770K - 4736
+GeForce GTX 960M - 416
+Radeon HD 7970 GE (*) - 930
+GeForce GTX TITAN (**) - 1107
+
+(*) We actually use one GPU in HD 7990 at 1.0 GHz, which is equivalent
+to HD 7970 GE.
+(**) With slight overclocking by the GPU card vendor.
+
+Raw detail:
+
+http://www.openwall.com/lists/john-dev/2015/07/25/21
+
+As you can see, both are slower on GPU than on CPU, but yescrypt fares
+better, especially on the AMD GCN device.  CPU/GPU speed ratio advantage
+of yescrypt over Lyra2:
+
+4736/416 / (3808/506) = 1.51
+4736/930 / (3808/2438) = 3.26
+4736/1107 / (3808/1625) = 1.83
+
+(BTW, I expect Argon2 as currently defined to perform worse than Lyra2
+at this test.  But this is yet to be seen.  Hopefully soon.)
+
+(Also, if I understood Agnieszka correctly, Lyra2 had the advantage of
+AVX2 in its benchmark on CPU, whereas yescrypt was plain AVX only.
+OTOH, yescrypt can be sped up by only ~6% with AVX2 on this CPU with
+yescrypt's current pwxform settings.)
+
+Why care about GPU cracking speeds when they are lower than CPU speeds
+anyway?  For several reasons:
+
+- Supporting use at even lower m_cost, as required in some cases.
+
+- Multi-CPU vs. multi-GPU rigs.  A currently common GPU rig typically
+has 1 or 2 CPUs, but up to 8 GPUs (although there are cost-effective
+options for packing more CPUs per chassis as well, with multiple nodes):
+
+https://sagitta.pw/hardware/
+
+- Many attackers readily having GPUs as well, whether more numerous than
+CPUs or not.  By hurting their GPUs' performance, we increase defender's
+advantage (if the defender does not use GPUs for password hashing). (*)
+
+(*) BTW, to answer Bill's question sort of asked in here a few times:
+yescrypt can be tuned to be GPU-friendly as well.  One way to do this is
+to run it in scrypt mode, with settings similar to Litecoin's, and very
+high p.  Doing it with pwxform enabled is also possible, by making the
+S-boxes extremely tiny.
+
+- Safety margin.  For example, if HD 7970 is slower than i7-4770K by
+only 1/3, then the (already widespread) R9 290X should be same speed as
+the CPU, and the (recently released) R9 Fury X should be faster than the
+CPU.  Of course, there are much faster CPUs too, so for now we're OK,
+but it is unclear how the CPU vs. GPU race will unfold.
+
+Using bigger than quad-core server CPUs for reference could be more
+appropriate, but they will perform similarly (just faster per-chip, for
+8+ core Xeon E5 series CPUs).  So the CPU/GPU ratios will increase, but
+the Lyra2/yescrypt ratios will stay roughly the same.
+
+Alexander
+

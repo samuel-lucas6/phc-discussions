@@ -1,0 +1,291 @@
+phc-discussions - Argon Indexing Function
+
+Message-ID: <BN3PR02MB12387C8FCD0DB1794EB04FAEDB8D0@BN3PR02MB1238.namprd02.prod.outlook.com>
+Date: Tue, 28 Jul 2015 22:46:01 +0000
+From: Henry Corrigan-Gibbs <henrycg@...nford.edu>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Argon Indexing Function
+
+Hello,
+
+I have a question about the indexing function in the Argon2 v1.2 spec. The function described in section 3.1.1 takes as input a pseudo-random 24-bit integer L_1 and outputs an integer \phi in the range {0, ..., R-1}. There is also a parameter \alpha, which defaults to 2.
+
+To save a bit of space, let x = L_1 % R. Then the value \phi is computed as:
+  \phi = ceiling[ (x/R)^\alpha R ]
+Setting \alpha=2:
+  \phi = ceiling[ (x/R)^2 R ]
+           = ceiling[ x^2 / R ]
+
+It seems like there might be a problem with the indexing function here. For example, take R=256. As x ranges across all of the values in the set {0, ..., 255}, \phi takes on only a subset of the possible values in the range {0, ..., 255}. Is this the desired behavior?
+
+For example, when R=256, \phi can never be equal to 254. For \phi to equal 254, the value (x^2 / 256) would have to fall in the range (253, 254]. This only happens when x^2 is between 253*256=64768 and 254*256 = 65024. However, there is no perfect square in this range, so no such x exists and \phi is never equal to 254.
+
+There are a number of other values that \phi never takes on (see table below), so it seems like an attacker could use the gaps in the distribution of \phi values to her advantage.
+
+The reference implementation on Github (in the "enhanced" branch) is computing \phi in a slightly different way, so maybe the spec just needs to be updated to match what is in the code. Or did I miss something here?
+
+Henry
+
+
+
+##################################
+\phi value : Number of times outputted after 2^20 trials
+-----------
+0 : 4083
+1 : 65209
+2 : 24501
+3 : 20470
+4 : 20545
+5 : 12391
+6 : 16525
+7 : 12352
+8 : 12257
+9 : 12366
+10 : 8142
+11 : 12352
+12 : 8228
+13 : 8136
+14 : 8203
+15 : 8173
+16 : 12411
+17 : 4119
+18 : 8263
+19 : 8160
+20 : 8022
+21 : 8141
+22 : 8183
+23 : 4051
+24 : 8246
+25 : 8182
+26 : 4114
+27 : 8176
+28 : 4109
+29 : 8262
+30 : 4124
+31 : 8192
+32 : 3914
+33 : 4024
+34 : 8301
+35 : 4115
+36 : 8121
+37 : 4072
+38 : 4097
+39 : 4044
+40 : 8182
+41 : 4061
+42 : 4056
+43 : 3967
+44 : 8124
+45 : 4058
+46 : 4157
+47 : 4176
+48 : 4062
+49 : 8244
+50 : 4119
+51 : 4028
+52 : 4022
+53 : 4149
+54 : 4022
+55 : 4028
+56 : 4067
+57 : 4068
+58 : 4017
+59 : 4064
+60 : 4104
+61 : 4125
+62 : 4013
+63 : 4192
+64 : 8388
+65 : 0
+66 : 4129
+67 : 4118
+68 : 4088
+69 : 4090
+70 : 4142
+71 : 4195
+72 : 4032
+73 : 3996
+74 : 4047
+75 : 4061
+76 : 4125
+77 : 4083
+78 : 4017
+79 : 4091
+80 : 4105
+81 : 4114
+82 : 0
+83 : 4117
+84 : 4129
+85 : 4078
+86 : 4061
+87 : 4101
+88 : 4061
+89 : 0
+90 : 4153
+91 : 4024
+92 : 4047
+93 : 4137
+94 : 4112
+95 : 0
+96 : 3949
+97 : 4093
+98 : 4198
+99 : 4249
+100 : 4014
+101 : 0
+102 : 4133
+103 : 4107
+104 : 4212
+105 : 0
+106 : 4046
+107 : 4077
+108 : 4065
+109 : 4125
+110 : 0
+111 : 4212
+112 : 4071
+113 : 4063
+114 : 0
+115 : 4032
+116 : 4191
+117 : 4150
+118 : 0
+119 : 4133
+120 : 4022
+121 : 4100
+122 : 0
+123 : 4068
+124 : 4242
+125 : 0
+126 : 4069
+127 : 4184
+128 : 4048
+129 : 0
+130 : 4039
+131 : 4019
+132 : 0
+133 : 4155
+134 : 4091
+135 : 0
+136 : 4109
+137 : 4071
+138 : 0
+139 : 4134
+140 : 3985
+141 : 0
+142 : 4158
+143 : 4074
+144 : 4066
+145 : 0
+146 : 4176
+147 : 0
+148 : 4099
+149 : 4138
+150 : 0
+151 : 4087
+152 : 4092
+153 : 0
+154 : 4098
+155 : 4163
+156 : 0
+157 : 4166
+158 : 4103
+159 : 0
+160 : 3927
+161 : 4150
+162 : 0
+163 : 4108
+164 : 0
+165 : 4067
+166 : 3976
+167 : 0
+168 : 4001
+169 : 4137
+170 : 0
+171 : 4118
+172 : 0
+173 : 4085
+174 : 4141
+175 : 0
+176 : 4102
+177 : 0
+178 : 4047
+179 : 3986
+180 : 0
+181 : 4056
+182 : 0
+183 : 4070
+184 : 4091
+185 : 0
+186 : 4055
+187 : 0
+188 : 4170
+189 : 0
+190 : 4105
+191 : 4082
+192 : 0
+193 : 4026
+194 : 0
+195 : 3995
+196 : 4051
+197 : 0
+198 : 4133
+199 : 0
+200 : 4023
+201 : 0
+202 : 4105
+203 : 0
+204 : 4221
+205 : 4119
+206 : 0
+207 : 4089
+208 : 0
+209 : 4099
+210 : 0
+211 : 4130
+212 : 0
+213 : 4170
+214 : 4144
+215 : 0
+216 : 4085
+217 : 0
+218 : 4116
+219 : 0
+220 : 4011
+221 : 0
+222 : 4216
+223 : 0
+224 : 4096
+225 : 4057
+226 : 0
+227 : 4127
+228 : 0
+229 : 4146
+230 : 0
+231 : 4198
+232 : 0
+233 : 4082
+234 : 0
+235 : 4158
+236 : 0
+237 : 4141
+238 : 0
+239 : 4198
+240 : 0
+241 : 4095
+242 : 0
+243 : 4082
+244 : 0
+245 : 4136
+246 : 0
+247 : 4109
+248 : 0
+249 : 4115
+250 : 0
+251 : 4177
+252 : 0
+253 : 4091
+254 : 0
+255 : 4163
+
+

@@ -1,0 +1,154 @@
+phc-discussions - Re: [PHC] avoiding cache thrashing
+
+Message-ID: <20140222015916.GA10949@openwall.com>
+Date: Sat, 22 Feb 2014 05:59:16 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] avoiding cache thrashing
+
+Bill,
+
+On Thu, Feb 20, 2014 at 08:32:14PM -0500, Bill Cox wrote:
+This is some pretty mind blowing cache optimization.  I'm still trying
+to get my head around it.
+
+I gave it a try, and it's not providing as much benefit as I had hoped
+it would, on the Sandy Bridge machine I tested on.  The good news is
+that this is because my code on SB is somehow not impacted too badly
+even when I read the entire L2 without this trick.  Maybe the trick will
+be more relevant on other CPUs or/and with tighter placed load and
+compute instructions (and with little room for out-of-order), but I have
+no time for such testing right now.
+
+Here's some curious info I found in the process:
+
+http://www.7-cpu.com and in particular:
+http://www.7-cpu.com/cpu/SandyBridge.html
+http://www.7-cpu.com/cpu/IvyBridge.html
+http://www.7-cpu.com/cpu/Haswell.html
+
+http://www.realworldtech.com/haswell-cpu/5/
+
+http://www.agner.org/optimize/blog/read.php?i=165
+http://software.intel.com/en-us/forums/topic/280663
+
+Notice how with very tight read/compute, 2 MiB pages may be helpful even
+starting with 256 KiB allocation (or even 128 KiB per thread!)  With my
+code, I am not seeing the effect at sizes this low, perhaps because the
+added latencies don't hurt it until they become bigger.
+
+Are you doing huge numbers of small memory
+authentications that run mostly out of L1 and L2 cache?
+
+No, they are not that small.  I achieve sufficient throughput at sizes
+of around 2 MiB, which exceeds L2 cache (256 KiB on SB).  However, I am
+trying to specifically target L1 and L2 caches, in addition to L3 and
+RAM.  There are S-boxes that fit in L2, and a portion of them that fits
+in L1, with access sizes adjusted accordingly.  On Sandy Bridge, I am
+testing with 16 byte wide random accesses for L1 and 64 byte for L2.
+
+If it busted
+out into main memory, would this scheme give the hardware prefetch
+algorithms problems?
+
+I did not even try using this scheme on reads that were meant to be from
+main memory.  (This would require gaps in a fairly large allocation,
+thereby actually wasting a non-negligible amount of memory, unless the
+selector bit altering approach is also implemented despite of its
+drawback with multiple instances running.)  However, if I did I'd need
+to choose the selector bit such that hardware prefetch would not fetch
+the unneeded/conflicting cache lines too often.  This means using larger
+continuous regions in each type of cache, perhaps 2 KiB.
+
+When I run on my son's quad-core 3.4GHz Ivy Bridge machine, with 4MB
+and 8 threads, it does 154GiB/s of memory hashing bandwidth (hashing
+4MiB, 10,000 times, 2 reads + 1 write each pass, .775s runtime).  4
+threads do about 142GiB/s, and then it drops rapidly, and 1 thread
+does 54GiB/s.  That's very close to 128 bits every clock, but with 1
+thread I wouldn't expect many L1 misses.
+
+These are very impressive speeds.  You're making it hard to compete with
+you, in terms of bandwidth at least!
+
+When you say "2 reads" each pass, are you counting even the reads from
+the previous block, which is almost always still in L1 cache?  I am not
+counting reads that are expected to be from L1 and L2 in the GB/s
+figures I post so far.  This means reads from the previous block and
+reads from the S-boxes are not counted.  Well, or maybe I should count
+them separately, just to see how close (or not) I am getting to the
+CPU's maximum L1 cache read bandwidth (I'd say not very close, since I'm
+still doing more computation than you do).
+
+Anyway, I am currently getting worse speeds than yours at memory sizes
+this low (e.g. 1 MiB/thread * 4 threads, to test against your results),
+but that's when I keep L1 S-box lookups and multiplies in there (and
+don't count the S-box lookups towards bandwidth used).  Dropping the
+multiplies brings the speeds to be on par with yours.  Dropping the L1
+S-box lookups as well makes the speeds higher than yours, but that's not
+fair comparison because you do have small random lookups (albeit not as
+small: you said 256-bit, whereas I do 128-bit in these tests).
+
+I think you actually have the multiplies in a separate thread.  I don't
+do that because for many use cases we'll only have 1 thread/instance
+(even if our caller may invoke our instances from multiple threads).
+I did suggest doing the multiply-hardening in parallel with SSE memory
+accesses, but I didn't mean threads.
+
+With 4 threads, I get
+142GiB/s rather than 4*54GiB/s = 216GiB/s.  Is this due to cache
+pollution?
+
+This may be due to a combination of many factors, including lower CPU
+clock rate (you probably get 3.9 GHz for 1 thread and 3.7 GHz for 4+
+threads) and maybe L3 cache bank conflicts.  If you're letting each
+thread access anywhere within the 4 MiB region (rather than allocate
+separate 1 MiB regions per thread), then there may also be a penalty for
+reading from another core's L3 cache portion.
+
+I was pretty happy to see 4 threads working that well in
+parallel.  I put the 10,000 repeat loop around the block hash, and set
+the block size to 4KiB, so each thread is hammering the same 4KiB over
+and over most of the time.
+
+Oh.  Were your high speeds for L1 cache only, then?!  I thought L3.
+I ran my 4-thread benchmarks mentioned above on the whole escrypt, with
+only the data mixing function tweaked in different ways (for higher
+speed at these unusually low memory sizes).
+
+It remains to be seen if the simple hash
+I'm doing is strong enough, but it seems to hammer memory pretty well,
+at least with low thread counts.  My thinking was that if I run just
+large enough to bust out of GPU local memory, then these highly
+repeated hashing loops should cause GPUs lots of memory access grief,
+especially since 1/2 of the reads are randomized every 32 bytes, just
+as you suggested (randomizing *prev rather than *from).
+
+I think the only reason why this may "cause GPUs lots of memory access
+grief" is because you have those randomized small reads.  Without them,
+the above doesn't sound GPU-resistant.  Remember, Litecoin does "bust
+out of GPU local memory", yet there's the usual 10x to 20x speedup at
+Litecoin when going from CPU to GPU.
+
+I could probably use access to other machines now.  I feel like I'm
+getting close to done optimizing for Ivy Bridge, and should take a
+better look at AMD processors.  Also, my son's getting miffed that I
+keep killing his MineCraft servers so I can do performance
+benchmarking.  The ones I have access to at work are impressive
+machines with 8 cores and 128GiB of RAM, but our sys admin runs such
+an old version of Debian on it, gcc doesn't know how to use SSE, and
+-O3 is buggy.  I can't get more than around 10 GiB/s main memory
+bandwidth on it.  Even memmove is slow.
+
+If your offer is still good, I'd appreciate a chance to play with an
+AMD machine with some impressive memory bandwidth.
+
+My offer is still good, but we don't have "an AMD machine with some
+impressive memory bandwidth".  Our only AMD machine for this is FX-8120
+with two DDR3-1600 sticks - IIRC, you already have access to something
+very similar.  So my offer is about access to Haswell, Sandy Bridge-EP
+(16 cores, 32 threads, 128 GiB RAM as 8x DDR3-1600, several compiler
+versions installed), Xeon Phi 5110P, assorted GPUs.  I'll e-mail you
+about setting up your accounts.
+
+Alexander
+

@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Please consider multiplication hardening</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="../../../2014/03/04/1">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7iQwWDOMcRfp+LtOTQhXZqjtKHcU6+gd9A8+ppdAF2gw&#64;mail.gmail.com&gt;
+Date: Sat, 1 Mar 2014 15:51:26 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Please consider multiplication hardening
+
+Solar designer suggested the idea, and I just happen to know enough
+about ASICs to figure out that it was a good one.  I'm sure Solar
+Designer feels the same: please feel free to use multiplication
+compute-time hardening in your own PHC entry.
+
+After noodling on how best to build semi-configurable chips to attack
+the PHC winner(s), I no longer believe high memory bandwidth is enough
+to slow down government sponsored attackers sufficiently.  A
+sequential chain of multiplication and one or more of add, XOR, and
+rotate (though not just an add), seems to be a winning combination for
+providing strong compute-time hardening, because ASICs and hand
+designed custom chips cannot compute serial multiplications
+substantially faster than our computer's CPU.
+
+I would feel honored rather than offended if you guys "borrowed" this
+idea to strengthen your own algorithms.
+
+Some tips for implementation:
+
+Intel and AMD CPUs have excellent SSE/AVX2 vector instructions for
+hashing memory fast.  There is a decent 4x32-&gt;2x64 SSE multiplication
+instruction, but the 4x32-&gt;4x32 instruction is too slow in Haswell,
+Intels latest architecture.  The fastest multiplier is in the regular
+integer units.  My Core i7-3370 does a multiplication in 3 cycles, or
+about 0.88ns.  I know of no ASIC implementation of a 32x32-&gt;32
+multiplier that is faster (though I strongly suspect there is one -
+see below).
+
+To keep the serial multiplication chain from stealing time away from
+memory hashing, consider running the multiplication chain on the
+scalar integer unit, while hashing memory using the SSE or AVX2 unit.
+They can both run in parallel, but they contend for the same L1 data
+bus.
+
+To keep them running fast, have the multiplication chain run out of
+CPU registers, and let the SSE/AVX2 unit have full access to the L1
+data bus.  Pointers to memory used by the SSE/AVX2 code live in
+regular CPU registers, so if you need a value, consider casting it to
+a uint32_t * or a uint64_t * and load some of the same data
+read/written by the SSE/AVX2 unit.
+
+You should have a configurable multiplication chain length, since
+memory speed and multiplication speed are not well correlated.  For
+example, when running out of L1 cache on Haswell, even 1 3-cycle
+multiplication and a 1-cycle XOR takes longer than a 32-byte read,
+XOR, addition, rotation, and write.  When I run out of external DDR3
+memory, I need 3 to 5 multiplications for that same SSE/AVX2 memory
+hash operation.  You'll want to be able to have 0 or more multiplies
+to compute-harden the hashing to the user's machine.  I allow
+multiplication chains lengths to be adapted from 0 to 8 long and run
+that out of registers in the regular scalar unit in a loop that hashes
+and writes 32 bytes of memory in the SSE/AVX2 unit.  I was able to
+fool the compiler into instantiating 9 different versions of the
+hashing loop, one for each multiplication chain length, but there are
+probably other ways to do it.
+
+If you do it right, the multiplication chains will not hurt your
+memory hashing performance at all on Intel and AMD CPUs.  It will
+simply make your algorithm stronger.
+
+I am aware of credible rumors that at least in the late 1990's a US
+government password cracking center was built that used cryogenic
+custom ASIC multipliers, and a modern version of those will run faster
+than our CPU multipliers (maybe 3X faster? - I don't know).  However,
+those same ASICs will also run all the other instructions faster, and
+multiplication remains our best bet for compute time hardening.
+
+Thanks,
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+phc-discussions - RE: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4B25D06@uxcn10-5.UoA.auckland.ac.nz>
+Date: Sat, 3 Oct 2015 10:52:40 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Specification of a modular crypt format (2)
+
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+
+>Yes, I know, but it's too late, harm is already done. If you evaluate "value
+>* 10" somewhere then a compiler can assume that "value <= INT_MAX / 10" and
+>use this to optimize the following code.
+
+That would appear to be a violation of sequence point constraints.  Now given
+that you mention gcc later on, and that's an apparent source of endless
+optimiser bugs (I have more workarounds for gcc bugs in my code than all other
+compilers combined, going back to VC++ 6.0 from 1998), it wouldn't surprise me
+if it did that, but there's a limit to how far you can go to work around buggy
+compilers, particularly if you can't predict the bugs in advance.  Thus my
+somewhat conservative programming style, I have huge numbers of preconditions,
+postconditions, and invariants in my code that should be no-ops, but it's
+surprising what they've caught at times (mostly in gcc-compiled code, their
+ingenious remove-checks-for-null-pointers optimisation is particularly
+clever).
+
+>Another example -- the following program will happily print negative number
+>even though it specifically checks against it:
+
+I'm not enough of a language lawyer to figure out the legalities around going
+via the unsigned short, but I'm guessing there's something in the annotations
+to the appendix to the apocrypha to C99 that says this is supposed to happen.
+This is why I always use signed ints everywhere, you get overflows, but you
+can easily check for those, rather than getting code that looks like it should
+do A but actually does B.
+
+Peter.

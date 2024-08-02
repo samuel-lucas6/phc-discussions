@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Some Schvrch issues
+
+Message-ID: <CAOLP8p6TYvKLUVWKkH28+zpLKvuayEARPaXU49SSM-sG+6x+kw@mail.gmail.com>
+Date: Fri, 4 Apr 2014 04:56:11 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some Schvrch issues
+
+On Thu, Apr 3, 2014 at 6:19 PM, Rade Vuckovac <rade.vuckovac@...il.comwrote:
+The evolve function is an attempt to emulate Wolfram's rule 30 (random
+number generator in Wolfram's Mathematica).
+>
+What is behind the randomness of rule 30 and how it is related to the evolve
+function in terms of cyclomatic complexity is presented in the paper (see
+submission Appendix).
+
+I'm afraid this scheme doesn't work as you're expecting it to.  For
+example, if you fix line 107, but comment out both calls to the stir
+function, and run with t_cost = 1000, and m_cost = 1000, here's what I
+get:
+
+./phs-schvrch 1000 1000 1
+type: d
+count: 8
+numbit: 32
+2341707444
+2341707404
+4294967279
+4294967295
+32
+0
+2341707436
+2341707404
+
+This resulting hash is not at all random.  Revolve and evolve simply
+don't mix the data significantly, no matter how long they run.  The
+XORing with memstate also does essentially no real mixing.  The only
+two function calls that do any significant mixing are the two calls to
+stir, and each can be reversed in 2^64 guesses of carry, so guessing
+them both at the same time should not take more than 2^128 guesses.
+
+Bill
+

@@ -1,0 +1,26 @@
+phc-discussions - Questions about Lyra
+
+Message-ID: <d2678995186744cc801bfdb19da019c6@BY2PR03MB523.namprd03.prod.outlook.com>
+Date: Mon, 31 Mar 2014 21:39:14 +0000
+From: Greg Zaverucha <gregz@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Questions about Lyra
+
+Hi
+After reading the Lyra ePrint and looking at the reference implementation I have a few questions about the spec (Algorithm 2, page 10).  I guess the designers would be the best to answer but others who've looked at the design might have input as well.
+
+1. For line 16: "col <- M[row][C-1] mod C", doesn't this require multiprecision modular arithmetic in the general case?  C will usually fit in a machine word, but elements of M will probably not.  In the reference implementation C is hard-coded to 64, so this is a non-issue.  Will C always be a power of two?   It's my preference that key derivation not depend on multiprecision arithmetic.
+
+2. On line 17, how is |R| defined?  I initially thought it was the number of bits required to represent R, but in the reference implementation |R| is fixed to 64.  Maybe it would be better to fix |R| = 64 and require R < 2^64. The implementation of line 17 is slightly more awkward when |R| varies.
+
+3. On lines 16 and 17 a byte array must be converted to an integer, but the endianness is not specified.  In the reference implementation the endianness of the processor is used; so a different result would be computed on a big and little endian machines.
+
+4. Does the paper define what the initial state should be?  In the code it's the Blake2b IV, but for another choice of f how should it be chosen?
+
+A general comment: you might consider breaking up the current "Setup" phase (lines 1-8) into two pieces, Setup (lines 1-3) and Initialization (lines 4-8), because after line 3 the input password is no longer required and can be zeroized.  Or maybe make Setup be lines 1-3 and call lines 3-19 "Derive" or similar.
+
+Looking forward to your response, thanks
+Greg
+
+
+

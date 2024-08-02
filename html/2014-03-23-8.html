@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Shortcut-free functions</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;87siq9pksp.fsf&#64;wolfjaw.dfranke.us&gt;
+Date: Sun, 23 Mar 2014 01:04:54 -0400
+From: Daniel Franke &lt;dfoxfranke&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Shortcut-free functions
+
+The following definition grew out of an attempt at formally
+characterizing the manner in which EARWORM relies on the AES round
+function. I think some other submitters might find the concept useful in
+their own security analyses.
+
+Hopefully all the Unicode in this email renders properly for most of
+you.
+
+Let {fₙ | n ∈ ℕ} be a family of functions with signature
+
+    fₙ : {0,1}ⁿ × {0,1}ⁿ → {0,1}ⁿ
+
+such that fₙ is computable in polynomial time wrt n. Let
+
+    gₙ : ℕ × ({0,1}ⁿ)[L] × {0,1}ⁿ → {0,1}ⁿ
+
+(this notation for the second argument denotes a zero-indexed array of L
+n-bit strings), where
+
+    gₙ(0, K, m) = m
+    gₙ(i, K, m) = f(K[i-1], g(i-1, K, m)).
+
+gₙ is undefined when i ≥ L. Essentially, gₙ iterates fₙ by folding it
+over K, using m as a starting value.
+
+Consider the following game. The defender fixes the parameters n and L,
+chooses K ← ({0,1}ⁿ)[L] and m ← {0,1}ⁿ uniformly at random, and outputs
+n, L, and K, keeping m secret. The adversary then outputs a circuit
+description
+  
+    h : {0,1}ⁿ → {0,1}ⁿ.
+
+The attacker wins iff
+
+   h(m) = gₙ(L, K, m).
+
+{fₙ} is defined to be a "shortcut-free" family of functions iff for all
+adversaries A such that
+
+   * A executes in probabalistic polynomial time wrt n and L, and
+   * the circuit-size complexity of A's output is o(L) (sic: little-o
+     notation),
+
+A's success probability is less than ε(n), where ε is a negligible
+function.
+
+A particular function fₙ may informally be said to be shortcut-free if
+ε(n) is "sufficiently" small.
+
+This definition basically says that the attacker can't do any
+precomputation to usefully "compress" K for the purpose of computing gₙ.
+The first restriction on the set of adversaries says that the
+precomputation is tractable, and the second restriction says that it
+produces a beneficial result.
+
+For a simple example of a function family that is *not* shortcut-free,
+consider addition, where fₙ adds two n-bit integers modulo 2ⁿ. So, gₙ
+computes m + ∑K. In this case the adversary can precompute ∑K and then
+output a circuit that simply performs the single remaining addition (the
+complexity of which does not depend on L), thus winning the game with
+certainty.
+
+EARWORM, in order to satisfy its security goals, relies upon the
+conjecture that the AES round function is shortcut-free.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

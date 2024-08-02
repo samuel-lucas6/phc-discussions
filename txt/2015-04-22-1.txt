@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <CAOLP8p6sMSyB77MJNHEefu3MHsVO5J4u7uV7gJNioHGwOhUUWA@mail.gmail.com>
+Date: Wed, 22 Apr 2015 09:13:21 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 modulo division
+
+On Tue, Apr 21, 2015 at 10:01 AM, Krisztián Pintér <pinterkr@...il.com>
+wrote:
+
+>
+>
+>
+Bill Cox (at Tuesday, April 21, 2015, 5:48:31 PM):
+>
+>Generally, small integer division algorithms that are not
+>constant-time...
+I do not consider this to be a limitation of Argon2d, though Lyra2
+(and TwoCats) does protect against related attacks with it's
+password independent first loop.  However, there are some tin-foil
+hat attacks
+>
+this is unfortunately not the first time i hear such unscientific
+arguments on the list. it would be a good time to stop that.
+>
+side channel attacks not only bypass the computational hardness. it is
+false that in case of a succesful attack, the hashing scheme reverts
+back to a single hash, or a half-hash if there are two phases. side
+channels are much more sinister. it is possible to steal the password
+in situations when it was not at all possible without them
+>
+
+It turns out that there was not a single entry in the competition that is
+power rail analysis resistant, including Gambit.  On line 90 of gambit.cpp,
+you have:
+
+            A.block_absorb(pwd, 16, pwd_len);
+
+This code runs in time directly proportional to the password length.
+Determining the exact length of the user's password from an oscilloscope
+trace of the power rails should be trivial.  While I agree that this side
+channel is important, I was not able to get a single person on this list to
+consider defending against it.
+
+Why is password length not worth protecting better than we do now?  What
+makes it a less significant side-channel weakness than using power rail
+analysis to detect mod operation timing?
+
+By the way, looking back at the Gambit code just now was a pleasure.  As
+much as we differ on defense philosophy, I have to credit you for writing
+clean code.  It's very nice work.
+
+Bill
+
+
+

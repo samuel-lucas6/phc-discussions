@@ -1,0 +1,67 @@
+phc-discussions - Bandwidth hardened algorithms?
+
+Message-ID: <CAOLP8p6yrHuQ-HQnnuYo+rn90ZdU25Y15-Zz37J9GEcKZ+MsLA@mail.gmail.com>
+Date: Sat, 11 Jul 2015 15:02:16 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: John Tromp <john.tromp@...il.com>
+Subject: Bandwidth hardened algorithms?
+
+Is this a good term to use to describe password hashing and PoW algorithms
+with ASIC defense based on the expense of I/O ports with high data
+bandwidth?
+
+Here are the differences I see between bandwidth-hard algorithms vs
+memory-hard algorithms:
+
+- Memory hard algorithms compute a serial chain of data values that must be
+computed sequentially
+- Bandwidth hard algorithms allow an attacker to compute hash values in
+parallel
+- Memory hard algorithms require significant memory per parallel worker
+- Bandwidth hard algorithms allow the data to be shared between parallel
+workers, but it must be transmitted between them
+- Memory-hard algorithms defend against ASIC attacks through the cost of
+memory, the cost of bandwidth, or both
+- Bandwidth hardened algorithms limit ASIC attacks through communication
+bandwidth
+- Memory-hard algorithms tend to have long verification times for PoW
+- Bandwidth-hard algorithms tend to have short verification times for PoW
+
+In most of my proposed ASIC attacks against memory-hard algorithms, memory
+bandwidth limited the overall speed of the attack.  The cost of the
+external memory was rarely significant.  For example, if bandwidth is not a
+concern, I can buy a 1TiB hard drive for under $100.  If I need 350 GiB/s,
+it will cost several hundred dollars, regardless of the amount of memory
+I'm buying.  It seems to me that bandwidth hardening defends more reliably
+than memory cost.  While bandwidth hardened algorithms have disadvantages
+(like those listed above), the fast verification makes them suitable in
+some cases for PoW.
+
+I know of three bandwidth-hardened algorithms: Momentum, Cuckoo Cycle, and
+what I was calling "CPU Hash", which ideally is something like Yescrypt
+running with a very small amount of RAM, and a reasonable amount of ROM, or
+an EARWORM with expanded state size.
+
+SFAICT, all three algorithms provide reasonable ASIC defense.  The benefit
+for each is that verification is very fast.  There is also Argon2's
+proposed Merkel hash tree built on top of the memory filled by Argon2.
+Like Cuckoo Cycle, this allows for log(n) speed verification.  However, the
+Merkel hash tree building dominates the runtime, reducing the benefit of
+running Argon2 as a pre-process rather than just filling memory in parallel
+with hash data.  An advantage of a CPU-hash-like algorithm is simplicity
+and I believe a simple proof of security, but then you have to have the ROM
+available everywhere to do verification.
+
+An important key for fast-verification PoW bandwidth-hardened algorithms
+seems to be high speed computation that fills available memory bandwidth,
+with no significant short-cut available to an attacker.  These slower
+memory-filling implementations I've seen so far give an ASIC attacker too
+much gain.
+
+Bandwidth hardening only works if you use a lot of bandwidth.
+
+Bill
+
+
+

@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+Message-ID: <CAOLP8p7wqfgsEQmD2iQg6AgKLhZZvYkL2oegrub3kxVgkvts5w@mail.gmail.com>
+Date: Sat, 5 Apr 2014 12:58:48 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+I take back what I said about the Birthday test above.  At a minimum,
+any PHS that fails the Birthday test is going to generate non-random
+appearing data.  I think that generating cryptographically
+pseudorandom outputs should be a goal of the PHS, though I agree it is
+not critical.  However, not losing much entropy is a must.
+
+Given enough entropy from salt (say the required default of 16 bytes),
+any test that fails the dieharder test or any other test for
+randomness clearly has lost too much entropy to be a good PHS.  Simply
+running the dieharder tests with salt from /dev/urandom can help weed
+those out.  I'd say /dev/random, but since dieharder is quite happy
+with /dev/urandom results, it would be a bad thing to run a PHS on
+/dev/urandom data and get results that don't pass the dieharder tests.
+
+By the way, the compression test is already in dieharder.  Go ahead
+and try to come up with some others, but I'd be surprised to see any
+new randomness tests that fail on a PHC entry for valid reasons, yet
+pass the dieharder tests, unless the algorithm is specifically
+designed to detect the output of a specific PHS.  Honestly, I only do
+Alexander's manual collision test to make him happy.  It's already in
+the Birthday test.
+
+One thing we can prove is that a PHS that attempts to be a secure
+memory-hard algorithm is "strongly secure" in the sense that we've
+hashed all the inputs to meet that definition, and have preserved
+entropy all the way to the output.  Both yescript and TwoCats pass
+this test, as well as several others, I think.  All you have to show
+is your code works something like:
+
+PRK = H(all inputs, including lengths)
+X = whateverHashAlgorithm(PRK)
+output H(PRK || X)
+
+I would call anything like this a "strongly secure PHS".  I'm not
+really thinking about the non-memory-hard PHS's which seem to take
+radically different approaches.  Some of the memory-hard PHS's look
+more like:
+
+PRK = H(all inputs, including lengths)
+X = whateverHashAlgorithm(PRK)
+output H(X)
+
+For example, I think Scrypt, Catena, and Gambit look more like this.
+I'd have to double check to be sure.  These schemes require more proof
+that entropy is not lost, but since they use familiar cryptographic
+primitives for all hashing, they seem pretty safe to me.  The ones
+that don't use any cryptographic primitives at all are the scary ones
+to me.  Using the dieharder tests, we're already showing that some of
+those are not very well put together, at least in their submitted
+form.
+
+Bill
+

@@ -1,0 +1,322 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - [PHC] yescrypt &amp; Lyra2 on GPU</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2018/04/08/1">[&lt;prev]</a> <a href="../../../2018/04/29/1">[next&gt;]</a> <a href="../../../2018/04/29/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20180428212332.GA31541&#64;openwall.com&gt;
+Date: Sat, 28 Apr 2018 23:23:32 +0200
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: [PHC] yescrypt &amp; Lyra2 on GPU
+
+Hi,
+
+Due to use in altcoins, there are new results for yescrypt 0.5'ish (PHC
+v0 from 2014) and Lyra2 (I don't know which revision) on NVIDIA GPUs.
+Unfortunately, the discussion thread is in Japanese and the code is on
+OneDrive, but the CUDA source is in there and it is quite clear:
+
+<a href="http://askmona.org/9245" rel="nofollow">http://askmona.org/9245</a>
+
+BTW, I'd appreciate it if someone gets me in touch with the author of
+that miner mod via e-mail.  (I think there's no e-mail address given in
+the zip archive, nor in the thread, nor in askmona user profile.)
+
+The main approach is similar to what we see in argon2-gpu, where a
+single hash computation is split across many "threads" (32 in case of
+argon2-gpu), but taken to an even lower level (where what were
+individual SIMD vector elements on CPU, or even their 32-bit halves if
+64-bit, become separate SIMT threads, even if frequent synchronization
+and data exchange or duplicate work is needed).  I didn't look into
+what's achieved there for Lyra2, as I'm naturally more interested in
+what happens to yescrypt.
+
+For yescrypt, the split is across 16 SIMT threads, but due to yescrypt's
+use of 64-bit math each pair of those threads ends up doing duplicate
+work by two threads within the pair, so it's actually a split into 8
+rather than into 16 parallel computations.  I guess such duplicate work
+isn't any worse than leaving those threads unused would have been (if
+we're bumping into NVIDIA's shared memory size) whereas the extra data
+exchanges that would be needed otherwise would have cost extra.
+
+There's simply no more parallelism in yescrypt than that: it's four
+16-byte parallel lanes within each 64-byte sub-block, and then it's two
+64-bit halves within those lanes, additionally with a frequent data
+dependency (each pwxform round) between the halves (but this
+implementation goes for the split and the resulting overhead anyway).
+
+Here's what this looks like in code:
+
+__device__ __forceinline__ uint2 mad64(const uint32_t a, const uint32_t b, uint2 c)
+{
+#if 0
+        return vectorize((uint64_t)a * (uint64_t)b) + c;
+#else
+        asm("{\n\t"
+                "mad.lo.cc.u32 %0, %2, %3, %0; \n\t"
+                "madc.hi.u32 %1, %2, %3, %1; \n\t"
+                "}\n\t" : "+r"(c.x), "+r"(c.y) : "r"(a), "r"(b)
+        );
+        return c;
+#endif
+}
+
+#define Shared(a) *(uint2*)&amp;shared_mem[(threadIdx.y * 512 + (a)) * 4 + (threadIdx.x &amp; 2)]
+
+                uint2 buf;
+                uint32_t x[256];
+
+                        for (k = 0; k &lt; r * 2; k++) {
+                                x[k] ^= x[(k + r * 2 - 1) &amp; (r * 2 - 1)];
+                                buf.x = __shfl_sync(0xFFFFFFFF, x[k], 0, 2);
+                                buf.y = __shfl_sync(0xFFFFFFFF, x[k], 1, 2);
+#pragma unroll
+                                for (j = 0; j &lt; 6; j++) {
+                                        x0 = ((__shfl_sync(0xFFFFFFFF, buf.x, 0, 4) &gt;&gt; 4) &amp; 255) + 0;
+                                        x1 = ((__shfl_sync(0xFFFFFFFF, buf.y, 0, 4) &gt;&gt; 4) &amp; 255) + 256;
+                                        buf = mad64(buf.x, buf.y, Shared(x0));
+                                        buf ^= Shared(x1);
+                                }
+                                if (threadIdx.x &amp; 1) x[k] = buf.y;
+                                else x[k] = buf.x;
+                        }
+
+The 64-bit "uint2 buf" is located within each 32-bit SIMT thread (in
+hardware, it's two 32-bit elements in two different SIMD registers),
+mad64() performs two 32-bit MADs within each thread sequentially (or
+perhaps pipelined) to produce the 64-bit result, and the S-box lookups
+are done using indices from the lower 64-bit half of the original (CPU
+implementation's) 128-bit SIMD vectors obtained using __shfl_sync() to
+read them from the same or the adjacent thread.  I'm not sure if
+__shfl_sync() is fast enough for this to be worth it compared to split
+into fewer threads.  Perhaps it is, since in hardware it's just access
+to within the same SIMD registers - much like we extract indices from
+the needed part of the SIMD registers on CPU.  And as you can see the
+even/odd threads store only 32 bits of the 64-bit values they computed -
+that's because of the duplicate work between them.
+
+The resulting performance is quite good.  A certain cryptocoin is using
+yescrypt 0.5'ish (PHC v0 from 2014) at N=4096 r=16 p=1 t=0 (8 MiB), and a
+person behind it was kind enough to share benchmarks of the above GPU
+miner with me.  For reference, on i7-4770K for that revision of yescrypt
+and with those parameters I am getting ~740 h/s, with new implementation
+optimizations backported from yescrypt 1.0 (but retaining compatibility
+with 0.5) this improves to ~770 h/s.  And the results sent to me for
+NVIDIA Pascal are:
+
+GTX 1060 - 1060 h/s
+
+GTX 1070 - 1800 h/s
+
+GTX 1080 - 3200-3300 h/s
+
+GTX 1080 Ti - 3600-4200 h/s
+
+Also, I'm told the GPU global memory usage is approx. at 2/3 of max, so
+the miner is not bumping into that yet.  Per the code and the comments
+in the Japanese thread (after Google Translate), the miner is bumping
+into so-called shared memory within each SM (as I had intended), but it
+nevertheless is able to run 2 or 3 warps at once.
+
+Thus, GTX 1080 Ti gives a speedup of ~5x, but it also costs ~5x more
+than a modern CPU of performance comparable to or faster than the
+quad-core i7-4770K (roughly $1k for GTX 1080 Ti vs. $200 for 6-core
+i5-8400 or $300 for a budget 8-core AMD Ryzen).  OTOH, GPUs win in terms
+of amortization of cost of the rest of the rig (since many GPUs can be
+put in the same rig cheaply).  Yet another aspect is that for cryptocoin
+mining the GPUs would be better used on another coin, where they provide
+much more of a speedup anyway (e.g., on Zcash's Equihash).
+
+Then there are NVIDIA Volta GPUs, which are currently available on AWS
+and which are roughly twice faster than the largest Pascal ones.
+
+But we're interested in the performance figures here for how they'd
+relate to uses of yescrypt for password hashing, where there wouldn't
+necessarily be a "more profitable" hash to crack.  Well, yescrypt 1.0 by
+default uses 12 KiB for S-boxes vs. 0.5's 8 KiB.  So maybe the number of
+concurrent warps would have to be lowered accordingly, which will slow
+things down by up to as much (that is, up to by a third).  There are
+also the added writes into S-boxes, which are essentially free on CPU
+(the L1 cache write ports and the execution port for store instructions
+would have been idle otherwise), but will probably cost a little bit of
+time within each thread on GPU.
+
+(For the cryptocoin folks reading this: no, I don't recommend that you
+upgrade to yescrypt 1.0.  You can do better than that, if you want to
+defeat GPUs at all rather than keep their usage moderate as it happens
+on its own currently.  There might also be a special revision of new
+yescrypt for the PoW use case later.  Please feel free to e-mail me.)
+
+Overall, it looks like with current yescrypt a dual-CPU server doing
+password hashing at low to moderate memory cost (a few megabytes per
+hash) will be roughly on par with one of the largest GPUs, when not
+using a ROM.
+
+It's also curious that yescrypt at low memory settings like 2 MiB is
+currently slightly more GPU resistant (relative to its performance on
+CPU) than it is at 8 MiB: either fits in global memory anyway, but 2 MiB
+has higher L3 cache hit rate on CPU and thus its pwxform runs relatively
+faster while hurting GPUs as much.  Somewhere from 16 to 32 MiB might
+finally bump into global memory size again, and thus work against GPUs.
+
+With these results, I am once again thinking of possibly moving from 12
+to 24 KiB for the S-boxes in yescrypt by default.  yescrypt 1.0 already
+has this as a configurable parameter (it's part of flags, and it gets
+encoded into the hash strings and decoded from there - for values up to
+768 KiB), but right now it's compile-time (the implementation will
+refuse to process hashes that use a different than its compiled-in S-box
+size).  Maybe in 1.1+ it'll be runtime.
+
+On current Intel CPUs, the slowdown when going from 12 to 24 KiB is from
+non-existent (on some servers under full load, which is actually the
+most relevant scenario) to a few percent.  On AMD Bulldozer, it's worse
+than that, but maybe we don't care about that microarch anymore?
+
+There's also rumor that future Intel CPUs will have 48 KiB of L1d cache:
+
+<a href="https://browser.geekbench.com/v4/cpu/2400363" rel="nofollow">https://browser.geekbench.com/v4/cpu/2400363</a>
+
+(up from the current 32 KiB), so two SMT threads with 24 KiB each would
+fit again (or maybe we'll move to 48 KiB S-boxes then, or to wider SIMD
+and L2 cache - all of which is already tunable in yescrypt, just not yet
+one of the standard configurations).
+
+For yescrypt with a ROM, there are no GPU implementations (that I'm
+aware of) yet.  I suppose they could eventually use CUDA uniform memory
+to access host's or/and other GPUs' memory (as the ROM is meant to be
+much larger than a single GPU card's memory).  This will increase
+latency, and to compensate for that even more concurrent instances would
+need to be run on each GPU, again bumping into the GPU's memory sizes
+(on-die and/or on-card, whichever is hit first), so the speed will be
+impacted.
+
+So I think for yescrypt with a ROM this isn't too severe a threat yet,
+but bumping up the S-boxes size could make sense anyway.
+
+Finally, if very frequent __shfl_sync()'s work OK here, I am wondering
+if they'd also be beneficial for bcrypt.  Currently the speedups on
+large GPUs that we see for yescrypt above are on par with those we see
+for bcrypt (and this confirms that yescrypt's bcrypt-like anti-GPU works
+as intended).  For example, i7-4770K does 4.3k h/s for bcrypt cost 2^5
+defensively (one hash per thread), 6.6k h/s offensively (2 or 3 hashes
+per thread), and a GTX 1080 Ti at stock clocks does 20.7k h/s or with
+o/c does 22.8k h/s per Jeremi's hashcat benchmarks:
+
+<a href="https://gist.github.com/epixoip/973da7352f4cc005746c627527e4d073" rel="nofollow">https://gist.github.com/epixoip/973da7352f4cc005746c627527e4d073</a>
+
+That's roughly a factor of 5 increase from CPU defense to GPU attack
+performance, similar to what we see for yescrypt 0.5'ish.
+
+But maybe bcrypt speeds on NVIDIA Maxwell/Pascal/Volta can be improved
+further with this trick.  Maybe the four Blowfish S-box lookups can
+reasonably proceed concurrently in four adjacent SIMT threads, and then
+their results can be combined in one of the four threads that would do
+the add/xor/add.  The host code would need to expect final results from
+every fourth thread only.
+
+Since both JtR and Hashcat have gone OpenCL only (dropping CUDA), this
+will need to be done in OpenCL, but I see no problem there - at worst,
+inline asm will have to be used for the shfl.idx.b32 PTX instruction.
+We're already using tiny bits of PTX asm in OpenCL kernels in JtR.
+
+Anyone wants to give this a try?
+
+The above code for yescrypt does not try to split the two S-box lookups
+across threads, though.  (It only splits the four portions of each of
+the two 128-bit lookups.)  So maybe that would have been too extreme, or
+maybe it's worth trying there as well, or maybe it's unneeded there
+because there's other use those threads can be put to due to the 128-bit
+lookups (which isn't the case in bcrypt, where they're 32-bit).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Argon2: optional update
+
+Message-ID: <CAOLP8p6+KtLWfcC6gZY+0QFaWFjR4i-9KK7vTGr6piDFonzQ4g@mail.gmail.com>
+Date: Mon, 22 Jun 2015 14:49:12 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Alex Biryukov - UNI <alex.biryukov@....lu>, Dmitry Khovratovich <khovratovich@...il.com>
+Subject: Re: [PHC] Argon2: optional update
+
+On Mon, Jun 22, 2015 at 1:01 PM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Dear PHC community,
+ following discussions in the PHC forum we decided to further increase the
+circuit depth and improve the tradeoff resistance of Argon2. We propose an
+optional update with two main changes:
+>
+1) The "random" memory block is not  uniformly selected but with a
+distribution skewed towards later blocks. This gives both higher tradeoff
+resilience and more uniform memory access. The distribution is similar to
+that in TwoCats, though for the moment we slightly prefer quadratic (rather
+than cubic) power function as it minimizes the AT gain for a tradeoff
+attacker. The detailed design rationale is provided in the update
+description.
+>
+
+Excellent.  This should significantly reduce the options for an attacker.
+
+
+2) The round function of Blake2b is replaced with BlaMka (each addition is
+now accompanied with a 32x32 multiplication) in order to increase the
+circuit depth. In total we add 512 MULs per 1-KB block with shortest chain
+having 12 MULs.The structure of the compression function remains the same
+for the moment (thus some extra parallelism is still in place), since such
+a change apparently requires a very involved analysis.
+>
+Both modifications affect the performance (the first one increases the
+speed, whereas the second one decreases it). In total, Argon2d (and
+Argon2i) would run slower by 15% with multiple threads, and by 45% with 1
+thread.
+>
+This update should be considered as a post-PHC modification, i.e. the one
+that is deployed after the winner is declared.
+>
+
+I like them both!
+
+Bill
+
+
+

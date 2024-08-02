@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] An additional PHS API to include a string?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140831134658.GA21032&#64;bolet.org&gt;
+Date: Sun, 31 Aug 2014 15:46:58 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] An additional PHS API to include a string?
+
+On Sun, Aug 31, 2014 at 07:31:22AM -0400, Bill Cox wrote:
+&gt; I think this is important enough of an issue that the PHC should
+&gt; recommend an additional interface that takes this string and password
+&gt; as the only hashing parameters, and where the string is suitable for
+&gt; storage as an ASCII text field in a database or password file.
+
+As Krisztián points out, this is mostly orthogonal to the actual hash
+function, so it can be decided later. However, I totally agree with
+Marsh and Greg: this is important. Casual observation of what people do
+in practice with cryptographic algorithms (e.g. by reading their
+panicked questions on specialized online forums) shows that any method
+to get things awfully wrong _will_ be used by some people. In
+particular, if the function needs a salt and the API requests the salt
+as a separate parameter (as is common with PBKDF2 implementations), then
+an alarmingly high number of developers will use a fixed constant salt,
+or use the password itself as salt.
+
+Storing all parameters and salt along with the hash value in a single
+character string, and (crucially) making the implementation by default
+generate the salt values randomly, will make the situation better. This
+is what can be observed right now: botched usages of bcrypt are much
+rarer than PBKDF2-based abominations.
+
+
+
+Ideally, PHC should concentrate on the cryptographic qualities of the
+candidates, using code made for research, not for production.
+Production-ready implementations will come later on, for the winner(s),
+and these will include a simplified string-based API. Developers at
+large will cautiously wait for these implementations to emerge, and use
+them.
+
+I do not believe that things will go that way, though. Some people with
+the "early adopter" frame of mind will not wait; they will use the
+reference implementations right away (I suppose that some have already
+begun). Others, based on some assumption of "purity" (or any other
+name), will insist on using the "reference" code, and not any other
+implementation. For this reason, in the case of Makwa, I took care to
+already define a string-based format and implement it right away in the
+reference code. Thus, Makwa offers right now the simplified API that
+we are talking about here.
+
+On the up side, this means that if you need C or Java code which handles
+some Base64 encoding/decoding for salts and parameters, then you can
+reuse the functions from Makwa's reference implementations. On the other
+hand, there cannot be a single, unified string format which will fit all
+candidates, since they differ in parameter types and ranges.
+
+
+So while I agree with you that it would be better if the PHC candidates
+already included a simple string-based API in their reference
+implementations, I must point out that it does not seem feasible to
+define a _generic_ API and format which will fit all candidates, so this
+will have to wait for the list of candidates to thin out (as Krisztián
+states).
+
+Some extra notes:
+
+ - String outputs should be compatible with "whatever needs strings", e.g.
+   /etc/shadow files on Unix-like systems. The list of allowed or
+   disallowed characters thus varies, depending on context. In general,
+   you should stick to plain ASCII without space or control characters,
+   and you should avoid:
+
+     ':' and '$' (for /etc/shadow files)
+     '&lt;' and '&gt;' (for XML)
+     '"' amd ''' (for CSV files)
+     '`' and '\' (for literal strings)
+
+   In the case of Makwa, I used Base64 (letters, digits, '+' and '/')
+   and '_' as separator.
+
+ - If you need something like Base64, then please use actual Base64, not
+   just something similar (like bcrypt does). It helps for implementing
+   in various languages which may already feature some Base64 machinery,
+   e.g. C#/.NET. (Removing the trailing '=' signs may be worthwhile,
+   though).
+
+ - String encoding for the output is fine, but you must also mind the
+   input. Password hashing is about hashing passwords (duh), and
+   passwords tend to be sequences of characters. Invariably, any
+   password hashing function begins by converting a sequence of
+   characters into bytes. C-based implementations often assume that
+   the conversion has already been done, but this is a known source
+   of bugs; famously, one widespread implementation of bcrypt had
+   trouble processing non-ASCII characters, and I saw the same bug
+   in PGP 5.5 code (because of assumptions on the signedness of the
+   'char' C type).
+
+   We cannot ignore the non-Western world; thus, ISO-8859-1 ("latin-1")
+   encoding is not appropriate. We have to embrace Unicode, which means
+   UTF-8, UTF-16 or some other encoding. Unfortunately, humans have been
+   extremely creative with regards to writing systems, which means
+   ambiguity (e.g. even a simple "é" character has several possible
+   decompositions in code points). Therefore, it seems best if any
+   implementation of a password hashing function, in a language where
+   strings are strings (i.e. almost all of them except C and C++), takes
+   care to apply strictly defined and unambiguous encoding rules.
+
+
+See Annex A of Makwa's specification for further discussion on this
+subject.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160323041843.GA4248@openwall.com>
+Date: Wed, 23 Mar 2016 07:18:43 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Wed, Mar 23, 2016 at 06:41:25AM +0300, Solar Designer wrote:
+Attached is an implementation of a 256-bit block cipher based on
+SHA-256 (which yescrypt has anyway).  I'd appreciate a review.
+
+Oh, I need to clarify: I use "uint64_t block[4]" in the interface to
+ensure alignment and be able to do fast XORs without strict aliasing
+violations.  Of course, when I pass a half-block to SHA256_Update(), I
+rely on a specific byte order of the data.  I do not expect this block
+encryption function to work on 4 integers, always producing the same
+other 4 integers - what encrypted integers it produces depends on the
+host's endianness.  I expect this function to be used internally on data
+that is in a host-independent byte order, just properly aligned and
+passed in here as four 64-bit integers, and to produce encrypted data in
+a host-independent byte order, meaning that the integer values will vary
+by the host's byte order, and that's fine (because they're not to be
+used as integers).  Perhaps this needs at least a source code comment.
+
+The test program does invoke the function on integers, and it does print
+integers.  What I expect from it is that it shows successful decryption
+to the original values.  However, the encrypted values will vary by
+endianness.  I need to also add a test to ensure the encrypted values
+are a host-independent sequence of bytes, as long as the inputs are.
+
+Alexander
+

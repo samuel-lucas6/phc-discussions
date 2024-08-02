@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <5498DD07.8050606@bindshell.nl>
+Date: Mon, 22 Dec 2014 19:09:59 -0800
+From: epixoip <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On 12/22/2014 5:46 PM, Ben Harris wrote:
+>
+On 23/12/2014 8:49 am, "Jeremy Spilman" <jeremy@...link.co
+<mailto:jeremy@...link.co>wrote:
+Another way to look at it, what is the minimum amount of entropy a
+password would need under the hashing scheme to resist an offline
+attack given some assumed resource and time constraint? E.g. For 2,048
+MD5, lets say I can target a single account with $10,000 of hardware
+and achieve 50 MH/s, or 30 trillion guesses in a week's time, that's
+going to successfully crack what percentage of user-chosen passwords?
+>
+>
+First question is what percentage of user-chosen passwords are on a
+dictionary (probably a range depending on the community). For the
+remainder you'd need to guess the percentages that are
+guessable-by-candidate-generation and those that are
+fully-randomly-generated. There might be an in between group.
+>
+Those on a dictionary will fall very quickly (time and money cost is
+very low), the candidate generation ones are a little slower (I don't
+have the data to guess with), and the random ones are the slowest with
+the highest time and money cost.
+>
+Roughly, an 8 character randomly generated alphanumeric password (no
+symbols) is about 48 bits of entropy. With your 50MH/s rate that is
+almost 26 bits per second, giving about 2 months to check all the
+options (300W@.../kWh gives about $100 in electricity). Each
+additional character is ~64 times slower and more expensive.
+>
+N.B. did the calcs on my phone while typing so numbers may be off.
+>
+
+Remember that 2048 rounds of MD5 equates to about a 4066x slowdown as
+compared to raw MD5, due to the fact that many of the optimizations we
+apply to raw MD5 cannot be applied to PHPass. This was covered further
+in the comments. So while a 290X can pull 12.2 GH/s on raw MD5, it can
+only pull 3 MH/s on PHPass with 2048 iterations. Cut this speed in half
+for large hash lists since AMD has a shitty memory controller.
+
+In order to get 50 MH/s out of a single PHPass hash you'd need 16x 290X.
+The retail price for a system with 8x 290X is $18,499 and will draw
+about 3800W from the wall. So for two 8x 290X systems you're looking at
+$36,998 in hardware costs (for the sake of simplicity we'll ignore the
+cost of the cluster controller and networking gear) and will draw about
+7.6 kW, not including cooling costs. To exhaust 62^8 keyspace with this
+cluser would take ~50.5 days and cost ~ $1842.24 @ $0.20/kWh. Average
+PUE in 2014 is 1.7 so actual electricity cost would be more like $3684.48.
+
+And that's just for a single hash. For 400k salts (which is what Sc00bz
+estimated in the comments) the effective rate with 16x 290X would only
+be about 63 H/s.
+
+
+
+

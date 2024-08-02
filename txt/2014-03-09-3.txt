@@ -1,0 +1,88 @@
+phc-discussions - attacking and hardening escrypt
+
+Message-ID: <20140309030429.GA996@openwall.com>
+Date: Sun, 9 Mar 2014 07:04:29 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: attacking and hardening escrypt
+
+Hi,
+
+Somehow I am especially interested in comments from Steve Thomas
+(@Sc00bzT) and Christian Winnerlein (@CodesInChaos), please. ;-)
+Indeed, I'd appreciate anyone else's comments as well.
+
+escrypt's BlockMix replacement (enabled with a flag when not in scrypt
+compat mode) differs from scrypt's in two major ways:
+
+1. Only the final sub-block is passed through Salsa20.  All the previous
+sub-blocks are passed through escrypt's own sub-block transformation
+function instead.
+
+2. There's no sub-block shuffling.  (However, scrypt's approach to start
+processing with the block's last sub-block XOR'ed with the block's first
+sub-block is preserved.)
+
+(There are smaller differences as well, to account for possibly
+differing sub-block sizes of escrypt's own sub-block transformation
+function's vs. Salsa20's, when they do differ.  Let's ignore those
+smaller differences for now.)
+
+Now, just like it's common to attack reduced-round crypto primitives,
+let's attack escrypt with its own sub-block transformation function
+turned into a no-op.  (In terms of code that I posted, this may be
+achieved by setting S_ROUNDS to 0 at compile-time.)  What remains is
+XOR'ing of sub-blocks, followed by one Salsa20 per block.
+
+This degenerate revision of escrypt may be computed with less resources
+by XOR'ing together the sub-blocks and only storing the partial results,
+XOR'ing those with actual (yet unknown) other blocks' partial results
+just before computing Salsa20.  This works since XOR is associative.
+The benefit is in reduced memory usage during most of escrypt
+computation time.  While this gives us all the values of j that we need
+to finish computation of escrypt, it doesn't let us compute the full B'
+(we can only compute its last sub-block, which, due to the final PBKDF2
+step, is not sufficient to reject any candidate password).  To compute
+full B', we need to restart the computation, this time storing either
+all elements of V (thus, incurring the full memory usage) or storing
+only those elements of V that end up actually affecting B' (for this,
+we'd need to have saved a list of j's during the first pass).  Either
+way, the memory usage is at least 63% of full (and more than that if
+ESCRYPT_RW is set), but if we preserved j's we don't need to compute
+Salsa20 again, so this second pass can run a lot faster unless we're
+bumping into the memory bandwidth.  In a sense, we've decoupled whatever
+little computation we still do with the Salsa20's (first pass) from
+most memory accesses (second pass).  Overall, there may or may not be
+practically relevant savings from this.
+
+Is this the best attack there is?  (Speaking only of additional attacks
+enabled with S_ROUNDS = 0.)
+
+Now, this attack appears to be defeated by moving away from XORs to a
+_suitable_ non-associative operation (e.g., subtraction is _not_ suitable,
+still allowing for a similar attack, so non-associativity alone is not
+sufficient), or to alternating sufficiently different operations.  Would
+it be sufficient to alternate XORs and ADDs for even and odd sub-blocks?
+(I think so.)  Is this change worth making (drawback: adds complexity),
+or is it best to stipulate that S_ROUNDS is at least 1 and define the
+sub-block transformation such that it can't be precomputed out of order
+with the sub-block XORs (or in other words without having the actual
+input values to it yet), or is it best to do both of these things (harden
+for the case of S_ROUNDS = 0, yet require S_ROUNDS 0)?  I think the way
+the sub-block transformation is currently defined satisfies this property
+(for S_ROUNDS 0).
+
+This gives us a requirement for the sub-block transformation function.
+Further requirements are that it must not significantly reduce entropy,
+nor introduce significant biases - although these appear to be less
+important.  Are there any other requirements?
+
+BTW, this is similar to the question Bill Cox asked a few months ago,
+and got no real answers to.  My answer was: depends on context.  I do
+provide the context to my question now (it's escrypt 0.3.1 that I posted
+the other day, or/and the explanation above for those too busy to read
+the code), and my opinion on required properties - and I'd appreciate
+comments from others in this community.  Thanks!
+
+Alexander
+

@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <5617B542.2010506@openwall.com>
+Date: Fri, 09 Oct 2015 15:38:26 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-10-09 15:18, Thomas Pornin wrote:
+>>		acc = (acc << 6) + (unsigned)d;
+>>
+>...but this one seems entirely redundant:-)
+>
+This cast is for readability. Readability depends on who is doing the
+reading, and, in this case, the cast is for me. I tend to add explicit
+casts when switching between signed and unsigned integer types, because
+long ago I ran into trouble with signedness issues(*) and I got into the
+habit of making things more obvious.
+>
+The cast is redundant because the C compiler already applies it -- so
+the compiler won't mind.
+>
+>
+(*) This code:
+>
+	unsigned x = 10;
+	long y = -1;
+	if (x < y) {
+		...
+	}
+>
+will execute the code in the 'if' on a 32-bit machine, not on a 64-bit
+machine(**); and this is not undefined behaviour. In both cases, the
+result is clearly and unambiguously defined by the standard.
+
+Sure. But in this case, there is no switching of signedness, both 
+operands have "unsigned" type. Sorry, I don't see what an additional 
+cast could achieve.
+
+-- 
+Alexander Cherepanov
+

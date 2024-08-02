@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Fastest algorithm shootout with threads...</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5Jr20i6tetGjVCJAGpB9yh+SvxBmTyq4KR_LTEXdDp+w&#64;mail.gmail.com&gt;
+Date: Thu, 30 Apr 2015 04:12:54 -0700
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Fastest algorithm shootout with threads...
+
+On Wed, Apr 29, 2015 at 9:13 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+
+&gt; On Wed, Apr 29, 2015 at 03:47:35PM -0700, Bill Cox wrote:
+&gt; &gt; Just for fun, I added -p support for TwoCats.  I still win the speed
+&gt; &gt; competition :-)
+&gt;
+&gt; Cool!  How many sequential MULs does TwoCats have per 1 KiB in that test?
+
+
+By default, it does 2048 sequential multiplies in the integer unit in
+parallel with hashing a 16KiB block in the SIMD unit, and then hashes all
+the results together with a full Blake2s.  So, that's 128 sequential
+multiplies per 1KiB block.  However, this is tunable.
+
+
+&gt; &gt; In short, here's the best runtimes, when choosing num threads for highest
+&gt; &gt; speed at hashing 1GiB:
+&gt; &gt;
+&gt; &gt; TwoCats                103 ms
+&gt; &gt; Argon2d-sse            143 ms
+&gt; &gt; Yescrypt-2pw-sse       147 ms
+&gt; &gt; Lyra2-sse              212 ms
+&gt;
+&gt; The problem is most apps and users won't run additional benchmarks to
+&gt; choose the optimal number of threads, and even if they do they'd likely
+&gt; need to be computing the same derived key on an upgraded machine later,
+&gt; where the old thread count would no longer be the most optimal one.
+
+
+This depends on the use case, I think.   For FDE or volume encryption, an
+automt datic parameter generator should run, just like Scrypt does today.
+For authentication servers, these would also be well tuned.  You're right
+about most apps and users, though.
+
+
+&gt; &gt; Yescrypt does 33% more I/O operations than TwoCats, and uses OpenMP
+&gt; rather
+&gt; &gt; than pthreads, and uses a 1KiB block size compared to TwoCat's 16KiB
+&gt; block
+&gt; &gt; size.  This explains the difference in speed.  Lyra2 does a lot more I/O
+&gt; &gt; operations than TwoCats, explaining it's bandwidth-limited speed.
+&gt; &gt; Argon2d-sse also uses a 1KiB block size, and in addition, it calls 16
+&gt; &gt; reduced Blake2b rounds rather than 12 like Lyra2.  I think this explains
+&gt; &gt; why it's running slower.
+&gt;
+&gt; Unless I misunderstand something, Argon2d at lowest t_cost only goes
+&gt; through memory once (when filling it), without the extra 33% you
+&gt; mentioned for yescrypt.  So it could have reached TwoCats' speed, but
+&gt; somehow did not.  I guess the intermediate writes to state[] between the
+&gt; two groups of 8 BLAKE2b rounds might hurt even with write-back caches.
+&gt; Are those writes occasionally getting to higher-level caches or RAM?
+
+
+I did a few manual tests to see if I could get Argon2d and Yescrypt-2pw-sse
+to run at TwoCat's speed.  I succeeded for the single-thread case, but for
+multiple threads, the 1KiB block size used by Argon2d and Yescrypt slows
+them down.  I was able to slow TwoCats down similarly by useing a 1KiB
+block size.
+
+To get Yescrypt there, I commented out the multiplies in the PWX
+transform.  The fact that this runs as fast as TwoCats is impressive, given
+that Yescrypt was doing 33% more I/O operations.  It looks like even with 2
+rounds instead of 6, Yescrypt-2pw-sse is still computation time bound.
+
+To get Argon2d-sse there, I commented out half of their 16 reduced Blake2b
+rounds.  It seems Argon2d is also computation time bound on this machine.
+
+&gt;
+&gt; &gt; Should both Yescrypt and Argon2d to use my distance-cubed distribution?
+&gt; &gt; Argon2d uses a uniform distribution, and Yescrypt uses a
+&gt; &gt; sliding-power-of-two distribution.
+&gt;
+&gt; It's confusing to say that Argon2d uses a uniform distribution.  Both
+&gt; Argon2d and yescrypt use uniform distribution within their target range
+&gt; (all of memory written so far or the current window, respectively) at
+&gt; each given moment, but as we know this results in different non-uniform
+&gt; distributions across the entire memory filling loop's running time.
+
+
+Yes, it is.  As Dmitry said, their distribution is sub-optimal, with some
+room for improvement.  Your histograms show that pretty well.
+
+
+&gt;
+&gt; &gt; This would enhance Argon2d's TMTO
+&gt; &gt; defense and Yescrypt could probably not run the second loop at all when
+&gt; &gt; t_cost == 0.  That would make Yescrypt-2pw-sse nearly as fast as TwoCats
+&gt; &gt; when running with enough threads.
+&gt;
+&gt; Yes, perhaps.  It's a pity that TwoCats' TMTO wasn't studied by the
+&gt; Argon team.  Maybe we should have made TwoCats a finalist just for that
+&gt; privilege.  Then we would have greater confidence about your approach.
+
+
+It's not too late to study the distance-cubed distribution (or something
+similar).  The current Argon2d distribution is on the weak side.
+
+&gt; $ ./tst-twocats -p6 -m20 -t0 -r 10
+&gt; &gt; 8 32 20 0 103 1044860
+&gt; &gt;
+&gt; &gt; $ ./tst-twocats -p12 -m20 -t0 -r 10
+&gt; &gt; 8 32 20 0 117 1044908
+&gt;
+&gt; Oh, this is what I wanted to see.  I think it's actually a drawback that
+&gt; Lyra2 and TwoCats exhibit a performance reduction at more threads.
+&gt; OTOH, this implies they're probably not susceptible to faster CPU
+&gt; attacks (by interleaving multiple instances) on this machine at this
+&gt; m_cost.  (Argon2d and yescrypt might not be either, but it's not seen
+&gt; from these specific benchmarks.)
+&gt;
+&gt; Alexander
+&gt;
+
+Yes, Lyra2 has this problem to a small extent, and TwoCats has it worse.  A
+simple heuristic like "Use all my cores" is not optimal for TwoCats, while
+it seems to be pretty close for Yescrypt.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

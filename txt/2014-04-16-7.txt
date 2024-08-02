@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Re: The best of the best, IMO
+
+Message-ID: <CALCETrUkmevCQ8dpsLMK8jdB2htMBB-GqKQTFWuHFVCTEB18vw@mail.gmail.com>
+Date: Wed, 16 Apr 2014 15:32:27 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: The best of the best, IMO
+
+On Mon, Apr 14, 2014 at 6:06 AM, Bill Cox <waywardgeek@...il.comwrote:
+>
+I have a similar problem with my t_cost parameter in TwoCats.  I use it to
+balance external memory bandwidth and internal cache bandwidth, ideally
+maxing out both at the same time to provide two levels of defense.  However,
+if used to run a long time hashing only a small amount of memory, it will
+hash the same two blocks together many times before writing the result
+block, lowering external memory bandwidth to nearly 0.  I could have made
+t_cost repeat the entire memory hash operation like several entries do, but
+then I could not use it to balance cache and external memory bandwidth at
+the same time.  Also, some users may prefer to have TwoCats avoid maxing out
+external memory bandwidth, and this gives them a knob to do that.  Rather
+than confuse users with two separate time cost parameters, I chose to keep
+only the one I find of higher value.  As a work-around, a user could just
+call TwoCats repeatedly, providing his own outer loop.  The same can be done
+with Centrifuge, with t_cost set to 0, substantially increasing it's memory
+bandwidth.  However, in CFB mode, and writing only to on-chip cache,
+Centrifuge cannot approach maxing out cache memory bandwidth, regardless of
+settings.
+>
+
+I understand that this is needed to fit within the PHC framework, but
+this sounds like it'll cause screwups if you win and it stays like
+this (or if anyone else with the same issue wins).  For example, what
+if I want a really strong FDE hash, but I only have 4 GB of RAM?
+
+Would it make sense to adjust the real API (e.g.
+TwoCats_HashPasswordFull) to accept parameters for the total time to
+use (in arbitrary units), total memory to use (in bytes or some real
+unit) and something to control the cache/RAM bandwidth ratio?  It
+would be okay if not all combinations or arguments are valid (e.g. if
+you ask for very large memory and very short time).
+
+This way I could say "I'm willing to hash for 2 seconds and I can use
+3GB of RAM, and tune for average systems in 2014" and get reasonable
+behavior?
+
+--Andy
+

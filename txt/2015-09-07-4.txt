@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <55ED77F6.4090009@Oracle.COM>
+Date: Mon, 07 Sep 2015 12:41:42 +0100
+From: Darren J Moffat <Darren.Moffat@...cle.COM>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On 09/07/15 11:55, Solar Designer wrote:
+If we continue to build upon the traditional crypt(3) alphabet and
+encoding (like the above specification for scrypt does), then I'd also
+like to include a way to represent the numeric parameters in a more
+compact form: let the little-endian encodings be truncated when the
+values are small.  So e.g. instead of:
+>
+$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+it would be valid to use:
+>
+$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+or if we want to keep the number of '$' characters fixed, then either
+require the '$' delimiters to always be present or maybe introduce '+'
+or '=' for truncation (a character already used in the other base64
+encoding's alphabet, so likely safe to use):
+>
+$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+The savings for classic scrypt are small, but with yescrypt's additional
+parameters they are more significant.
+
+In Solaris crypt(3C) we use this syntax:
+
+If the first character of salt is "$", crypt()  uses  crypt.conf(4)  to
+determine  which  shared  module  to load for the encryption algorithm.
+The algorithm name crypt() uses to search in crypt.conf is  the  string
+between  the  first  and second "$", or between the first "$" and first
+"," if a "," comes before the second "$".
+
+Basically ',' is the argument separator so you can end up with things 
+like this:
+
+$5,rounds=6000$nlxmTTpz$
+
+So you could have
+
+$7,C6$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+I think it's desirable for us to arrive at a common approach at encoding
+these things for all PHC-endorsed schemes.  It is less important whether
+this would be part of the specifications for the individual hashing
+schemes or not, although I think that if not right away then it should
+retroactively be added to revisions of those later.
+
+I'd like to be sure that when we add Argon2 support for UNIX user 
+password hashes in Solaris that the syntax will be compatible with what 
+Linux vendors add.  It is also important that we have a Python 
+implementation since parts of OpenStack can be involved in setting the 
+password hashes at deployment time.
+
+
+-- 
+Darren J Moffat
+

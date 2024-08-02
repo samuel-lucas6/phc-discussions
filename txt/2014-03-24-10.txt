@@ -1,0 +1,187 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <532FF885.2010309@bindshell.nl>
+Date: Mon, 24 Mar 2014 02:19:01 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Hey Bill,
+
+On 3/23/2014 8:43 PM, Bill Cox wrote:
+On Sun, Mar 23, 2014 at 10:59 AM, Jeremi Gosney <epixoip@...dshell.nlwrote:
+>I've pushed code to a public repository for the candidate I will be
+>submitting, pufferfish. This repository will be frantically updated over
+>the coming week as I prepare my submission, but I wanted to get some
+>initial feedback before the cutoff.
+>>
+>https://github.com/epixoip/pufferfish
+My comments should not carry much weight compared to the guy's who've
+already chimed in, but I did read your code.  It is well written, and
+as a guy who reads a ton of more typical open source code, I really
+appreciate that.
+
+Thanks Bill! I'm not a very good programmer, so I try to make my code as
+easy to read as possible so it's easier for other people to find my bugs
+:P  Ok, that's not entirely true. But I do feel that code that is
+intended to be shared publicly should be well-presented.
+
+
+I liked the gen-salt concept, which is new to me.  I
+was thinking that managing all the parameters for a sophisticated PHS
+is a lot to put on a user, and given your KISS oriented entry, I like
+that this was the feature that you put a few extra lines of code into.
+
+Thanks. The concept is not new, there is such functions in bcrypt and
+other crypt(3) algorithms, phpass, etc. But there is some uniqueness in
+mine, in that the cost settings are encoded with the salt.
+
+
+>As the name implies, pufferfish is an improvement upon bcrypt, and ergo
+>blowfish. Concisely stated, pufferfish modifies the blowfish algorithm
+>to use 64-bit words, a 128-bit block size, and dynamic s-boxes. The
+>reference implementation uses a fixed key size of 256 bits, simply
+>because for these purposes there is no need to support different key
+>lengths.
+>>
+>The dynamic s-boxes are of course the biggest differentiating factor
+>between pufferfish and blowfish. The s-box generation is as follows:
+>>
+>1. Hash the raw salt as sha512
+>2. hmac-sha512 the password using the hashed salt as the key
+>3. hmac-sha512 the password again, using the output of the hmac
+>operation in step 2 as the key
+>4. These two hmac hashes are concatenated to initialize the 1024-bit state
+>5. The four s-boxes are each filled with m_cost / 4 / sizeof (uint64_t)
+>words by iterating over the internal state with a variant of chacha8
+>>
+>The state is then iterated 64 more times with chacha8 to generate a
+>third hmac key, which is used to hmac-sha512 the password one more time
+>to generate the inital encryption key.
+This seems a bit complicated to me for a nice simple password hashing
+function.
+
+I suppose it might seem complicated, but the whole initialization
+process described above can be implemented in about 15 lines of code. So
+it's not *that* complicated. In pseudocode you could describe it in even
+less lines:
+
+half_state := hmac-sha512 (sha512 (salt), password)
+state := hmac-sha512 (half_state, password).state
+foreach sbox do
+    for i := 0 to 3 do
+        for j := 0 to m_cost / 4
+            chacha8 (state)
+            sbox[i][j] := state
+do 64 times
+    chacha8 (state)
+key := hmac-sha512 (state, password)
+
+That said, I will consider simplifying this a bit. I had selected
+chacha8 to fill the sboxes since it is a lot more lightweight than
+sha512, and I didn't want this part of the algorithm to be the most
+expensive part. For example, if we used sha512 instead of chacha8 to
+fill the s-boxes, an m_cost of 64, we'd need 1024 iterations of sha512.
+That's really heavy for just the initialization. But, it could indeed be
+simplified by just doing something like:
+
+state := hmac-sha512 (sha512 (salt), password)
+foreach sbox do
+    for i := 0 to 3 do
+        for j := 0 to m_cost / 4
+            sbox[i][j] = sha512 (state)
+key := hmac-sha512 (state, password)
+  
+But while it is less steps, it's also a lot more expensive. I'll
+experiment with it, but I really don't see a need to be so compute-heavy
+during the initialization phase.
+
+
+>The rest of the construction is largely identical to bcrypt, using the
+>same eksblowfish algorithm. However, to support variable output lengths,
+>the 256-bit ciphertext is hashed with sha512 after being repeatedly
+>encrypted before being written to the output buffer.
+Similar to my thoughts above, do you need to go the extra mile in
+hashing the output blocks?  If I read the code correctly, you're doing
+64 rounds of hashing on the internal key state, and then using SHA512
+to hash it one more time to become part of the output result.  Don't
+we trust SHA512 enough to just send it your internal key state and a
+counter?  Wouldn't that be just as secure?
+
+No, it's doing 64 rounds of pufferfish encryption in ECB mode, and then
+using sha512 to hash the output. It's not strictly necessary, bcrypt
+just uses the output of blowfish in ECB mode directly, but as the
+modifications I made to blowfish to create pufferfish have not been
+thoroughly reviewed, it is an extra safety step and doesn't cost much.
+
+
+>I elected to use this design because I really like bcrypt, and I really
+>like the idea of being memory hard while using as little memory as
+>possible. And I believe that the modifications I have made increase the
+>effectiveness and extend the longevity of the original bcrypt design.
+Other people on this list also seem impressed by Bcrypt.  I haven't
+read it yet :-(
+
+Read it! :) https://en.wikipedia.org/wiki/Bcrypt#Algorithm
+
+The reason people are impressed with it is because it is memory hard
+while only using 4 KiB of memory. Even though it fits nicely in L1
+cache, it's still more efficient on CPU than GPU due to the
+data-dependent psuedo-random memory accesses. I'm a big fan of bcrypt, I
+think it's brilliant. But it's also 16 years old. It's definitely aged
+very well, but there are some areas which can be improved. It looks like
+solardiz and I disagree on where those improvements should occur, but I
+think we are in agreement that being able to increase the memory cost is
+a good start.
+
+
+I guess extending bcrypt into the future is a good thing.  I'm not a
+fan of sticking to tiny memory sizes that either fit in L1 cache or
+barely bust out.  I'd rather make an attacker pay for multiple GiB of
+memory for a full second per guess, but I understand there is a need
+for in-cache hashing.
+
+One of the biggest problems with this approach is adoption. As both
+Peter Maxwell and I discussed in this thread:
+
+http://thread.gmane.org/gmane.comp.security.phc/593/focus=601
+http://thread.gmane.org/gmane.comp.security.phc/593/focus=603
+
+It's enough of a struggle as is to convince even well-respected industry
+experts that they need to use expensive salted and iterated algorithms,
+let alone the general IT public. Telling them that they also need to
+dedicate multiple gigs of memory for the hashing operation will be
+complete turn-off to a lot of people -- myself included. It's a hard
+sell, and so far I haven't bought into it. The opinion you've expressed
+is a very popular one on this list right now, but officially consider me
+a dissinter :)  I'd much rather use as few resources as possible to
+accomplish the same goal.
+ 
+
+My concern over people going the Bcrypt route is that we may soon see
+commodity multi-CPU chips with as many as 1024 independent processors,
+all capable of computing Bcrypt rapidly.  You can defeat that by
+hashing 1MiB or more, so that each processor will not have enough
+local memory, but Bcrypt's 4KiB seems like the ideal target for these
+new multi-CPU chips.
+
+Agreed. Hence, pufferfish :)
+
+Modern GPUs may have trouble, but Bcrypt has
+nothing I've seen so far to make me feel confident in using it to
+protect my passwords over the next 10 years.
+
+Right. So, you know, pufferfish ;)
+
+
+>The reference code is clear, concise, and extensively commented, so it
+>should easy to read, especially if you are already familiar with
+>blowfish and/or bcrypt. I welcome your feedback.
+>>
+>- epixoip
+The reference code is both clear and concise.  Very nice!
+
+Thank you! And thanks again for your comments, Bill.
+
+Jeremi
+

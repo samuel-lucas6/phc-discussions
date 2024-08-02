@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] Information theoretic security for delegated hardening
+ was: winner selection
+
+Message-ID: <20150417144118.GB22275@bolet.org>
+Date: Fri, 17 Apr 2015 16:41:18 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Information theoretic security for delegated hardening
+ was: winner selection
+
+On Fri, Apr 17, 2015 at 06:39:12AM -0700, Bill Cox wrote:
+This is simpler than Makwa, but I haven't put any thought into attacking
+it.  Thomas Pornin, what do you think of this again?
+
+I am preparing an implementation and some documentation, to be
+published some time next week.
+
+Roughly put: for Makwa, and for Adam's RSA-based proposal, the core
+hashing operation is computing x^e mod N for input x, a huge exponent e,
+and a composite modulus N (in Makwa, e = 2^w, while Adam uses e =
+2^w-1). Blinding is done by assembling a "mask pair" (a, a^-e), because:
+
+   x^e = (a*x)^e * a^-e
+
+(All computations are done modulo N.)
+So "a*x" is what is sent to the delegation server, and that server
+raises that value to exponent e.
+
+We need a new mask pair for each delegation, so the problem is about
+producing such pairs efficiently, and without leaking information about
+the input x.
+
+In the Makwa specification, I described (and implemented) a scheme by
+which I precompute 300 mask pairs (a_i, a_i^-e), and generate a new mask
+pair by multiplying some of them together (on average half of them):
+
+   a = (prod_{b_i=1} a_i, prod_{b_i=1} a_i^-e)   for random bits b_i
+
+What Adam suggests is starting with a single mask pair (g, g^-e) and
+computing a new mask pair by using (g^b, (g^-e)^b) with a random
+exponent b.
+
+Adam's method can be said to be "information theoretic secure" if b is
+large enough and g is a generator of the subgroup containing inputs,
+because it implies that after blinding, every single element of the
+subgroup may be reached with roughly equal probability for any input, so
+the delegation server (the untrusted system to which you delegate the
+core of the hashing) provably learns nothing from the exchange, even if
+it has unlimited computing power. With my scheme, an evil delegation
+server with unlimited computing power may solve the knapsack problem and
+thus, for each password guess x, test whether that x would lead to a
+value that can be generated from the a_i, and thus filter out bad
+guesses. Note that the attacker would solve a O(2^150) problem for each
+password guess, so when we say "unlimited power" we mean it.
+
+Adam's scheme has an issue here, because for N = pq (and p != q), there
+is no such thing as a generator for all invertible integers modulo N
+(the problem here being that p-1 and q-1 are both even: the order of any
+g modulo N will be at most lcm(p-1,q-1), and that value is lower than
+N/2). However, this is fixed in Makwa, in which we work in the subgroup
+of invertible quadratic residues (the input is always a square), of size
+(p-1)(q-1)/4, and there we can have a generator g (*)(**).
+
+Makwa's delegation, as currently specified, requires about 300
+multiplications per instance. With a 2048-bit modulus, you need the
+exponent b to be 2100-bit or so, so you end up with two modular
+exponentiations that will cost, in total, roughly 16 times as much as my
+implementation (depending on the kind of optimization implemented for
+the modular exponentiations). If you want to speed up Adam's scheme then
+you can precompute (g^2, g^-2e), (g^4, g^-4e), (g^8, g^-8e)... at which
+point you are indeed back to the basic scheme, albeit with 2100 source
+mask pairs instead of 300, thus implying a 7x overhead.
+
+So Adam's scheme and mine are really the same, which has the nice
+property that my implementation already supports Adam's scheme, provided
+that the precomputed (g^(2^i), (g^-e)^(2^i)) values are input as
+"delegation parameters". What needs to be updated is the support code
+that generates these base mask pairs.
+
+
+
+(*) Reliably computing a generator can be hard in all generality. It is
+easy at modulus generation time, if factorizations of p-1 and q-1 are
+known. If the p and q factors are "safe primes" ((p-1)/2 and (q-1)/2 are
+also prime), then g = 4 will work; but generating random safe primes is
+rather expensive. I think I will generate p as p = p1*p2+1 where p1 and
+p2 are two distinct primes of roughly the same size; g = 4 will be a
+generator with overwhelming probability and I can check that at
+generation time.
+
+(**) Note that we ignore non-invertible elements modulo N here.
+Probability that a given input (padded password) is non-invertible is
+about 2/sqrt(N), i.e. 2^-1023, and I am reasonably sure we can neglect
+_that_.
+
+
+	--Thomas Pornin
+

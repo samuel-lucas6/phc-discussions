@@ -1,0 +1,27 @@
+phc-discussions - HKDF has collisions with different salts
+
+
+Message-ID: <CAOLP8p5zkq6wgngcgnEEh0caz9gQbE-0QDeA+uViRhWGhF1PUw@mail.gmail.com>
+Date: Fri, 14 Mar 2014 12:23:29 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: HKDF has collisions with different salts
+
+FYI, if you want to use HKDF and want the output to change with any
+change in input, you have to add the salt length to the input key
+material.
+
+HKDF inherits the same input collisions from HMAC that PBKDF2
+inherited, but they apply to salt instead of the password, which is of
+course much better.  Still, I want the output has to change when *any*
+input changes, preferably with no known collisions.
+
+Just adding the saltSize parameter to the key material I pass to HKDF.
+ That fixes the issue.
+
+Another thing to be careful about: you if you use the
+reset/input/result API, you have to zero the context yourself.
+hkdfReset does not do it for you.
+
+Bill
+

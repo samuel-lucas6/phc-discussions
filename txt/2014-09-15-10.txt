@@ -1,0 +1,188 @@
+phc-discussions - Re: [PHC] A review per day - Catena
+
+Message-ID: <541720C2.2010801@ciphershed.org>
+Date: Mon, 15 Sep 2014 13:24:18 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Catena
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/15/2014 08:19 AM, Dmitry Khovratovich wrote:
+It is somewhat strange to not take into account the existing 
+third-party cryptanalysis when doing such a review. For example
+
+On Sat, Sep 13, 2014 at 7:32 PM, Bill Cox 
+<waywardgeek@...hershed.orgwrote:
+
+>-----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>
+>
+>
+>It remains to be seen if there is an effective TMTO attack 
+>against Catena.  Using even 1 fewer memory locations increases 
+>recomputations considerably.  However, the defense increases 
+>somewhat slowly, and by a 1/8 memory attack (compared to the 1/4 
+>that Catena starts with), Catena starts losing against other 
+>algorithms in my pebbling attacks.
+>
+
+This paragraph: - ignores the attacks mounted by the Catena 
+designers; - ignores the lower bound proof given in the submission;
+- ignores the fact that the proof has a mistake (acknowledged by
+the designers); - ignores the tradeoff attacks found by our team
+(also acknowledged by the designers and verified by other people in
+the mailing list).
+
+It also does not tell us what are the penalties (found by the 
+author or someone else) for running Catena with 1/2, 1/4, 1/8 of 
+the memory or whatever.
+
+Sorry, but I simply do not buy your team's TMTO attack against Catena.
+ Your assumption that power drops as TMTO increases is wrong.
+However, I am impressed with your 15-ish percent improvement on my
+auto-pebbler's attack. :-)  That is quite impressive.
+
+Did I forget to mention the 9X-ish penalty I was seeing at the 1/2
+memory mark?  I call that a 1/8th TMTO, since the computation DAG has
+8X more nodes than we have memory locations at that point.  Since it
+gets worse faster as we go for deeper TMTOs, I think showing that a 2X
+memory reduction is good enough.
+
+Even if we get the recomputations down to 8X for 1/2 memory, the power
+increase will hurt an attacker more than it's worth, IMO.  Going for
+parallel recomputations will also make this worse.  I still doubt that
+in reality we will ever see a beneficial TMTO against Catena.  When
+they do occur, more likely it will be a desperate hack to get memory
+to fit on an attacker's chip.
+
+So... I'll start quoting your analysis when you figure out that power
+goes up instead of down with a TMTO.
+
+>
+>ASIC Defense - ------------
+>
+>
+The ASIC discussion also: - does not introduce any reference 
+attacker's platform, where the cost is computed; - ignores the 
+existing SHA-512 and Blake-512 ASIC implementation, their 
+latencies, voltages, frequencies etc. compared to that of DRAM or 
+SRAM designs available on the market or in the development.
+
+As in all my reviews, I assume the attacker and defender use the same
+silicon process.  My benchmark machine is 22nm used for Ivy Bridge,
+and I assume the ASIC is in the same process.  I assume the same clock
+speed as my CPU: 3.4GHz, and try to make a WAG about relative power
+use based on how much cache vs logic is in use, but it's just a WAG.
+
+These assumptions simplify analysis a ton!  However, I do not claim
+that this is the best way to go about a real ASIC attack.  It is too
+expensive, for one thing.
+
+>Contrary to what has been posted in the discussion forum, a TMTO 
+>against Catena will almost certainly *increase* power, rather 
+>than decrease.
+>
+>
+Whereas the other statements can be considered as a matter of 
+taste, this one can be verified rather easily. Let us take the 
+platform on where the exist SHA-512 implementations as the 
+reference platform: ( 
+http://www.iis.ee.ethz.ch/~sha3/ethz_gmu_sha3.pdf ) 65nm, 1.08 V, 
+316 MHz.
+
+The SHA-512 compression function has latency 65 cycles and
+consumes 9 mW at this platform. As a result, 2^20 calls to the
+SHA-512 compression function would take 9/(316/65) = 1.9mJ.w
+
+My Catena ASIC attack uses GDDR5 external memory because doing the
+full Blake2b hashing rounds is so slow that I can interleave a bunch
+of password states in external memory, taking advantage of predictable
+addressing, to nearly eliminate cache-miss penalties.  I get to run on
+the order of the full memory bandwidth of 384GiB/s, to 16 banks of
+GDDR5.  This greatly increases my attack rate vs doing hashing in cache.
+
+The power for moving that data back and forth to/from DRAM will
+dominate over the tiny power you're computing.  Even if I dramatically
+slowed down my ASIC attack and did it all on-chip in cache, then a 9X
+increase in computations would cause a 9X increase in runtime, with
+the chip running at nearly full power.  Rapid read/writes to a large
+cache like 8MiB will probably dominate over Blake2b computation power.
+
+I don't think my ASIC with external GDDR5 attack will burn 70W, like
+my Intel CPU, but as a total WAG, I'd guess it would burn half that,
+which is in line with what the GDDR5 memory would burn as well.  That
+stuff runs hot, but gives you 24GiB/s of bandwidth per bank.
+
+Catena-3 with 128 MB of memory would need 2^21 64-byte SHA blocks, 
+so 2^23 compression function calls, i.e. 15mJ within
+8/(316/65)=1.5 seconds. Our tradeoffs have computational penalty
+3.75q for the memory reduction by q, so, for instance, running it
+with 16 MB of memory would require 30x more energy, or 450mJ within
+the same 1.5 seconds.
+
+No one is suggesting using Catena in it's submitted for for 128MiB
+hashes.  The authors suggested 10MiB, I think, and since I only have
+8MiB of cache, I benchmarked at either 4MiB or 8MiB.
+
+The memory will consume far larger. The 128-MB Catena-3 
+reads/writes 768 MB of data from/to RAM, and 1.5 GB in tradeoffs. 
+If we consider GDDR5, advocated by Bill, and scale it down to 300 
+MHz, it would at least consume 0.5W, so its energy consumption 
+would be 750mJ, and 94mJ for 16MB.
+
+Therefore, the attacker will reduce his costs even if the memory
+is reduced 8-fold. And we have not counted the retention energy
+yet, as it will raise the tradeoff efficiency even more.
+
+
+Reducing memory by half means my ASIC attack could use 8GiB per bank
+instead of 16GiB per bank.  That would cut the power, but not in half!
+ Probably not even a quarter.  On the other hand, my bandwidth would
+increase about 9X, causing me to run 9X longer, since I'm mostly
+bandwidth limited.
+
+There is simply no way that a TMTO is going to lower power in an ASIC
+attack, unless it is a weak ASIC attack, or the algorithm has weak
+TMTO resistance.  Did you consider an interleaved memory attack to
+eliminate cache miss penalties for an attacker?  Also, did you
+consider realistic memory sizes, closer to 8MiB?
+
+Because of the predictable addressing, an attacker will pipeline the
+snot out of memory access, and the Blake2b computations only provide
+so much compute-time hardness.  That ASIC is going to need a great big
+fan, and it is going to tear through 8MiB Catena hashes.
+
+I'd put more work into it, but I don't believe Catena will "win"
+anything with it's current very slow hashing.  I think once we plug
+something like Lyra2's reduced round Blake2b into it, preferably with
+the new multiplication chain hardening suggested by Samuel Neves, then
+Catena will be far more ASIC resistant, and will hash 1GiB easily.
+That's a completely different ASIC analysis, so I'd rather not put to
+much effort into attacking Catena as-is.
+
+Anyway, I'll start taking your analysis seriously when power at least
+points in the right direction with a TMTO.  In the meantime, I've made
+my guestimate for an ASIC attack against Catena.  It should be
+factor-of-2-ish of reality for that specific attack.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFyC/AAoJEAcQZQdOpZUZC0AQAJntSVrPes3YSPyZrUsVlhgJ
+sBEsSDFa4gCEUs3/pA8R/dr/VIgUtFwzZywBdswy2wEfTkvUxoPgMavYBvHlSQV9
+BrJ/X64pgo649CrpMEw07TzwUtgVPMO6W/Pqsk3j58n8+sghG2GV0p190LL98uNT
+VKc7iO6jRDADynXX4Tde0gxpShHvqjqsPrbyvYzp1ittjFskvQDqk7msBFD9Wbo0
+PJCI3phG+ezm6DUIeMOwdwYAzWgBzlCOYAJgqALN6SXzyonWu4f93bus0eHOQXCz
+KyWKB8CCh01HCKTg0qj5V1G2kSenfeB9Ikuff4VFBuwaz6kTW3qo1k/eVgugHag5
+xLUoF7LTgY31LCUi1G2e2/flKGO52z4JsYOKE2ZTNbqaxaILfQI4tFYwEdFpc480
+8mrPIVNQj/Hsqe39mH2fkJnB2A5c7Q28tLj5Pmd4UbYGxO7jdK8nx3gVF7ucZ8g2
+ZzT2gaamWGLB1P/soIG5WjoP5Zyngld7egOPUqpuc4/yJLBz4iQp3d0CVw/Ii7hD
+GX4v0mvaE2/hpslUkZBGx2dLMHRxJTbNgakOK0OzY/T1jam7wbmkTH+4H7B8Tq3X
+OqqDGi1pgR7pdmD4hTBBnfy8XE4v0K+b8cQez6p5NVARssy3X4YHSeKMlrKxCysu
+DtwFx2ucT1wOz8afS0ME
+=9oit
+-----END PGP SIGNATURE-----
+

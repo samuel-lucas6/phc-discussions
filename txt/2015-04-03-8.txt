@@ -1,0 +1,108 @@
+phc-discussions - Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Message-ID: <20150403120143.GA25262@openwall.com>
+Date: Fri, 3 Apr 2015 15:01:44 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+On Fri, Apr 03, 2015 at 12:59:53PM +0200, Dmitry Khovratovich wrote:
+We could try to develop several typical scenarios for benchmarking.
+
+Agreed.
+
+Maybe people from industry could contribute with usecases.
+
+For example:
+Scenario 1 (cryptocurrency mining on x86 desktop):
+  maximum time: 1 second
+  maximum memory: 4 GB
+  maximum threads: unlimited
+
+I'm not an expert in cryptocurrency issues, but from what I heard so far
+the maximum time per hash computation is a lot lower, as needed to allow
+for fast verification of transactions.  This is what keeps them at
+around 2 MB currently.  Maybe an expert would chime in.
+
+Scenario 2 (password-based key derivation on x86 desktop):
+  maximum time: 5 seconds
+  maximum memory: 2 GB
+  maximum threads: unlimited
+
+Personally, I'd set the maximum time at 1 or 2 seconds.  It's quicker to
+type a few characters more than wait a few seconds more.
+
+Scenario 3 (password hashing on an authentication server):
+ maximum time: 0.1 seconds
+  maximum memory: 500 MB
+  maximum threads: 2
+
+This scenario should be expressed in terms of request rate capacity on
+given hardware.  The thread count per hash computed is 1.  The request
+rate capacity is determined by running the maximum number of threads
+supported in hardware, each hashing different passwords, and measuring
+their total throughput in hashes per second.  The latency of each hash
+may then be derived as threads/throughput, and it should remain sane -
+like 0.1 seconds, as you say.  So I'd define this scenario as:
+
+Scenario 3 (password hashing on an authentication server):
+ throughput: 100, 1000, 10000 hashes per second per server (separate benchmarks)
+ maximum latency: 0.1 seconds
+ maximum memory: N/A since usually not reached anyway
+ maximum threads: 1 per hash, and as many as hardware supports overall
+
+Except on hardware with support for lots of threads (such as future CPUs
+and current GPU/MIC cards), I think it's a bad idea to use multiple
+threads per one hash computation in this scenario, because synchronizing
+those threads may be very inefficient (and with hard to predict
+efficiency loss) when the server is under some other load (even minor
+load coming from parsing the authentication protocol).  When the
+hardware supports lots of threads (like 100+), we might be forced to use
+multiple threads per hash computed to keep the latency sane.
+
+There's also scenario 4, password hashing in a libc's crypt(3) and such,
+where the maximum memory usage may in fact be very limited.  The thread
+count per hash computed is also exactly 1, and also only throughput and
+latency with multiple concurrent requests matter (determine suitability
+of a given scheme).
+
+Scenario 3 will use a ROM if supported.  Scenario 4 won't.
+
+The measurements are done on the following metrics (the more the better)
+  metric 1: amount of memory filled
+  metric 2 to maximize: total bandwidth
+  metric 3 to maximize: total amount of computations, excluding memory
+access (e.g., total count of MUL/ADD/XOR operations, or taken with
+weights equal to their Haswell (for example) latencies)
+  metric 4 to maximize: computational latency (hardening), i.e. the
+length of the longest chain of computations expressed as above.
+
+I think we shouldn't consider instruction latencies in metric 3 - the
+relevant thing to consider would be die area of the corresponding
+execution units, and obviously it's only relevant with very high degrees
+of parallelism that the defender would somehow actually benefit from.
+Another relevant aspect is whether the CPU is bumping into its maximum
+instruction decode rate and such or not yet.  This is relevant for CPU
+attacks (where more parallelism can be brought from higher level).
+
+For metric 4, I think e.g. Haswell's latencies for simple instructions
+like ADD and XOR are overly conservative, because we won't see a
+sub-cycle latency for ADD even if that's possible in an ASIC.
+(Pentium 4's double-pumped ALU comes to mind, though.)
+
+The designers then select 1 or more instances  (parameter sets) of
+their scheme, which compete in all scenarios. Then we look at the
+rankings. It'd be great to have a single instance that perform well in
+all scenarios (not necessarily being the winner in any).
+
+Right.
+
+yescrypt's current defaults are meant to be well-balanced in this
+respect.  In fact, I was primarily benchmarking it for throughput in
+scenarios 3 and 4 above, while also achieving high bandwidth usage (by
+many concurrent threads) and high computation latency hardening, whereas
+I see it benchmarked for scenario 2 by most others (who run benchmarks
+at all) on this list.
+
+Alexander
+

@@ -1,0 +1,272 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7Km-H4SBfK5Lyhro34Bu-NahWeQeh2md-6xO_xcD6y_NA@mail.gmail.com>
+Date: Fri, 8 Aug 2014 11:02:06 -0700
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: Bill Cox <waywardgeek@...il.com>
+Cc: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, ben@...rr.is
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Hi Bill,
+
+1. Yes, the tradeoff should be MT = 16N^2 indeed.
+
+2. Constants like 2^18 do not matter for deciding whether proof is correct
+or not. Our attack shows that q^lambda does not appear for q<N^{1/3}. With
+some improvement, you can have the penalty O(q^2) for q<N^{0.42} for any
+constant lambda. The gap between N^{0.42} and N^{0.5} is interesting to
+explore, but it is not so much important.
+
+3. I do not understand what is "lower bound for low q for Catena".
+
+4. I can try to break your primary submission, if you give some explicit
+security claims for your fastest secure set of parameters. This applies to
+all other candidates, actually.
+
+
+On Fri, Aug 8, 2014 at 10:13 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+First, good work on the pebbling!  I can confirm numbers close to yours
+for Catena on slide 29.  You beat my generic pebbling algorithm for
+Catena-3 by around 10-20% in your benchmarks.  I pebble a 1024 node
+Catena-3 graph using 128 pebbles with 8.7 times more computation, vs your
+7.4.  I also agree with your second to last equation: for a 1/q fraction of
+memory, you have a  penalty of no more than 4*q for Catena-3, *for small
+q*.  More on that at the end...
+>
+I think you're last line is off by 4X.  I agree that an attacker using N/q
+memory has no higher than about a 4*q penalty for small q.  My tests
+confirm your Catena-3 data.  Normally, the time is 4*N computations, so the
+attacker must spend (4*N)*(4*q) = 16*N*q.  Your last equation failed to
+include one of the factors of 4.
+>
+After such careful analysis, you should point out that TMTO attackers on
+Catena-3 see almost a 4X overall MT penalty, even at the 1/2 q mark.  That
+compares well vs Script, where TMTO attackers gain a 4X MT *bonus* for high
+q.  IMO, Catena-3 is good enough in TMTO hardness.
+>
+The other issue I had with the presentation is slide 24.  You state that
+1/q memory should imply a penalty of q^lambda.  You seem to think the
+penalty should be strictly greater than q^lambda, but all Catena proved was:
+>
+    T >= G^4/(2^18*S^3)
+>
+For q < 2^18, this equation provides no useful estimate of the penalty at
+all!  When q aproaches sqrt(N), it is simple to show that the penalty
+increases as q^lambda, because pebbling each sequence of sqrt(N) pebbles
+will require full repebbling of N/2 pebbles on the prior row, and that
+penalty propagates to the prior row for each sqrt(N) that is pebbled, and
+so on.  It is clearly O(q^lambda).  This property is also a lower bound for
+TwoCats, Gambit, and some others.  Unfortunately, it says nothing about
+important TMTO attacks like q == 2 or 4.
+>
+So, nice work on the pebbling!  This sort of experimentation is good
+evidence that we're nearing a lower bound for low q for Catena.  For
+example, I'd guess you'd scoff at the possibility that you've left another
+factor of 2 on the table.  That's about how I feel :-)  If you have time,
+try pebbling SkinnyCat :-)  It's an easily analyzed subset of TwoCats.  I
+believe it is weaker than Catena at q=2, but stronger at q=8 and up, but
+that's largely due to my pebbling work.
+>
+Bill
+>
+>
+On Thu, Aug 7, 2014 at 8:47 PM, Dmitry Khovratovich <
+khovratovich@...il.comwrote:
+>
+>Hi Ben,
+>>
+>indeed k has to be large enough to be efficient.
+>>
+>Your calculations are correct. In fact, you will also have to add 2^3
+>hash calls that actually compute the vertices in the interval to the
+>3.5x2^6 in precomputations (I will add this to the slides).
+>>
+>However, the penalty is computed for the entire Catena. You spend
+>2^3 hashes to get 2^3 vertices at level 0 - penalty 1
+>(0.5x2^6+2^3) to get 2^3 vertices at level 1 - penalty 5
+>(1.5x2^6+2^3) at level 2 - penalty 13
+>(2.5x2^6+2^3) at level 3 - penalty 21
+>(3.5x2^6+2^3) at level 4 - penalty 29
+>>
+>Average penalty is (1+5+13+21+29)/5 = 13.8
+>>
+>To get 13.1 I used a more efficient method for levels 1 and 2, which does
+>not do precomputations. Instead, I moved forward stored points at level X-1
+>after they had been used at level X. This gives the penalty 3.375 for level
+>1 and 11.25 for level 2, so in total you have around 13.1 .
+>>
+>Dmitry
+>>
+>>
+>On Thu, Aug 7, 2014 at 5:15 PM, Ben Harris <ben@...rr.iswrote:
+>>
+>>I'll have to test your pebbling scheme for Catena - but an initial
+>>comment on the time comparisons.
+>>>
+>>Catena with lambda=4 and n=20 takes 2^20 storage and 5x2^20 hashes.
+>>Presentation takes Lx2^(n-k) storage. So at k=1 you are using more
+>>memory, and k=2 you are using the same. Need k=3 to use 1/2 the memory.
+>>At k=3 you need 3.5x2^6 to get 2^3 vertices, so 3.5*2^6*2^(20-3) to get
+>>all the vertices for the final row. So 3.5x2^23 to get the last row.
+>>>
+>>Catena will take 2^20 to get the final row, so that is a slowdown of
+>>3.5x2^3 = 28x. You only have 13.1x slowdown?
+>>>
+>>>
+>>On 7 August 2014 17:15, Ben Harris <ben@...rr.iswrote:
+>>>
+>>>Thanks Dimitry,
+>>>>
+>>>Page 26 just needs to be updated then - it says "Consider vertices
+>>>[AB0]... where each letter has k bits" suggesting that A and B are k bits
+>>>each - not that C is k bits.
+>>>>
+>>>>
+>>>On 7 August 2014 17:10, Dmitry Khovratovich <khovratovich@...il.com>
+>>>wrote:
+>>>>
+>>>>Hi Ben,
+>>>>>
+>>>>the following points are important:
+>>>> - A, C, *, 0 are all k-bit values. k<n/3, and for the attack being
+>>>>efficient k>2.
+>>>> - [**0] takes 2^(n-k) storage per level as you store everything that
+>>>>ends with k zeros.
+>>>>>
+>>>>The example in presentation has |A| = |C| = 1, and |B|=2. Such small
+>>>>values are for the ease of understanding, but not for the efficiency. I
+>>>>attach the picture in the higher resolution. The red indices are those
+>>>>precomputed for the next level.
+>>>>>
+>>>>Best regards,
+>>>>Dmitry
+>>>>>
+>>>>>
+>>>>On Thu, Aug 7, 2014 at 1:19 AM, Ben Harris <ben@...rr.iswrote:
+>>>>>
+>>>>>Just getting my head around the Catena one.
+>>>>>>
+>>>>>Storing [**0] takes 2^2k storage per level? (presentation says
+>>>>>2^(n-k))
+>>>>>And the [*B*] takes 2^(n-k) storage
+>>>>>So L*2^2k + 2^(n-k) storage all up.
+>>>>>>
+>>>>>Computing each [*B*] at level 0 takes 2^(n-2k) operations from each
+>>>>>2^k [*B0]. total 2^(n-k) operations? (presentation says 2^2k)
+>>>>>Computing each [*^B*] at level 1 is more complicated because we don't
+>>>>>always have what we need.
+>>>>>>
+>>>>>At level 1, for the A = 1, B = 1, and len(C) = 2 (the example in the
+>>>>>presentation). For the 2^(n-k) = 2^(4-1) = 8 [*^B*] we have
+>>>>>[00 1 0] - h( h([00 0 0] + [1 0 00]) + [0 1 00]) = 2 hashes
+>>>>>[00 1 1] - h([00 1 0] + [1 1 00]) - 1 hash
+>>>>>[01 1 0] - h([01 0 1] + [0 1 10]) - but [01 0 1] is h([01 0 0] + [1 0
+>>>>>10]) and I don't have [1 0 10] it takes 2 hashes from [1 0 00]
+>>>>>[01 1 1] - 1 hash from previous
+>>>>>[10 1 0] - h([10 0 1] + [0 1 10]) -  again, I don't have [10 0 1]?
+>>>>>[10 1 1] - 1 hash from previous
+>>>>>[11 1 0] - again, we are missing something
+>>>>>[11 1 1] - 1 hash from previous
+>>>>>>
+>>>>>These missing dependencies become exponential at level 2+.
+>>>>>>
+>>>>>So there are three bits I'm getting a bit stuck on:
+>>>>>  - Storage per level
+>>>>>  - Operations for level 0
+>>>>>  - Missing dependencies at level 1
+>>>>>>
+>>>>>Maybe I'm just misreading the slides and needed to see the talk?
+>>>>>>
+>>>>>>
+>>>>>On 7 August 2014 05:10, Marcos Simplicio <mjunior@...c.usp.brwrote:
+>>>>>>
+>>>>>>Hi, all.
+>>>>>>>
+>>>>>>Very interesting analysis! We noticed the same attack venue
+>>>>>>described in
+>>>>>>slide 47 for Lyra2 some time ago, so we provided and evaluated a
+>>>>>>simple
+>>>>>>fix in the version provided in our website (http://lyra-kdf.net/,
+>>>>>>see
+>>>>>>section 5.1.2.3 of the specification). I'm not sure how the tradeoffs
+>>>>>>table is affected by this fix, but the costs are likely to grow (at
+>>>>>>least that was my impression by crossing your results with our
+>>>>>>preliminary analysis).
+>>>>>>>
+>>>>>>BTW, the document in our website is being continuously updated as new
+>>>>>>tests are performed, so we expect to introduce this and possibly
+>>>>>>other
+>>>>>>tweaks in the corresponding phase of the PHC. We are still evaluating
+>>>>>>the "possible extensions" mentioned in the original submission, for
+>>>>>>example.
+>>>>>>>
+>>>>>>BR,
+>>>>>>>
+>>>>>>Marcos.
+>>>>>>>
+>>>>>>On 06-Aug-14 14:31, Dmitry Khovratovich wrote:
+>>>>>>Hi all,
+>>>>>>>
+>>>>>>here is the link to the slides of the talk I have just given at
+>>>>>>PasswordsCon'14. It investigates time-memory tradeoffs for PHC
+>>>>>>candidates
+>>>>>>Catena, Lyra2, and Argon, and estimates the energy cost per
+>>>>>>password on an
+>>>>>>optimal ASIC implementation with full or reduced memory.
+>>>>>>>
+>>>>>>https://www.cryptolux.org/images/5/57/Tradeoffs.pdf
+>>>>>>>
+>>>>>>Additional comment: It is a standard practice in the crypto
+>>>>>>community to
+>>>>>>give explicit security claims for the recommended parameter sets
+>>>>>>so that
+>>>>>>cryptanalysts could easily identify the primary targets. Many PHC
+>>>>>>candidates do not follow this rule by not only missing these
+>>>>>>claims but
+>>>>>>also concealing the recommended parameters. As a result,
+>>>>>>cryptanalysts like
+>>>>>>me spend valuable time attacking wrong sets or spreading the
+>>>>>>attention over
+>>>>>>multiple targets.
+>>>>>>>
+>>>>>>Remember: third-party cryptanalysis increases the confidence in
+>>>>>>your
+>>>>>>design, not decreases it (unless it is badly broken). Analysis of
+>>>>>>a 5%-part
+>>>>>>of your submission (one of 20 possible parameter sets) is little
+>>>>>>better
+>>>>>>than no analysis at all. It is also worth mentioning that to make
+>>>>>>fair
+>>>>>>comparison of candidates, benchmarks and performance discussion in
+>>>>>>general
+>>>>>>should cover recommended parameter sets only.
+>>>>>>>
+>>>>>>>
+>>>>>>
+>>>>>>
+>>>>>
+>>>>>
+>>>>--
+>>>>Best regards,
+>>>>Dmitry Khovratovich
+>>>>>
+>>>>
+>>>>
+>>>
+>>
+>>
+>--
+>Best regards,
+>Dmitry Khovratovich
+>>
+>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

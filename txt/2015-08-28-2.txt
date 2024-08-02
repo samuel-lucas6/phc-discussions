@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Argon2 using memset still
+
+Message-ID: <CALiR+uMcyOnMejMmszvd3TLUYsLQJkXi71o3C17fVH4hd0U-0A@mail.gmail.com>
+Date: Fri, 28 Aug 2015 09:07:24 +0000
+From: Sascha Schmidt <sascha.schmidt@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 using memset still
+
+Maybe it would be wise to additionally add compiler attributes that prevent
+ the optimization of a function:
+__attribute__((optnone)) for clang
+__attribute__((optimize("O0"))) for gcc
+They are available for clang 3.5 or newer and gcc 4.4 or newer. You can
+combine them to something like this:
+
+#if defined(__clang__)
+#if __has_attribute(optnone)
+ __attribute__((optnone))
+#endif
+#elif defined(__GNUC__)
+#define GCC_VERSION (__GNUC__ * 10000 \
+                    + __GNUC_MINOR__ * 100 \
+                    + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 40400
+  __attribute__((optimize("O0")))
+#endif
+#endif
+
+On Thu, Aug 27, 2015 at 6:58 PM Bill Cox <waywardgeek@...il.comwrote:
+
+On Thu, Aug 27, 2015 at 9:43 AM, Daniel Franke <dfoxfranke@...il.com>
+wrote:
+>
+>On 8/27/15, Bill Cox <waywardgeek@...il.comwrote:
+>g++ has a habit of optimizing calls to memset away.  I doubt that Argon2
+>succeed in it's attempts to clear memory.  I copied this function from
+>Blake2:
+>>
+>/* prevents compiler optimizing out memset() */
+>static inline void secure_zero_memory( void *v, size_t n )
+>{
+>  volatile uint8_t *p = ( volatile uint8_t * )v;
+>  while( n-- ) *p++ = 0;
+>}
+>>
+>This is an improvement over memset, but note the comment above
+>secure_wipe() in
+>https://github.com/dfoxfranke/earworm/blob/master/util-ref.h.
+>>
+>
+True, but using secure_zero_memory is an improvement :)
+>
+I prefer to call the core hashing function a few times with small, but
+exponentially increasing memory sizes.  This will overwrite just about
+everything, providing slightly improved garbage-collector attack resistance
+without much performance loss.  However, it increases complexity, and I
+think I was the only one who felt the additional security against
+garbage-collection attacks was worth it.
+>
+>
+
+
+

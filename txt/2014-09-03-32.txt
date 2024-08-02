@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Message-ID: <CALCETrW7o4zjrsEzLYoLgctPkuzNmQ078htH0cmwfUj5wWAuNw@mail.gmail.com>
+Date: Wed, 3 Sep 2014 15:57:48 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+On Wed, Sep 3, 2014 at 3:45 PM, Alex Elsayed <eternaleye@...il.comwrote:
+Andy Lutomirski wrote:
+>
+>On Wed, Sep 3, 2014 at 3:29 PM, Alex Elsayed
+><eternaleye@...il.comwrote:
+>>Besides, why store _anything_ on the user's computer? The user types in
+>>N, and then P, and neither has any related data stored anywhere on the
+>>computer; the less you process P the less time it spends resident in
+>>memory as well. Treat it like a hot potato and hand it straight to the
+>>token.
+>>>
+>>
+>Because I want to trust my token as little as possible.
+>
+My point is it doesn't actually trust your token any less.
+>
+Handing your token F(P) instead of P doesn't matter, because F(P) is still
+sufficient for a malicious token to never ask again if it stores it - and a
+malicious token disclosing P rather than F(P) only matters if your password
+hygiene is really terrible (reuse, etc).
+>
+Besides, the token _does_ rely on you relaying the second exchange for it -
+if it tries to do an exchange when you didn't _initiate_ an exchange, that's
+a 'KILL IT WITH FIRE' indicator; that leaves only that it surreptitiously
+stores what you give it and waits for someone to steal it from you.
+
+Let me try to say it more precisely.  I want a fourth security
+requirement: even if the token is actively malicious (e.g. records
+things it shouldn't, sends maliciously incorrect output, and leaks
+things to <insert government agency here>), then the protocol should
+still be as secure as either password-authenticated or
+encrypted-key-authenticated protocols, depending on whether the user
+stores a key file on his/her hard drive.
+
+I think that my protocol achieves this, or at least tries to.  Yours
+seems to be completely insecure in this threat model.
+
+Yours might be fixable for this purpose by having the user do a second
+PAKE exchange with the server, protected by the output of the first
+one.  This requires more round trips than my approach.
+
+--Andy
+

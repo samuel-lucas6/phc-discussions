@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140214105946.GA9100@openwall.com>
+Date: Fri, 14 Feb 2014 14:59:46 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Bill,
+
+On Fri, Feb 14, 2014 at 03:51:02AM +0400, Solar Designer wrote:
+On Thu, Feb 13, 2014 at 05:36:26PM -0500, Bill Cox wrote:
+I just tested the impact of unpredictable lookups on NoelKDF's hash
+function.  Instead of hashing:
+
+    value = value*(*prev++ | 3) + *from++;
+    *to++ = value;
+
+I tried:
+
+    value = value*(*prev++ | 3) + *(from + (value & mask));
+    *to++ = value;
+
+This makes the next "from" address unpredictable and dependent on the
+next value of value (I really need to rename this).  It slowed down
+single-threaded hashing of 2GB from 0.76 seconds to 2 seconds.  If
+instead of unpredictable, all I need is pseudo-randomized, I got about
+0.95 seconds when I replaced *from++ with *(from + (*prev & mask)).
+
+It looks like there is a penalty to pay for unpredictable lookups.  Is
+(*prev & mask) enough to cause problems for GPUs, or since *prev is
+calculated many cycles earlier, do I really need (value & mask)?
+
+In order to have any assurance of being no weaker than bcrypt, you do
+need (value & mask).  I am surprised that you're seeing this much of a
+performance impact given that the random lookup and the multiplication
+can proceed in parallel (right?)
+[...]
+I am also surprised.  Are you sure your "mask" is small enough that this
+fits in L1 cache?  Are you sure the data was already in L1 cache?
+
+Actually, I think your "from" is a random page, likely not in L1 cache
+by the time you reach this code.  I think you wanted to replace *prev++
+with *(prev + (value & mask)), and leave reads from "from" sequential
+(since they usually go from L2 or worse).
+
+This explains the worse than 2x slowdown you've observed.  I'd expect
+smaller slowdown with the change I suggested above.
+
+Alexander
+

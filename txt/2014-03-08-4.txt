@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <20140308003130.GA27420@openwall.com>
+Date: Sat, 8 Mar 2014 04:31:30 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 07, 2014 at 07:20:49PM -0500, Bill Cox wrote:
+On Fri, Mar 7, 2014 at 6:45 PM, Solar Designer <solar@...nwall.comwrote:
+BTW, Bill's choice of BLAKE2 for the sole cryptographic primitive, while
+sound technically, may be problematic for some prospective users.
+
+Good point.  I just read a bit more about SHA3, and it sounds like I
+might get more acceptance using Blake2...
+
+Maybe I should just plug SHA-256 back in like I had before, just for
+the hashing at the start and finish.
+
+If you keep block size at >= 4 KiB (usually too large, in my opinion,
+even if smaller sizes result in measurable slowdown), then you can as
+well use SHA-256 for everything.
+
+[...] I am thinking of a suitably minimal change to scrypt's use
+of PBKDF2 so that the two problems pointed out in this thread today
+would not affect escrypt (except in scrypt compat mode).  Unfortunately,
+those minimal changes feel hackish.  For example, I could XOR the
+least significant byte of password length into each derived key block
+after the initial PBKDF2 call.  How does this sound to you?  (One byte
+should be enough since it contains all the info that is otherwise lost
+with padding.  And there's no endianness issue.)
+>
+Alexander
+
+I get a wiggy feeling now when stuff gets XORed together and then use
+the result directly, after Steve's attack on my original NoelKDF
+function, and after reading about the PBKDF2 chosen c attack which is
+only possible because they XORed results together.  XORing in the
+length is simple, but I might just go ahead and do the work of using
+Init, Update, and Finalize and hash in the input length directly.
+
+XORing is a higher risk when neither input comes directly from a crypto
+hash or/and when the two inputs are similarly derived.  (I think in your
+example it was both of these things.  Inside PBKDF2, it is the latter.)
+When XORing in lengths into PBKDF2 output blocks, those blocks are a
+result of a crypto hash, whereas the lengths have not similarly passed
+through the crypto hash.  scrypt similarly XORs things where one has
+passed through a crypto hash (Salsa20/8 in scrypt's case) at least one
+more time (or is it actually at least 2 more times, for r=1?)  So I
+think further complexity here is not justified.
+
+Thank you for your opinion, though!
+
+Alexander
+

@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Scrypt can have highest time*average memory cost</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="13">[&lt;prev]</a> <a href="../../../2014/03/29/1">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="../../../2014/03/29/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140328231328.GA29617&#64;openwall.com&gt;
+Date: Sat, 29 Mar 2014 03:13:28 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Scrypt can have highest time*average memory cost
+
+On Sat, Mar 29, 2014 at 01:01:36AM +0400, Solar Designer wrote:
+&gt; pow2
+&gt; t       AT      AT/t    ATnorm
+&gt; 1.00    0.33    0.333   1.333
+&gt; 1.05    0.38    0.365   1.391
+&gt; 1.10    0.43    0.394   1.433
+&gt; ...
+&gt; 1.25    0.58    0.467   1.493
+&gt; 1.30    0.63    0.487   1.499
+&gt; 1.35    0.68    0.506   1.500 &lt;==
+&gt; 1.40    0.73    0.524   1.497
+&gt; 1.45    0.78    0.540   1.490
+
+More curious numbers: yescrypt reaches scrypt's AT at 5/3*N:
+
+1.65    0.98    0.596   1.445
+1.70    1.03    0.608   1.430
+
+When it does, its ATnorm efficiency is at exactly 96% of max:
+
+1.5/(5/4)^2 = 0.96
+
+In other words, it is (very slightly) more optimal to stop at 4/3*N with
+increased N (by a factor of 5/4 to maintain constant time) than to
+proceed to 5/3*N.
+
+&gt; 1.90    1.23    0.649   1.367
+&gt; 1.95    1.28    0.658   1.350
+&gt; 2.00    1.33    0.667   1.333
+&gt; 2.05    1.38    0.675   1.317
+&gt; 2.10    1.43    0.683   1.300
+
+yescrypt's AT at 4/3*N is reached by scrypt at 5/3*N:
+
+1.66    0.66    0.398   0.958
+1.67    0.67    0.401   0.961
+
+This is also 96% of what's optimal (for scrypt this time).
+
+In terms of API, I am thinking of making t_cost = 0 request 4/3*N for
+yescrypt native modes (optimal) and 5/3*N for scrypt-like modes (96% of
+optimal).  That way, it requests the same AT cost (given the same values
+of other parameters) in either case.
+
+Similarly, I am thinking of making t_cost = 1 request 5/3*N for yescrypt
+native modes (96% of optimal) and 2*N for scrypt-like modes (optimal).
+That way, it also requests the same AT cost (given the same values of
+other parameters) in either case.
+
+It is slightly unfortunate that 100% optimal setting will vary between 0
+and 1 for these two categories of modes.  But even if chosen wrongly,
+it's 96% of optimal, and arguably being inadvertently at only 2/3 of
+intended AT cost would be a worse tradeoff.  So I prefer exact match for
+AT cost and risk of having "only" 96% efficiency if a wrong one of these
+settings is used inadvertently.  It's also convenient to be able to
+benchmark these modes at same AT cost by altering only the requested
+mode and leaving t_cost intact.
+
+What's I still haven't decided on (and would appreciate advice on) is how
+to handle t_cost of 2 and above.  With my decisions already made, we have:
+
+t_cost	anti-TMTO	TMTO-friendly	AT (vs. scrypt)
+0	4/3		5/3		2/3
+1	5/3		2		1
+
+scrypt
+t       AT      AT/t    ATnorm
+2.00    1.00    0.500   1.000
+2.33    1.33    0.571   0.980
+2.50    1.50    0.600   0.960
+2.66    1.66    0.624   0.938
+3.00    2.00    0.667   0.889
+3.33    2.33    0.700   0.840
+3.50    2.50    0.714   0.816
+3.66    2.66    0.727   0.794
+4.00    3.00    0.750   0.750
+4.33    3.33    0.769   0.710
+4.50    3.50    0.778   0.691
+4.66    3.66    0.785   0.674
+5.00    4.00    0.800   0.640
+
+pow2
+t       AT      AT/t    ATnorm
+2.00    1.33    0.667   1.333
+2.17    1.50    0.693   1.277
+2.33    1.66    0.714   1.226
+2.50    1.83    0.733   1.173
+2.67    2.00    0.750   1.124
+3.00    2.33    0.778   1.037
+3.17    2.50    0.790   0.996
+3.33    2.66    0.800   0.961
+3.50    2.83    0.810   0.925
+3.67    3.00    0.818   0.892
+4.00    3.33    0.833   0.833
+4.17    3.50    0.840   0.806
+4.33    3.66    0.846   0.782
+4.50    3.83    0.852   0.757
+4.67    4.00    0.857   0.734
+5.00    4.33    0.867   0.693
+
+Given these numbers, how to assign further t_cost values, such that the
+effect on running time matches people's expectations and is convenient,
+and preferably such that we continue to match AT cost for same t_cost
+regardless of which of the two categories of modes is enabled, and also
+such that the t_cost to smix2 iteration count translation is described
+by a simple formula (or two of them for the two categories of modes),
+not by a table.
+
+ATnorm efficiency is no longer as important for t_cost &gt; 1 because those
+values are intended specifically to spend more time without spending
+more memory, so further deviation from what would be optimal given
+unlimited memory is on purpose.
+
+... Hmm, maybe trying to match AT cost for TMTO-friendly modes makes
+little sense, because in scrypt (if both loops are considered) the AT
+cost can be reduced by up to a factor of 4 when TMTO is made use of.
+Given this lack of precision, trying to match non-TMTO costs exactly
+makes a lot less sense than it appeared to at first.
+
+Given this additional consideration, should we simply use? -
+
+t_cost	t	AT anti-TMTO	base AT TMTO-friendly
+0	4/3	2/3 (100%)	1/3 (75%)
+1	5/3	1 (96%)		2/3 (96%)
+2	2	4/3 (89%)	1 (100%)
+
+... but then it's weird to have to emphasize in the documentation that
+optimal t_cost for some modes is 0 and for some others is 2.  The 100%
+vs. 75% difference is not negligible.
+
+Given all of the above, maybe it's better to match on efficiency: have a
+common t_cost achieve 100% ATnorm efficiency for both kinds of modes?
+
+t_cost	t anti-TMTO	t TMTO-friend	AT (vs. scrypt not incl. TMTO)
+0	1 (89%)		5/3 (96%)	1/3	2/3
+1	4/3 (100%)	2 (100%)	2/3	1
+2	2 (89%)		3 (89%)		4/3	2
+3	3 (69%)		4 (75%)		7/3	3
+
+Actually, I like this one.  0 and 1 are special, the rest are trivially
+computed from t_cost.
+
+For t_cost=0 and anti-TMTO, maybe t very slightly higher than 1.0 should
+be preferred, like 13/12 for ATnorm half way between 4/3 (which it is
+at t=1.0) and 1.5 (max).  Otherwise the last few elements of V are
+almost certainly never read back.
+
+I'll continue to think about this, but I thought I'd run this by the
+list as well.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

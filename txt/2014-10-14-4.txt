@@ -1,0 +1,172 @@
+phc-discussions - Re: [PHC] What is "basic cryptography" ?
+
+Message-ID: <CALW8-7+hrJkz5twCoAhD4QZ0N3Z1VyLn6MuVX97zXv52_rA40Q@mail.gmail.com>
+Date: Tue, 14 Oct 2014 12:49:48 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] What is "basic cryptography" ?
+
+Hi Thomas,
+
+I think that your hesitancy can be resolved rather easily. Let us consider
+preimage resistance. Since we deal with a single hash function, not a
+family, the notion of "always preimage-resitance" (aPre) by
+Rogaway-Shrimpton seems to be the most relevant. So you just consider an
+adversary who is given function H(), salt S, and image Y = H(P,S) of random
+P. You measure the advantage of the adversary of finding any P' such that
+H(P',S) =  Y as a function of available resources R.  Let m be the
+dimension of the password space (i.e. there are less than 2^m passwords)
+and n be the length of Y (i.e. output length of H)
+
+If R is measured in the number of calls to H (or amount of computations
+equivalent to it), then an aPre-secure function, intuitively, should satisfy
+Adv(A) < C*max(R/2^m,R/2^n),
+where C<1 is some constant that accommodates for minor computational
+shortcuts (like computing only a subset of bits, or more sophisticated
+stuff like biclique attacks).
+
+If the password distribution is not uniform, then you correct the
+definition, i.e. Y= H(P,S) where P is chosen according to some distribution
+Q, and the resistance is measured as
+Adv(A) < max(f(R),R/2^n),
+where f(R) is the maximum cumulative probability of R inputs.
+
+If you want preimage resistance up to k <min(m,n) bits, then you use R/2^k
+instead of the maximum function.
+
+TMTO attacks are not relevant here as long as they do not decrease the
+(amortized) computational cost of H.
+
+Best regards,
+Dmitry
+
+On Sun, Oct 12, 2014 at 4:24 PM, Thomas Pornin <pornin@...et.orgwrote:
+
+Hello everybody,
+>
+in his survey, Dmitry Khovratovich includes a property called "basic
+cryptography" and defined succinctly as:
+>
+  "Basic cryptography -- collision/preimage resistance, unpredictability."
+>
+While I can intuitively have a rough idea of what this means, I struggle
+to write it down as a mathematically precise definition. My goal is to
+have sufficiently clean definitions so that I could set out to "prove"
+security of some functions (in my case Makwa, but this may be applicable
+to other candidates as well) in the sense that any successful attack
+would have to either break a known underlying hard problem, _or_ to be a
+computational shortcut such as a TMTO or something like that. In
+informal terms, I want to separate the "cryptography" from the
+"engineering".
+>
+>
+For collision resistance, I can have something satisfactory: for a
+password hashing function h(), that takes as inputs a salt s and
+password p, collision resistance is about the computational
+infeasibility of finding (s,p,p') where p <p' and h(s, p) = h(s, p').
+Note that I am talking about infeasibility, regardless of the space of
+plausible or potential passwords. While collisions can help an attacker
+only within rather esoteric usage scenarios involving active misuse of
+the function by the defender, it is still a nice thing to have.
+>
+In particular, collision resistance implies second-preimage resistance,
+and THAT is good for security proofs, in the following sense: if the
+attacker is given s and h(s, p), and is challenged with finding a
+password p' such that h(s, p') = h(s, p) (that is the normal setup when
+considering an authentication server), then second-preimage resistance
+means that if the attacker succeeds, then he found p' = p; otherwise,
+that would contradict second-preimage resistance. So far so good: if
+second-preimage resistance can be proven (and proving collision
+resistance implies proving second-preimage resistance), then we have
+shown that if an attacker finds a matching password, then he found _the_
+password, meaning that no password entropy was lost in the process: the
+space of potential passwords, already quite small (that's the problem
+with passwords), is not unduly shrunk through some misbehaving of the
+function.
+>
+>
+It is with preimages (not second-preimages) that I have a problem. The
+usual definition for a cryptographic hash function is the following:
+>
+   Given a hash function f() with inputs in space X and outputs in space
+   Y, f() is said to be preimage resistant if it is not feasible, given
+   y in Y, to find x in X such that f(x) = y with a computational
+   average cost lower than #Y times the cost of evaluating f().
+>
+It is important to note that preimages and second-preimages are very
+different things. In the second-preimage setup, there is no secret; in
+the preimage setup, the target output is a given and there is no
+information, indeed no condition on how it was generated.
+>
+With normal hash functions such as SHA-1, the output space is "all
+possible 160-bit blocks" and, crucially, the space of possible inputs is
+much larger (even if we restrict ourselves to inputs that imply only
+minimal evaluation cost, we have 2^448-1 possible inputs, i.e. all
+sequences of 0 to 447 bits). Under these conditions, it is rather easy
+to define preimage resistance with a target output taken randomly and
+uniformly in that well-defined output space.
+>
+With password hashing, things are not as easy. The space of possible
+inputs will be a lot smaller, and quite smaller than the apparent size
+of the output space. For instance, a password hashing function may
+produce a 128-bit value, but since there are much fewer than 2^128
+possible passwords (realistically), then not all 128-bit outputs are
+actually possible. In any case, brute force on the input is assumed
+to work (the input is a password). So I could try something like this:
+>
+   Password-hashing function h() will be said to be preimage resistant
+   if it is not feasible, given s and h(s, p) for an unknown p chosen
+   randomly and uniformly in space P, to find p' such that
+   h(s, p) = h(s, p') with average cost less than #P/2 the cost of
+   evaluating h().
+>
+I am not satisfied with that definition for the two following reasons:
+>
+ - This depends on the space of potential passwords. For the definition
+   to be useful, it must hold for all spaces of a given size, and not
+   just "on average". That is, the "average cost of #P/2 evaluations"
+   must be understood as "over all p in P for a single, given P". I
+   fear that such a definition may be defeated by anomalous spaces of
+   passwords that are not realistic in any way.
+>
+ - This definition includes the cost of evaluating h(), i.e. it
+   postulates the lack of any shortcut. Thus, it fails at separating
+   cryptography from engineering.
+>
+So far my best attempt at producing a clean, mathematical definition of
+preimage resistance for a password hashing function is the following:
+>
+   For a given space P of inputs, the password-hashing function h() will
+   be said to be preimage-resistant over P if, given s and h(s, p), the
+   average cost (for p chosen randomly and uniformly in P) of finding p'
+   such that h(s, p) = h(s, p') is not less than the computational cost
+   of evaluating h(s, t) for all t in T, for any subset T of P such that
+   #T >= #P/2.
+>
+   h() will be said to be preimage-resistant up to "k bits" if it is
+   preimage-resistant over all possible spaces P of size less than 2^k.
+>
+The intuition behind this definition is that h() must be such that
+cracking a password must involve obtaining the hashes for at least half
+of the potential passwords. If that can be proven, then it will imply
+that any successful attack on the function MUST be a "computational
+shortcut" that allows computing, say, 30 hash values for the cost of 25,
+or something like that.
+>
+Now that is quite clunky and I don't really like it.
+>
+Does anybody here has an idea on the subject ? Or maybe a reference to
+some existing published work that already covers these questions ?
+>
+>
+        --Thomas Pornin
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

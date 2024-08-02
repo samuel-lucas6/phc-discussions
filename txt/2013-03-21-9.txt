@@ -1,0 +1,61 @@
+phc-discussions - RE: [PHC] Password Hashing done wrong on CISCO IOS
+
+Message-ID: <1112768727.95265.1363902137097.open-xchange@email.1and1.com>
+Date: Thu, 21 Mar 2013 16:42:17 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Password Hashing done wrong on CISCO IOS
+
+
+On March 21, 2013 at 4:11 PM Marsh Ray <maray@...rosoft.comwrote:
+>
+>
+-----Original Message-----
+From: Per Thorsheim [mailto:per@...rsheim.net]
+Sent: Thursday, March 21, 2013 11:14 AM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Password Hashing done wrong on CISCO IOS
+>
+Well, at least I guess Jens should be able to share his side of this, but
+honestly I don't think that's the interesting part. This has to be a serious
+implementation error by somebody who doesn't know crypto well enough,
+>
+Implementation errors happen to *everyone*, even folks who know tons about
+crypto. In practice, it seems that some functions are more prone to subtle
+implementation errors than others.
+>
+Say the developer accidentally left in some test code that ignored the round
+count and salt parameter and substituted the constant values of [nil] and 1, I
+agree we probably wouldn't learn much new from that. On the other hand, if the
+error came from C code making assumptions about the signedness of 'char' or
+sign extension of a shift right operator (e.g., Java) this might be
+interesting to hear about.
+>
+and (crypto) QA / testing before the affected versions of IOS got released
+must have been weak, if at all present over the usual "if it reboots fine
+all is
+good" testing.
+>
+The challenge with subtle password hash bugs is that QA can do a thorough job
+of black-box testing and still not catch 1 round instead of 1000. Customers in
+the field are even unlikely to notice or complain about it.
+>
+Bugs like this get caught only by either comprehensive test vectors and/or 3rd
+party white-box testing.
+>
+- Marsh
+>
+
+It gets caught when anyone does a quick look at a standard base64 encoded SHA256
+vs Cisco type 4:
+VmfGkLmm/FDPyMTthaWnH1LeNOzoo51UIfFtafyTOre  (Cisco type 4)
+XohImNooBHFR0OVvjcYpJ3NgPQ1qq73WKhHvch0VQtg= (Standard base64)
+
+Then there's the other 21 duplicate characters that are easily found with a
+simple script which confirms it (1 in 2 ^ 18 [quick look] vs 1 in >2 ^ 84
+[script]). Then just do a simple character substitution with a few hashes until
+you either realize the base64 character set or you get all the characters.
+
+This was more than likely already known years ago and kept secret.
+
+

@@ -1,0 +1,59 @@
+phc-discussions - RE: [PHC] blakerypt sequential memory-hard function
+
+Message-ID: <007201cef1e8$419762b0$c4c62810$@acm.org>
+Date: Thu, 5 Dec 2013 10:31:46 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] blakerypt sequential memory-hard function
+
+
+Re Andy's questions:
+
+The biggest reason for choosing a Fibonacci-indexed work factor was to provide a compact code and use the saved space for more cryptographically-random salt bytes in the data structure chosen for conveying the parameters.  This seems particularly beneficial in case a fixed work-factor setting is used with high regularity, although one can do better than that with a time-adaptive iterator.  I also wanted a growth mechanism that would likely never outgrow a compact, fixed-width data element.  That's the particular appeal for using a compressed selection of timing work factors, however it is done.
+ 
+The Fibonacci recurrence is very useful for checking progress timing and knowing whether to try another block of iterations without growing quite so fast as doubling.  It is only necessary to keep two numbers, of course, with the first two known in advance.  Only additions are used in deriving additional iteration blocks.  This also avoids time-checking in the inner loop, and that strikes me as useful too.  I wanted to avoid setting timers or doing anything that depends on event mechanisms, although it is necessary to have access to a clock with reasonable granularity.  That was the second appeal to me -- the ease of working it progressively in an adaptive timing of the hash production.
+
+Powers of 2 seem a little too systematic and I wanted to avoid those as a simple precaution.  The Fibonacci scheme can be used to target timings between Ttarget and about 1.6*Ttarget, as Andy notes.
+
+Yes, it is necessary that the iterative hashing be "restartable" to obtain more iterations.  This does influence how cryptographic primitives are integrated with the iteration mechanism when a hash is being produced initially.  That is definitely additional complexity and there are many good reasons to be wary about it.  
+
+ - Dennis
+
+PS: In the case I had in mind, the document-embedded hash might be verified on different systems than the one used to produce it.  If there is a wide variation in implementation performance, that needs to be taken into consideration in using an adaptive timing on the iterations for the produced hash.  I mentioned that and some other aspects as simply something to pay attention to, not something unique to the Fibonacci compression of iteration cases.  It happens that these apply to the Fibonacci case, not that the Fibonacci compression provides anything unique.  It's just handy (and not uniquely so) for the two key reasons that mattered to me.
+
+
+-----Original Message-----
+From: Andy Lutomirski [mailto:luto@...capital.net] 
+Sent: Thursday, December 5, 2013 09:16
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+On Thu, Dec 5, 2013 at 8:16 AM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+I favor Fibonacci indexes for this sort of thing.  That is k, in a small number of bits, produces work factor fib(k+n) where n is some value that assures a reasonable minimum and the maximum fib(k+n) is decisively out of reach for any forseeable time into the future.
+>
+The advantage is that the Fibonacci recurrence provides a nice way of deriving k on the fly by seeing how much time is being taken in real time, and incrementing by the next step if a target threshold has not been reached.  This does mean that k is not known until the hashing has been completed, and the protocol has to accommodate that.
+
+What does this have to do with Fibonacci numbers?  fib(n) is, to an
+excellent approximation, ϕ^n (i.e. ~1.618^n).  1.618 < 2, so this
+gives a bit more fine-grained control than 2^n, but it seems like it
+will come at a cost of being more esoteric.
+
+For what it's worth, it would be possible to implement any strictly
+iterative password hashing scheme so that it ran for a preset time and
+output the resulting iteration count.  This has nothing to do with
+Fibonacci numbers or even with exponential growth.
+
+I'm still not sure I see the advantage of any exponential approach
+over just a plain linear work factor (except for losing compatibility
+with some fancy chaining schemes).
+
+>
+The advantage is that k will grow along with growth in processor power.  One disadvantage in certain applications is that the speed of the system where the hash is first created determines the work factor that less powerful systems will need to employ in order to verify the hash.
+>
+
+This is true for any reasonably password hash as far as I know.
+
+--Andy
+
+

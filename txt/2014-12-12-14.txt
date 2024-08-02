@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <alpine.DEB.2.11.1412121010100.22319@debian>
+Date: Fri, 12 Dec 2014 10:41:09 +0100 (CET)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On Thu, 11 Dec 2014, Taylor Hornby wrote:
+
+Another reason is that without a salt, the attacker can pre-compute
+lookup tables before they get access to the hashes. In terms of
+organized crime that means there'll be large-scale cracking services
+that can invest in creating MASSIVE rainbow tables and make a profit
+selling access to them. With salt, that entire effort has to be re-done
+for each breach (and hash within a breach).
+
+Actually, you don't need *rainbow* tables for that!
+
+Computing a list with a few million pairs
+
+ 	(Hash(PW_i), PW_i),
+
+(with a few million likely passwords PW_i) isn't a big deal. Probably, 
+many users actually log in with one of the PW_i on the list. Cracking a 
+likely password on any machine is just a single look-up from the list.
+
+Rainbow tables are only interesting, if you want a much longer list, such 
+that you cannot afford to store all the (Hash(PW_i), PW_i) any more.
+
+I have two further points:
+
+   1. Observing two (or more) users on some server did choose the same
+      password isn't much of an attack. Except that one can draw
+      conclusions about server's user base and their typical password
+      strength: For a fixed number of users:
+
+ 	more password collisions ~ weaker passwords.
+
+   2. Traditionally, the salt is often chosen randomly. But there is
+      no need for a *random* salt at all. The salt just needs to be unique.
+
+      E.g., S = H(date, user_id, server_id) would make an excellent salt:
+
+       * H is a cryptographic hash function,
+
+       * date is date (and time) when the password is set,
+
+       * user_id is a unique user id, and
+
+       * server_id uniquely describes the server
+         (URL, or IP-address, or whatever)
+
+      If you know date, user_id and server_id, you can compute S on the
+      fly, rather than storing the salt.
+
+So long
+
+Stefan
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+

@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - [PHC] trivial delegation</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2016/09/28/1">[&lt;prev]</a> <a href="../../../2017/03/17/1">[next&gt;]</a> <a href="../../../2017/03/17/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20170316193210.GA21035&#64;openwall.com&gt;
+Date: Thu, 16 Mar 2017 20:32:10 +0100
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: [PHC] trivial delegation
+
+Hi,
+
+This is something many of us probably had in mind (I did), but I don't
+recall us discussing it.  So here goes.
+
+I'll start with the counterpart of delegation: what Catena calls server
+relief.  It's computation of almost-final hash on the client, with the
+hash function being defined such that the computation can be completed
+on the server without needing to transfer a lot of internal state from
+client to server (but rather just a tiny pre-final hash).
+
+Delegation of heavy computation by a client or a server to another
+server (e.g., Facebook backend node to Facebook frontend node, as Alec
+Muffett mentioned in his talk) can similarly be trivially accomplished
+by computing a fast pre-hash on the requesting system and finishing the
+computation on a delegation server (then having this hash sent back to
+the requesting system).
+
+Both things can readily be done on top of any existing password hashing
+scheme - in fact, this is why some of us (including me) were skeptical
+about Catena's server relief as a built-in feature.  However, PHC being
+a competition I ended up adding an equivalent (and more: also usable in
+challenge/response) to yescrypt, and I am now thinking whether built-in
+trivial delegation support would also be worth it.
+
+In order to minimize the exposure of sensitive information to the
+server, the requesting system should include a secret in its pre-hash
+computation.  It can be a global secret (per deployment) or it can be a
+second per-account salt.  This is fine, but this extra data will then
+need to be stored somewhere, and the computation will need to precede
+our hashing scheme's computation each time, even if the delegation is
+not always used or is dismantled later.  So we can't just say that this
+e.g. yescrypt standard hash encoding includes all of the inputs to this
+hash computation (sans the password and optional encryption key) and
+that the entire algorithm is specified by yescrypt - rather, there would
+be site-specific pre-hashing algorithms (we could recommend some
+"standard" for pre-hashing, but technically it'd remain separate).
+
+What I am thinking is that similarly to built-in server relief, we could
+instead structure the hashing scheme such that it'd include the
+separable pre-hashing as a standard step that is always done (whether
+there's delegation or not).  Then delegation-computed hashes will not
+require extra storage for an extra secret key and/or secret salt.
+
+Specifically, it means that the main and only salt will also serve this
+purpose, and in a delegation setup will not be revealed to the server.
+The hashing scheme will then start by combining the password and salt
+inputs e.g. with HMAC, and then will never use the salt directly again.
+In a delegation setup, the requester will compute the HMAC on its end,
+send it and yescrypt parameters (but not the salt) to the server, and
+receive the hash value, which it will re-combine with the parameters and
+the salt to form a standard yescrypt hash encoding string for storage or
+comparison.
+
+For cost-upgraded hashes, this means that each upgrade should not
+require the original salt either, or else upgraded hashes would not be
+fully computable in a delegation setup like the above.  As long as we
+use strong cryptography like HMAC-SHA256 at the beginning and end of
+each hash "body" computation (each upgrade step), this should be OK -
+we'll have entropy bypasses over the heavy computation (like SMix) via
+the HMAC-combined password and salt values (gradually HMAC-combined with
+the heavy computation intermediate results, as yescrypt already does,
+and overwritten).
+
+Here are my past concerns on pre-hashing, where I ended up using HMAC of
+the password along with a personalization string:
+
+<a href="http://lists.openwall.net/phc-discussions/2015/01/31/3">http://lists.openwall.net/phc-discussions/2015/01/31/3</a>
+
+To better support trivial delegation as above, I am now thinking of
+revising this HMAC to use the salt instead of the personalization string
+(or along with it if there's a good reason, or to avoid the need for
+reasoning on why dropping the personalization would be safe).
+
+I think using the salt instead of the personalization string would be
+fine, and as a bonus could allow some existing frameworks/apps using
+HMAC-SHA256 to upgrade to yescrypt easier (without keeping custom code),
+although unfortunately most (maybe all?) of them appear to use
+key=password, message=salt, which we should not (should do it the other
+way around, because of HMAC's optional pre-hashing of the key).
+
+If anyone knows of examples of frameworks, web apps, or whatever that
+use HMAC-SHA256 with key=salt, message=password, please let me know.
+
+As I'm only aware of private uses of yescrypt for password hashing so
+far (plus two cryptocoins), which is no surprise given I never made an
+official release of it outside of PHC, I still feel empowered to make
+adjustments like this for the official 1.0 release, and it's OK, even
+though not ideal, that PHC's 0.8 is slightly different.  (FWIW, the
+privately used 0.9.x is still compatible with PHC's 0.8.1 - it just has
+some extras in its reversible string encoding and optional encryption.)
+
+Seeing how even Argon2i was tweaked post-PHC is empowering, too. ;-)
+
+I'd appreciate any comments on any/all of the above.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

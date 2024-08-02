@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Re: Some KDF stumbling blocks, plus Common
+
+Message-ID: <20141216124616.GA25895@bolet.org>
+Date: Tue, 16 Dec 2014 13:46:16 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Some KDF stumbling blocks, plus Common
+
+On Tue, Dec 16, 2014 at 04:57:57AM +0000, Adam Back wrote:
+Recall g is a fixed base, y=g^e mod n is stored at setup (when p and q
+is known), and blinded work is r=m*g^b mod n , the computation is
+s=r^e mod n and unblinding is u=y^b mod n (fast as b is < n) and
+m^e=s/u mod n.
+
+Ok, now I get what I had not understood previously. You do generate a
+new blinding pair dynamically, with the b exponent. Actual blinding
+pairs are not reused nor stored, so no issue there.
+
+Let's see how it could be implemented efficiently. With a simple
+square-and-multiply algorithm and a 2000-bit modulus, you need about
+4000 squarings and 2000 other multiplications to compute x^b and y^b.
+You can save on the multiplications by using a sliding window. Another
+method which saves time is to precompute (and store) g, g^2, g^4, g^8...
+and also y, y^2, y^4, y^8... and just multiply the values you need,
+depending on the binary representation of b. At that point you are down
+to an average of 2000 multiplications. But then, that's my blinding
+method (instead of g, g^2, g^4... I use random base values, but I
+don't think that really changes things here).
+
+I also trim down the list to 300, because it saves space and time, and I
+don't see "information theoretic security" as a worthwhile goal. It sure
+looks elegant, but it makes sense only in a context where the rest of
+the system is also information theoretic secure in some way. It really
+depends on what you use the KDF for; the "brain wallet" instance is a
+case where information theoretic security is useless since an adversary
+with unbounded computational power can simply break the resulting ECDSA
+key pair. Moreover, I am quite ready to assume that attackers cannot run
+a 2^150 attack with non-negligible probability of success (even if they
+"get lucky").
+
+With 300 base pairs, cost is about 300 multiplications on average, i.e.
+six times better than the "information theoretic" method, and 15 to 20
+times faster than the g^b/y^b method with a sliding window
+exponentiation. Depending on the available resources (both in CPU and
+storage size), that kind of speed-up may or may not matter.
+
+
+Another thought: if you use a shorter b, you no longer have the
+"information theoretic security", but you get better performance, in the
+same way as ElGamal or Diffie-Hellman with a smaller exponent. People
+do that all the time; especially the small-exponent DH, which is at
+work whenever there is a SSL connection with a DHE cipher suite, or for
+about every SSH connection around the world. I don't think this is that
+much a risk.
+
+Anyway, all these methods can be applied to Makwa without changing the
+function definition. If some notion of "information theoretic security"
+is what you want for the delegation, then, by all means, go for it.
+
+
+	--Thomas Pornin
+

@@ -1,0 +1,26 @@
+phc-discussions - Re: [PHC] Multiply with CUDA
+
+Message-ID: <541FE4EF.80703@dei.uc.pt>
+Date: Mon, 22 Sep 2014 09:59:27 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Multiply with CUDA
+
+On 09/21/2014 08:11 PM, Steve Thomas wrote:
+Most of what I was talking about is for arbitrarily large multiplies. I was
+really thinking of Makwa. I probably should of mention this.
+>
+
+I did some work on this a few years back. While the throughput of 24x24 or 32x32 multiplication by itself does influence
+the peak speed, another serious problem with modular multiplication/exponentiation in a GPU is managing the availability
+of fast memory/registers per thread. Larger numbers require more of it, and balancing parallelism level and register
+count is nontrivial. We typically see a decrease of ~10x in performance when moving from N-bit moduli to 2N-bit moduli,
+for 512 < N < ~4096.
+
+GPUs used to lose both in raw performance and performance/watt against 64-bit CPUs back in the 24-bit multiplier days.
+They might win now, but only as long as the modulus is relatively small (<= 1024 bit), or very very large (in the FFT
+range).
+
+
+
+

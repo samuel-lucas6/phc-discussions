@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2014/02/11/6">[&lt;thread-prev]</a> <a href="14">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140212161619.GA2098&#64;openwall.com&gt;
+Date: Wed, 12 Feb 2014 20:16:19 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Tue, Feb 11, 2014 at 07:47:22AM -0500, Bill Cox wrote:
+&gt; VMULPD sure sounds good for 64-bit versions.  I was also toying with
+&gt; the idea of 8-way 32-bit float operations, since the history of
+&gt; graphics cards seems to show we're headed towards caring a lot about
+&gt; 32-bit float SIMD more than 32-bit ints.
+
+You might be misinformed.  Even though the published high GFLOPS figures
+for GPUs are often for 32-bit float (whereas the 64-bit float ones are
+2x to 24x lower), GPUs are typically just as good at 32-bit int as well.
+For example, notice how very fast modern GPUs are at cracking MD4 (NTLM)
+and MD5 hashes, which use 32-bit ints (not multiplication, though).
+
+However, multiply latency hardened hashing is likely a poor fit for GPUs
+anyway(*), because GPUs are optimized primarily for high throughput
+rather than for low latency of individual operations.
+
+(*) We may include tunable parameters to make the same hashing scheme
+fit GPUs well, and it may be good to do so, but with settings optimal
+for defensive use of GPUs it won't actually be multiply latency hardened
+against ASICs.  Rather, we will be using the die area occupied by the
+multipliers, which may be non-negligible.
+
+&gt; .L3:
+&gt;         movq    32768(%rbx,%rdx,8), %rax
+&gt;         movl    %ecx, %ecx
+&gt;         addq    $1, %rdx
+&gt;         orl     $3, %eax
+&gt;         imulq   %rax, %rcx
+&gt;         addq    -8(%rbx,%rdx,8), %rcx
+&gt;         cmpq    $268427264, %rdx
+&gt;         movq    %rcx, 65528(%rbx,%rdx,8)
+&gt;         jne     .L3
+&gt; 
+&gt; The "movl %ecx, %ecx" I think is used to clear the high 32-bits.  That
+&gt; causes a bit of extra latency in the loop:
+
+Oh, right.  The extra latency could be reduced or avoided if you (let
+the compiler) unroll this loop, so that an equivalent of "movl %ecx, %ecx"
+would appear right before "movq %rcx, 65528(%rbx,%rdx,8)" (with another
+distination register instead of %ecx, so that %rcx is still available
+for the movq to memory).  I suggest that you use -funroll-loops for all
+of your benchmarks.
+
+BTW, you might not need the "| 3" when you do 32x32-&gt;64.  Your rationale
+for the "| 3" was to preserve entropy, but 32x32-&gt;64 is lossless (in
+fact, it's reversible, which might allow for attacks - you might need
+something else instead of the "| 3", perhaps after the multiply, to make
+it one-way).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

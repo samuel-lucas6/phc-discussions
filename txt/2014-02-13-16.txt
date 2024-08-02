@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p5WFi2HqeXq3a-9cbFmvV5z=B4u1B6aGo32DNWOd-bNMg@mail.gmail.com>
+Date: Thu, 13 Feb 2014 12:21:40 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:00 PM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 13, 2014 at 11:23:29AM -0500, Bill Cox wrote:
+>I'm still torn as to whether or not to offer the SIMD option.  Higher
+>memory bandwidth is crucial, but I don't like losing compute time
+>hardening as a result.
+>
+I've just posted an idea on how you can have both.
+>
+>I think we're down to the last 30% in how much we make an
+>attacker pay for hardware.  That's a good place to be.
+>
+Yes, but that's ignoring attackers with pre-existing hardware such as
+GPUs combined with low-memory settings needed for mass password hashing.
+For those, we need something very similar to bcrypt's access pattern
+(yes, it is leaky), which all upcoming PHC submissions discussed so far
+lack.  I am experimenting with introducing it for escrypt.  Until that
+is done, I am not happy about PHC submissions for general-purpose uses.
+Specialized uses like as KDF in TrueCrypt may be OK.
+>
+When scaled down to low memory settings like e.g. Litecoin's 128 KB, the
+PHC submissions so far may be about as much faster to attack on GPU than
+to compute on CPU, as Litecoin is to mine on GPU vs. CPU (10x to 20x).
+While we could stipulate a minimum memory size per hash of e.g. 16 MB,
+this would exclude some use cases.  We can do better than that.  We
+don't have to be worse than the 17-year-old bcrypt at comparable settings
+(currently we are much worse).
+>
+Alexander
+
+I was under the impression that bcrypt was difficult for a GPU due to
+it's memory size requirement, and that soon with increased L1 cache
+sizes, bcrypt may be fast to hash on GPUS.  Some paper I read said so,
+and papers are never wrong :-)
+
+What is it about bcrypt's memory access pattern that is hard for GPUs?
+
+What I currently do for GPUs is to allow for memory sizes as low as
+1MB, with block sizes as low as 4 bytes, and if that hashes to
+quickly, there is a repetition factor that increases the inner loop
+calculations to run as long as you like.  I guess my 1MB may be too
+coarse, but below 1MB just seems like giving up on memory hardness.
+Maybe if I moved the repeat loop outside the outer loop, the memory
+access pattern would be more random, but the inner loop enables small
+block sizes without having cache miss penalties dominate.  Is
+something like this what is required?
+
+Bill
+

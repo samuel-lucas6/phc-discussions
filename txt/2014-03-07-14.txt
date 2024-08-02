@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAOLP8p494rKeTwE1B3goKgsjpVjH=j=K88nuqQk6Lg4xk_y+ww@mail.gmail.com>
+Date: Fri, 7 Mar 2014 16:20:59 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 6:23 AM, CodesInChaos <codesinchaos@...il.comwrote:
+I like putting PBKDF2 in between the two parts of HKDF:
+>
+hash1 = HKDF-Extract(salt, password)
+hash2 = PBKDF2(hash1)
+hash3 = HKDF-Expand(hash2, purpose, length)
+>
+Using HKDF-Expand avoids the large cost increase for larger outputs
+and supports a purpose string.
+Using HKDF-Extract avoid the collisions (both the >64 and the 0
+padding variants) because it uses the salt not the password as HMAC
+key.
+
+This is cool.  Thanks for the pointer to HKDF.
+
+Of course it still leaks information about the length of the password,
+but that's unavoidable if one doesn't limit the maximal password
+length.
+>
+If you want to apply a pad, consider a removable padding, like PKCS#7
+instead of null padding.
+>
+Even without a padding, an implementation can always choose to
+implement the initial hash step in constant time for all inputs
+shorter than a threshold.
+For example you could always use 5 SHA-256 compressions to avoid side
+channels on passwords shorter than 300
+or so bytes using proper constant time selection to choose one. The
+only problem with that is that many implementors won't bother.
+
+It does still potentially leak the password length, and there's zero
+effort in HKDF_Extract to avoid it, and in fact it bypasses HMAC's
+attempt to at least hide the length of a password shorter than 64
+bytes.  Grr...
+
+So, what I coded today is HKDF_Extract and HKDF_Expand, but before I
+pass the password to HKDF_Extract, I first pad it to 1024 bytes, and I
+return an error if the password is longer.  I think this is better
+than what I had with PBKDF2.  As for your recommendation on padding, I
+think I'm OK, because I add the password length to the info parameter,
+so I just zero-pad.  Then I HKDF_Expand to the user's desired hash
+length, and pass this to my memory-hard hash function.  I'm not so
+sure that doing my own padding is a good idea... why didn't they do it
+in HKDF?  It seems really frightening to be rolling-my-own when HKDF
+seems to have become a standard in 2010, and should already deal with
+all my concerns.  Am I missing something?
+
+Bill
+

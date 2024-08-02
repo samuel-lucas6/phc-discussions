@@ -1,0 +1,98 @@
+phc-discussions - wider integer multiply on 32-bit x86
+
+Message-ID: <20140304021339.GA6500@openwall.com>
+Date: Tue, 4 Mar 2014 06:13:39 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: wider integer multiply on 32-bit x86
+
+Hi,
+
+Normally, on 32-bit x86 without SSE2 (thus, on Pentium 3 and older, or
+when code is compiled such that SSE2 is not enabled) the widest integer
+multiply available is 32x32->64, via the [I]MUL instruction.  There are
+two problems with this: the instruction uses the specific EDX:EAX
+registers, so we can't have more than one such multiply in progress
+until we've read/replaced at least the EAX contents(*), and 32x32->64 is
+not very wide.
+
+(*) Does register renaming (on CPUs that have it) help avoid stalls
+here?  Maybe.
+
+I looked into using x86 FPU instructions to get around one or both of
+these limitations.  The attached program implements 31x31->62 and
+63x63->63 using the FPU.  This does force us to use memory (L1 cache)
+instead of registers, but x86 is register starved anyway, so with 2+
+interleaved instruction streams dealing with bigger than 32-bit values
+we'd have register spills to memory anyway.  We can have 2 interleaved
+instruction streams by having one use the regular [I]MUL and the other
+the FPU, and we can probably have more than 2 by also using FXCH (which
+is normally free starting with the original Pentium).
+
+I think 4 instructions, including the loads and stores, for a 63x63->63
+multiply is rather good.  Without this trick, it'd take 4 _multiplies_
+to implement the equivalent via 32x32->32 (or perhaps 3 multiplies if we
+also use the 32x32->64).  Some bigint library could use this trick,
+perhaps for some nice speedup on those older CPUs/builds (does any use
+it already?)
+
+Now, if we only wanted 32x32->64 without the EDX:EAX limitation on
+interleaving, things are not as nice.  We'd have to define our KDF so
+that one or both source operands is at most 31-bit (not 32).  (And we
+wouldn't be taking full advantage of the support for 63-bit source
+operands.)  I can think of some ways to do that without an explicit mask
+in the inner loop.
+
+Why bother with interleaved instruction streams, given that one stream
+is enough for the latency hardening, and the ASIC die area difference
+from more complete use of just a handful of multipliers is negligible?
+
+My thinking is that more complete use of our CPUs' multiplication
+throughput is desirable for not allowing for much room for speedup in
+attacks by other CPUs and similar, which _would_ interleave multiple
+instruction streams for multiple candidate passwords (e.g., we do this
+in JtR for many hash types).  (Of course, those other CPUs will need to
+have sufficient cache and memory bandwidth to be able to benefit from
+the extra parallelism.  So not all will.  But many may.)  Thus, it is
+somewhat desirable to constantly feed our SIMD multipliers on SSE2+, and
+when we do that it is then desirable not to incur too much of a
+performance hit in pre-SSE2 builds.  Is this worth the complexity (even
+if in optimized implementations only)?  I'm not sure.  Yet I thought
+I'd share.
+
+Output from widermul on a P3 (should be same on other CPUs):
+
+00000000 * 00000000 = 0000000000000000 0000000000000000 0000000000000000
+00000001 * 00000000 = 0000000000000000 0000000000000000 0000000000000000
+00000000 * 00000001 = 0000000000000000 0000000000000000 0000000000000000
+00000001 * 00000001 = 0000000000000001 0000000000000001 0000000000000001
+00000010 * 00000010 = 0000000000000100 0000000000000100 0000000000000100
+000003e8 * 000003e8 = 00000000000f4240 00000000000f4240 00000000000f4240
+00001000 * 00001000 = 0000000001000000 0000000001000000 0000000001000000
+00010000 * 0000ffff = 00000000ffff0000 00000000ffff0000 00000000ffff0000
+00010000 * 00010000 = 0000000100000000 0000000100000000 0000000100000000
+00100000 * 00100000 = 0000010000000000 0000010000000000 0000010000000000
+000f4240 * 000f4240 = 000000e8d4a51000 000000e8d4a51000 000000e8d4a51000
+12345678 * 78765432 = 0890f2a4d5e84370 0890f2a4d5e84370 0890f2a4d5e84370
+12345678 * 7fffffff = 091a2b3bedcba988 091a2b3bedcba988 091a2b3bedcba988
+7fffffff * 7fffffff = 3fffffff00000001 3fffffff00000001 3fffffff00000001
+80000000 * 80000000 = 4000000000000000 4000000000000000 4000000000000000
+80000000 * 80000001 = 4000000080000000 3fffffff80000000 4000000080000000
+80000000 * ffffffff = 7fffffff80000000 0000000080000000 7fffffff80000000
+00000001 * 80000000 = 0000000080000000 ffffffff80000000 0000000080000000
+00000001 * 80000001 = 0000000080000001 ffffffff80000001 0000000080000001
+12345678 * 98765432 = 0ad77d73d5e84370 f8a326fbd5e84370 0ad77d73d5e84370
+7fffffff * ffffffff = 7ffffffe80000001 ffffffff80000001 7ffffffe80000001
+ffffffff * ffffffff = fffffffe00000001 0000000000000001 8000000000000000
+
+The three results are: 32x32->64 (computed without FPU) followed by
+31x31->62 and 63x63->63 (but with 32-bit inputs only in this test).
+As you can see, when we exceed the allowed size of inputs or output for
+the latter two functions, we get incorrect results (as expected).
+As long as our inputs to 31x31->62 are at most 31-bit, it works fine.
+As long as the output fits in 63 bits, our 63x63->63 works fine.
+
+Alexander
+
+View attachment "widermul.c" of type "text/x-c" (1217 bytes)
+

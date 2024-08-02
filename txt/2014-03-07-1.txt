@@ -1,0 +1,86 @@
+phc-discussions - TigerKDF paper and code ready for review
+
+Message-ID: <CAOLP8p4SH0TReDoaNVAxGmgz6CrmPidEZ+KJ9p_kiJuQE3pptQ@mail.gmail.com>
+Date: Thu, 6 Mar 2014 19:12:27 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: TigerKDF paper and code ready for review
+
+I still have to do a bit of work on the paper, but it's nearly ready:
+
+    http://waywardgeek.net/TigerKDF.pdf
+
+The code is on github and can be checked out with:
+
+    git clone git://github.com/waywardgeek/tigerkdf.git
+
+I suspect TigerKDF, my 3rd major rewrite in 2 months, may be
+competitive.  Solar Designer keeps pushing me to make it so, and for
+some reason I feel like I need to do what he says...  The paper goes
+into more detail than I should probably write down, but the highlights
+are that TigerKDF:
+
+* Fills and hashes memory rapidly - 1/2 as fast as memmove
+* Hardens runtime through sequential multiplications
+* Provides strong defense against GPU, FPGA, and ASIC attacks
+* Reduces time-memory trade-off options
+* Defends against cache-timing attacks
+* Use parallelism for improved protection
+* Offers protection in case of leaked memory
+* Is suitable for desktop PCs, web servers, mobile, and embedded applications
+* Supports client independent updates
+* Supports server relief
+* Performs well hashing many GiB of DRAM, or a few KiB of cache
+
+Of course, that's just fluffy sales material.  Maybe more interesting
+is the list of specific features I chose to include, with credits to
+who I think is the culprit behind each idea.  Upgrades include:
+
+1. A sequential multiplication chain to compute-time harden the algorithm
+against ASIC attacks (Solar Designer & Bill Cox)
+2. Larger blocks than hashlen to reduce cache miss penalties (Scrypt)
+3. Hashing between lanes in between block hashes to mix data and introduce
+cryptographically strong hashes now and then (Solar Designer)
+4. SSE/AVX2 parallelism to hash 8 chains in parallel (Solar Designer)
+5. Small unpredictable reads to thwart GPU attacks (Solar Designer)
+6. Repetitions parameter to increase compute time for memory-limited
+systems (Solar
+Designer & Bill Cox)
+7. A "resistant" loop before the "unpredictable" loop to harden
+against cache-timing
+attacks (Catena)
+8. Inter-thread memory hashing to thwart TMTOs (Solar Designer)
+9. Thread level parallelism to take advantage of multi-core CPUs (Scrypt)
+10. Client-independent update (Catena)
+11. Protection against memory leaking to attackers by overwriting
+early memory (Bill Cox)
+
+I also took a cue from Catena and simplified the API so there aren't
+many parameters to tweak.  The "full" api is:
+
+bool TigerKDF_HashPassword(uint8_t *hash, uint8_t hashSize, uint8_t
+*password, uint8_t passwordSize,
+    const uint8_t *salt, uint8_t saltSize, uint8_t *data, uint8_t
+dataSize, uint8_t startMemCost,
+    uint8_t stopMemCost, uint8_t timeCost, uint8_t parallelism, bool
+clearPassword);
+
+TigerKDF simultaneously does a multiplication based hash in the main
+CPU registers, while doing SSE/AVX2 rapid parallel memory hashing in
+the SSE/AVX2 unit.  It uses a "sliding-power-of two bit-reversal"
+memory read pattern in the "resistant" loop, and a rand^3 read pattern
+in the "unpredictable" second loop.  These both tested as best in my
+pebbling benchmarks.  The algorithm hashes 2GiB on my i7-3770 machine
+in 0.32 seconds, with 2 threads.  The memory hashing algorithm uses
+Blake2s for cryptgraphic hashing between blocks, and a simple
+non-cryptographic add/rotate/xor hash to fill memory.  I've done more
+work trying to analyze it's security, and I think it's pretty good,
+though I remain a non-expert at such things.
+
+I had a couple new ideas, but basically my PHC entry would stink
+without the upgrades suggested on the PHC forum.  I think it now no
+longer stinks, and may even be a competitive entry.  Thanks for all
+the feedback!
+
+Bill
+

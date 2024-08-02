@@ -1,0 +1,63 @@
+phc-discussions - Argon2
+
+Message-ID: <CALW8-7LGO5ydKWoxMth+7DusP1G_jZ07iNSZVY5SvOVx27vngA@mail.gmail.com>
+Date: Mon, 30 Mar 2015 12:18:17 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Alex Biryukov - UNI <alex.biryukov@....lu>, Daniel Dinu <dumitru-daniel.dinu@....lu>
+Subject: Argon2
+
+Dear all,
+
+Our team would like to present Argon2,  which summarizes the state of
+the art in the design of memory-hard functions.
+
+Argon2 is a streamlined and simple design. It aims at the highest
+memory filling rate, which is on par with the fastest PHC candidates
+(close to 0.6 cycles per byte per pass on a 1.8 GHz CPU), while still
+providing good defense against tradeoff attacks.
+
+Argon2 effectively uses multiple computing units. We designed a
+special permutation-based mode of operation to parallelize the
+computation of Argon2 and still resist tradeoff attacks (sequential
+computation, like in scrypt, is no longer possible/beneficial).
+
+The internal cryptographic permutation (part of the block-generating
+compression function) was optimized for simplicity (two Blake2b rounds
+on a larger state) and resistance to tradeoff attacks (it can not be
+computed iteratively and memoryless).
+
+We tried to pre-fix as many parameters as possible so that the users
+get fast and secure design out of the box with no need for special
+tuning. Those who now what they are doing, certainly can adjust the
+design to their own needs (choose another permutation, block size,
+etc.).
+
+Cryptographers can be interested in the new 8192-bit permutation we
+designed, a security proof for the parallel mode of operation, and an
+extension to Blake2 that enables arbitrary length outputs.
+
+Argon2 has two variants: Argon2d and Argon2i. Argon2d is faster and
+uses data-depending memory access, which makes it suitable for
+cryptocurrencies and applications with no threats from side-channel
+timing attacks. Argon2i uses data-independent memory access, which is
+preferred for password hashing and password-based key derivation.
+Argon2i is slower as it makes more passes over the memory to protect
+from tradeoff attacks (3 passes by default comparing to 1 default pass
+in Argon2d).
+
+Both Argon2d and Argon2i can be tested in PHC benchmarking frameworks,
+as the standard PHC API is provided. To benchmark either of them on
+your own machine, run a makefile in a
+corresponding "opt-sse" folder and run the executable with option "-benchmark".
+
+Webpage: https://www.cryptolux.org/index.php/Argon2
+Specification: https://www.cryptolux.org/images/0/0d/Argon2.pdf
+Implementation: https://github.com/khovratovich/Argon2
+
+Comments are welcome.
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

@@ -1,0 +1,151 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7+HuniaYmCqYs_imieyva8W4KMgH1z8HtAj5Fjf-bE3OQ@mail.gmail.com>
+Date: Thu, 7 Aug 2014 02:28:12 -0700
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Thanks for the correction -- updated.
+
+
+On Thu, Aug 7, 2014 at 2:15 AM, Ben Harris <ben@...rr.iswrote:
+
+Thanks Dimitry,
+>
+Page 26 just needs to be updated then - it says "Consider vertices
+[AB0]... where each letter has k bits" suggesting that A and B are k bits
+each - not that C is k bits.
+>
+>
+On 7 August 2014 17:10, Dmitry Khovratovich <khovratovich@...il.com>
+wrote:
+>
+>Hi Ben,
+>>
+>the following points are important:
+> - A, C, *, 0 are all k-bit values. k<n/3, and for the attack being
+>efficient k>2.
+> - [**0] takes 2^(n-k) storage per level as you store everything that
+>ends with k zeros.
+>>
+>The example in presentation has |A| = |C| = 1, and |B|=2. Such small
+>values are for the ease of understanding, but not for the efficiency. I
+>attach the picture in the higher resolution. The red indices are those
+>precomputed for the next level.
+>>
+>Best regards,
+>Dmitry
+>>
+>>
+>On Thu, Aug 7, 2014 at 1:19 AM, Ben Harris <ben@...rr.iswrote:
+>>
+>>Just getting my head around the Catena one.
+>>>
+>>Storing [**0] takes 2^2k storage per level? (presentation says 2^(n-k))
+>>And the [*B*] takes 2^(n-k) storage
+>>So L*2^2k + 2^(n-k) storage all up.
+>>>
+>>Computing each [*B*] at level 0 takes 2^(n-2k) operations from each 2^k
+>>[*B0]. total 2^(n-k) operations? (presentation says 2^2k)
+>>Computing each [*^B*] at level 1 is more complicated because we don't
+>>always have what we need.
+>>>
+>>At level 1, for the A = 1, B = 1, and len(C) = 2 (the example in the
+>>presentation). For the 2^(n-k) = 2^(4-1) = 8 [*^B*] we have
+>>[00 1 0] - h( h([00 0 0] + [1 0 00]) + [0 1 00]) = 2 hashes
+>>[00 1 1] - h([00 1 0] + [1 1 00]) - 1 hash
+>>[01 1 0] - h([01 0 1] + [0 1 10]) - but [01 0 1] is h([01 0 0] + [1 0
+>>10]) and I don't have [1 0 10] it takes 2 hashes from [1 0 00]
+>>[01 1 1] - 1 hash from previous
+>>[10 1 0] - h([10 0 1] + [0 1 10]) -  again, I don't have [10 0 1]?
+>>[10 1 1] - 1 hash from previous
+>>[11 1 0] - again, we are missing something
+>>[11 1 1] - 1 hash from previous
+>>>
+>>These missing dependencies become exponential at level 2+.
+>>>
+>>So there are three bits I'm getting a bit stuck on:
+>>  - Storage per level
+>>  - Operations for level 0
+>>  - Missing dependencies at level 1
+>>>
+>>Maybe I'm just misreading the slides and needed to see the talk?
+>>>
+>>>
+>>On 7 August 2014 05:10, Marcos Simplicio <mjunior@...c.usp.brwrote:
+>>>
+>>>Hi, all.
+>>>>
+>>>Very interesting analysis! We noticed the same attack venue described in
+>>>slide 47 for Lyra2 some time ago, so we provided and evaluated a simple
+>>>fix in the version provided in our website (http://lyra-kdf.net/, see
+>>>section 5.1.2.3 of the specification). I'm not sure how the tradeoffs
+>>>table is affected by this fix, but the costs are likely to grow (at
+>>>least that was my impression by crossing your results with our
+>>>preliminary analysis).
+>>>>
+>>>BTW, the document in our website is being continuously updated as new
+>>>tests are performed, so we expect to introduce this and possibly other
+>>>tweaks in the corresponding phase of the PHC. We are still evaluating
+>>>the "possible extensions" mentioned in the original submission, for
+>>>example.
+>>>>
+>>>BR,
+>>>>
+>>>Marcos.
+>>>>
+>>>On 06-Aug-14 14:31, Dmitry Khovratovich wrote:
+>>>Hi all,
+>>>>
+>>>here is the link to the slides of the talk I have just given at
+>>>PasswordsCon'14. It investigates time-memory tradeoffs for PHC
+>>>candidates
+>>>Catena, Lyra2, and Argon, and estimates the energy cost per password
+>>>on an
+>>>optimal ASIC implementation with full or reduced memory.
+>>>>
+>>>https://www.cryptolux.org/images/5/57/Tradeoffs.pdf
+>>>>
+>>>Additional comment: It is a standard practice in the crypto community
+>>>to
+>>>give explicit security claims for the recommended parameter sets so
+>>>that
+>>>cryptanalysts could easily identify the primary targets. Many PHC
+>>>candidates do not follow this rule by not only missing these claims
+>>>but
+>>>also concealing the recommended parameters. As a result,
+>>>cryptanalysts like
+>>>me spend valuable time attacking wrong sets or spreading the
+>>>attention over
+>>>multiple targets.
+>>>>
+>>>Remember: third-party cryptanalysis increases the confidence in your
+>>>design, not decreases it (unless it is badly broken). Analysis of a
+>>>5%-part
+>>>of your submission (one of 20 possible parameter sets) is little
+>>>better
+>>>than no analysis at all. It is also worth mentioning that to make fair
+>>>comparison of candidates, benchmarks and performance discussion in
+>>>general
+>>>should cover recommended parameter sets only.
+>>>>
+>>>>
+>>>
+>>>
+>>
+>>
+>--
+>Best regards,
+>Dmitry Khovratovich
+>>
+>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

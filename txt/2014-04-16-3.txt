@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] The best of the best, IMO
+
+Message-ID: <20140416132924.GA4870@openwall.com>
+Date: Wed, 16 Apr 2014 17:29:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] The best of the best, IMO
+
+On Sun, Apr 13, 2014 at 05:39:48AM -0700, Jeremi Gosney wrote:
+On 4/13/2014 12:22 AM, Solar Designer wrote:
+However, for this to be of help to PHC decision-making we need
+attack-optimized implementations (in addition to defense-optimized
+ones), and it's unclear whether JtR community members would have
+sufficient incentive for that.
+
+I was hoping that password crackers would jump at an opportunity to
+optimize new algorithms, but maybe I'm being too optimistic :)
+
+I think you're being too optimistic, but it doesn't hurt to try - so
+please bring this topic up on the john-users list (and actual code
+details could be discussed on john-dev, then).
+
+Chances are that almost all of the 23,
+if wrapped into JtR formats, will (initially) be using mostly
+defense-optimized code for attack, which is suboptimal and does not
+(yet) significantly help us answer the questions we need answered.
+It is nice extra testing anyway, though.
+
+Well, I think it answers half the question. Knowing how the defense
+optimized code performs is significant. And I think using JTR as a
+testbed is a decent way to benchmark the defense optimized code, and
+provides a good starting point for attackers to start optimizing code.
+
+I agree.
+
+For Pufferfish and battcrypt, I think there may be significant speedup
+from interleaving of multiple instances for attack.  Someone needs to
+implement that.
+
+Yeah, I was going to implement this in the attack-optimized JTR patch
+for Pufferfish, but was short on time. I was able to kind of fake it
+with MPI though by running 4 threads per core instead of 2 (CPU has HT),
+I think this achieved a similar effect.
+
+No, running more threads than the hardware supports is not at all
+similar to the effect achieved by interleaving instructions from
+multiple instances within the hardware supported number of threads.
+
+And indeed the memory (de)allocation overhead should be
+out of loop for attack as well.  IIRC, you're using alloca() to avoid it
+in the JtR patch, correct?
+
+In the attack optimized code I am, yeah. I think this is one of the rare
+instances where its use isn't totally inappropriate.
+
+Makes sense.
+
+Also, we need GPU attack implementations.
+
+Agreed, but there's a bit of a logistics problem with that, in that I
+highly doubt we're going to be able to get 23 kernels written. Jens has
+stated offlist that he plans to write kernels for his 6 favorite
+algorithms, maybe we'll all get lucky and his 6 will align with the ones
+we feel should be finalists.
+
+This is good news.  OpenCL kernels for 6 of the schemes would be a good
+contribution to PHC even if those 6 don't match the list of finalists.
+
+Alexander
+

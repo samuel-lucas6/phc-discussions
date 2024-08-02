@@ -1,0 +1,199 @@
+phc-discussions - Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Message-ID: <CADPMZDBJgms0hMmGcM3hXL-Oj2cNkVhYYQhBOuLbEAx6DFmuRw@mail.gmail.com>
+Date: Wed, 14 Mar 2018 06:24:33 -0500
+From: denis bider <denisbider.ietf@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Ken: Thank you so much for educating me! I knew of the existence of Bloom
+filters, but since I had never previously looked into them, I did not know
+this is what they do. :)
+
+That's very useful! It shows that an efficient filter can be constructed
+and not all of the original entropy needs to be stored.
+
+My question, then, transforms into the following:
+
+Is anyone aware of any work on an algorithm / data structure with a
+different memory-time tradeoff than the Bloom filter?
+
+What I am looking for would be exactly like a Bloom filter in concept, but
+with:
+
+- radically less memory use;
+
+- computational cost could be increased by orders of magnitude to construct
+the filter;
+
+- but the computational cost of using it should remain reasonable.
+
+Is anyone aware of any work involving such tradeoffs?
+
+And if not, where would be the right place to ask this question? Would the
+"passwords" list be any more likely to have this answer? :-)
+
+
+On Tue, Mar 13, 2018 at 10:30 AM, Ken T Takusagawa <kenta@....eduwrote:
+
+For rejecting previously revealed passwords, the hash-based
+Bloom Filter data structure will do the trick.  Your hash
+function does not need to be cryptographically secure.  I
+feel that tuning the data structure to allow the false
+positive rate to be as high as 10% would be acceptable, but
+that's a subjective user experience issue.
+>
+https://en.wikipedia.org/wiki/Bloom_filter
+>
+--ken
+>
+On Tue, 13 Mar 2018, denis bider wrote:
+>
+Actually... I think with the hash function construction, I’ve actually
+shown one of
+two things:
+>
+(a) The recognizer function, F(x) =word32, can be as small as the size
+of the
+hash function and its internal state.
+>
+(b) Alternately, F(x) =word32 cannot be implemented using a  hash
+function .
+>
+The reasoning:
+>
+Yes, if the number of passwords is N, then X would be expected to be
+32*N bits in
+size. But in order to calculate SHA256(X | Pcandidate), we do not need
+X. We just
+need the last internal state of SHA256, which is much smaller.
+>
+Therefore, if we have infinite computing power to generate it, a
+recognizer
+function F(x) can either be implemented in a compact size that is both
+fast and
+small to use, OR we can never find X for a large enough number of
+passwords because
+the internal state of a hash function is too small.
+>
+>
+On Tue, Mar 13, 2018 at 4:30 AM, denis bider <denisbider.ietf@...il.com>
+wrote:
+      Yeah, but... I'm still not so sure. :) People said we couldn't
+have a
+      digital currency either! The coins would be GIGABYTES in length! :D
+This is not fractal compression because we do not intend to decompress.
+We
+are definitely throwing away data. What we want is a compressed oracle,
+however.
+The size of X I estimated if using a hash function (8 bytes?!) was
+clearly
+ridiculous. What I proposed was to generate X by brute-forcing it as a
+counter input to a pseudo-random function that generates a string 32*N
+bits
+in size. If N is the number of passwords we are encoding, then to encode
+1
+billion passwords, the random string needs to have 32 billion bits - and
+they
+all must be zero. Clearly, an X that we arrive at this way must be about
+32
+billion bits in size. So, uh... 4 gigabytes.
+>
+But what if... say... instead of a hash function - mod N arithmetic?
+>
+Suppose we represent the passwords we want to store using primes P1, P2,
+...
+Pn. We generate:
+>
+X = P1 * P2 * ... * Pn mod N
+>
+Of course, when we do "mod N", we are losing information. But how fast?
+>
+Are you sure that arguments against fractal compression also apply to
+highly
+lossy compression like this? ZIP won't compress a PNG, but JPG will ;)
+>
+>
+On Tue, Mar 13, 2018 at 3:56 AM, Poul-Henning Kamp <phk@....freebsd.dk>
+wrote:
+      --------
+      In message
+      <CADPMZDBq_CsD2ztxBX4J0FZLyf8Stm+Bz=AOPs6
+Adq7frGmi1g@...l.gmail.com>,
+      denis bider writ
+      es:
+>
+      >For example, the best measure
+      >for password safety is probably to prevent users from using any
+      of billions
+      >of known revealed passwords, but the compressed database is 5 GB
+      in size:
+      >[...]
+      >Now. I sort of have this intuition that it=E2=80=99s possible to
+      compress this crap
+      >into 20 bytes.
+>
+      This is basically the old "fractal compression" idea all over
+      again.
+>
+      It always goes more or less like this:
+>
+      1. Look at the digits of PI or E, they look awfully random and
+      are
+         very hard to compress.
+>
+      2. Yet, we have this incredibly simple formula for generating
+      them
+         (insert favourite PI or E expression here).
+>
+      3. What an amazing compression ratio!
+>
+      4. There must be some function which similarly emits the MPG
+      stream
+         of Lord Of The Rings
+>
+      5. Profit!
+>
+      This thinking suffers both from logical fallacies and factual
+      misunderstandings.
+>
+      Ad 1: While it is generally a good indicator of entropy that you
+      cannot compress some data, it is not a proof that the data is
+      random,
+      you may simply be using the wrong compression algorithm.
+>
+      Ad 2: Deterministically generated data, no matter what its
+      entropy
+      might be, is never random, even when you do not know the formula
+      which generated the data.
+>
+      Ad 3: The reason the compression ratio is so amazing is that PI
+      or E has infinite length.  Normally we use only about 8-16 digits
+      of either and it's way more compact than your formula to just
+      write down those digits.  (Footnote: 355/113)
+>
+      Ad 4: Yes, there is undoubtedly such a function, but there is no
+      reason to think that it is significantly smaller than the
+      *finite*
+      length bitstream you are trying to produce with it.
+>
+      Ad 5: No, because finding the magic LOTR function has complexity
+      far exceeding the size of the known universe.
+>
+      Poul-Henning
+>
+      --
+      Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+      phk@...eBSD.ORG         | TCP/IP since RFC 956
+      FreeBSD committer       | BSD since 4.3-tahoe
+      Never attribute to malice what can adequately be explained by
+      incompetence.
+>
+>
+>
+>
+>
+>
+
+
+

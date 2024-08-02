@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Non-temporal writes and uninitialized memory
+
+Message-ID: <CAOLP8p6XY_nO91MZ=uhcZZwLce4tD-SDwFk-rDzforE6w0WuEQ@mail.gmail.com>
+Date: Fri, 18 Apr 2014 23:50:00 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Non-temporal writes and uninitialized memory
+
+On Fri, Apr 18, 2014 at 9:33 PM, Solar Designer <solar@...nwall.comwrote:
+
+    _mm_stream_si128(p++, value);
+>
+Yeah, I had tried that too.  No luck.
+
+
+Your explanation makes sense.  The 0's must already be in L3 cache, so
+there's less of a penalty when doing the read-modify-write.
+
+
+TwoCats currently has no method for writing to previously initialized
+memory, so it's no help to me.  Some of the other entries, like Yescript
+and Lyra2 should be able to benefit from it, but only in the second loop,
+not in the first.
+>
+When YESCRYPT_RW is set, yescrypt's second loop writes only to the same
+V_j that has just been read, so it's already in cache.  When YESCRYPT_RW
+is not set, yescrypt's second loop only reads.
+>
+In the first loop, each page being written to has just been zeroed by
+the kernel, so it's in cache.
+>
+Alexander
+>
+
+That makes sense.  Now that I think about it, Lyra2 also reads both write
+destinations, so they will already be in cache.  I assume this is no
+coincidence.  You're other trials would have been slower, and in tuning
+this scheme probably won.
+
+I think both Lyra2 and Yescript should be able to beat TwoCats bandwidth
+with this approach.  My test code achieved 15GiB/s bandwidth with the
+non-temporal writes with the 10 iteration outer loop.  Isn't this a crazy
+name?  How can we remember non-temporal vs temporal?  Grr... Intel makes
+the PHC authors sound like naming geniuses :-)
+
+Bill
+
+
+

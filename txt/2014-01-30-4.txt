@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <20140130033453.GA12990@openwall.com>
+Date: Thu, 30 Jan 2014 07:34:53 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Thu, Jan 30, 2014 at 02:38:35AM +0000, Samuel Neves wrote:
+The only downside here is
+that moving between general-purpose register and vector registers is
+more expensive on Bulldozer than it is on Intel.
+
+Luckily, we only need to move from vector to general-purpose register:
+we can maintain a separate loop counter in a vector register,
+incrementing it right there.  In fact, if we didn't do that, we'd also
+waste instructions on broadcasting the scalar value to the vector
+elements.  It is much quicker to start with e.g. {0, 1, 2, 3} and be
+adding {4, 4, 4, 4} to it every four loop iterations, right after the
+bit reverse operation (saving its output in another vector).
+
+By definition only the most significant bit of each byte is looked at in
+PSHUFB, so it's OK to share the same selection mask. I've additionally
+used PSHUFB to compute the bit reversal of 4-bit values, which should be
+somewhat faster. Here it is:
+
+Thanks!  Compared to yours, my SSSE3 code looks naive.
+
+This is in the public domain, correct?  (My bitrev.c is.)
+
+#elif defined(__SSSE3__)
+
+I happened to write "#elif __SSSE3__" in that place.  Of course, I meant
+to write "#elif defined(__SSSE3__)".
+
+    t3 = _mm_srli_epi32(_mm_andnot_si128(c0f, t1), 4); // x >4
+
+I guess the reason why you use ANDN before the shift rather than AND
+after it is to better accommodate the shift's higher latency, correct?
+
+    t2 = _mm_shuffle_epi8(rev1, t2); // rev(x)
+    t3 = _mm_shuffle_epi8(rev0, t3); // rev(x)
+
+Nice thinking outside the box, indexing constants by our data, rather
+than vice versa like we do in the byte shuffling step.  While I was well
+aware that these instructions could be used to implement e.g. S-boxes,
+and that fast bit reversals are sometimes implemented with table lookups,
+somehow such use didn't occur to me in this context.
+
+Alexander
+

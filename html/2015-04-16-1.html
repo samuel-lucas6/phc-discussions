@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Attack on the iterative compression function"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/04/15/5">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/04/15/3">[&lt;thread-prev]</a> <a href="../../../2015/04/17/6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150416010117.GB13118&#64;openwall.com&gt;
+Date: Thu, 16 Apr 2015 04:01:17 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+Hi Dmitry,
+
+Thank you very much for working on this!
+
+On Wed, Apr 15, 2015 at 12:43:35PM +0200, Dmitry Khovratovich wrote:
+&gt; your original interpretation is correct. The idea is that even though
+&gt; the computation latency may be high, the recomputation latency can be
+&gt; very low if the attacker stores appropriate intermediate values. This
+&gt; applies to Lyra2 and other iterative designs.
+&gt; 
+&gt; I guess Percival felt there is an attack of this kind, that is why he
+&gt; introduced this subblock shuffling. The authors of Lyra2 did the same
+&gt; after they have seen our attack.This countermeasure helps a bit, but
+&gt; for small recomputation depth it is not good enough (it is my
+&gt; feeling), and it adds complexity.
+
+Yes, now I can see how the shuffling may affect this.  Original scrypt's
+sub-block shuffling appears to double the latency of your attack at each
+level of the recomputation tree.  Correct?
+
+I guess original scrypt's sub-block shuffling is defined in the exact
+way it is in order to ensure that two successive applications of the
+shuffling don't cancel each other.  However, I don't immediately see a
+specific reason to have this requirement, and from the point of view of
+maximizing latency in your attack, simple reverse order of sub-blocks
+(e.g., "B_15 xor B_14", "B_14 xor B_13", etc. written to new B_0, B_1,
+etc. instead of the current "B_15 xor B_0", "B_0 xor B_1", etc.) feels
+like it'd work best.  I haven't thought this through yet.  I'd
+appreciate your thoughts on the reverse order of sub-blocks idea.
+
+&gt; Our approach is to avoid this
+&gt; situation for all, requiring that there simply must not be any
+&gt; tradeoff attack on the compression function, or, in other words, the
+&gt; computational latency must be tradeoff-resistant. The Argon2
+&gt; parallelism that you have mentioned is somewhat unavoidable if we want
+&gt; this resistance.
+
+Yes, I figured this out yesterday.
+
+I think it's avoidable, but a possible reduction of parallelism just
+does not occur with your approach naturally, and it'd cost a few extra
+XORs or such to introduce it.  Looking at it from a different angle,
+maybe this is your opportunity to easily introduce tunable
+instruction-level parallelism (have a couple of flags dictate whether to
+introduce or skip those extra data dependencies).
+
+&gt; The attack, apparently, also applies to yescrypt. I was not sure about
+&gt; that until you released the pseudo-code, but then I started thinking
+&gt; about storing the last subblock of each block to break the chain. For
+&gt; the full attack I would still have to plug yescrypt mode of operation
+&gt; (and its addressing) into our ranking method.
+&gt; 
+&gt; Your question prompted me to finish the attack, write a small
+&gt; description, and adapt the ranking algorithm to yescrypt. Here is a
+&gt; fresh draft:
+&gt; <a href="https://www.cryptolux.org/images/0/0f/Tradeoff_for_Yescrypt.pdf" rel="nofollow">https://www.cryptolux.org/images/0/0f/Tradeoff_for_Yescrypt.pdf</a>
+
+I confirm your analysis.
+
+I assume the C(q) and D(q) figures are currently inexact, for the reason
+you mention ("have to plug yescrypt mode of operation (and its
+addressing) into our ranking method"), but they look sane to me, and the
+combination with your attack on BlockMix_pwxform looks correct to me.
+
+I hope that yescrypt's D(q) will turn out to be slightly higher than
+what you included here once you consider yescrypt's Wrap().  I guess
+your current C(q) and D(q) assume modulo division in place of Wrap()?
+
+You make two observations: about late inter-lane diffusion, and about
+recovering missing blocks subblockwise.  It appears that you currently
+only make use of the latter observation.  Do you think the former is of
+any use in an attack?
+
+&gt; The consequences are better than for the original Lyra2 due to rather
+&gt; small number of subblocks and different addressing. Assuming unlimited
+&gt; parallelism, the time-memory product can be kept the same while the
+&gt; memory is reduced by the factor of 6.
+
+Right.  At least that's what we arrive at with the current D(q) estimates.
+
+I would also be interested in your results for t=1 (5/6 passes) and t=2
+(2 passes).
+
+&gt;&gt; However, the attack would appear to rely not only on the last
+&gt;&gt; sub-blocks, but also on occasional full blocks, so I don't see how it'd
+&gt;&gt; improve upon the higher-level TMTO attack alone.
+
+I now see that it works by reducing the recomputation depth, not the
+total recomputation, nor the memory, of a higher-level TMTO attack.
+
+Thanks again,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

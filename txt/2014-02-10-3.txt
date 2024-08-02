@@ -1,0 +1,143 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p4qMeeVRM753jgthiiDd2Y_PTAD3fG+xeCL+yRPbhVLHQ@mail.gmail.com>
+Date: Mon, 10 Feb 2014 18:03:33 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Sun, Feb 9, 2014 at 9:46 PM, Solar Designer <solar@...nwall.comwrote:
+On Sun, Feb 09, 2014 at 08:01:43AM -0500, Bill Cox wrote:
+>Wouldn't we want PMULLW rather than PMULUDQ?  4 packed 32x32->32 lower
+>mimics the C 32-bit multiply, and gives the same result for both
+>signed and unsigned multiplication, which is nice for Java
+>compatibility.
+>
+PMULLW is 8 packed 16x16->16.  I felt that if we go for 16x16, we
+probably want to take the upper 16 bits of result (so PMULHW or PMULHUW
+or PMULHRSW), not lower, although this does make the signedness matter.
+
+My bad!  You are correct.  The Haswell 32x32 -lower 32 packed 4 at a
+time multiply (PMULLD) is 10 cycle latency.  That's just too long.
+
+Do we have any 32x32->64 in Java(Script) at all, whether signed or
+unsigned?  I'm not familiar with Java(Script).
+
+Java has 64-bit integer multiply, but it's signed.  There are no
+unsigned operations in Java, only signed.  It makes signal processing
+a bit of a pain.  On the positive side, my single-thread Java
+signal-processing tests have been only 5% slower than vanila
+(non-SIMD, single-threaded) C versions.
+
+JavaScript has only floating point, but the various JiT compilers all
+seem to have ways to infer integer operations.  I think it depends on
+the specific compiler, but my tests in Chrome's JavaScript without
+compiler-specific hints were very slow for integer operations (10X
+slower or more than C).  I have been told that with good hints, 2X is
+achievable, but I assume this is versus single-thread non-SIMD.
+
+In C, I'd prefer unsigned, because this is expressed with trivial casts
+from uint32_t to uint64_t (usually not generating any instructions) and
+multiplication.  For signed, the corresponding casts would potentially
+generate sign extension instructions (the compiler would need to be
+somewhat smart to pick a signed 32x32->64 multiply instead, although I
+hope most modern optimizing compilers are smart enough).  Also, we have
+SIMD unsigned 32x32->64 starting with SSE2, but signed only starting
+with SSE4.1.
+>
+Alexander
+
+I agree unsigned is prefered.  Java can add a few instructions to
+emulate unsigned if needed.
+
+I spent some time today benchmarking slightly modified hash functions
+using 32x32->32, 32x32->64, and 64x64->64.  There are interesting
+trade-offs.  Here's three runs with the same number of multiplies in
+each run.  This is all compiled with -m64:
+
+This is the current version of NoelKDF run on my son's MineCraft server:
+
+time ./noelkdf -m 1024
+garlic:0 memorySize:1024 repetitions:1 numThreads:1 blockSize:4096
+AA67864CFA33E5DEB02858F014415AAD0267C0B2C9EC686E057D67725A69AA2E
+
+real    0m0.399s
+user    0m0.330s
+sys     0m0.060s
+
+Here's NoelKDF modified to use 64-bit hashing, with memory read/writes
+at 64-bits rather than 32:
+
+noelkdftime ./noelkdf -m 2048
+garlic:0 memorySize:2048 repetitions:1 numThreads:1 blockSize:4096
+9E590BA563F1DFC6464B460B204B2E638EF8777C5579A1D33F8A8EC7B701DAF3
+
+real    0m0.476s
+user    0m0.330s
+sys     0m0.140s
+
+Here's a version using 64-bit read/writes, and the 32x32->64 multiplication:
+
+noelkdftime ./noelkdf -m 2048
+garlic:0 memorySize:2048 repetitions:1 numThreads:1 blockSize:4096
+E667EE04AC437609CF8B2A7CB9A7FC3F4A7602A53C50D57D4EB2D7C0D5818BD5
+
+real    0m0.547s
+user    0m0.400s
+sys     0m0.140s
+
+Each of these runs does 2^18 serial multiplications, which take up
+about 0.231 s.  The inner loops of the 32 and 64 bit when run with
+high iterations (-r 100), take about 0.29s, or only 25% overhead,
+which only 4 cock cycles, in a loop where the multiplication takes 3.
+
+The hybrid that uses 64-bit memory read/write, but only a 32x32->64
+multiplication had some extra overhead for converting from 64-bit to
+32-bit.  Compiled in 32 bit mode, the 32-bit hash function performs
+exactly as before.  The 64-bit version is quite a bit slower:
+
+noelkdftime ./noelkdf -m 2048
+garlic:0 memorySize:2048 repetitions:1 numThreads:1 blockSize:4096
+9E590BA563F1DFC6464B460B204B2E638EF8777C5579A1D33F8A8EC7B701DAF3
+
+real    0m0.708s
+user    0m0.610s
+sys     0m0.090s
+
+The hybrid 32x32->64 does better:
+
+time ./noelkdf -m 2048
+garlic:0 memorySize:2048 repetitions:1 numThreads:1 blockSize:4096
+E667EE04AC437609CF8B2A7CB9A7FC3F4A7602A53C50D57D4EB2D7C0D5818BD5
+
+real    0m0.578s
+user    0m0.480s
+sys     0m0.090s
+
+I tried these benchmarks on Ivy Bridge, and AMD FX-8 (I think).  The
+relative performance was similar.
+
+One more interesting data point: the 32x32->32 runs 72% faster with
+two threads, while the 64x64->64 runs only 45% faster.  I think it's
+the memory bottleneck becoming an issue.
+
+Here's the 32x32->32 with 2 threads:
+
+noelkdftime ./noelkdf -m 2048 -t 2
+garlic:0 memorySize:2048 repetitions:1 numThreads:2 blockSize:4096
+EFBA06246E06429740D6A1EAF149E7786BA9A13F06A5556180F90985D2730C81
+
+real    0m0.433s
+user    0m0.720s
+sys     0m0.130s
+
+This does the same number of multiplications as the single-threaded
+64x64->64 benchmark, and hashes the same amount of memory, but it does
+it slightly faster.  That's simply better, IMO, so the 32x32 hash
+function wins by a bit in my tests.  Whew!  The hash function survives
+yet another day...   :-)
+
+SIMD remains an issue...
+
+Bill
+

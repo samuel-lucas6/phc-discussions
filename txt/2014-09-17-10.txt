@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <20140917161454.5806ee01@lambda>
+Date: Wed, 17 Sep 2014 16:14:54 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: Bill Cox <waywardgeek@...hershed.org>
+Cc: discussions@...sword-hashing.net, bmenrigh@...ndonenright.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Wed, 17 Sep 2014 06:30:36 -0400
+Bill Cox <waywardgeek@...hershed.orgwrote:
+
+I think OmegaCrypt, POMELO,
+and Schvrch do too little data-based branching to badly hurt a GPU
+attack.  The GPU can simply execute each case serially, and only write
+data for the selected case, so with N cases, a GPU will not slow down
+by more than a factor of N.
+
+This attack doesn't work against OmegaCrypt.  Each branch consumes a
+different amount of the ChaCha stream used to guide future branching.
+Also, there is a carry value from the previous round.
+
+For the very first round of branching the GPU could run all 4 in
+parallel and select the correct one.  But, for the second round, the
+GPU would have to run branch 1 for each of the possible previous
+branches, and branch 2 for each of the possible branches, and so
+forth.
+
+The carry value is modified from start to finish through each
+branch.  There is no realistic way to perform the attack you describe
+because the previous branch path possibilities grows exponentially.
+After just a few rounds you'd be doing an exponential amount of work.
+
+Or perhaps you're imagining doing all 4 branches, then pausing to
+figure out which was right, then doing another 4, pausing to figure out
+which was right, and so on?  You'd need some sort of copy-on-write
+memory to facilitate "backing out" of the changes made by wrong
+branches.  I don't see how you'd actually be avoiding any
+data-dependant branching.
+
+Can you explain more concretely what your suggested attack is?  I don't
+see how what you're describing would actually work.
+
+Also for what it's worth, if OmegaCrypt makes it to round 2 I plan on
+adjusting the branches to consume a coprime amount of the ChaCha stream
+to further protect against executing future rounds by trying all the
+combinations of the previous rounds.
+
+Brandon
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlQZs5IACgkQqaGPzAsl94JyCQCfdxKdhlAxjoxCm9nL1kMQIjcb
+L1AAnjxzXPialp1EqpSgU0MS4NN1gYSA
+=gcQA
+-----END PGP SIGNATURE-----
+

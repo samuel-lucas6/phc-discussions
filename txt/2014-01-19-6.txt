@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <52DBC58A.5060508@uni-weimar.de>
+Date: Sun, 19 Jan 2014 13:31:06 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On 19.01.2014 08:54, Solar Designer wrote:
+On Sat, Jan 18, 2014 at 01:14:32PM -0800, Tony Arcieri wrote:
+>On Sat, Jan 18, 2014 at 1:12 PM, Larry Bugbee <bugbee@....comwrote:
+>>
+>>May I assume that if the pswd is hashed client side, two conditions need
+>>to be true: 1) javascript or other hashing support is available, and 2) the
+>>hash is passed in a secure tunnel
+>>
+>Yes
+
+I'd say "secure tunnel" is orthogonal to "client-side hashing", as well
+as to "better password hashing" in general.  Any of these are somewhat
+nice to have even without the others, although of course a combination
+of them is usually preferable.
+You are right, but in the following I want to paraphrase your statement
+in a very explicit way to prevent misconception.
+
+Secure server-relief requires a secure channel, otherwise an adversary
+can just eavesdrop the transmitted hash to impersonate Alice.
+
+Example:
+Suppose F() is time and memory costly KDF (e.g, scrypt), and
+H() cryptographic hash function (e.g. Blake2).
+
+1. Alice (e.g. javascript running in a browser) computes
+x = F(password || salt).
+
+2. Alice sends x to the server over an insecure channel
+
+3. Eve eavesdrops x.
+
+4. Bob (server) loads Alice password hash h_alice,
+and then tests if h_alice = H(x). If so Bob grants access, otherwise
+denies access.
+
+5. Eve can impersonate Alice by sending x to Bob.
+
+
+A countermeasure against passive adversaries are challenges (i.e.,
+random bit string).
+
+Example:
+1. Alice sent a access request to Bob.
+2. Bob sends a challenge z (i.e., random bit string) to Alice
+3. Alice response with y = H( H(F(password || salt)) || z)
+4, Bob test if h_alice  =  H( h_alice || z).
+
+But such a protocol is vulnerable to active attacks (e.g.,
+Men-in-the-Middle attacks).
+
+
+Conclusive, perform server relief over an secure channel (e.g., TLS)  if
+possible, otherwise your login process is as insecure as telnet.
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

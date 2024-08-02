@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Modified pseudo-random distribution in NoelKDF
+
+Message-ID: <20140120140124.GA25258@openwall.com>
+Date: Mon, 20 Jan 2014 18:01:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Modified pseudo-random distribution in NoelKDF
+
+On Sat, Jan 18, 2014 at 12:43:12PM -0500, Bill Cox wrote:
+The original NoelKDF loop looked a bit like:
+
+v[0] = SHA256(password, salt)
+for i = 1 .. memlen-1
+    v[i] = H(v[i-1], v[rand() % i]
+output v[memlen-1]
+
+This has tons of issues, but it illustrates one themes I've kept so
+far in NoelKDF.  Each memory location (or "block" of memory locations)
+depends on the previous as well as a pseudo-random prior memory
+location (or block).
+
+My theory was that for attackers using much less than 1/4 of the
+memory in a TMTO would suffer a massive recomputation penalty.  It
+turns out that recomputations with this uniform distribution of edge
+lengths is not high enough.
+
+Do you have specific numbers for the original approach above, and what
+would be high enough (in your opinion)?
+
+So, I've modified the distribution to look like:
+
+v[0] = SHA256(password, salt)
+for i = 1 .. memlen-1
+    edgeLength = floor( (i - 1) * (pseudo-random value between 0 and 1) ^ 3 )
+    v[i] = H(v[i-1], v[i - edgeLength])
+output v[memlen-1]
+
+Basically, instead of a uniformly random edge lengths, I heavily
+weight edge length distribution to be shorter by cubing the random
+value between 0 and 1 before multiplying it by the memory position.
+This causes the sub-DAGs rooted at a random location to use more high
+memory locations, which in turn require more low memory locations.
+
+This may be more effective against TMTO, but if it also brings the
+distribution of random indices farther from uniform then it may be
+benefiting attackers in that way (letting them efficiently use
+different memory types for different sub-regions).  On the other hand,
+as discussed before, "% i" also produces a non-uniform distribution,
+skewed towards lower indices across all i's.  So part of your change is
+compensating for that earlier non-uniformity, and that part may be good
+irrespective of the effect on TMTO (nice bonus).
+
+My sliding window approach has a similar effect, but I think yours is
+more aggressive.  Have you tried estimating the TMTO resistance of my
+sliding window approach?  That would be very helpful.
+
+Alexander
+

@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] A review per day - skipping Makwa
+
+Message-ID: <20140907135513.GC12675@bolet.org>
+Date: Sun, 7 Sep 2014 15:55:13 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - skipping Makwa
+
+On Sun, Sep 07, 2014 at 07:31:34AM -0400, Bill Cox wrote:
+I reread it, and duh... It makes sense now.  The hash ix x^(2^(w+1)),
+not x^(w^2).  I'm sure this is simply to protect the password derived
+key x in case someone solves the knapsack problem
+
+It is even simpler. The "+1" is meant to protect people who use 0 as
+work factor: they would still have one squaring, which, while not good,
+is still much better than plaintext passwords...
+
+Also, that "+1" makes equations prettier for delegation, where you want
+to do at least one squaring yourself so that the value which is sent to
+the delegation server is already a quadratic residue. Without a "+1"
+there, you would need a "-1" in some other places, and for purely
+aesthetic reasons (that, by definition, I don't need to justify), I
+prefer the "+1" to the "-1".
+
+
+What happens in the future if Makwa is broken?
+
+Same as for other cryptographic functions: that which is broken, is
+broken. However, I have the _intuition_ that a break of Makwa would
+probably also be a break of RSA, at which point we would enter
+"interesting times" and the loss of some protection for Makwa would not
+be the biggest of our problems.
+
+
+A post hash provides shorter hash tags, but defeats work-increase.
+
+The post hash is also meant to yield unbiased key material, when Makwa
+is used as a KDF, e.g. for password-based encryption. Without the
+post-hash, the first bytes of output are slightly biased, since the
+result is modulo N which is not a power of 2.
+
+
+I think I prefer the Catena-style work increase, and work factor w
+values that are powers of 2 only.  This enables short hash tags which
+I think will be more popular.
+
+In my string-based encoding, I defined the work factor to be equal to 2
+or 3 times a power of 2 (Makwa itself supports any nonnegative value for
+the work factor w, but the string encoding format is constrainted to
+these specific values). This indeed yields a shorter (and fixed-size)
+encoding; however, the main reason was for better support of delegation.
+The "delegation parameters" (the 300 value pairs) can be expensive to
+generate, and are tied to a single work factor, so I wanted to limit the
+number of possible work factor values in some way, so that
+pre-generation of a number of sets of delegation parameters would be
+possible.
+
+Using only powers of 2 was not smooth enough to my taste, so I added
+some intermediates. Possible work factors are then 2, 3, 4, 6, 8, 12,
+16, 24, 32...
+
+
+	--Thomas Pornin
+

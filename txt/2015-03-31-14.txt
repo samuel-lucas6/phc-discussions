@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+Message-ID: <20150331131455.GA2880@openwall.com>
+Date: Tue, 31 Mar 2015 16:14:55 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+All -
+
+The Argon2 specification includes TMTO analysis of multi-pass schemes in
+general, that's section "2.4.3 Multi-pass schemes".  It is relevant to
+PHC in general, so is worth taking a look at even if you're not
+currently interested in Argon2 in particular.
+
+On Mon, Mar 30, 2015 at 07:30:11PM +0300, Solar Designer wrote:
+So in what I wrote the multiplier shouldn't be depth as in
+your report, but rather number of other direct dependency blocks and
+previous contents that a not stored block depends on, on average.
+
+The multiplier I referred to is probably close to the number of passes
+used in the Argon team's analysis I mentioned above.
+
+Dmitry, does the below look right to you?
+
+If at 1 GB pre-TMTO spending 100 MB on indices gave us 32-byte block
+size, then at 3 overwrite passes it might be 96 bytes, which is close to
+being practical.  At a 1/10 TMTO not including indices, we'd have 100 MB
+for the stored blocks and another 100 MB for the indices.  So
+effectively only 1/5 instead of 1/10.  A 96-byte block size corresponds
+to a performance reduction of maybe 40% compared to 1 KB for an
+scrypt-alike (extrapolated from my testing for 1 KB vs. 128 bytes for
+scrypt, where I measured a slowdown of 25% to 27% on a given machine for
+both a single thread and as many threads as the hardware supports).
+(Indeed, 96 in particular has an additional performance hit of not being
+a multiple of cache line size, which is 64 bytes on modern x86 CPUs.
+But the numbers we're using here are not that precise anyway.  It could
+as well be 64 or 128.)
+
+I do not actually recommend to incur a maybe 40% slowdown just to
+discourage such extreme TMTOs a little bit more.  But I think this may
+skew some numbers in a non-negligible way.  And such low block sizes may
+in some cases be chosen for other reasons, such as to discourage
+attacker's use of higher latency memory.
+
+Alexander
+

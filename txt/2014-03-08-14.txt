@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] escrypt 0.3.1
+
+Message-ID: <20140308075137.GA30909@openwall.com>
+Date: Sat, 8 Mar 2014 11:51:37 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt 0.3.1
+
+On Wed, Mar 05, 2014 at 04:44:04AM +0400, Solar Designer wrote:
+The tentative 64-bit lane round function:
+
+	x += ((uint64_t)xl * s0l + s1) ^
+	    ((uint64_t)xl * s1l + s0);
+
+(where the 64-bit s0 and s1 come from S-box lookups, and s0l and s1l are
+their least significant 32 bits) has some significant biases
+[...]
+This can be much improved by simply adding:
+
+	x += (uint64_t)xl * xl;
+
+Actually it should be:
+
+	x += (uint64_t)xl * xl;
+	xl = x;
+
+right before the expression given above, but after "x" has been used to
+derive S-box lookup indices.  (This added multiplication occurs in
+parallel with the two S-box lookups, so there's almost no slowdown from
+it.  In fact, I've been experimenting with repeating that line (or
+rather its SSE2 equivalent) a few times.  With one or more of these
+added lines (_not_ included in the escrypt 0.3.1 code attached here),
+"analyze" output improves to:
+
+min = 12018 max = 12638 (min+max)/2 = 12328.0 (expected 12329.0)
+diff = 788789 (expected 788983.5)
+diff_lo = 65535 diff_hi = 65536 (expected 65535.6)
+
+(diff is still slightly lower than perfect, but the rest is great).
+
+Further testing revealed that diff being "still slightly lower than
+perfect" above was actually an artifact of the way I was measuring: I
+dumped the entire local->aligned area, which contained not only V, but
+also both XY and B, and there's (expected) overlap between data found in
+final X or Y and B.  Analyzing V only, I see no biases anymore, e.g.:
+
+r=8 N=2^14 NROM=2^0
+Will use 0.00 KiB ROM
+         16384.00 KiB RAM
+
+n = 16777216
+min = 64950 max = 66353 (min+max)/2 = 65651.5 (expected 65536.0)
+diff32 = 2096628 2096661 (expected 2096640.1)
+diff16 = 65536 65536 65536 65536 65536 65536 65536 65536 avg = 65536.0 (expected 65536.0)
+
+For SSE2 experiments, the line to add is:
+
+	X = _mm_add_epi64(_mm_mul_epu32(X, X), X); \
+
+right after the existing lines:
+
+#define SBOX_SIMD_1(X, x, s0, s1) \
+	x = EXTRACT64(X) & 0x0ff000000ff0ULL; \
+
+This was correct.  In case anyone else (Bill?) wants to experiment with
+this, I've attached the "patch" relative to 0.3.1, and the improved
+analyze.c (now analyzes even/odd 32-bit values separately, and 8x 16-bit
+"lanes" separately).
+
+While at it, I also checked modified scrypt with Salsa20/2 using the
+improved analyze.c - no significant biases there as well.
+
+To analyze the "x += x * x" thing (in its different variations), or
+"x = x * (x + 1)" (which is the same or almost the same, depending on
+integer widths used), I used the attached sim-mul.c program.  Curiously,
+aside from the obvious aspects (the result being always even, and there
+being some fixed points), this trivial operation behaves reasonably
+well.  The loss of 1 bit of entropy may be compensated by also using the
+value of x prior to this operation.  (In the above case, for S-box
+lookups.)  Is squaring much simpler or/and quicker in ASIC than
+arbitrary multiplication?
+
+Bill, any comments on this?
+
+I intend to try revising this further, but I think this approach with
+the extra "x += x * x" is among candidates for the final version.
+
+Alexander
+
+View attachment "analyze.c" of type "text/x-c" (2517 bytes)
+
+View attachment "escrypt-0.3.1-0.3.2.diff" of type "text/plain" (7826 bytes)
+

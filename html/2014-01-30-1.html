@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Combining sliding window and bit-reversal</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/01/29/3">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/01/28/16">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140130013231.GA12613&#64;openwall.com&gt;
+Date: Thu, 30 Jan 2014 05:32:31 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Tue, Jan 28, 2014 at 04:05:29AM +0400, Solar Designer wrote:
+&gt; On Mon, Jan 27, 2014 at 11:49:37PM +0000, Samuel Neves wrote:
+&gt; &gt; You can get decent bit reversal speed using PSHUFB, by reversing up to
+&gt; &gt; 32 4-bit chunks per cycle.
+&gt; 
+&gt; Yes, but unfortunately this adds overhead of going from scalar to vector
+&gt; and back (we need to bit-reverse a single 32-bit or 64-bit value), and
+&gt; SIMD instructions generally have lower throughput than scalar ones.  Yet
+&gt; it might be the fastest approach.  Will need to benchmark.
+
+I haven't benchmarked yet, but I realized that it's actually OK that
+this works in vector form, since we readily know what further indices
+needing reversal will be.  We can simply perform the vectorized bit
+reversal operation every 4 loop iterations, or whatever matches the
+vector size.  In fact, a smart (but overly complicated?) implementation
+could split the full vector width into fields of arbitrary length in
+bytes, so e.g. while i &lt;= 0xff, we'll only do one SIMD bit reversal
+every 16 loop iterations (then extract bytes from the resulting vector,
+one byte per loop iteration).  For i &lt;= 0xffff, it's one bit reversal
+every 8 iterations, then for i &lt;= 0xffffff it's one every 5, and so on.
+(Perhaps including the optimization for the case of i &lt;= 0xff is not
+worth it, as that's too few bit reversal operations to matter anyway.
+Maybe none of this optimization is worth it, though.)
+
+&gt; &gt; Considering other architectures have native bit reversal instructions,
+
+I just recalled that AMD XOP's VPPERM, which is an extension of PSHUFB,
+can be directly used to perform bit reversal.  Like PSHUFB, it operates
+on bytes rather than bits, but it has more special modes, including bit
+reversal (within the bytes, which can also be reversed by the same
+instruction).  (It can even do bit reversal and inversion at once, but
+we probably don't need that.)
+
+&gt; &gt; it may be an acceptable solution compared to an ad hoc permutation.
+&gt; 
+&gt; I agree.
+
+I've attached a program I wrote, testing bit reversal with VPPERM and
+PSHUFB.  It seems to work fine.  Can the SSSE3 case be optimized further?
+
+$ gcc bitrev.c -o bitrev -s -O2 -mxop; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1299     504      16    1819     71b bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+$ gcc bitrev.c -o bitrev -s -O2 -mavx; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1427     504      16    1947     79b bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+$ gcc bitrev.c -o bitrev -s -O2 -mssse3; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1443     504      16    1963     7ab bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+
+BTW, reusing the value of "sel" that I define for VPPERM also for PSHUFB
+works fine - those extra bits are simply ignored, and the instruction
+appears to be defined to ignore them (so it's probably behavior we can
+rely upon) - but I don't do that in this program just in case (and to
+avoid possibly including a comment on that).  The only savings would be
+in source code, not in compiled code (nor data).
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/1">bitrev.c</a><strong>" of type "</strong>text/x-c<strong>" (1055 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

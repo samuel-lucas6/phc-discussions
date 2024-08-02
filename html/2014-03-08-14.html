@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt 0.3.1</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="13">[&lt;prev]</a> <a href="15">[next&gt;]</a> <a href="../../../2014/03/05/9">[&lt;thread-prev]</a> <a href="15">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140308075137.GA30909&#64;openwall.com&gt;
+Date: Sat, 8 Mar 2014 11:51:37 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt 0.3.1
+
+On Wed, Mar 05, 2014 at 04:44:04AM +0400, Solar Designer wrote:
+&gt; The tentative 64-bit lane round function:
+&gt; 
+&gt; 	x += ((uint64_t)xl * s0l + s1) ^
+&gt; 	    ((uint64_t)xl * s1l + s0);
+&gt; 
+&gt; (where the 64-bit s0 and s1 come from S-box lookups, and s0l and s1l are
+&gt; their least significant 32 bits) has some significant biases
+[...]
+&gt; This can be much improved by simply adding:
+&gt; 
+&gt; 	x += (uint64_t)xl * xl;
+
+Actually it should be:
+
+	x += (uint64_t)xl * xl;
+	xl = x;
+
+&gt; right before the expression given above, but after "x" has been used to
+&gt; derive S-box lookup indices.  (This added multiplication occurs in
+&gt; parallel with the two S-box lookups, so there's almost no slowdown from
+&gt; it.  In fact, I've been experimenting with repeating that line (or
+&gt; rather its SSE2 equivalent) a few times.  With one or more of these
+&gt; added lines (_not_ included in the escrypt 0.3.1 code attached here),
+&gt; "analyze" output improves to:
+&gt; 
+&gt; min = 12018 max = 12638 (min+max)/2 = 12328.0 (expected 12329.0)
+&gt; diff = 788789 (expected 788983.5)
+&gt; diff_lo = 65535 diff_hi = 65536 (expected 65535.6)
+&gt; 
+&gt; (diff is still slightly lower than perfect, but the rest is great).
+
+Further testing revealed that diff being "still slightly lower than
+perfect" above was actually an artifact of the way I was measuring: I
+dumped the entire local-&gt;aligned area, which contained not only V, but
+also both XY and B, and there's (expected) overlap between data found in
+final X or Y and B.  Analyzing V only, I see no biases anymore, e.g.:
+
+r=8 N=2^14 NROM=2^0
+Will use 0.00 KiB ROM
+         16384.00 KiB RAM
+
+n = 16777216
+min = 64950 max = 66353 (min+max)/2 = 65651.5 (expected 65536.0)
+diff32 = 2096628 2096661 (expected 2096640.1)
+diff16 = 65536 65536 65536 65536 65536 65536 65536 65536 avg = 65536.0 (expected 65536.0)
+
+&gt; For SSE2 experiments, the line to add is:
+&gt; 
+&gt; 	X = _mm_add_epi64(_mm_mul_epu32(X, X), X); \
+&gt; 
+&gt; right after the existing lines:
+&gt; 
+&gt; #define SBOX_SIMD_1(X, x, s0, s1) \
+&gt; 	x = EXTRACT64(X) &amp; 0x0ff000000ff0ULL; \
+
+This was correct.  In case anyone else (Bill?) wants to experiment with
+this, I've attached the "patch" relative to 0.3.1, and the improved
+analyze.c (now analyzes even/odd 32-bit values separately, and 8x 16-bit
+"lanes" separately).
+
+While at it, I also checked modified scrypt with Salsa20/2 using the
+improved analyze.c - no significant biases there as well.
+
+&gt; To analyze the "x += x * x" thing (in its different variations), or
+&gt; "x = x * (x + 1)" (which is the same or almost the same, depending on
+&gt; integer widths used), I used the attached sim-mul.c program.  Curiously,
+&gt; aside from the obvious aspects (the result being always even, and there
+&gt; being some fixed points), this trivial operation behaves reasonably
+&gt; well.  The loss of 1 bit of entropy may be compensated by also using the
+&gt; value of x prior to this operation.  (In the above case, for S-box
+&gt; lookups.)  Is squaring much simpler or/and quicker in ASIC than
+&gt; arbitrary multiplication?
+
+Bill, any comments on this?
+
+I intend to try revising this further, but I think this approach with
+the extra "x += x * x" is among candidates for the final version.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="14/1">analyze.c</a><strong>" of type "</strong>text/x-c<strong>" (2517 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="14/2">escrypt-0.3.1-0.3.2.diff</a><strong>" of type "</strong>text/plain<strong>" (7826 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

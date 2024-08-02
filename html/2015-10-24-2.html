@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] RE: Specification of a modular crypt format (2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="../../../2015/10/25/1">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="../../../2015/10/25/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;562C01B8.9090508&#64;openwall.com&gt;
+Date: Sun, 25 Oct 2015 01:10:00 +0300
+From: Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] RE: Specification of a modular crypt format (2)
+
+On 2015-10-24 18:06, Peter Gutmann wrote:
+&gt; Just thought I'd post an update to this, based on the discussion earlier in
+&gt; the thread I rewrote the code to avoid gcc's issues, the result ended up
+&gt; almost identical to Thomas' decode_decimal() (I didn't look at it when I
+&gt; updated my code, it just ended up that way :-):
+
+That would be ideal -- to independently arrive at the optimal code 
+starting from the shared goals. And it would not very surprising IMHO 
+for such a small and isolated task. But your code differs in various 
+ways. Some are an evidence of globally different approaches (you know 
+the length of the field and hence make two passes over the string), 
+others are stylistic (convert char to int before sanity checking it or 
+after?). But the really interesting difference is in comparisons -- "&gt;" 
+vs. "&gt;="...
+
+&gt;      for( value = 0, i = 0; i &lt; strLen; i++ )
+&gt;          {
+&gt;          const int ch = byteToInt( str[ i ] ) - '0';
+&gt;
+&gt;          if( ch &lt; 0 || ch &gt; 9 )
+&gt;              return( CRYPT_ERROR_BADDATA );
+&gt;          if( value &lt; 0 || value &gt;= MAX_INTLENGTH / 10 )
+&gt;              return( CRYPT_ERROR_BADDATA );
+&gt;          value *= 10;                                    // Line 19
+&gt;          if( value &gt;= MAX_INTLENGTH - ch )               // Line 20
+&gt;              return( CRYPT_ERROR_BADDATA );
+&gt;          value += ch;
+&gt;          ENSURES( value &gt;= 0 &amp;&amp; value &lt; MAX_INTLENGTH );
+&gt;          }
+&gt;
+&gt; What's scary about this is that without the unnecessary 'value &lt; 0' condition,
+&gt; the STACK analyser still reports it as being problematic:
+&gt;
+&gt; bug: anti-simplify
+&gt; model: |
+&gt;    %cmp10 = icmp sge i32 %mul, %sub9, !dbg !37
+&gt;    --&gt;  false
+&gt; stack:
+&gt;    - test.c:20:0
+&gt; ncore: 1
+&gt; core:
+&gt;    - test.c:19:0
+&gt;      - signed multiplication overflow
+
+Hm, strange, I'll take a closer look at it tomorrow. But what is clear 
+without any tools is that the "if" at line 20 is superfluous. By 
+successfully passing the previous "if" we know that "value &gt;= 
+MAX_INTLENGTH / 10" is false.
+==&gt;  value &lt; MAX_INTLENGTH / 10         (with integer division)
+==&gt;  value &lt;= MAX_INTLENGTH / 10 - 1    (with integer division)
+==&gt;  value &lt;= MAX_INTLENGTH / 10 - 1    (with exact division)
+==&gt;  value * 10 &lt;= MAX_INTLENGTH  - 10
+==&gt;  value * 10 &lt; MAX_INTLENGTH  - 9
+==&gt;  value * 10 &lt; MAX_INTLENGTH  - ch
+
+&gt; Depending on how closely STACK follows gcc's reasoning, if they do perform the
+&gt; same analysis then gcc would "see" UB there and decide that it could break the
+&gt; code.
+
+I don't know how closely STACK follows gcc's reasoning, but gcc does 
+indeed optimize such "if"s away. But it doesn't depend on any UB (and 
+hence STACK is not supposed to report it).
+
+Perhaps this is worth emphasizing. Compilers don't optimize like "Aha, I 
+see UB, lets remove something", it's more like "Aha, I can prove it's 
+false, let's remove it". And proofs sometimes use the assumption that 
+the code doesn't trigger UB, sometimes don't use.
+
+-- 
+Alexander Cherepanov
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

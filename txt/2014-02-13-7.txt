@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213154006.GA5000@openwall.com>
+Date: Thu, 13 Feb 2014 19:40:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Wed, Feb 12, 2014 at 06:20:38PM -0500, Bill Cox wrote:
+I wrote an SSE 4.1 version of the inner hash loop in NoelKDF, with a
+quick hack where I compute 4 separate interleaved hashes, so it gets a
+different answer, and has 4 times the parallelism.  I used the fast
+packed 32x32->32 multiply available on my Ivy Bridge processor
+(_mm_mullo_epi32), which we know will run a lot slower on Haswell.
+This instruction isn't even available until SSE 4.1, so that's a
+narrow band of processors that support it well.
+
+Right, although Samuel Neves posted nice emulation of it via SSE2 in:
+
+Date: Sun, 09 Feb 2014 05:47:29 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+The single-thread results dropped from 0.76 seconds to hash 2GB to 0.4
+seconds.  With two threads, it takes 0.3 seconds, so pretty darned
+fast.  The down-side here is the chains of multiplications are all cut
+to 1/4th the length, while I only got a 1.9X increase in speed.  That
+means an attacker will complete the hash a 4X faster, while I
+completed it only 1.9X faster, if computation speed is the bottleneck.
+
+Yes, and this was deliberate on your part: you knew you were only ~2x
+below the memory bandwidth, and you reduced the length of chains to 1/4.
+You didn't have to do the latter: you could e.g. access memory every two
+rounds (then things will be no worse than before SIMD) or possibly even
+every 3 or 4 rounds while still achieving no worse memory bandwidth than
+you did pre-SIMD (then you'd have an improvement).  Maybe try it?
+
+Note that accessing memory every N rounds, for N>1, does not reduce the
+multiply latency hardening aspect.
+
+I'm leaning towards abandoning this hack and SIMD all together.
+
+In this form, sure, it's not good enough.  But you can do better.
+
+Also, consider behavior at small memory sizes - e.g., only a few MB per
+instance, as will often be the case for password hashing (rather than
+for KDF).  You'll get different benchmark results, and the die area
+consumed by multipliers may be non-negligible.  In fact, potential reuse
+of the multipliers by other (attack) cores could start to matter, so
+you'd want to have more parallelism - not only SIMD, but also
+interleaving of instructions, keeping almost all pipeline stages of your
+multipliers busy on almost all clock cycles.  Your goal is to do that
+without reducing multiply latency hardening and without reducing memory
+bandwidth usage.  It's not easy, but it may be doable.
+
+On your Ivy Bridge, you need maybe 4x4 = 16 in-flight multiplies per
+core, where one x4 factor is SIMD and the other is pipeline stages.
+
+Alexander
+

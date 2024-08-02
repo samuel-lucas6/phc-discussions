@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <CAMtf1HtKjwdonR+f6L7En7qg=QWZFhX8psWbriWma1zrR2dS0g@mail.gmail.com>
+Date: Sat, 13 Dec 2014 08:07:17 +0800
+From: Ben Harris <ben@...rr.is>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On 13/12/2014 3:11 am, "Brandon Enright"
+Your description ignores an important optimization in the case where
+some hashes share a salt.  If you have N unique hashes and M unique
+salts then the work per candidate password is O(M) rather than O(N).
+>
+All cracking tools use a unique salts table because in many realistic
+scenarios M < N so what matters is not eliminating hashes from the hash
+table, it's eliminating unique salts from the salt table.
+
+I think unfortunately the status-quo has resulted in two different
+definitions for salt that depend on your personal context.
+
+Today's situation - salt is missing, constant or underspecified (12-bit
+salt was probably fine for my 20 account passwd file twenty years ago,
+practically needs to be globally unique now so 64bit +).
+
+PHC context - what the recommendation should be going forward. Salt is a
+properly implemented salt so M=N above. A 12bit "salt" doesn't provide much
+defence against anything today.
+
+Underlying this is the fact that most users would chose from a list of the
+top million passwords (as an example - provides for a nice 2^20 number).
+
+So the initial question was - if people are going to choose a weak password
+anyway, why bother with the salt. And the two answers were:
+The salt prevents precomputation attacks against good passwords (when using
+a real salt).
+The salt just provides an N times (M times with weak salt) slowdown when
+attacking weak passwords.
+
+If 2^48 hashes cost a dollar. In the case of the million weak passwords and
+a weak 12bit salt, the PHC winner needs to increase the work factor by much
+more than 2^16 to make attacking the whole database uneconomic.
+If we use no salt the cost is 2^12 lower.
+If we use a real salt, the PHC winner needs to increase the work factor by
+more than 2^28 to make attacking *one hash* uneconomic.
+If everyone started using strong passwords (even just 40 bit entropy), the
+2^28 drops to a more manageable 2^8.
+
+The ranty/not so ranty side - it is great when we all contribute to the
+pool of understanding in a conversation. And not so great when we just
+reply with "you are wrong, it should be obvious to anyone who has actually
+done X". I'm pretty good at inferring someone's context, but if you are
+going to reply to each and every of my messages in a thread and tell me I'm
+wrong without actually adding anything to the pool of understanding I'm
+liable to start poking back.
+
+Epixoip: I clearly hit a nerve for you to respond so strongly. Given that
+we know next to nothing about one another I'm sure you can see it was a
+lucky hit. I am sorry to have caused you so much distress.
+
+
+

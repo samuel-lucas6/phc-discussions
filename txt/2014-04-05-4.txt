@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Gambit review
+
+Message-ID: <alpine.DEB.2.10.1404051057440.1887@debian>
+Date: Sat, 5 Apr 2014 11:10:04 +0200 (CEST)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Gambit review
+
+On Fri, 4 Apr 2014, Krisztián Pintér wrote:
+
+Bill Cox (at Friday, April 4, 2014, 10:37:43 PM):
+>
+>Did you use bit reversal before reading Catena?
+>
+i never published, so it does not count. i accidentally discovered the
+good mixing property of bit reversal as a child, when i was looking
+for an algorithm to calculate points of the mandelbrot set in an order
+that gives me an overlook of the scene as soon as possible.
+
+Anyone who searches for methods to prove memory-hardness for algorithms 
+with a fixed look-up pattern is likely to (re-)discover the bit reversal 
+permutation. It seems like an obvious idea when you are working there.
+
+>  I am still trying to figure out what the impact is of
+>XORing over memory rather than overwriting it.
+
+We considered XORing for Catena. Maybe we'll still do it, if we get the 
+opportunity for a tweak. But we didn't finish the proper analysis before 
+the submission deadline for PHC. Being a professional cryptographer, I 
+have seen too many "obviously harmless" modifications turning bad, that I 
+would dare to trust any such modification without proper analysis.
+
+that one i can answer. if you overwrite, the slot becomes unused for a
+while. i mean, once it has been read, and until it gets a new value,
+it just sits there unused. at any point in time, a certain fraction of
+the memory (and a quite huge fraction) is in this idle state. if you
+cleverly reuse memory slots, you can run the algorithm with smaller
+memory footprint. i prevent this by never discarding any value.
+
+Good point!
+
+predictable addressing is something i'm not willing to give up. it is
+in my view an absolute necessity. i'd rather present a weaker
+algorithm than one that can be cracked wide open using side channel
+attacks.
+
+Agreed!
+
+>Now that I've seen a couple entries that use the new AESENC
+>
+as soon az keccak-ni arrives in 2019 processors, you will be a fan of
+gambit instead.
+
+Don't hold your breadth. The main reason for the introduction of AES-NI 
+instructions has not been the improved performance, but actually the 
+existence of cache-timing attacks on almost all AES implementations. The 
+design of Keccak/SHA-3 does not seem to allow such attacks. Also, I 
+anticipate most people will be using SHA-256 or SHA-512 rather than SHA-3 
+in the short- and mid-term future. If few people are using SHA-3, why 
+should Intel (or AMD) implement native instructions for SHA-3?
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

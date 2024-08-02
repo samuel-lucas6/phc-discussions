@@ -1,0 +1,129 @@
+phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)
+
+Message-ID: <CA+aY-u48gNMTMP9CfY8CRku7dQ3=BMo70-p3kCy2_-oVu6F77g@mail.gmail.com>
+Date: Fri, 24 Jan 2014 17:25:27 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)
+
+On 24 January 2014 16:33, <Stefan.Lucks@...-weimar.dewrote:
+
+On Fri, 24 Jan 2014, Peter Maxwell wrote:
+>
+ Unless I've missed something important, surely that is only if the
+>attacker has both the collection of hashes+salts *and*
+>continuing access to the compromised host?
+>>
+>
+Actually, the salts are sufficient, you don't even need to know the hashes.
+>
+
+​Fair enough, I was just trying to keep it generalised to avoid making
+assumptions about other potential submissions.
+
+
+
+
+>
+And "continuing access" is a bit of a stretch. You need some temporary
+access for some measurements. It doesn't matter if you compromise the
+hashes before you have access to the host, or at the time when you have
+access to the host, or after you have access to the host.
+
+
+Is it safe to presume the attacker must observe a correct login attempt for
+each password he/she wishes to recover?  (assuming the salts are all not
+equal to each other then in this scenario, the "correct" timing information
+for each password will be different and can only be known by observing a
+correct login)
+
+​If that is indeed the case, the problem will be of differing severity
+depending on the use-case.  In the situation of a standard website, the
+attacker would ideally need continuing access as only a proportion of users
+will login during a given time period.  In the situation of, say, a company
+then it would be far more critical as you can expect the majority of staff
+to login on any given day.
+
+
+
+>
+>
+ In that scenario, is it not likely that the attacker can also observe
+>plaintext
+>password attempts too?
+>>
+>
+Well, the whole point of a password hash is to provide a defense if the
+salt (and, actually, the password hash) has been compromised. Who, on
+earth, would need a slow and, maybe, memory-consuming password hash,
+otherwise? What would be the point of the entire PHC?
+>
+
+​The idea of an attacker stealing a password repository with hashes, salts,
+etc, can be either a one-time affair - for example, SQL injection - or it
+could be due to a persistent compromise of a system.  Both scenarios occur
+frequently.
+
+In the former example, the attacker will usually have difficulty in
+performing timing observations for a correct login.  In the later, the
+attacker will have timing information but in all likelihood will also be
+able to capture the plaintext passwords anyway via their compromise of the
+target system, obviating the need for using side-channels.
+
+So, while I'm not entirely comfortable with exposing a side-channel that
+could leak bits of the password, I suspect using timing information is not
+the most efficient approach for an attacker (who as a group normally go for
+the path of least resistance).
+
+
+
+
+>
+Actually, it is amazing that with the memory access pattern, you don't
+even need the password hash for this attack! In that sense, password hash
+functions with password dependent memory access patterns can turn things
+from bad to worse!
+>
+
+
+Eh, yeah, secret-dependent memory access patterns is really asking for
+trouble.  It might be more wise to generate a memory-hard - or at least
+memory-tricky - access pattern from fixed values, e.g. salt/username/etc,
+and use the non-commutative properties of logical operations against
+arithmetic operations.
+
+
+
+
+>
+(This is probably not a big deal. Usually, I'd expect salt and password
+hash to be stored at the same place, so if either is compromised, the other
+one is compromised as well. On the other hand, the salt is a "random"
+value, and recent relevations regarding, e.g., the Dual-EC-RBG random
+generator are frightening ...)
+>
+>
+​I get the distinct impression it will matter more in some scenarios than
+others.  Personally, I suspect that a one-size-fits-all general solution
+will need to make some pretty poor compromises and will end up being a
+mediocre improvement in most cases; the solution seems to require different
+tactics depending on the context it is to be used in.  Although, I suppose
+if this was easy it wouldn't be any fun.
+
+
+
+
+>
+In any case, the adversary just needs the salt and the ability "to rent a
+virtual machine sharing the same CPU as the defender" (quoting Marsh Ray).
+
+
+​"Just" the salt ;-)   In other words, if the attacker has the salt, are
+they likely to be needing to rent a co-incident VM?
+
+​
+
+
+

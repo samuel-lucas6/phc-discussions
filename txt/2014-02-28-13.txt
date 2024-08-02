@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] die area estimates (Re: [PHC] GPU multiplication speed?)
+
+Message-ID: <20140228165857.GD17032@openwall.com>
+Date: Fri, 28 Feb 2014 20:58:57 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] die area estimates (Re: [PHC] GPU multiplication speed?)
+
+On Thu, Feb 27, 2014 at 09:42:12PM -0500, Bill Cox wrote:
+I keep thinking that with your GPU background
+
+I don't have a GPU background.  We were late to add GPU support to JtR
+-jumbo, only starting with it in 2011, and it's not my primary focus.
+Some other projects/tools started earlier and/or did more in this area.
+
+and experience with
+other multi-core devices, that you've got some totally awesome
+massively parallel password authentication machine in mind, where the
+multipliers and ALU logic add up to a lot even compared to the RAM.
+
+It would be fun :-)
+
+Yes, it would be.  We considered defensive use of FPGAs for password
+hashing in a GSoC 2011 project.  We primarily focused on trying to make
+the parallel crypto cores tiny, so that a lot would fit and thus CPU/GPU
+attacks would be suboptimal because CPU and GPU cores and even
+individual SIMD lanes are "too big" (leaving much of their resources
+unused).  This wasn't very successful, although that could be in part
+because of our lack of experience with optimization for FPGAs (I guess
+many times better results could be achieved by instantiating resources
+manually).  Resource usage was too high even for tiny cores
+(Blowfish-like, but with ridiculously small S-boxes), so too few would
+fit.  Simply going with DES, which is an excellent fit for Xilinx FPGAs,
+would provide better CPU resistance.  CPUs run bitslice DES very fast,
+but FPGAs are much faster yet.  (Of course, for defensive use the
+parallel tiny cores' outputs would be combined into fewer hash outputs.)
+
+Another hurdle was that modern CPUs' shuffle instructions available on
+Cell, SSSE3, XOP essentially have 1-byte wide SIMD lanes with gather
+loads (albeit from only 16 or 32 bytes of "memory" per instruction),
+which matches our tiny S-boxes in FPGA too well.  A way to defeat this
+would be via making the S-boxes variable (and we did, just like in
+bcrypt).  We were afraid that AVX2 gather loads would defeat our defense,
+although so far this wouldn't happen (Haswell's implementation is slow).
+
+http://www.openwall.com/presentations/YaC2012-Password-Hashing-At-Scale/mgp00032.html
+
+Alexander
+

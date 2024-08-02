@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] integer multiply was not always constant-time
+
+Message-ID: <CAOLP8p5Cj2Xm3nY3CkO8my0DQiXGXhmbPJgmMbZdzfoDRjWG+g@mail.gmail.com>
+Date: Tue, 4 Mar 2014 18:02:56 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] integer multiply was not always constant-time
+
+On Tue, Mar 4, 2014 at 5:41 PM, Solar Designer <solar@...nwall.comwrote:
+BTW, let's not forget that even MUL/IMUL were not constant time on 486
+and prior (and it's similar on similarly old non-x86 archs).  So if we
+care about being timing-safe even on CPUs this old, we should probably
+avoid multiplication in the portion where we avoid cache timing leaks.
+>
+Alexander
+
+I think multiply speed remains data-dependent on ARM Thumb
+architectures (I've not checked which).  On pretty much all of these
+older machines, I think setting the number of multiplies per loop to
+zero is probably the right thing to do.  Not only are the multiplies
+not constant time, but they take a bunch more cycles, and there's no
+multiple-issue instruction unit, so this is all in-line with the
+runtime, and will significantly reduce the memory we can fill.  It's
+probably best just to fill memory as rapidly as possible on these
+machines.
+
+Bill
+

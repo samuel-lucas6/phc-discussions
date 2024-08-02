@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] PolyPassHash PHS interface
+
+
+Message-ID: <53497EE7.4030606@gmail.com>
+Date: Sat, 12 Apr 2014 13:59:03 -0400
+From: Santiago Torres <torresariass@...il.com>
+To: discussions@...sword-hashing.net
+CC: Justin Cappos <jcappos@....edu>, waywardgeek@...il.com
+Subject: Re: [PHC] PolyPassHash PHS interface
+
+Bill,
+
+Yes, the output seems "random". This behavior lies in the operating
+nature of the PolyPassHash scheme: we need to create a store
+in order to produce a Hash.
+
+After considering this, we decided to implement the PHS function in the
+following way:
+
+1) Create a new store after a call. This implies a new secret is
+generated, hence the random output.
+2) create a new polyhashed entry, this would belong to a user, but we
+do not care about users now.
+3) copy the value of the polyhashed entry to the output buffer
+4) destroy the store.
+
+We decided to do this in order to provide a time cost that should vary
+with the input. The time cost, in this case, is the threshold value for
+the store. We took this design decision based on the fact that vault
+creation and unlocking is the only cost-intensive operation that resides
+in the scheme; unlocking was not an option either since the store is not
+tune-able at that point.
+
+Taking this into consideration, integrating PolyPassHash into your test
+vectors seems to be difficult, but not impossible. The cost of doing
+this would be reduced secrecy, but it can be done; we can move to a
+chroot environment and overwrite dev/urandom to do the testing:
+
+mkdir pph_chroot
+mkdir -p pph_chroot/bin
+mount --bind /bin pph_chroot/bin
+mkdir -p pph_chroot/usr
+mount --bind /usr pph_chroot/usr
+mkdir -p pph_chroot/lib
+mount --bind /lib pph_chroot/lib
+
+# if you have 64-bit binaries
+mkdir lib64
+mount --bind /lib64 pph_chroot/lib64
+
+mkdir -p pph_chroot/dev/
+
+# create a fake urandom file...
+dd if=/dev/urandom of=pph_chroot/dev/urandom count=2048
+
+chroot pph_chroot
+# ... do the testing.
+
+You might need to bind some other locations, depending on the libraries
+you are using to run your test vectors.
+
+I hope this is good enough to allow testing, but if not, please let me
+know and I can help you put something together.
+
+-Santiago.
+

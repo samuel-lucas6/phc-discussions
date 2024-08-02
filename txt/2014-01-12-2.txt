@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140112073638.GA8693@openwall.com>
+Date: Sun, 12 Jan 2014 11:36:38 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 08:47:07PM -0800, Andy Lutomirski wrote:
+To be clear, I was thinking about the possibility of hammering cache
+and main memory at the same time.
+
+We're playing with that, but it's tricky.
+
+Imagine some matrix multiplies or
+other cache-heavy operations needed to select the next memory index to
+access.  If you could get 30 or 40 GB/sec and, say, 100GB/sec to L2,
+you'd probably be doing even better.  (No clue whether this is
+possible -- I'm not at all sure whether modern CPUs can sustain that
+much bandwidth anywhere.  Something that depends on low-latency access
+to a block of cache might be a better bet.)
+
+Modern CPUs can sustain that bandwidth and more - I am getting ~400 GB/s
+cumulative for sequential reads from L3 cache on the 2x E5-2670 machine
+(it got 20+20 MB L3 cache in the two CPUs), with 32 threads each reading
+from its own region.  However, getting a KDF to use that is not trivial.
+
+For example, making only one change relative to the 50 GB/s escrypt with
+Salsa20/1 at 2 GB (one of the examples I posted recently) - reducing
+scrypt's N so that the memory usage is only 32 MB - surprisingly results
+in the speed dropping to 10 GB/s.  Having many threads running suddenly
+provides little or no speedup over 1 thread (it's around 10 GB/s either
+way).  I think this has to do with the way L3 cache is structured: split
+between the two CPU sockets and having 2.5 MB sub-regions close to each
+CPU core.
+
+Running many independent instances of escrypt with p=1 works fine
+(providing slight increase in speed as we reduce memory usage, with no
+unexpected performance drops), but does not (yet) reach cumulative
+speeds in excess of RAM bandwidth (even though on the sequential read
+test the L3 cache is much faster, as I mentioned above).
+
+So it appears that each thread needs to use its own portion of the cache
+(or we can have p=1, in which case the issue does not arise).  Then
+simultaneous use of cache and RAM may be beneficial.  In escrypt, we
+currently only have something like this when there's a "ROM" (such as in
+RAM on 2 MB pages in SysV shared memory) and also a smaller "RAM".  One
+of the specific size combinations we're using for testing on this
+machine is 112 GiB ROM (shared) + 1.75 MiB RAM (per instance).  With 32
+concurrent instances (each with p=1, since we're talking mass user
+authentication where the parallelism will come from nearly concurrent
+authentication attempts), this works reasonably well, but unfortunately
+does not (yet) benefit from L3 cache's higher bandwidth potential as
+much as I think it could (given that most of the 1.75*32 = 56 MB can fit
+in the 40 MB of L3 cache).  There's room for improvement, but it gets
+tricky, and even if we come up with some approach that provides good
+results I'm afraid we won't like the added complexity.
+
+So we're already making use of two layers in the memory subsystem, via
+having "ROM" and "RAM", and we intend to add greater dependency on nice
+properties of the L1 cache (ability to access smaller than cache line
+pieces of data efficiently and with low latency).  That will be three
+layers when a "ROM" is present, and two layers when not.  Adding another
+layer (such as to better use L2/L3 caches when there's no "ROM") might
+not be worth the complexity.
+
+Alexander
+

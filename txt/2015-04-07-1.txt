@@ -1,0 +1,433 @@
+phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Message-ID: <20150407001232.GA18442@openwall.com>
+Date: Tue, 7 Apr 2015 03:12:32 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi Marcos,
+
+On Mon, Apr 06, 2015 at 01:09:36PM -0300, Marcos Simplicio wrote:
+Apologies for the delay: I had almost no Internet access this weekend.
+
+No problem about the delay.
+
+On 03-Apr-15 08:12, Solar Designer wrote:
+There's a difference, though: I guess yescrypt's pwxform S-box lookups
+are much more frequent than Lyra2's equivalent (is there one?)  
+
+No, there is no table look-up or anything of the sort in any Blake
+variant I'm aware of.
+
+Of course not in Blake2, but does Lyra2 itself perform anything like it?
+
+OTOH, what I can say is actually a question: the S-box lookups are
+attack-discouraging when you look at GPUs, right? At least that is what
+I grasped from previous discussions on pwxform:
+
+- Multiplications are to limit speed-ups on ASICs, since CPUs have
+highly-optimized hardware for this task (I'm not sure about GPUs).
+
+- Look-up tables (LUTs) are GPU-unfriendly operations, at least in
+theory, but are in principle very fast in hardware.
+
+So far we were discussing hardware-oriented protection, so LUTs would
+not count much in the comparison. Of course, I may be missing something!
+
+You're mostly correct.  The rapid S-box lookups are primarily meant
+against GPUs.  So when I mentioned them, I expanded the scope of the
+comparison.
+
+However, like MULs they are also not very fast in hardware.  In fact, in
+an earlier thread here we discussed the possibility to build a 32x32->64
+MUL from multiple table lookups, and the conclusion was that it's
+unlikely to reduce the overall latency much if at all.  So what pwxform
+achieves is ensure that a round latency is max(MUL, LUT), and it is in
+fact unclear which of these is faster on attacker's platform.  This may
+vary between attackers and their platforms.  It might vary even between
+different reasonable ASIC designs, although chances are that LUTs (of
+this size) are roughly twice faster than MULs.
+
+BTW: we are still trying to verify the above assumptions on GPU- and
+FPGA-oriented unfriendliness with actual experiments. The GPU graphs
+should be ready shortly (we have a GPU specialist working on that),
+while FPGAs should take a little longer (a colleague professor allocated
+a student to work on that).
+
+You've seen our results for bcrypt cracking on a variety of devices
+including GPUs and FPGAs, right?
+
+http://www.openwall.com/presentations/Passwords14-Energy-Efficient-Cracking/
+
+There's also related work for bcrypt cracking on FPGAs by Friedrich
+Wiemer and Ralf Zimmermann:
+
+https://www.emsec.rub.de/media/crypto/veroeffentlichungen/2014/10/22/reconfig14_bcrypt.pdf
+
+Also, I never understood why you chose two full passes through memory as
+the minimum for Lyra2.  Is this arbitrary?  For yescrypt, the 4/3 can be
+shown as being the optimal stopping point assuming no AT-reducing TMTO,
+so it's not arbitrary at all.
+
+OK, that is our fault: that should be clearer on our documentation...
+The rationale is a little long, so please bear with me.
+
+I found this very interesting, thank you!
+
+In regular executions with large amounts of memory, memory latency and
+bandwidth are expected to (and, experimentally, they do) play an
+important role. The result is that using much faster computation
+hardware in attacks may end up being of little use: it will not
+accelerate the attack by much, just like increasing the number of rounds
+10 times in a legitimate platform does not slow down the execution 10
+times either...
+
+Right.  Computation speedup might or might not provide a comparable
+speedup of attacks.
+
+Now, attackers could combine faster computation hardware with faster
+memory technology, thus taking full advantage of the former to
+accelerate attacks, in which case computation hardening indeed becomes
+an important requirement. However, using fast memory technology for a
+PHS with a high memory usage (e.g., 1GB of high-speed registers) is
+probably unrealistic, as it would become very expensive to test a single
+password, let alone several passwords in parallel. It would probably be
+more reasonable to buy more (less expensive) hardware and get a higher
+password testing throughput simply with parallel tests.
+
+This is unclear.  Faster memory technology is already being developed,
+and it won't necessarily be prohibitively expensive.  The question is
+whether it'd become equally available on typical defenders' hardware and
+on attackers' most cost-effective specialized/chosen hardware, or not.
+
+On the other hand, using fast memory is very reasonable for accelerating
+operations that involve only a small amount of memory. This is exactly
+what a legitimate user's cache is for, so maximizing cache usage on the
+legitimate platform is (at least from this perspective) a good approach:
+attackers should have at least the same amount of cache to get the same
+speed-ups, while having much more cache only helps if the data to be
+processed is in that part of memory (e.g., if the required data can be
+prefetched, something reasonable in deterministic, cache-timing
+resistant schemes/passes, or, again, if the whole memory is a huge cache).
+
+Yes.  So yescrypt's S-boxes tuned for current CPUs' L1 cache per thread
+favor current defenders vs. possible attackers' hardware mostly other
+than ASICs (some kilobytes of SRAM in an ASIC is almost negligible, if
+we also use megabytes of RAM).
+
+There is, however, another situation that involves only small amounts of
+memory and, thus, in which attackers can benefit from faster memory
+technology: recomputations during a TMTO attack. After all, whether the
+scheme/pass is deterministic or password dependent, recomputations
+become password-independent as long as the attacker stores the sequence
+of rows required after seeing them in original computation; those rows
+can, thus, be prefetched and stored in cache-like memory. As a result,
+while the original computation of a block V_i (discarded) from a set of
+blocks \phi{V_i} took, say, 20\sigma (where \sigma accounts both for
+memory- and processing-related costs), a hardware acceleration of 10x
+combined with a 10x faster memory could bring the cost of recomputations
+to approximately 1 if \sigma is 50% memory and 50% processing;
+parallelism and pipelining, if possible, may allow recomputations to
+occur even faster. The lesson here is that, even though at first sight
+the time*memory cost would appear to the around 20, in practice it might
+be much lower than that. That is why computing the actual time*memory
+cost is tricky, especially without experiments to verify them, and why I
+believe TMTO resistance should involve a reasonable security margin
+(something that Argon and Lyra2, for example, try to achieve with their
+minimum settings).
+
+Basically, you're saying that TMTO reduces not only the memory
+component, but also a time component - specifically, memory latency - so
+the theoretical memory*time calculations that assume same time per round
+of a primitive, etc. do not reflect the reality.  OK, this is finally a
+well-reasoned argument in favor of a TMTO security margin.  (It's also
+an argument in favor of compute time hardening, which makes having a
+TMTO security margin less important.)
+
+I actually considered this aspect in yescrypt's support for thread-level
+parallelism, where it tries to discourage the obvious TMTO that is
+otherwise possible with sequential computation of the would-be-threads'
+workload.  This TMTO attack would not reduce the theoretical and naive
+memory*time product, but it may reduce real life's due to lower memory
+latency.
+
+---
+The YESCRYPT_RW flag moves this parallelism to a slightly lower level,
+inside SMix.  This reduces flexibility for efficient computation (for
+both attackers and defenders) by requiring that, short of resorting to a
+TMTO attack on ROMix, the full amount of memory be allocated as needed
+for the specified p, regardless of whether that parallelism is actually
+being fully made use of or not.  This may be desirable when the defender
+has enough memory with sufficiently low latency and high bandwidth for
+efficient full parallel execution, yet the required memory size is high
+enough that some likely attackers might end up being forced to choose
+between using higher latency memory than they could use otherwise
+(waiting for data longer) or using TMTO (waiting for data more times per
+one hash computation).  The area-time cost for other kinds of attackers
+(who would use the same memory type and TMTO factor or no TMTO either
+way) remains roughly the same, given the same running time for the
+defender.
+---
+
+This desire for a security margin is what motivated Lyra2's t_min=1,
+which can be considered "arbitrary" but not "random": it was based on
+the security analysis we tried to provide together with the algorithm's
+documentation. Based on what we have seen as effective attacks, I
+believe that (and, again, that is open to debate!):
+[...]
+Without further experimentation, however, I do not feel comfortable
+speculating further on potential drawbacks of each approach, though. I
+can only say that we do pay a price in terms of performance trying to
+provide some cache-timing resistance, while it might be better to go
+with Argon2's approach of separating things in "d" and "i" (explaining
+the difference to users, however, may not be very easy).
+
+Thanks for explaining your rationale.  All of this (including the
+portion I skipped from quoting) makes sense to me.
+
+Anyhow, I do not think t_min is critical for any scheme during the
+competition itself: a better understanding on attacks may motivate
+authors to set it higher or lower, and the final decision of what should
+be the minimum is probably something that needs to be discussed and
+sanctioned by the PHC panel together with the authors and the community
+in general. SHA-3's capacity is an example of such after-competition
+effort: although it is probably a bad example due to the debatable
+choices NIST tried to push, the idea of "fixing some knobs" after a
+scheme was selected is not bad per se.
+
+I agree.  Unfortunately, we don't currently have another tweaking phase
+planned, so we have to pay attention to the current settings as well.
+
+And that is also why comparisons
+with a similar number of passes through memory are useful, even if not
+definitive to say which scheme is "the best".
+
+While I agree that t_min isn't critical, you've provided some good
+reasons why Lyra2's isn't currently set lower.  Most notably, its
+partial cache-timing resistance.  With this, I think it primarily makes
+sense to compare yescrypt vs. Lyra2 at their current t_min's, but also
+to take into consideration that Lyra2 buys us partial cache-timing
+resistance, whereas yescrypt (mostly) does not.
+
+I currently recommend that yescrypt be used with t=0 unless more time
+can be spent and more memory can't be in a given case.
+
+That is reasonable. I'm just not sure what is the "security margin" in
+practice (again, because computing time*memory cost is
+technology-dependent). Just to avoid misunderstandings: no FUD intended
+here! Unless someone can come up with an effective attack, there is no
+reason to think yescrypt's assumptions are wrong, so t=0 may be
+perfectly safe.
+
+I expect that there may in fact be cases where a low TMTO factor like
+1/2 would turn out to be optimal when attacking yescrypt t=0.  However,
+I expect those to be relatively rare special cases, and I expect that
+the alternative of having yescrypt run to higher t would have been worse
+even in most of those special cases (it'd defeat TMTO, but the overall
+memory usage would be less without TMTO).
+
+I cared about those TMTOs that don't reduce theoretical memory*time more
+for the thread-level parallelism, because potentially much higher TMTO
+factors would otherwise be practical there: proportional to the number
+of threads, which for some use cases might be very high.  I think the
+current yescrypt design greatly reduces the TMTO factors that would
+actually turn out to be optimal in those cases (and requires TMTO to be
+applied at ROMix level rather than at thread level).
+
+>- For 1 thread ("p1") with different passes through memory: say,
+>yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+>while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+>MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+>= 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+>difference, the reason is probably related to bandwidth usage, because
+>Lyra2 purposely uses more bandwidth in this scenario: namely, it makes 2
+>writes per call of the underlying hash instead of 1, and 4 reads (2 from
+>cache and 2 from memory) instead of 2. I'm not sure if that is good or
+>bad, but improvements on memory bandwidth are usually slower than on
+>computation power, so I would rather say it is good in terms of attack
+>resistance, as it limits an attacker's parallelism ability.
+
+This makes sense, but you also need to factor in yescrypt's S-box lookups.
+
+I agree this factor is likely to play a role. However, Bill reported a
+long time ago speed-ups of ~20% if Lyra2 reduced its number of memory
+writes when no parallelism is employed. We preferred not do so in the
+1-threaded version, however, because we _wanted_ attackers to run into
+memory bounds as soon as possible (again, because users and attackers
+are likely to have access to the same memory technology).
+
+I didn't mean that yescrypt's S-box lookups slow it down a lot - I think
+they slow it down just a bit.  This is a measurable slowdown, though.
+(I designed and re-designed pwxform until the performance impact of
+S-box lookups was low, while their frequency was bcrypt-like.)
+
+I primarily meant that they add to defense too, so same speed of Lyra2
+and yescrypt on a given benchmark may actually mean that yescrypt wins
+in terms of the compute hardening against various platforms.
+
+Nevertheless, that discussion and further tests motivated a bandwidth
+reduction for higher p,
+
+While you can tweak things based on p for KDF use, you can't do it for
+password hashing use - you just don't know how many threads are being
+run simultaneously (external to your code).
+
+which justifies the better results for p 1:
+the extra cores provide both the higher bandwidth usage we wanted and
+similar TMTO security margins. The side effects are, however:
+
+1) It does become memory bound with degrees of parallelism higher than ~4
+
+2) More parallelism allows better performance of attacks using GPUs
+(e.g., the highest throughput of GPU-based attacks reported in the
+Reference Guide is for p = 4, the maximum p we tested)
+
+Of course, more/excessive parallelism favors attackers.
+
+All in all, it is quite possible that Lyra2 is not as good at using the
+whole budget of processing cores as schemes with a lower bandwidth
+usage, unless further tweaking is done (outside the competition, of course).
+
+Right.
+
+What machine is this, for these benchmarks?
+
+Sorry: I forgot to mention... It is a Intel Xeon
+E5-2430, with 48 GB of DRAM, running Ubuntu 14.04
+LTS 64 bits
+
+(Note: this is the same computer used for the benchmarks in our
+reference guide. The number of physical cores is 6, however, not 12 as
+reported there: 12 is the number of threads)
+
+Yes, and I recall asking you for p=12 benchmarks before. ;-)  Thank you
+for providing them now.
+
+Would you also benchmark Lyra2 vs. yescrypt for the maximum number of
+threads supported in hardware on your machine, please?
+
+Sure! Attached are the graphs for 1-14 threads (more than 12, just to
+see what happens).
+
+Thank you!
+
+For more than 12, what happens is implementation and system rather than
+design specific.  It also matters whether this is merely p=14 or actual
+14 threads running concurrently.
+
+For yescrypt, a (minor) goal was that there should be no (significant)
+reduction in requests/second throughput with growing number of
+concurrent independent threads (as with password hashing on a server),
+including beyond the server's supported hardware threads (so with
+context switching).  I ran some experiments of this sort.  This is also
+a minor reason why PWXrounds is currently set so high.
+
+With p=14 in one invocation, you may in fact see a slowdown, because by
+default OpenMP does not run more threads than your system supports in
+hardware.  The two extra threads' workloads were waiting for two threads
+to be done with their initial workloads.  With p=24, you'd see optimal
+behavior again.
+
+As mentioned above, Lyra2 gets memory bound after ~4 cores, so there is
+little difference in performance between Blake2 or BlaMka with a
+different number of rounds.
+
+Yescrypt appears to scale better with more cores, apparently because it
+does not get (much) memory-bound. We notice that the performance gains
+seem to be more expressive up to the point the maximum number of
+physical cores is reached, although it may be a coincidence.
+
+This is not a coincidence.  yescrypt with its current pwxform settings
+contains almost enough instruction level parallelism to fully load your
+CPU's cores even without running 2 threads/core.  This was a tough
+decision (on tuning the default settings), because excessive parallelism
+helps attacks.  I made it this way in part because some recent/cheaper
+Intel CPUs come with HT disabled (and some people disable HT in BIOS
+settings) and in part because this extra parallelism will be made use of
+with AVX2 code (so 2 threads/core would be required there anyway).
+
+Another aspect is that you might have needed to set
+
+export GOMP_CPU_AFFINITY=0-11
+
+to have OpenMP work more optimally for 6 threads on your machine.
+
+One question here is: does yescrypt design tries to make attackers
+memory-bound too? I mean, it clearly takes better advantage of the
+"processing cores" budget, but cores are something that attackers are
+likely to have access more easily than defenders, while "better memory
+technology" not so much. This logic may be completely wrong (especially
+without experimental results to back it up), but, for better or for
+worse, that is something we considered when designing Lyra2.
+
+yescrypt tries to maximize use of multiple resources at once, so it
+tries not to bump into memory bandwidth before reaching the maximum
+number of threads supported in hardware.
+
+I was primarily optimizing it for password hashing on a server, where
+the requests rate capacity (and thus what cost settings the sysadmins
+would choose for new passwords) is determined by what happens at full
+load - so with the maximum number of concurrent instances running.
+
+This makes it suboptimal for KDF use at low p.  Unfortunately, low p
+does not indicate there are not lots of concurrent independent threads
+running, which is why I didn't opt to tune PWXrounds based on p.  Maybe
+there should be an implementation-level flag to tune for KDF use at low
+p (would in fact reduce PWXrounds if so).
+
+Are both Lyra2 and yescrypt
+built for the same SIMD intrinsics (and which)?
+
+Not really: Lyra2 uses SSE2 ("-msse2" flag), while yescrypt was built
+with the default makefile, with its "-march=native" flag. So, in the
+words of my student who run the benchmarks, "yescrypt is running SSE4.1
+and/or AVX".
+
+I will have to check in more detail to avoid saying anything wrong, but
+it appears we are running yescrypt with more help from SIMD instructions
+than Lyra2...
+
+It sounds so.
+
+BTW, we have not yet used the suggestion by Samuel Neves regarding NORX
+tricks ("We used this trick (replacing + with ^, * with &) in NORX (pg.
+23 of https://norx.io/data/norx.pdf); it does noticeably
+improve latency."). We will try and see what happens.
+
+I think Samuel was referring to the operation re-ordering trick I had
+mentioned, not to "replacing + with ^, * with &".  Replacing * with &
+would obviously remove the multiply latency hardening.
+
+There's significant room for improvement for yescrypt with AVX2, which I
+haven't added yet.  In fact, on pre-AVX2 CPUs the compute hardening can
+be doubled by reducing the parallelism from 512-bit to 256-bit, with
+only a moderate slowdown, so the hardening per defensive running time
+would likely be improved by 50% or so - but I preferred the defaults to
+be balanced, with newer and near future CPUs in consideration as well,
+and also with CPU attacks considered (where an attacker could bring the
+extra parallelism in from having multiple candidate passwords to test).
+
+That sounds reasonable. One caveat, though, is that if we really are
+going to take into account more limited platforms (e.g., 8- or 16-bit
+microcontrollers) as a possible use case, then fixing the underlying
+hash to pwxform may not be the best approach (possibly a "pwxformLite"
+would be necessary).
+
+Yes, I had thought of that, but I listened to the criticism (and my own
+opinion) of yescrypt being too complex already.  Currently, pwxform
+scales down to one 64-bit lane, but not below that.  This means it has
+2x maybe-excessive parallelism when running on some 32-bit CPUs.  As to
+microcontrollers, those would need a MUL-less version of pwxform.  My
+idea was to provide a 32-bit MUL-less version like that (similar to or
+even exactly a Blowfish round) when PWXgather = PWXsimple = 0.  Maybe
+later, if there's demand.  Right now, yescrypt's native mode is not for
+systems this small.
+
+Wow.  This reply took time to write.  Maybe we should avoid lengthy
+messages like that.
+
+Thanks again,
+
+Alexander
+

@@ -1,0 +1,53 @@
+phc-discussions - Re: Password hashing by itself is not enough
+
+Message-ID: <op.xvf12gvgyldrnw@laptop-air>
+Date: Fri, 13 Mar 2015 09:18:12 -0700
+From: "Jeremy Spilman" <jeremy@...link.co>
+To: discussions <discussions@...sword-hashing.net>, "Justin Cappos"
+ <jcappos@....edu>
+Cc: polypasswordhasher-dev <polypasswordhasher-dev@...glegroups.com>
+Subject: Re: Password hashing by itself is not enough
+
+That all definitely makes sense, thanks!
+
+>In either case you need some admin (threshold account) input when the  
+>server first boots to ensure all users can immediate start logging in.  
+>In either >>case the secret can be stolen over the network from a  
+>compromised server.
+>
+I think we likely get in our own way by saying administrator, non admin,  
+etc.  Really, if you have some reason to believe that an attacker cannot  
+simply >create as many accounts as they like, you can make all of the  
+accounts 'protector accounts' (or threshold accounts in our prior draft)  
+*so long as you >don't use ICB (partial verification) to allow logins  
+before a threshold is reached*.
+
+I meant 'admin' in the case of the volatile pepper, or 'threshold account'  
+in the case of PolyPass, sorry for any confusion.
+
+Some people have commented to us that a reasonably number of users  
+choose password or 123456, so this would be guessable.  For example, .9%  
+of the >RockYou users chose 123456.   However, since you have to guess  
+*which* accounts choose this password, the amount of time also becomes  
+massive.  >It is basically a .009^5 probability that each guess is  
+correct.  If you use tricks like key stretching to make the  
+recombination time long, then this operation >can also take a very long  
+time.
+
+Key management / Protector account management concerns aside, I think it  
+is reasonable to say the result (the resulting security posture) of a  
+secret key and PolyPass are fairly similar if not exactly the same?
+
+>
+Note, I copied the wrong cracking number from my previous email.  With a  
+threshold of 5 on RockYou, and an attacker checking for 123456, the time  
+>would be hundreds of years w/ stretch to 1 check per second.  (1 check  
+per second is sane because the defender will only need to do this  
+operation a >small number of times, often once, per reboot.)
+
+That's a very nice feature, to be able to add latency / cost to the key  
+recovery process independent of the latency / cost of a password  
+verification after the key has been recovered! I will have to read up on  
+how you imposed tunable latency on the Shamir secret recovery process.
+
+

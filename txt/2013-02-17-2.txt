@@ -1,0 +1,72 @@
+phc-discussions - RE: [PHC] Different cost settings and optional input
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E09036FB7@TK5EX14MBXC286.redmond.corp.microsoft.com>
+Date: Sun, 17 Feb 2013 07:18:15 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: Jeremi Gosney <epixoip@...dshell.nl>
+CC: Jens Christian Hillerup <jens@...lerup.net>, Jens Steube
+	<jens.steube@...il.com>, "discussions@...sword-hashing.net"
+	<discussions@...sword-hashing.net>
+Subject: RE: [PHC] Different cost settings and optional input
+
+-----Original Message-----
+From: Solar Designer [mailto:solar@...nwall.com]
+We may have a chicken-egg problem here.  If there's an elegant and compact
+PHC submission that possesses some of these optional extra features,
+_then_ maybe they'd become reasonable to use and popular.
+
+Yeah, good point.
+
+That said, I agree that many/most PHC submissions may be simple ones,
+without the extras, and we're likely to favor them for the simplicity.
+
+Are we going to be awarding points at all?  Is this how we'll be determining
+the winner(s)?  Maybe, or maybe not.
+
+I have no idea, except that fairness requires us to document the criteria as well as possible in advance.
+
+It may be that, like the SHA-3 competition, we learn a lot during the process itself. Therefore, having multiple rounds of the competition will be important.
+
+I agree that having too many knobs will result in more misuses, but FYI I
+found scrypt with its three knobs not flexible enough - I want more knobs
+(specific ones) for some specific uses - well, or I'd have to hard-code some
+changes, without supporting scrypt proper.
+
+It may be that you dealing with specialized uses and thus not really the target audience for the recommended result of the PHC :-)
+
+The solution may be in providing multiple interfaces (wrapper
+functions?) to the password hashing scheme - and recommending that
+people use the one with the lowest number of knobs that they need (we'll
+provide sane defaults for the rest of the knobs then).
+
+I'll probably be saying this often: I think the biggest challenge initially is just defining a model where we can evaluate the effectiveness of the knobs that we *can* reasonably define the behavior of. E.g., CPU-hard, RAM-size-hard, RAM-latency-hard, GPU-unfriendly, FPGA-unfriendly, ASIC-unfriendly and all this relative to defender's-hardware-friendly.
+
+We may end up having to define some of this in terms of assumptions about the defender's hardware.
+
+
+-----Original Message-----
+From: Jeremi Gosney [mailto:epixoip@...dshell.nl]
+
+Yes, I can see how that proposal would not be very popular :)
+
+It was more of a thought experiment, but hopefully not one completely disconnected to reality.
+
+My impression is about half the users can be expected to choose one of the top 10000 most common passwords. 10k trials takes, what, microseconds on a single GPU? Take the LinkedIn breach for example: millions of unsalted SHA-1 hashes. About half were cracked in the first few minutes to a day. The next batch to 70-80% took a few weeks. Probably 10-5% will never be cracked.
+
+Salting for Linkedin would have increased the difficulty for the attackers *hardly at all*. GPU cracking has gotten so fast that precomputed rainbow tables often not even worth the trouble. When you can compute Gigahashes per second on a single video card, a dictionary proves to be more trouble than it's worth for the initial pass.
+
+Sure LinkedIn could have imposed a reasonable work factor...but how many more servers are they willing to deploy to handle on the massive number of logins they process?
+
+So if a defender said "forget the salt...we'll thwart dictionary attacks by preventing duplicate passwords", could he possibly be better off with this strategy?
+
+This alternate non-salt solution to the problem of preventing precomputation and observing duplicate passwords simply ensures that duplicate passwords (and those appearing in other breaches) are not allowed. This is a 'tough love' policy applied to the users because it means they can't register twice with the same password. But that's not a serious problem is it? The user could just append their username and it's probably against the ToS anyway, right? The users' credentials are probably far more at risk because he uses the same password on multiple sites (like Linkedin).
+
+But when new user B independently chooses existing user A's password, we know two things: that the password is not unguessable and probably worth adding to a dictionary. We can't allow B to use it. We also have informed B that some user account has that password, and so to protect A we need to disable him until he chooses another one via a second factor of authentication (could be as simple as the 'forgot my password' email reset process).
+
+So...salts aren't always be the big win they look like on paper because cracking tools have gotten far more faster than users have gotten better at generating and remembering entropic strings.
+
+Again, it's a thought experiment.
+
+- Marsh
+
+

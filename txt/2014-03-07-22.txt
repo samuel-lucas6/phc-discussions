@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CALCETrW0kRpaTppHkD0P+_PLFFEaN8uK7NJb9OxWd_bNQbfhRw@mail.gmail.com>
+Date: Fri, 7 Mar 2014 15:30:37 -0800
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 3:22 PM, Solar Designer <solar@...nwall.comwrote:
+On Fri, Mar 07, 2014 at 05:21:06PM -0500, Bill Cox wrote:
+>On Fri, Mar 7, 2014 at 11:49 AM, CodesInChaos <codesinchaos@...il.comwrote:
+>As an example with nice printable characters in both passwords:
+>>
+>`plnlrtfpijpuhqylxbgqiiyipieyxvfsavzgxbbcfusqkozwpngsyejqlmjsytrmd`
+>and `eBkXQTfuBqp'cTcar&g*` have the same PBKDF2-HMAC-SHA1 hash (no
+>matter the salt or the number of iterations).
+>>
+>I found those with a CPU and unoptimized code. One of our GPU hashing
+>friends could easily find a similar pair for PBKDF2-HMAC-SHA-256.
+>>
+>Sweet.  I assume the only difficulty is finding a printable character
+>hash, which is something like 70 out of 256 values, so the printable
+>hashes for HMAC-SHA256 would be 1 in (70/256)^32.  We'd have to search
+>about 1e18 to find one, so a billion billion... definitely time for a
+>GPU farm.
+>
+There are 95 printable 7-bit ASCII characters, not 70.  The attached
+trivial program may do the trick in a couple of weeks on a fast server.
+>
+I've already found such "collisions" for 8-bit printable ASCII, and made
+sure they do indeed work for scrypt as a whole as well (confirmed).
+
+It seems odd to me that PBKDF2 is being used in any PHC proposals.
+AAUI PBKDB2 was intended as a password hashing algorithm, and it's not
+very good.  The modern PHC candidates really want to use at as a
+function that maps arbitrary-length strings to arbitrary-length
+strings and that has "some of" the properties of a PRF, where "some
+of" is possibly not very well thought through.
+
+Why not use a simple, modern primitive for this?  To me, the obvious
+candidate is Keccak.  It's immune to generic attacks like this, which
+was half the point of developing it in the first place.  ISTM that it
+would be embarrassing for the PHC winner to have less resistance to
+generic attacks than a hash function should provide.
+
+--Andy
+

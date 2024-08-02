@@ -1,0 +1,77 @@
+phc-discussions - RE: [PHC] Required Output Key
+
+Message-ID: <000001ce0eca$3a0398e0$ae0acaa0$@acm.org>
+Date: Tue, 19 Feb 2013 09:54:54 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Required Output Key
+
+The common approach to this (illustrated by PBKDF2 but also other key
+derivation functions) is to ask for a wider result and break it up into the
+cryptographic parameters that are needed.  This happens, for example, with
+authenticated encryption where an IV, symmetric key, and MAC key are all
+needed.
+
+So it is not necessary to have PHS( ) produce multiple results, it can
+produce a wider result than just what is needed as an authentication
+verifier.  
+
+However, a successful attack on the part used as a password authenticator is
+likely to be a successful attack on the rest of the PHS result.  Once the
+authentication hash is compromised, one must assume that the key derivation
+is as well.  (The negligible prospect of a collision on only the
+authentication hash is a tolerable cost of doing business for determined
+adversaries.)
+
+It seems to me that we're right back at the problem of disclosed hashes and
+the prevalence of poor passwords in situations where an off-line attack can
+be carried out.
+
+ - Dennis
+
+
+-----Original Message-----
+From: havoc [mailto:havoc@...use.ca] 
+Sent: Tuesday, February 19, 2013 06:36
+To: discussions@...sword-hashing.net
+Subject: [PHC] Required Output Key
+
+It is important for the submissions to return two values:
+
+(1) A standard hash for verification.
+(2) A variable-length encryption key.
+
+If an attacker has access to the hash list, they'll probably have access
+to other data in the database (user's name, credit card number,
+messages, etc.), and assuming a full compromise, the only way to secure
+them is by encryption with a key derived from the user's password.
+
+It's easy to create two different hashes of the single output and use
+one as the hash and the other as the key. But if what's standardized
+only defines a verification hash output, coders are going to have to
+implement that themselves, and they're going to invent all sorts of
+wacky and insecure stuff.
+
+Some mistakes I can see happening:
+
+1. Hashing the hash to get the key.
+2. Using SHA256(password) as the key.
+3. Re-running a different stretching algorithm on the password.
+4. Using the hash as the key and a hash of the hash as the hash.
+5. Deriving a 32-byte key from the 16-byte output.
+
+... and so on ...
+
+These are obvious mistakes to us, but we are cryptographers, and the
+majority of coders using PHC are not. So either PHC should require
+separate key/hash output parameters, or we should, in parallel, decide
+upon the best scheme for deriving a (key,hash) pair from the single output.
+
+What do you think?
+
+Regards,
+-- 
+Havoc
+(sorry for the nym -- I'll use my real name someday)
+
+

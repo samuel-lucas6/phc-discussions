@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] Some updates on EARWORM
+
+Message-ID: <20131116041812.GA6367@openwall.com>
+Date: Sat, 16 Nov 2013 08:18:12 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some updates on EARWORM
+
+Daniel,
+
+On Fri, Aug 23, 2013 at 09:44:18PM -0400, Daniel Franke wrote:
+Here are some updates on EARWORM.  See
+http://article.gmane.org/gmane.comp.security.phc/226 if you missed the
+original thread.
+
+* I've cut CHUNK_WIDTH from 4 to 2, leaving CHUNK_LENGTH at 128. Testing
+  on my workstation seems to indicate that neither the reduction in
+  internal parallelism nor the increased frequency of random memory
+  accesses results in any performance penalty.
+
+This means that your memory accesses are to 4 KB regions (with
+sequential access within those regions), correct?  2*128*16 = 4096.
+
+Is there a performance penalty with lower CHUNK_WIDTH or/and
+CHUNK_LENGTH?  If so, how bad is it e.g. for 2 KB, 1 KB, 512 bytes?
+
+Are you testing this with one instance of EARWORM or/and with many
+concurrent instances (how many), or possibly with many threads within
+one instance?
+
+* I wrote a GPU implementation of EARWORM today. It computes batches of
+  256 workunits of a single hash computation, doing the initial and
+  final PRF computations sequentially on the host, while farming out the
+  expensive main loops to the GPU for parallel execution.  A 25600
+  workunit computation over a 256MiB arena takes about 3.05 seconds on
+  my Radeon 7850. The same computation on two CPU threads takes about
+  2.25 seconds. I was struck by how similar these numbers are.
+
+Is this a defensive or offensive kind of implementation (if it were
+finished, optimized, cleaned up, etc.)?  It sounds like you're computing
+just one instance of EARWORM, but with some parallelism in it (albeit by
+far not enough parallelism to use a GPU optimally), so I assume
+defensive?  Anyhow, this doesn't tell us much about GPU attack speeds on
+EARWORM.
+
+* I'll be posting reference and AES-NI-optimized implementations of
+  EARWORM to GitHub this weekend, as soon as I'm done with some
+  finishing touches on the test harness.  Note that these
+  implementations are designed for benchmarking and validation only, and
+  lack the user-level API that I plan to include in later
+  implementations (Obviously, nobody should be using EARWORM in
+  production right now anyway!).
+
+Of course.  And I guess "this weekend" will be now. ;-)
+
+* The GPU implementation is currently a disgusting hairball and won't be
+  included in this initial release. I'll eventually get around to
+  cleaning it up, but my next major task for EARWORM is to write a spec,
+  and I don't plan to do much more work on the software until that's in
+  good shape.
+
+Sounds fine.
+
+Thanks,
+
+Alexander
+

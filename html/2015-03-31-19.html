@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="18">[&lt;prev]</a> <a href="20">[next&gt;]</a> <a href="18">[&lt;thread-prev]</a> <a href="20">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150331145649.GA4143&#64;openwall.com&gt;
+Date: Tue, 31 Mar 2015 17:56:49 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 03:34:44PM +0200, Dmitry Khovratovich wrote:
+&gt; On Tue, Mar 31, 2015 at 2:50 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt;
+&gt; &gt;&gt; means that the block latency is not 16 pwxform calls+ 8 Salsa rounds,
+&gt; &gt;&gt; but far smaller, only the equivalent of 4 pwxform+8 Salsa rounds.
+&gt; &gt;
+&gt; &gt; No.  Where does the number 4 come from?
+&gt; 
+&gt; Let me reformulate. Pwxform operates lanewise and can be fully
+&gt; parallelized up to the lane level. What I meant is that you get only
+&gt; 1-lane latency for the entire sub-block. You do not have to know an
+&gt; entire subblock to compute the next one, so the total latency of
+&gt; Blockmix is 16 1-lane pwxform.
+
+That's correct.
+
+&gt; This value I divided by 4; maybe I was
+&gt; incorrect if you implicitly took this into account, and by latency of
+&gt; 32 sequential pwxform's meant "latency of 32 sequential 1-lane
+&gt; pwxform's"
+
+That's what I meant.
+
+&gt; (should there be 16, not 32?).
+
+It's 32 because Bill tested yescrypt with two pwxform rounds per
+sub-block.  So 16 sub-blocks per 1 KB, 2 pwxform rounds per sub-block,
+giving us a latency of 32 pwxform rounds.
+
+Those 32 pwxform rounds correspond to 128 gather lane computations
+(128-bit), and 256 simple lane computations (64-bit), with the current
+default settings.  However, those larger numbers are irrelevant when
+we're talking maybe-ASIC attackers' latencies.  On CPUs, the 4x
+difference you noted covers the integer multiply latency.
+
+&gt; Well, you may consider the same for Argon2, since the Blake2b round
+&gt; also has internal parallelism, and the round latency is only 2
+&gt; quarterround latencies.
+
+I was referring to Blake2b round latency, whatever it is.  You say it is
+that of 2 quarterround latencies.  If this benefits typical defenders'
+CPUs (in other words, they manage to take advantage of this parallelism),
+then that's fine.  If not yet, that's moderately problematic.
+
+What I find most problematic is that Argon2 invokes 8 Blake2b rounds in
+parallel, whereas current CPUs probably need at most the parallelism of
+one or two Blake2b rounds.  (Most likely one, with very little benefit
+from a second parallel instance.)  While excessive parallelism may help
+future CPUs, it also helps current and future attackers.
+
+I think we shouldn't introduce more than 2x the parallelism that we can
+use currently.  As an option, we need to have it tunable, like I do with
+pwxform parameters.
+
+&gt; A fair comparison between the latencies of the
+&gt; two schemes becomes difficult at this level, I feel. Whereas Argon2
+&gt; has definitely more parallelism inside, it also synchronizes much more
+&gt; often, whereas yescrypt synchronizes the lanes only in Salsa.
+
+While you're correct about the difference in lanes synchronization
+frequency, I see no significant drawback of the lower frequency.
+
+&gt; What we can do, for example, is to draw up for each scheme a chain of
+&gt; operations that must be sequential. For Argon2, I see a chain of 16
+&gt; additions, 16 XORs, and 16 rotations, which depend sequentially on one
+&gt; another. Such a chain exists for every 64-bit word of the 1 KB-block.
+&gt; For yescrypt's pwxform, I see a chain of 2 multiplications (or S-box
+&gt; calls), 2 XORs, 2 additions - for first subblock, 4 mults, 4 XORs, 4
+&gt; additions - for the second subblock, etc., up to 32 mults, 32 XORs, 32
+&gt; additions for the last subblock + Salsa.
+&gt; 
+&gt; For me these two sets of chains look comparable,
+
+Comparable, yes.  In software.
+
+&gt; and almost equal in average length.
+
+I guess you're averaging per sub-block?  I think this metric is
+irrelevant.  Computation of the next block cannot proceed until the
+current block is complete anyway.
+
+Note that rotations are no-ops in ASICs.  It's like if we counted
+pwxform's shifts by 32 bits, which it has to perform in some builds to
+extract the high 32 bits of multiplication result - but for ASIC or FPGA
+attacks we should not count these, either.
+
+I am not sure how many sequential ADDs a single 32x32-&gt;64 MUL is
+equivalent to in terms of latency is ASIC, but judging by these
+instructions' latencies on CPUs I'd expect that at least 3, and probably
+many more (like 32).  Using the very conservative estimate of just 3,
+we get 3*32 + 32 + 32 = 160.  (I am counting the ADDs and XORs
+separately because we used the conservative estimate for MUL.
+In practice, MUL will likely dominate the latency to an extent where
+the ADDs and especially the XORs are negligible.)
+
+For Argon2, it's 16 + 16 = 32 in the same arbitrary units of latency as
+above.  OK, that's a mere 5x difference, and not 16x.  I admit this is
+less than I had expected.  But that's for an extremely conservative (I
+think almost unrealistically low) estimate of MUL's latency vs. ADD's
+(when found in a sequence of ADDs and XORs).
+
+&gt; &gt; Yes, it can be computed lanewise up until the final Salsa20/8, but
+&gt; &gt; that's a non-issue.  In fact, this flexibility may be somewhat useful on
+&gt; &gt; register-starved archs.  pwxform() in yescrypt-opt.c actually partly
+&gt; &gt; takes advantage of this: it has the loops re-ordered to be
+&gt; &gt; gather{rounds{simple}} rather than rounds{gather{simple}}, for some
+&gt; &gt; slight speedup on register-starved archs.  yescrypt-opt.c does not take
+&gt; &gt; this to the BlockMix level, but it could.
+&gt; &gt;
+&gt; &gt; Do you think this has any drawback, and why?
+&gt; 
+&gt; I understand. I do not know yet if it is a drawback since I have not
+&gt; found an attack. I must check some ideas, also on your S-box
+&gt; generation...
+
+I'd appreciate your analysis of this very much.  Thank you!
+
+&gt; &gt;&gt; Do I understand yescrypt right?
+&gt; &gt;
+&gt; &gt; I think not.  Perhaps I need to describe it better, including the
+&gt; &gt; expected latencies.
+&gt; 
+&gt; So do I understand it now?:)
+
+Yes!
+
+It feels good to be on the same page.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

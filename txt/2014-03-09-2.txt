@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <20140309002631.GA589@openwall.com>
+Date: Sun, 9 Mar 2014 04:26:31 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Sat, Mar 08, 2014 at 04:06:11PM -0800, Jeremy Spilman wrote:
+Just restating what CiC said in bullet form, but seeing it in pseudo-code  
+always helps me. When using password as the HMAC key, the way that PBKDF2  
+does, you end up with:
+
+if (password.length < block_size)
+  password = password.pad(0x00, password.length - block_size)
+else if (password.length block_size)
+  password = hash(password)
+
+Almost.
+
+I guess it should be apparent that you can pass the hash of a password  
+longer than the block size in place of the password,
+
+Note that for this the padding should also be applied after the hash is
+computed, which is a detail you lost in the pseudo-code above.
+
+but I bet 99.9% of people using PBKDF2 would be "shocked" to learn this.
+
+Right.  Here's an aspect that I haven't seen mentioned yet:
+
+Suppose someone reuses a >64 chars password on two sites, where e.g. one
+site uses raw SHA-256 and the other uses scrypt.  Suppose the raw
+SHA-256 hashes leak.  The password might be strong enough not to be
+cracked given the SHA-256 hashes (it's >64 chars).  However, the SHA-256
+hash may be used to log in to the site that uses scrypt.
+
+This is probably impractical given that passwords this long are
+extremely rare, but other than that it'd work.
+
+A hurdle is that the SHA-256 hash is likely to contain non-printable
+chars, which might or might not be possible to pass to the login form
+(and have them accepted and reach scrypt).
+
+Alexander
+

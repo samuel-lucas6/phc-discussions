@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] PolyPassHash is broken
+
+Message-ID: <CAMVss_rQG9f-FboZAzhh4E0Y9OoBPeN-c3yMkaA_aXEf5y7dJQ@mail.gmail.com>
+Date: Sun, 14 Sep 2014 15:45:41 -0400
+From: Justin Cappos <jcappos@....edu>
+To: discussions <discussions@...sword-hashing.net>
+Cc: polypasswordhasher-dev <polypasswordhasher-dev@...glegroups.com>
+Subject: Re: [PHC] PolyPassHash is broken
+
+We have some discussion about the points list in our paper (Sections 5.2.3
+and 6 for example). However, I'll be more explicit and direct here.
+
+Method 1
+ * get partial hash from DB
+ * find partial hash collision
+ * crash/restart server
+ * login
+>
+
+Sure you can do this.  Once a threshold is reached, the attack will be
+detected because the full password hashes will not match.  That is, unless
+the attacker is fortunate enough so that the partial hash collision is the
+actual full hash / password.
+
+Method 1.5 (for large partial hash [like ~48 bits])
+ * get partial hash from DB
+ * find partial hash collision
+ * try password
+ * repeat steps until password is found
+  - note you probably won't hit a password rate limit
+>
+
+I think there is some confusion in either what you propose or what I
+understand you proposing.  If the system has bootstrapped, an incorrect
+password will be detected and rejected because the full password will not
+be matched.
+
+If partial bytes matches but the rest does not, the administrator gets
+notified.  (Or at least, this is what the Django implementation of PPH
+does:
+https://github.com/PolyPasswordHasher/PolyPasswordHasher-Django/wiki/Installing-PolyPasswordHasher-for-Django
+)
+
+
+Method 2
+ * crash/restart server
+ * quickly login several times
+ * repeat steps until partial hash collision is found
+>
+
+Yes, but if partial bytes is a reasonable value (let's say 32 bits) even if
+you can make 100 requests per second, you would need an average of >8
+months of "bootstrapping" time to get your first login.  So you'd not only
+need to wait a very long time, but also be sure that a threshold of users
+didn't log in then either...
+
+
+If there are no partial hashes in the DB, then this is equivalent to HMAC
+with
+secret key.
+
+
+Where would the key come from in this case?
+
+
+Anyways this has a placeholder for a password hashing algo (ie the
+winner of PHC). So even if it didn't have these problems then it could
+only be
+mentioned in tandem with another entry.
+>
+
+Sure, this is something we've mentioned several times.  I also said before
+that I don't think we fit with what other submissions are trying to do.
+ We're orthogonal to them since we're a way to store password hashes
+securely, more so than a better way to hash them.
+
+We'd be happy to collaborate with the eventual winner, but don't expect to
+be seriously considered because we don't fit the contest API, goals, etc.
+
+Currently the hashing algorithm is "encrypt(SHA256(salt || password))"
+>
+
+As you mention, this is not inherent to the design.  This is a
+implementation detail of the C version which was written specifically for
+this contest.  Our Django version, which is being rolled out on a few
+servers at NYU, may be better to poke holes in, if you are curious...
+
+Justin
+
+
+

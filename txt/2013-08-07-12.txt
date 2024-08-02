@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+Message-ID: <CAK9dnSyR_uwTfiiSVk0r68CnGbAzEsN20emuDDUV3os_=fkr7Q@mail.gmail.com>
+Date: Wed, 7 Aug 2013 09:45:40 +0200
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+Not a good algorithm. Some issues:
+
+1. SHA-256 is very slow at producing a chain, so it takes a long time until
+you reach a significant amount of memory. There is a reason why scrypt uses
+round reduced Salsa.
+2. `hash.call(salt, chains.join)` isn't parallelizable but takes a
+significant amount of time (A third with SHA-256).
+3. Your memory access is predictable, so the usual store every sqrt(n)th
+value, regenerate on the fly" technique breaks it:
+
+For the first step a machine with pmem^{1/2} memory which stores every
+pmem^{1/2}th value. This runs in pmem time and uses pmem^{1/2} memory for a
+total cost of pmem^{3/2}.
+
+For the second step use a machine with 2*pmem^{1/2} memory, initialized to
+the data produced in step 1. Then regenerate pmem^{1/2} values for each
+step in time pmem^{1/2} and pmem^{1/2} memory. Since there are pmem^{1/2}
+steps, the total time is pmem, and thus the total cost for this step is
+pmem^{3/2}.
+
+Combined cost of these machines is ptime*pmem^{3/2}. A defender with a
+standard computer has cost ptime*{pmem^2} instead.
+
+>
+
+
+

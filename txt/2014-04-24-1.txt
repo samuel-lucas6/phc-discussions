@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] Dumb fast file digest idea...
+
+Message-ID: <CALW8-7Lx3hpG7YtqViNucaPiknjXb=d8WNk8e62iuV=YarTR6g@mail.gmail.com>
+Date: Thu, 24 Apr 2014 10:30:51 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Dumb fast file digest idea...
+
+Bill,
+
+this is not the way the things are done in symmetric crypto. As you see,
+one can invent hundreds of hash functions per day, many of them being very
+fast and seemingly secure. However, the cryptanalysis resources are
+limited, so the entire community can properly study only a handful of
+functions per year. Hence it's designer's job to select one (rarely two) of
+many possible alternatives, study it himself, publish the analysis and
+motivation (10+ pages usually), implement it and only then invite the
+others to look at the design.
+
+In your particular example, before anyone starts analysing it, you should
+have answered the following questions publicly and convincingly:
+1) why two states (not one, not three?)?
+2) why and which rand_const (why one constant? why here constant? any
+constant?)
+3) why 127-i? (not 2i, not 3i, not pi*i)
+4) why inverse_round?
+5) why low and high (why not xor the two, why not only low, why not only
+high)?
+
+Similar questions apply to most of the PHC submissions, in fact.
+
+Best regards,
+Dmitry
+
+
+
+On Wed, Apr 23, 2014 at 11:48 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+On Wed, Apr 23, 2014 at 2:33 PM, Bill Cox <waywardgeek@...il.comwrote:
+>
+>I think there are various possibilities for hashing functions like the
+>one above.  For example, how about using a large block hash function
+>more like:
+>>
+>hashBlock(uint512 block[128], uint1024 state) {
+>    state1 = state
+>    state2 = state ^ RAND_CONST
+>    for(i = 0; i < 128; i++) {
+>        state1 = Blake2b_ROUND(state1, block[i])
+>        state2 = Blake2b_Inverse_ROUND(state2, block[127-i])
+>    }
+>    // Full Blake2b hash to combine state1 and state2
+>    return Blake2b(Blake2b(state1, low(state2)), high(state2))
+>}
+>>
+>
+I coded this for fun, based on Lyra2's modified version of Blake2b.  I'm
+not confident it's secure, but it does run fast.  It hashes files almost
+3.5 GB/s, or just over 1 byte per clock.  Here's some speed comparisons:
+>
+wghash (as I'm calling this hack): 3.48 GB/s
+md5sum: 0.72 GB/s
+sha256sum: 0.29 GB/s
+>
+It's almost 5X faster than md5sum, and 12X faster than sha256sum.  It
+would be very cool of something like this works out.
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

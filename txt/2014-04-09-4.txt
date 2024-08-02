@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <53451757.2040609@uni-weimar.de>
+Date: Wed, 09 Apr 2014 11:48:07 +0200
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+On 09.04.2014 00:10, Greg Zaverucha wrote:
+Christian, can you clarify/justify your recommendation?  
+
+Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+considered to be independent?
+
+Personally, I would feel better when using the following key derivation
+algorithm.
+
+y= H(PWD || salt)
+K1' =   F(y, 1)
+K2' =   F(y, 2)
+
+where F is a cryptographic hash function. Here you have only two
+additional hash function calls and since (y, 1) != (y,2) one can argue
+that K1' and K2' are pairwise independent. But is hard to argue that K1
+and K2 are pairwise independent.
+
+
+Its common  practice to call a KDF with an input parameter for the required
+number of output bytes then divide the output into two or more keys.
+For instance, you might derive separate encryption authentication
+keys from a DH secret with one call to the KDF.
+
+One example standard that does this is in Section 7.3 of: 
+http://csrc.nist.gov/publications/nistpubs/800-108/sp800-108.pdf
+
+
+Using KDF (modeled as PRF) in Counter or Feedback mode is fine.
+
+Note that these modes do not work for password based key derivation. The
+PRF model assumes a secret key K which is chosen uniformly at random
+from a key space. A password is not chosen uniformly at random.
+
+
+Another example is the scrypt encryption utility
+(http://www.tarsnap.com/scrypt.html) Quoting the FORMAT file: 
+"AES256-CTR is computed with a 256-bit AES key key_enc, and
+HMAC-SHA256 is computed with a 256-bit key key_hmac, where 
+scrypt(password, salt, N, r, p, 64) == [key_enc][key_hmac]"
+
+The reference code for all PHC submissions to accept an output
+length.  It should be a requirement that any subset of the output
+bytes be suitable for use as keying material.  Is this not the case?
+
+Assume that the output of our KDF is larger than the internal
+state of the underlying cryptographic primitive. Where should the
+additional security come from?
+
+An output transformation does not protect you against an adversary which
+can reconstruct the internal state.
+
+
+Best regards,
+Christian
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

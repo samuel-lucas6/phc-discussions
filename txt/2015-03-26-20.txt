@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150326183525.GB25080@openwall.com>
+Date: Thu, 26 Mar 2015 21:35:25 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Paulo Santos <pcarlos@....usp.br>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 02:57:22PM -0300, Marcos Simplicio wrote:
+On 26-Mar-15 13:30, Bill Cox wrote:
+I need to go carefully read the latest version, but IIRC, Lyra2 still does
+no small random reads in it's inner loop, right?  Once you get down to L1
+cache sized hashing, GPUs will dominate over CPUs, unless we do something
+GPUs are not good at.  While this may not always be true, currently GPUs
+are very slow at doing rapid small unpredictable reads. 
+
+Well, we did include in Lyra2's core the extension that would read
+rapidly and unpredictably from rows prev^0 and prev^1 (that are likely
+in in L1 cache), but sincerely we could not see much of a difference in
+modern GPUs coming specifically from this reading pattern (even though
+we did observe slowdowns in an older GPU). We decided to keep the tweak
+anyway, however, because it makes pipelining between rows more
+complicated to achieve, and also considering older GPUs. We did not test
+this issue extensively, though, since we decided to keep the extension
+anyway (maybe we should revisit that).
+
+This sounds good.
+
+For bcrypt-like GPU resistance, the memory accesses have to be rapid and
+their available parallelism has to be low.  Maybe your accesses are not
+rapid enough, or maybe they are.  If you were only testing at sizes like
+2.3 MB as you mentioned, you might not have observed this effect fully
+because at that size it was not yet needed for that GPU.  You should
+also test on multiple GPU types.  For example, Kepler (which is what
+you're using?) is very bad at bcrypt (several times slower than CPU so
+far), but Maxwell and GCN are OK (CPU-like).  So defeating Kepler in
+this way is easier, and this should not mislead you into thinking your
+accesses are already rapid enough for all current GPUs.
+
+Anyhow, I believe that more tests with (1) lower memory usages and (2)
+different GPU-oriented techniques may help clarifying this point,
+though, because so far we have no experimental data showing when Lyra2
+starts being faster in GPUs than in CPUs.
+
+Right.
+
+Alexander
+

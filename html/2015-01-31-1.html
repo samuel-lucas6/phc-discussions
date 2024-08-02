@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] simplifying yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/01/30/6">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/01/30/6">[&lt;thread-prev]</a> <a href="../../../2015/02/19/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150131000505.GA20904&#64;openwall.com&gt;
+Date: Sat, 31 Jan 2015 03:05:05 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+On Tue, Oct 21, 2014 at 05:58:37AM +0400, Solar Designer wrote:
+&gt; As long as yescrypt supports computing not only its native, but also
+&gt; classic scrypt hashes, it obviously can't be made simpler than scrypt.
+&gt; However, I am planning on introducing yescrypt-lite supporting a subset
+&gt; of yescrypt's full functionality, and yescrypt-lite would not be a
+&gt; superset of the full scrypt either.  Here's what I'd change in -lite:
+&gt; 
+&gt; - Drop support for (ye)scrypt's p parameter.
+&gt; (Only p=1 will be supported in -lite, and hence -lite will not include
+&gt; the different handling of p that now exists between classic scrypt and
+&gt; native yescrypt hashes.)
+&gt; 
+&gt; - Maybe: drop support for classic scrypt hashes.
+&gt; (Have only native yescrypt hashes supported in -lite.)
+&gt; 
+&gt; - Maybe: drop support for a ROM.
+&gt; 
+&gt; I'd appreciate arguments for/against the two "maybes" above, considering
+&gt; that I intend -lite to be usable in Unix crypt(3) and PHP crypt(), etc.
+
+I still intend to introduce yescrypt-lite with the above changes, but I
+intend to treat it merely as a partial implementation of yescrypt, so
+not subject to PHC's tweaks deadline. ;-)  Anyone could create an extra
+implementation, including a partial functionality one.  This one will
+just happen to come from me rather than from someone else. ;-)  This is
+not removal of features from yescrypt in PHC.
+
+I am going to focus on choosing from and submitting tweaks to the full
+yescrypt first, while that is still permitted.  It would be premature to
+split out -lite when the full thing is changing.
+
+&gt; Overall, I don't expect this to make yescrypt-lite simpler than scrypt
+&gt; (it will have pwxform, which isn't in scrypt), but it'd certainly be
+&gt; simpler than full yescrypt.
+&gt; 
+&gt; In PHC context, I am willing to offer replacing full yescrypt with
+&gt; yescrypt-lite, and keeping the full yescrypt (a strict superset of
+&gt; yescrypt-lite, re-adding full classic scrypt support and the rest of
+&gt; full yescrypt features) as a non-PHC extra.  That is, if the PHC panel
+&gt; prefers so, yescrypt-lite and not full yescrypt would be the PHC
+&gt; candidate, although of course it can/should be kept in consideration
+&gt; that there exists this sort of superset (which would remain a reason
+&gt; for yescrypt-lite to be defined the way it would be).  I don't actually
+&gt; recommend doing things in this way (I'd rather keep full yescrypt in
+&gt; PHC, with -lite being a subset of it, much like how TwoCats/SkinnyCat
+&gt; is currently in PHC), but this is a valid option.
+
+No one on the PHC panel asked me to replace the full yescrypt with -lite
+for PHC, so I am not going to do that.
+
+&gt; Regardless of what exactly goes into yescrypt-lite (and what's excluded
+&gt; from it), and regardless of whether/which yescrypt remains in PHC, here
+&gt; are some other changes I am considering to simplify yescrypt (the full
+&gt; thing, not only -lite):
+&gt; 
+&gt; - Drop support for ROM access frequency mask.  In practice, this will
+&gt; mean no ROM-on-SSD support (only ROM-in-RAM will be supported).  The
+&gt; reason why I am considering dropping this is that in most cases where I
+&gt; would have recommended use of ROM-on-SSD I would _also_ recommend
+&gt; simultaneous use of ROM-in-RAM, and then it would need to be two ROMs,
+&gt; with different access frequency, resulting in even greater complexity.
+&gt; Perhaps just one mask (only for the ROM-on-SSD) would be enough even in
+&gt; that two-ROMs case, though.
+
+Done.
+
+&gt; - Merge the various yescrypt flags into one - to choose native yescrypt
+&gt; mode or classic scrypt mode.  This doesn't simplify the reference code
+&gt; much, but it will simplify documentation, analysis, testing,
+&gt; benchmarking, and it may simplify optimized implementations.  A drawback
+&gt; is that there will no longer be any deliberately-TMTO-friendly native
+&gt; yescrypt mode (for which I think some use cases exist), requiring that
+&gt; people use the classic scrypt mode if they require that.
+
+I am still considering this.  It's not a trivial decision to make.
+
+&gt; - Without scrypt compatibility (as in -lite) and when in native mode, I
+&gt; can replace Salsa with ChaCha.  If a given build lacks scrypt
+&gt; compatibility (would be true for -lite), this would probably make it
+&gt; slightly simpler by eliminating the need for 32-bit word shuffling
+&gt; associated with interfacing with Salsa.  The drawback is that full
+&gt; yescrypt would become more complicated, requiring both Salsa (for scrypt
+&gt; compatibility) and ChaCha.  This is why I stayed with Salsa only so far.
+
+I decided to stay with Salsa only.  I improved the specification
+document to describe the 32-bit word shuffling in more detail and more
+specifically.  It's a simple transformation (and a no-op in SIMD
+implementations on little-endian archs), but it does have some
+specification complexity cost.  (It's simpler in code than in spec.)
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+phc-discussions - [OT] Memory hard proof of work with constant time verification
+
+Message-ID: <CAOLP8p6wn8ZA-tCHcO6oofTDG5OG6Btcm2rALq=yt159FXAyBA@mail.gmail.com>
+Date: Thu, 25 Dec 2014 11:44:55 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: [OT] Memory hard proof of work with constant time verification
+
+I am not sure if posting off-topic stuff like this here is still OK, but I
+read about the John Tromp's Cuckoo Cycle here, and frankly this list has
+provide amazing feedback in the past, so I'll keep milking this expert
+channel so long as it's not annoying...
+
+Here's an algorithm I'm thinking about on Christmas.  I hope you enjoy it:
+
+This algorithm implements a memory hard proof of work scheme with a
+constant time verificatoin capability.  This idea is motivated from:
+
+      Cuckoo Cycle: a memory-bound graph-theoretic proof-of-work system, by
+John Tromp
+
+The point is to require enough memory to make it difficult to compute more
+cheaply up  using GPUs, FPGAs or ASICs.  This is the goal of various
+crypto-coins, such as LiteCoin  and GlobalBoost-Y.  However, these schemes
+are forced to use low memory to enable rapid  block-chain verification.
+
+Like Cuckoo Cycle, much larger memory sizes can be supported because
+verification of the  proof of work is fast and does not require significant
+memory.  In contrast to Cuckoo  Cycle, this algorithm is simpler and
+verification is done in constant time rather than  O(log(N)).
+
+  Algorithm:
+
+For a given initial value, compute H(0 | value), H(1 | value),  H(2 |
+value) ... until we have at least a computation cost, c_cost, initial bits
+of the latest hash value being equal to the initial c_cost bits of some
+previous hash value.  To enable a memory cost,
+m_cost, to be independent of c_cost, require that the prior index be within
+2^m_cost of the current index.  Verification is done with two calls to H.
+
+There are various ways to remember if a prefix has been seen before, such
+as hash tables and Bloom filters.  You can read about Bloom Filters here:
+
+    http://en.wikipedia.org/wiki/Bloom_filter
+
+As an example, consider when for m_cost == 25, and c_cost == 60.  We can
+implement a Bloom filter with 32 bits per entry, and 2^26 entries in 256
+MiB, without significant recomputations.  However, this Bloom filter would
+access 32 independent locations in
+  DRAM, causing 32 L3 cache misses for every hash value, making the Bloom
+filter too slow.  Instead, a hash table of the 60-bit prefixes with their
+25 bit indicies should fit nicely in a 128 bit field, and a half full hash
+table would take 2^26*16 = 1GiB.  As an additional benefit, the hash table
+supports constant time deletion, simplifying implementation of the m_cost
+restriction.
+
+Time/memory trade-offs are possible.  Lower memory can be used by simply
+imposing a smaller m_cost, with a proportionally higher computation
+requirement. However, the memory*computation time cost does not change,
+making this algorithm memory hard.
+
+I'm likely missing some important aspect of what is required for PoW, but
+if no major issues are reported, I'll go ahead and code a reference version
+just for fun.  Should only take a few hours.... famous last words :-)
+
+Bill
+
+
+

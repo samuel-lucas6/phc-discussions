@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CAOLP8p4yVMtO8+UUQszDEAyEtLtAZ6X5+68Y5VA2BXbAcgPhVA@mail.gmail.com>
+Date: Fri, 24 Jul 2015 08:20:56 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Dmitry Khovratovich <khovratovich@...il.com>, Alex Biryukov - UNI <alex.biryukov@....lu>
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Fri, Jul 24, 2015 at 7:00 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Dear community,
+>
+So far we support most of the API and minor corrections to the scheme that
+do not change its functionality and do not make it more complex.
+Complexity, as we see it, is one of the greatest enemies of security.
+>
+=============MAXFORM============
+>
+In this case, I think it is fortunate that Yescrypt made it as a
+recommended solution for situations requiring the defenses it has to
+offer.  I think this will be most use cases.
+
+
+=========================Hybrid scheme===
+>
+It has been proposed to add another version of Argon2, which is a
+combination of Argon2d and Argon2i. In more details, the first half (or so)
+of the memory should be filled with data-independent addressing, and the
+rest with data-dependent addressing. The motivation is to reduce the
+side-channel leakage for 1-pass Argon2d  at the cost of reduced tradeoff
+resilience and the overall latency. The drawback of this proposal is
+threefold: 1) yet another primitive 2) the side-channel leakage is reduced
+but not removed, which still restricts the use case. 3) the tradeoff
+becomes more favourable to the attacker.
+>
+
+I agree with 1) and 2), but not 3).  Against brute-force off-line guessing,
+a hybrid architecture is just as strong as a purely password-dependent one.
+
+
+Clearly, such update would make sense only for 1- or 2-pass Argon2d, since
+for 3 passes and more Argon2i comes into play.
+>
+
+I agree, but I also feel the use-cases for more than 1 pass are as rare as
+the use cases for Argon2i.  Embedded in a TPM chip, Argon2i could help
+protect secrets stored in the device.  This is the best use case that comes
+to mind.
+
+
+We think that the drawbacks currently outweigh the positive effect, in
+particular we are concerned of the fact that the scheme is weaker than both
+existing variants in some scenarios. Still, it can be possible to include
+it as a possible extension, though not recommended by the designers but
+available to those who desperately want such a scheme.
+>
+
+In what scenario would a hybrid be weaker than Argon2d?
+
+In any case, not merging Argon2d/Argon2i with a new parameter is fine.
+This is a non-critical featuer, IMO.
+
+Bill
+
+
+

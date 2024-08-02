@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] TwoCats multiplication chain
+
+Message-ID: <CAOLP8p7HOgArE36nMOfJa0ur--okxLZUn_ujCeYyBX3xGNTYMw@mail.gmail.com>
+Date: Sun, 22 Jun 2014 16:35:37 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sat, Jun 21, 2014 at 5:06 PM, Solar Designer <solar@...nwall.comwrote:
+
+Bill, all -
+>
+Here's one more idea I'd like to have recorded in here, and it's about
+multiplication latency hardening in general, not TwoCats specifically.
+>
+An attack which I think we haven't mentioned yet is speculative
+computation of multiple possibilities of the next MUL before a previous
+MUL completes.
+>
+For a simplified example, suppose there's exactly one MUL output bit
+that limits the overall speed (it arrives late and/or is needed early,
+overall more so than the rest of bits do/are).  We can trivially
+eliminate this bottleneck, exposing whatever next bottleneck there may
+be, by starting to compute the next MUL for both possible values of this
+one bit before its actual value is known.  Ditto for the next bottleneck
+bit, and so on.  To do it for e.g. 10 bits at once, we need 1024
+multipliers - this is likely still affordable in terms of die area (it
+may be less than the die area we're forcing the attacker to spend on
+memory), but it might or might not be affordable in terms of routing and
+extra MUXes (which introduce delays, too).
+>
+
+This is the basic idea behind a carry select adder:
+
+http://en.wikipedia.org/wiki/Carry-select_adder
+
+More generally, the speedup technique you are describing is application of
+what I used to call "Shannon Decomposition", though Wikipedia seems to
+prefer Bool's expansion:
+
+http://en.wikipedia.org/wiki/Boole's_expansion_theorem
+
+This can be a very effective technique for speeding up logic, especially
+when there is a clearly identifiable critical path, such as a carry chain.
+ I've written code to automate this, and it can speed up carry-chain adders
+a ton.
+
+I think I could accelerate multiplication chains built using the last
+multiplier I designed by about 2X.  The LSB of the upper output word had
+about 1/2 the latency of the MSB.    It is possible that Intel and AMD used
+something as lame as my Booth encoded multiplier.  I hate to assume they
+decided to design something faster, even if they are so speed competitive
+with each other.
+
+However, I think it is far more likely they did something awesome like a
+Booth encoded Wallace Tree multiplier.  Wallace Tree multipliers generate
+outputs at nearly the same time on all of the upper 32 bits, so there would
+be little chance to speed up those designs from just a logic redesign.  The
+last stage is typically a fast carry-select adder, which is why the output
+bits are computed so close in time to each other.  Here's a paper on
+multiplier verification that leaks a hint that Intel is comfortable using
+Wallace Tree multipliers:
+
+http://www.cs.utexas.edu/users/hunt/FMCAD/FMCAD13/papers/80-Relational-STE-and-Theorem-Proving.pdf
+
+If you can come up with a way to significantly reduce the propagation delay
+through multiplication chains compared to chains of Booth Encoded Wallace
+Tree multipliers with registers between them, I will be very impressed!
+ I've scanned some recent papers that save an adder or two, but there
+aren't any practical implementations that demonstrate a significant speedup
+over the venerable Wallace Trees.
+
+Bill
+
+
+

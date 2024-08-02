@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Pretty cool: first sequential memory hard KDF secure
+ against timing attacks
+
+Message-ID: <CAOLP8p7MXQEj164erY01dCOB2NHFATrAJRta5Kxc-ZksK9hWUg@mail.gmail.com>
+Date: Thu, 9 Jan 2014 10:28:09 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Pretty cool: first sequential memory hard KDF secure
+ against timing attacks
+
+On Wed, Jan 8, 2014 at 10:33 PM, Stephen Touset <stephen@...set.orgwrote:
+
+To be fair, I would argue that my blakerypt proposal and implementation
+were first. Order of memory access is based on a unique "session key" and
+not the password. :)
+>
+>
+I went back and read your posts.  I agree your algorithm is sequential
+memory hard, avoids the worst timing attacks, and was first.
+
+I'm pretty excited about your session key derived from a master key idea.
+ Is this already sort of standard practice, or at least well known?
+ Servers with password databases should all derive user specific session
+keys from a master key.  It thwarts brute-force attacks against any
+attacker who does not have the master key.  Linked-in could really have
+used this.
+
+If I understand correctly, blakerypt uses the session key for determining
+memory access patterns, and password derived data is written to memory.
+ This avoids the worst timing attack where an attacker simply aborts
+password guesses that don't result in the right timing.
+
+Some information still leaks, just like in my cheat killer round.  The
+session key is still unique to a particular password, and while an attacker
+can't use cache timing to help guess the password, he could still notice
+who just authenticated.  This seems like a small risk to me.  Is it better
+to leak the fact that a user has authenticated while using a sequential
+memory hard KDF, or is it better to hide even who is logging on, but use
+only a memory-hard, but not sequential memory hard KDF?
+
+There are only two things that bother me a bit about what I've read so far
+about blakerypt, not that my noob-ish opinion really counts.  First is that
+a master key is required, and I don't see how that protects my ~/ssh/id_rsa
+private key, because there's no master password available.  Second is that
+while Blake2 is amazingly fast, and beats just about any real
+crypto-strength hash out there, but I feel it's a waste of CPU cycles to
+fill memory with a crypto-strength hash.  We gain security in proportion to
+the memory filled, but we gain little security making the data we write to
+memory seem more random, SFAIK.  I haven't seen anyone else suggesting
+dropping the compute intensive crypto-strength hashes in the inner loop, so
+this isn't a blakerypt specific gripe.
+
+Bill
+
+
+

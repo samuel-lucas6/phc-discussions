@@ -1,0 +1,89 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+Message-ID: <20150330141648.GA29030@openwall.com>
+Date: Mon, 30 Mar 2015 17:16:48 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+Hi Dmitry,
+
+Thank you for commenting on this so promptly.
+
+On Mon, Mar 30, 2015 at 02:58:45PM +0200, Dmitry Khovratovich wrote:
+you're certainly right, the stored indices must be taken into account
+when counting memory for tradeoffs. For the default parameters of
+Catena and Lyra2 that we considered, these indices occupy less than
+1/1000 of total memory, and we just (explicitly or implicitly) ignored
+this small addend in the computation.
+
+OK, this feels realistic, and I hope your estimate is correct.
+
+The same happened to other
+"service" information that we use in the attacks (such as storing the
+access complexities, which accounted to 1/6000 of memory, cf. page 9
+of the report).
+
+Thank you for mentioning this detail in the report.
+
+Indeed, smaller blocks would increase the proportion of indices in the
+memory. To have them occupy, say, 1/10 of memory, let us consider 1 GB
+memory size. 100 MB of 3-byte indices would imply 2^{25} blocks, i.e.
+
+(Ignoring the 24 vs. 25 minor "rounding" discrepancy for the purpose of
+this discussion.)
+
+This would imply we could refer to a total of 2^{25} blocks and other
+data structures (we'd need such indirect references for depth 1
+attacks), including possible duplicates (same indices), in whatever data
+structure we'd use to mount the TMTO attack.
+
+That's not the total number of blocks there is.
+
+A question is then what TMTO ratio we could achieve while not needing
+more than 2^{25} indices.
+
+32-byte blocks.
+
+I think not, for the reasons above.
+
+We wouldn't be storing each block's index exactly once.  I guess we'd
+need to store roughly depth (e.g., 26.6 in the example I referred to
+before) indices per (pre-TMTO or post-TMTO?) block (including many
+duplicate index values, but this doesn't help us much if at all).
+
+Suppose we have an original memory size of 1 GB, a post-TMTO
+without-indices size of 100 MB (the 1/10 ratio corresponding to depth
+26.6), and we spend another 100 MB on indices (bringing the actual TMTO
+ratio to only 1/5, so a significantly worse attack than we had estimated
+without considering the indices).  What block size would achieve this?
+We can fit 100 MB / (26.6*3) = ~1.25 million sets of 26.6 indices in our
+100 MB allotted to them.  If the 26.6*3 = ~80 bytes are needed per
+pre-TMTO block, then a block size of 1 GB / 1.25 million = ~800 bytes
+achieves this.
+
+I made many guesses and assumptions here.  These might be about right or
+they might be way off.  I think this needs to be researched for real.
+
+However, on the x86 architecture random access to
+32-byte blocks  would increase latency dramatically (my estimate would
+be 3-5x at least), and make the scheme much slower and thus weaker.
+
+I agree there's a tradeoff here.
+
+My point is that for some of the larger TMTO ratios in your report, we
+might not have to go to a block size as low as this in order to
+significantly affect the effective TMTO ratio.
+
+On the architectures where the memory latency is only  a few CPU
+cycles (AVR?), smaller blocks can be useful.
+
+Right.  This would apply in cases where TMTO attacks would otherwise be
+relevant to most frequently accessed portions of data kept in a device's
+local memory even in an overall large-memory scheme (using external
+memory for most of its data), to fit more instances per device.
+
+Thanks again,
+
+Alexander
+

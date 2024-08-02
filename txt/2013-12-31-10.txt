@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p6khb4rCO8H=X9pYkvr6VGD1iiA8_N6Uh0K2_5g1BZ4dg@mail.gmail.com>
+Date: Tue, 31 Dec 2013 06:52:01 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Tue, Dec 31, 2013 at 12:45 AM, Solar Designer <solar@...nwall.comwrote:
+
+"Unfortunately, reducing N such that the array would fit in the L1 data
+cache prevented automatic parallelization from working.  What could the
+reason for this be?  I actually tried forcing the compiler into
+parallelizing the loop even for smaller values of N by using OpenMP
+directives, and the performance was poor - all 8 threads running, but so
+slowly that there was no advantage overall.  Apparently, this slowness
+was caused by cache coherence overhead.  I expected this problem to occur
+with multiple threads accessing the same cache line.  My test results
+demonstrated that it was worse than that: if a thread wrote to a given
+page of memory, accesses to that entire page by other threads would be
+slow (entry thrown out of TLBs maybe?)  I did not spend time to confirm
+(or disprove) this guess via the CPU's performance counters, though.
+>
+The problem did not occur for read-only accesses [...]"
+>
+For a non-artificial program where this issue occurred as well, read the
+"Long story short [...]" paragraph further on the same wiki page.  I ran
+into (what felt like) this same issue several times since then, testing
+on different machines (and CPU types), with the same workaround working.
+>
+
+Thanks for this tip!  My initial version, before I read about your idea for
+hashing all of memory at the same time, rather than giving each thread it's
+own N/p memory, performed much better with multiple threads.  It has been
+driving me crazy that I'm having difficulty getting decent performance from
+the new version.
+
+I'll try having large continuous regions for each thread's write-region.
+
+
+

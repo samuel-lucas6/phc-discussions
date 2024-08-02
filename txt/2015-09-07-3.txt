@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150907105530.GB7152@openwall.com>
+Date: Mon, 7 Sep 2015 13:55:30 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Sun, Sep 06, 2015 at 10:02:28PM +0200, Simon Josefsson wrote:
+Thomas Pornin <pornin@...et.orgwrites:
+If the Argon2 authors do not have time for that, I can contribute the
+specification and code if needed (I have not written anything to that
+effect yet for Argon2, but I did for Makwa, so I believe I can do that
+job properly).
+
+I worked on this for scrypt, see
+
+https://gitlab.com/jas/scrypt-unix-crypt/blob/master/unix-scrypt.txt
+
+and I am interested in working on this for Argon2 too.
+
+I briefly contributed to that too, and I've got additional thoughts on
+this bikeshed since then.  Specifically:
+
+The syntax we introduced for scrypt at the time turned out not to
+accommodate some other encodings people came up with (some may have been
+already in use when we came up with ours), whereas it would have been
+nice to be able to convert any unofficial encoding to/from the official
+one.  The issue is that, for implementation and specification
+simplicity, I chose to treat the salt substring verbatim, passing it
+right into scrypt with no decoding.  Some other people chose to generate
+the scrypt salt as arbitrary binary data and to encode it.  Thus, when
+converting their encodings to the one described at the URL above, we may
+get bad (non-printable or otherwise special) characters in the salt
+substring, making such conversion unusable in general.  So maybe we need
+to use encoded salts, even though this requires us to decode them in
+implementations and to decide on how we handle incorrect salt encodings
+(e.g., characters outside of the base64 alphabet).
+
+If we continue to build upon the traditional crypt(3) alphabet and
+encoding (like the above specification for scrypt does), then I'd also
+like to include a way to represent the numeric parameters in a more
+compact form: let the little-endian encodings be truncated when the
+values are small.  So e.g. instead of:
+
+$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+it would be valid to use:
+
+$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+or if we want to keep the number of '$' characters fixed, then either
+require the '$' delimiters to always be present or maybe introduce '+'
+or '=' for truncation (a character already used in the other base64
+encoding's alphabet, so likely safe to use):
+
+$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+The savings for classic scrypt are small, but with yescrypt's additional
+parameters they are more significant.
+
+(These examples don't yet switch to encoded salts.  I am keeping these
+two topics separate in this message, although obviously if we implement
+both changes then we'd need to merge them in some way.)
+
+There are also some good reasons in favor of using the RFC specified
+base64 encoding, but that's a deviation from what was used traditionally
+and unfortunately it appears incompatible with the truncation feature
+(and moreover it has padding characters, resulting in even longer
+strings).
+
+What do others think on all of this?  Thomas?
+
+I don't believe it is important to include this in the official
+specification.  It should be fine to keep it in a separate document, and
+for a disjoint, or only partially overlapping group of people, to work
+on that project.  I do agree that a plethora of incompatible formats is
+a severe pain, but if a number of people now agree on a writeup and
+starts to experiment, I believe we can get closure on something that
+should be "good enough" for others to accept.  That said, I'm not
+opposed to including things in the official specification, if consensus
+on details can be established.
+
+I think it's desirable for us to arrive at a common approach at encoding
+these things for all PHC-endorsed schemes.  It is less important whether
+this would be part of the specifications for the individual hashing
+schemes or not, although I think that if not right away then it should
+retroactively be added to revisions of those later.
+
+Alexander
+

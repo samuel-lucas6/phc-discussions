@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+Message-ID: <alpine.DEB.2.02.1304171751080.11626@debian>
+Date: Wed, 17 Apr 2013 17:51:15 +0200 (CEST)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+On Wed, 17 Apr 2013, Solar Designer wrote:
+
+Here's a related desirable property of a good PHS: its overall
+computational cost should not depend strongly (e.g., linearly) on input
+length as well.
+
+Strictly spoken, this is plain impossible. When the length of inputs goes 
+to infinity, the computational cost can be more than linear in the input 
+size, but never less than linear in the input size ... if the output may 
+depend on all of the input, as would be for any good password-scrambler.
+
+If the time for the main computation is sublinear, then beyond some input 
+length the time for just reading the input dominates the running time.
+
+Of course, this is just a theoretical problem. Who cares if the timings 
+allow the adversary to distinguish between passwords who's length is a few 
+characters and "passwords" who's length extends to more than a few hundred 
+characters?
+
+Nevertheless, it would be a bad policy to require a property that is 
+theoretically impossible.
+
+1. The cost settings would have to be chosen with consideration of the
+maximum input length supported on a given system, so they would likely
+end up being lower than what could be afforded for typical input length.
+>
+2. The input (password or passphrase) length would be leaked via timings.
+While such leaks are unavoidable e.g. with crypt(3)'s use of C strings, a
+strong dependency of PHS computation time on input length would make the
+leaks a whole lot worse.
+
+Addressing 1.:
+
+For all passwords of a certain length (either up to the given maximum 
+length or up to, say, 1000 characters), the time to process them is within 
+5% range.
+
+Addressing 2.:
+
+If the password is N characters, the timing to process the password shall 
+not allow to figure out more about N than that it is within a range of 
+length D, for a reasonable D (say, D>7 or so). I.e., the adversary can 
+figure out if the password is, say, shorter than 16 characters, longer 
+than 23 or in between, but not anything more.
+
+The requirements for a PHS are stronger than those for some uses of a 
+KDF.
+
+A really cool password hash should be usable for key derivation, and vice 
+versa.
+
+If you really need to separate between the two, then the requirements for 
+password hashing are neither stronger nor weaker than the requirements for 
+key derivation, they are just different -- even if there is some overlap.
+
+For one thing, the output of a KDF should really be pseudorandom, while 
+some statistical bias in the output of a password hash might be tolerable.
+
+
+So long
+
+Stefan
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

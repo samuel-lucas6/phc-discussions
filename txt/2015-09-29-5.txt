@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <CAGiyFddmjRbUEhdOhrpHGn1JeM5jBOTYh3JPN+AMP0NHfmgRug@mail.gmail.com>
+Date: Tue, 29 Sep 2015 15:01:02 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+@Thomas: let's copy the updated source code on a new shared doc
+https://docs.google.com/document/d/13bv-3HarFpQOD1PayJ2hMvRtVIs5QPu1FZ5XonEv57c/edit?usp=sharing
+ ?
+
+On Tue, Sep 29, 2015 at 2:56 PM Thomas Pornin <pornin@...et.orgwrote:
+
+On Tue, Sep 29, 2015 at 03:05:59AM +0300, Alexander Cherepanov wrote:
+AIUI the decoder tries to be strict. Then perhaps it's worth to
+check that 'str' doesn't start with ' ' or '-' here and try to catch
+overflows.
+>
+Strictly speaking, the decoder tries to be strict when strictness is
+cheap. If we want a strict decoder of numerical values, strtoul()
+won't be enough; we would need something like this:
+>
+/* ------------------------------------------------------------------- */
+#include <limits.h>
+>
+/*
+ * Decode decimal integer from 'str'; the value is written in '*v'.
+ * Returned value is a pointer to the next non-decimal character in the
+ * string. If there is no digit at all, or the value encoding is not
+ * minimal (extra leading zeros), or the value does not fit in an
+ * 'unsigned long', then NULL is returned.
+ */
+static const char *
+decode_decimal(const char *str, unsigned long *v)
+{
+        const char *orig;
+        unsigned long acc;
+>
+        orig = str;
+        acc = 0;
+        for (orig = str;; str ++) {
+                int c;
+>
+                c = *str;
+                if (c < '0' || c '9') {
+                        break;
+                }
+                c -= '0';
+                if (acc (ULONG_MAX / 10)) {
+                        return NULL;
+                }
+                acc *= 10;
+                if ((unsigned long)c (ULONG_MAX - acc)) {
+                        return NULL;
+                }
+                acc += (unsigned long)c;
+        }
+        if (str == orig || (*orig == '0' && str != (orig + 1))) {
+                return NULL;
+        }
+        *v = acc;
+        return str;
+}
+/* ------------------------------------------------------------------- */
+>
+(This code is completely untested; I just wrote it in this email.)
+>
+I am not sure this is worth the effort. It is not very complex to do
+(less than 40 lines of C code).
+>
+>
+    if (pp->m < 1 || (pp->m >30) 3) {
+>
+Why not just compare with a constant here?
+>
+This is to avoid a spurious warning. If I write this:
+>
+        if (pp->m < 1 || pp->m 0xFFFFFFFF)
+>
+then the compiler, on a 32-bit machine, will complain that the
+comparison result is "always true". I don't want spurious warnings: they
+train developers to ignore warnings.
+>
+>
+    if (pp->p < 1 || pp->p 64) {
+>
+255 here?
+>
+Oh yes. Indeed. I fixed the specification, but forgot to change the code
+accordingly. Thanks !
+>
+>
+        --Thomas
+>
+
+
+

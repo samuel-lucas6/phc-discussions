@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+Message-ID: <CAOLP8p5rvGoQoRpSbGn8c5sQ-vkwDMwcYq4FCH2vY0Tq_jhzCg@mail.gmail.com>
+Date: Fri, 3 Jul 2015 05:55:16 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+On Fri, Jul 3, 2015 at 5:49 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+However, like Bcrypt, BusyBeaver in it's current form uses very little
+memory (it fits in L2 cache), and overwrites it many times.  This is good
+for GPU defense, and this makes a nice server-side algorithm.  However, for
+full-disk encryption or unwrapping user keys, I'd prefer to use _lots_ of
+memory - maybe a GiB.  In this case, the memory wont be overwritten many
+times like it is server-side.  Your algorithm would then become more
+sensitive to TMTO attacks, as it should.  There's no point lowering
+memory*time defense much due to paranoia about TMTO attacks.  Lyra2 suffers
+a bit in this regard, making it a bit slower than Yescrypt and Argon2d.  A
+reasonable defense is to introduce a cryptographic hash now and then into
+your computations, which force an attacker to move compute forward.  For
+example, you could compute hashState = SHA512(hashState || registerValue)
+every 10000 or so loop iterations, and do registerValue ^=
+lower64(hashState).
+>
+However, this is really a minor concern, IMO, so feel free to leave it out
+;-)
+>
+Bill
+>
+
+If you do make the memory size a parameter, then you also need to address
+cache-miss penalties.  The way to make an algorithm efficient at
+large-memory hashing is to hash blocks of memory together, rather than
+individual 64-bit values.  Of course, this adds additional complexity.
+Maybe BusyBeaver should remain a simple low-memory server-side hash.
+
+Bill
+
+
+

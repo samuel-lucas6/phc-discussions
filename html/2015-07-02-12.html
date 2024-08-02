@@ -1,0 +1,429 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Password hashing as a self-overwriting Turing machine;
+ Protection of keys in SSH</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="../../../2015/07/03/6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;1856942145-1900&#64;skroderider.denisbider.com&gt;
+Date: Thu, 2 Jul 2015 16:41:07 +0100
+From: denis bider &lt;pwhashing&#64;...isbider.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine;
+ Protection of keys in SSH
+
+Bill,
+
+thank you for your awesome reply! This is really the best I could ask for. You've been so thorough, you've already preempted what I might have replied to most of these points.
+
+I was going to ask you which ones of the PHC candidates you favor; I'm glad you answered that as well, and explained your reasoning.
+
+I did look at TwoCats! I liked the cat pictures :) I did not study  it extensively, but I found the idea of separate client-side vs.  server-side versions interesting, and also the use of multiplication for anti-ASIC strengthening.
+
+With respect to my design - I would indeed like to have a greater number of operations than 4, but I had a lack of ideas about other good constructions that would not have wildly differing costs, and would preserve entropy. I would have liked CPU AES, but availability in hardware and ease of portability seem troublesome. This ought to be better in 5-10 years.
+
+I see your point about the multiply-and-modulo operation, and how this can cause cache-timing leakage if the CPU optimizes it away when the result is not used. I see this as a tradeoff - I wanted to have the multiply-and-modulo because it's one of a few entropy-preserving operations I can think of that really favor a 64-bit CPU.
+
+With regard to parallelism - I agree there's a clear and decisive advantage to this on the client, where cores are most often going unused. For use on the server, the advantages are less apparent: for a busy server, CPU cost is CPU cost, whether it's distributed 1*8 or 8*1. My design targets specifically the niche of an x64 server that cannot offload password hashing on the client, and needs to use an algorithm with a reasonable CPU and memory footprint.
+
+With regard to ASIC and FPGA optimization: I think making an effort to defend against this, and succeeding to *some* extent, is important. However, maximizing such defense would matter primarily:
+
+- For the most critical of passwords, which might motivate someone to invest tens/hundreds of thousands of USD (for FPGA) or millions (for ASIC) into cracking a class of passwords. (Arguably, if a class of passwords is *that* important, it ought to be complex enough that even a single SHA-256 would protect it.)
+
+- For a proof-of-work hash for a digital currency that wants to encourage mining by casual enthusiasts, and have them be competitive with moneyed investors. Litecoin made the original attempt with scrypt, which kinda fell through. Vertcoin now uses Lyra2RE.
+
+For everyday passwords, it seems we're defending primarily against hackers with botnets. Those have access primarily to commodity hardware they might purchase themselves, and other people's hardware to which they have surreptitious access. I can imagine them having significant GPU power at their disposal; possibly FPGA, if a well-to-do hacker is into that as a hobby; but access to custom ASICs seems very unlikely.
+
+Having written that, though - it comes to mind that China is an attacker who is interested in commercial targets, is beyond the law, and is someone we need to be defending against as well. Hmm.
+
+My other point is that there's value in variety. No one should use weak algorithms, by any means. However, if there's a single widely used strong algorithm, and it's used for everything from protection of common passwords to proof of work for a digital currency, *eventually* there may be cheap ASICs everywhere for that algorithm, such as there are now for SHA-256. In that case, an application may be better off using a different algorithm, just because there aren't readily available ASICs for it.
+
+In order for this not to happen with PHC winners, they would have to be *strongly* resistant to more cost-effective implementation in ASIC. Do you believe any of the candidates truly resist this, if the stakes are high enough? Would you say this is the case for Yescrypt, Lyra2, or Argon2d? If yes - what properties of these algorithms do you think are critical in this?
+
+With respect to password hashing in SSH, you are correct; the widely used methods are poor. But:
+
+(a) When transferring private keys between implementations, the main obstacle is compatibility - if strong password hashing is to be used, both sides have to agree on the method. The dominant implementation dictates the most common interchange format; for client keys, this means PuTTY and OpenSSH.
+
+(b) When encrypting private keys locally, the main obstacle is practicality. People often use public key authentication because they do not want to use a password. A large proportion of users, therefore, will not encrypt a private key, and this has to be supported.
+
+(c) There's also no way to truly encrypt a key that must be used by an automated process. Anything that runs unattended must be able to access credentials without user input.
+
+You are right that we could do more in case (a) when our own interchange format is used, and in case (b) when the user chooses to encrypt the private key. In this case, the most suitable password hashing function would be something other than BusyBeaver; something with threads, a larger CPU cost, and a larger memory footprint. I will recommend that we implement one of the PHC winners for this purpose, when they are chosen.
+
+denis
+
+
+-----Original Message----- 
+From: Bill Cox 
+Sent: Wednesday, July 1, 2015 18:39 
+To: discussions&#64;...sword-hashing.net 
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine 
+
+It's too bad you missed this last year.  I think it would have been fun to
+work with you and all the others on hashing algorithms.  I think I started
+out last year with a similar level of password hashing knowledge, and
+shared enthusiasm for some of your ideas.  It would have been fun to learn
+about this stuff together.  As it was, I was about the only novice on the
+list.
+
+I like a lot of the ideas in your code, but I've learned reasons why we
+should do things a bit differently.  Comments below.
+
+On Wed, Jul 1, 2015 at 9:14 AM, denis bider &lt;pwhashing&#64;...isbider.com&gt;
+wrote:
+
+&gt; Dear password hashing gentlemen - and potentially ladies?
+&gt;
+&gt; I'm over a year late to the party. However, I have in the past two months
+&gt; designed an algorithm which may deserve a nod in its direction, due to
+&gt; insight I haven't noticed being used as directly elsewhere.
+&gt;
+&gt; My premise is that, while a password hashing algorithm must be written
+&gt; *carefully*, this does not mean it has to be *complex*. The way I see it,
+&gt; the principal goals of anti-brute force password hashing are as follows:
+&gt;
+&gt; - Entropy preservation. (Obvious.)
+&gt;
+
+This is easy to prove if you use only reversible operations, which is what
+most of us did.  Your operations look close.  The swap operation is not
+useful, and should be replaced with a ^= b or b ^= a or something like
+that.  In the computation graph, swaps simply go away.  The multiply is a
+good one, I think, but the % p, where p is a prime, is very slow.  To make
+the multiply reversible, I'd do something like a *= (b | 1) and skip the
+mod.  You need b to be odd, for this to be reversible, which is why I or-ed
+with 1.  Your operations can easily be made 100% reversible, in which case
+no entropy can lost.  To keep people from running the algorithm backwards,
+you do need to do some irreversible hashing now and then.  A few of us
+settled for doing a cryptographic hash every now and then to prevent
+backwards computation.
+
+- Irreducibility. The algorithm cannot be reduced to a simpler version that
+&gt; executes faster in the general case, for a large proportion of inputs.
+&gt; Nevertheless - and this is important in this case: optimizations that
+&gt; require knowing the password are irrelevant, because the attacker has
+&gt; achieved their goal if they know it.
+&gt;
+
+The most obvious irreducible thing a CPU can do better than any other
+device is execute random machine code.  There is no way an attacker can
+speed this up with an ASIC or GPU.  However, no  sane sys-admin is going to
+want to let the password hashing algorithm execute random binary :-p
+
+That would also non-portable, so you've tried to do the next best thing and
+interpret random operand codes.  I think this would work  better if there
+were more op-codes, similar to what we see in real CPUs.  Something similar
+was tried with Antcrypt and OmegaCrypt, but we could not convince ourselves
+that it really offered strong GPU resistance, and were wary of the data
+dependent branching.  Still there's something here...
+
+Also, I think it is important to use multiple threads to have a really
+awesome password hash function.  That is often free for the user, but not
+for the attacker.
+
+- Non-trivializability on easily obtainable alternate hardware. If an
+&gt; algorithm is to normally run on a 64-bit server, then it should perform
+&gt; most cost-effectively in that environment, not on an AMD GPU. A good
+&gt; password hashing algorithm is platform specific, and chosen for a
+&gt; particular usage case and platform. A different algorithm should be used if
+&gt; the main usage case is e.g. a 32-bit client.
+&gt;
+
+I am more familiar with ASICs than GPUs, so I focus more on ASIC
+resistance.  Your algorithm uses 128KiB of memory.  If I can build an ASIC
+with 8 MiB of memory, I get 64-cores per ASIC.  That's not horrible, but if
+you spend 1ms to hash 8MiB in your hash function instead (yes, some run
+this fast), you'd put the ASIC attacker essentially on parity with CPU
+speed.
+
+
+&gt; Finally, there are other goals an algorithm ought to meet. Resistance to
+&gt; side channel attacks and garbage collection attacks are among them.
+&gt;
+
+How much side-channel resistance is optimal remains a hotly debated topic.
+However, all the guys on this list who disagree with me are wrong :-p  The
+best way is to have a resistant first loop followed by an unpredictable
+second loop.  There are a few special cases where true side-channel
+resistance is warranted, but they're rare.  More about that below.
+
+
+&gt; What I believe to be worthwhile in my design is that, in order to achieve
+&gt; these goals, it does not use a complex algorithm with a fixed order of
+&gt; instructions. Instead, we first use a trusted algorithm, SHA-512, to
+&gt; generate random data dependent on the salt and password; and then we
+&gt; interpret and execute that data as a self-overwriting Turing machine
+&gt; composed of entropy-preserving operations. The Turing machine is allowed to
+&gt; run for a fixed number of operations, but its memory access pattern is
+&gt; random (dependent on the salt), and its order of operations is random
+&gt; (dependent on the salt and password). The result is a cryptographic digest
+&gt; of the state of the Turing machine, after the specified number of
+&gt; operations.
+&gt;
+&gt; If this design has been done well, then I believe it to be irreducible.
+&gt; This is for similar reasons as that the halting problem cannot be solved in
+&gt; the general case, in a way more efficient than actually running the
+&gt; algorithm.
+&gt;
+&gt; The resulting design looks very simple. It comprises 115 lines of code
+&gt; found in the "BusyBeaver" function, starting on line 290 in BusyBeaver.cpp,
+&gt; found in the following archive (23 kB):
+&gt;
+&gt; <a href="http://www.denisbider.com/BusyBeaver-20150630.zip" rel="nofollow">http://www.denisbider.com/BusyBeaver-20150630.zip</a>
+&gt;
+&gt; My implementation attempts to be specific to the x64 platform. It uses
+&gt; SHA-512 to generate pseudo-random data, which favors the 64-bit CPU. The
+&gt; Turing machine uses operations that a 64-bit processor does well. It uses
+&gt; an amount of memory that fits CPU cache sizes, but doesn't fit into local
+&gt; memory of a GPU compute unit. I've hired a colleague for the purpose of
+&gt; testing this; we have not been able to come up with a faster AMD GPU
+&gt; implementation than what runs on a comparable x64 CPU.
+&gt;
+
+This cache size does seem to bust out of current GPU local memory, and it
+does do rapid small memory reads.  This is apparently good for GPU
+defense.  However, there are some weaknesses.  An attacker can know what
+addresses will be accessed way in advance, by pre-computing them based on
+the salt.  He can use this to prefetch data long before it's needed,
+eliminating a lot of latency delays that the user will see on his machine.
+This is a problem in general with pure cache-timing resistant algorithms,
+and one reason I don't want to use them.  In general, they lower the
+memory*time defense by about 2X-3X, because predicable memory addressing
+makes their agorithms more vulnerable to TMTO attacks and massively
+parallel attacks.
+
+
+&gt; The algorithm resists side-channel attacks based on execution timing. The
+&gt; number of operations is constant, and so is the amount of time to process
+&gt; them.
+&gt;
+
+Some operations take longer than others.  Your multiply+mod operation will
+take several cycles longer than the others.  A password leaks timing
+information in this way.  You do all the operations in each loop, and if
+our CPUs were very simple, this would be constant time.  However, Intel and
+AMD CPUs will detect that you have computed the only required result, and
+continue executing instructions while an unused mul/mod operation is still
+in progress.  The timing of each loop can tell an attacker what password
+dependent operations are occurring.
+
+Even if you use just 1-cycle ALU operations (add, sub, xor, and, or,
+complement, rotate-left, rotate-right), you still leak information.  If
+another process is running on your same hyper-threaded CPU core, using up
+all the ALU's barrel-shifter cycles, your program will run those operations
+slower.
+
+It resists side-channel attacks based on memory access timing: all memory
+&gt; indices are controlled by pseudo-random data generated from the salt, while
+&gt; operations and their order are controlled by pseudo-random data generated
+&gt; from the salt *and* password.
+&gt;
+
+I think the author of Gambit originally was looking into such systems.
+However, it doesn't quite work out.  For one thing, an attacker will be
+able to use cache-timing of salt-derived memory access to determine who is
+logging in.  I personally am not too concerned about this potential
+meta-data leak.  This is nearly equivalent to what is leaked by hybrid
+algorithms that have a resistant first loop followed by an unpredictable
+second loop.  However, in the hybrid case, if the attacker with cache
+timing knows the username and salt, he can likely figure out the password,
+even without the password hash.
+
+Because predictable addressing leads to attacks that are 2-3X faster in
+current implementations (there are possibly even worse attacks), I
+recommend doing password dependent memory access, just like Scrypt.
+However, password, or even salt dependent branching is still considered
+iffy.
+
+A wrapper provides resistance to garbage collection: the salt and password
+&gt; are hashed at start, so that the plaintext can be erased before proceeding
+&gt; with the rest of the algorithm.
+&gt;
+
+I believe your algorithm securely hashes the password and salt, without any
+obvious input collisions.  Several entries did not get this quite right.
+
+
+&gt; I understand that a majority of you have an academic background, and will
+&gt; expect this kind of work to be presented as a paper.
+&gt;
+
+Not me.  I'm a coder, like you.
+
+
+&gt; Unfortunately, I do not have this experience. It would be challenging for
+&gt; me to write a paper that would live up to the standards of your community.
+&gt; The way I am presenting this work is the best way I can. However, I don't
+&gt; believe that this implies that this approach is without value.
+&gt;
+
+I wish you'd been around last year when noobs like me were throwing around
+all kinds of ideas.  Clearly, you've got quite a few.
+
+At this point, I think anyone skilled at cryptanalysis or attacking code
+will be focused on the remaining entries.  Try not to be upset if the guys
+with experience seem to ignore your work for now - they have a lot on their
+plate.
+
+If it makes you feel any better, I personally examined the code for nearly
+every entry very carefully.  Yours is good.  Quite a few were not so good.
+A couple well respected academics had a heck of a time writing solid code.
+
+
+&gt; My background is 20 years of experience in C++ development and applied
+&gt; crypto usage. I am a co-founder and developer-in-chief at Bitvise, a small
+&gt; company specializing in SSH software for Windows. Our current plan is to
+&gt; use the above algorithm for password hashing in the next version of Bitvise
+&gt; SSH Server.
+&gt;
+
+I've heard of Bitvise.  While you're hashing algorithm is cool, you should
+use an existing standard (bcrypt or scrypt), or a winner of the PHC -
+preferably Yescrypt, Lyra2, or Argon2d.
+
+I assume you'll be using this for decrypting the ssh private key.  This is
+done poorly in every implementation I've seen so far.  I hope you'll work
+on improving this situation!  In particular:
+
+- Most user passwords can generally be guessed in under 64-million
+guesses.  If you tell these users to choose stronger passwords, they wont.
+Your responsibility is protecting them anyway.
+- As a result, your encrypted ssh keys put user passwords at risk.  These
+passwords are often cracked and used to PWN user gmail accounts (because
+users reuse passwords), which can then be used to PWN other accounts, such
+as banking sites.  Attackers don't want your user's ssh key.  They just
+what their passwords.  Fortuneately, there aren't many Windows ssh users,
+so attackers don't typically go for the encrypted key files.
+- Every ssh tool I've looked at writes the private ssh keys in a file that
+makes an attacker's job easier.  It is absolutely trivial to know when you
+have succeeded and guessed the user's password.  Please leave as much
+randomness as possible in the cleartext key, so attackers have to do a lot
+more work per guess.
+- Every ssh tool I've seen has poor password hashing.  Bcrypt is not strong
+enough!  Scrypt running for a good fraction of a second begins to provide
+median users some protection.  The winner of the PHC should be quite a bit
+better.
+
+
+&gt; If someone finds it worthwhile to research this design further, in a more
+&gt; formal manner, please be welcome. I present it because I think it is an
+&gt; interesting design. This is not to say that other designs you have
+&gt; considered might not have more features. However, I think the simplicity of
+&gt; this approach is valuable.
+&gt;
+&gt; Best regards,
+&gt;
+&gt; denis bider
+&gt;
+
+Thanks for posting it!  I learned a ton on this list, and also a ton
+reading all the code.  Your algorithm is the first that I've seen that does
+only salt-dependent addressing.  That was cool.  It's also simple, and was
+a quick read.
+
+Feel free to debate any of this, especially going into a holiday weekend.
+I enjoy it, and I think there's not too much noise on this list at
+present.  My own entry was TwoCats.  It started out very simple, like
+yours, but now it is overly complex, though it is the simplest that
+addressed as many security issues.  My was also the fastest at filling
+memory per CPU core.  Yescrypt addresses more security concerns, and I
+believe overall is the best password hashing scheme, but it is also the
+most complex.  The detail in the trade-offs in Yescrypt is amazing.  I will
+feel a bit sad if we choose one of the other algorithms over Yescrypt, but
+I do understand that reduced complexity is a good thing.  Not everyone has
+20+ years of coding experience like you and me :-)
+
+Bill
+
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

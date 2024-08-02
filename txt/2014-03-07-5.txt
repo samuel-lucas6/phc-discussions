@@ -1,0 +1,63 @@
+phc-discussions - Are password trailing 0's a problem?
+
+Message-ID: <CAOLP8p7t9=rkFVgz=OiMWU2Rv=1UJ7Tir+i_OCiCFaVrYyukdQ@mail.gmail.com>
+Date: Fri, 7 Mar 2014 05:34:36 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Are password trailing 0's a problem?
+
+I noticed that any password used in PBKDF2 gives the same result as
+that password with 0's appended any number of times up to a total
+length of 64 bytes.  Is this a problem?  A way around this would be to
+add the password length to the data hashed.  Since I always call
+PBKDF2 with c ==1 (1 repetition), this is the only input parameter
+which can change without changing the output.
+
+Another concern about PBKDF2 is that it calls HMAC_Init with the
+password, and if for some reason the password is 64 bytes, it is
+passed to the PRF directly, resulting in a very early call with
+runtime proportional to the password length.  Of course, the length is
+64, which is insanely long, so perhaps that's a secure enough
+password, but an attacker might gain useful information such as
+whether the long-password guy has logged in lately.
+
+Then of course there's the chosen input attack on PBKDF2 where an
+attacker gains some potential advantage by choosing adjacent values of
+c for two logging attempts.  I also dislike that PBKDF2 generates
+n-bit output when it's strength is never higher than 256 bits, and
+that it makes a useless second call to HMAC when c == 1.  It also
+bothers me that we can't clear the password until PBKDF2 has
+completed, and for large c, that could be a while.  This just seems
+dumb to me, but obviously, designing these things are very hard, or we
+wouldn't get standards like PBKDF2 with flaws.
+
+I'd just abandon PBKDF2 and use HMAC with "tweak" including input
+lengths, but I'm too worried I'll mess up and create a weakness.
+Blake2s seems to be begging me to use it to simplify HMAC, since the
+"inner" and "outer" hash states are not needed for Blake2.  I see the
+Catena author had more confidence, and just called the PRF directly,
+but I see he calls it with the password and salt, and that the runtime
+of this call will be proportional to the combined length.  Can this
+give an attacker knowledge of the password length?  I think I'd rather
+have the trailing 0's have no effect problem... It also concerns me
+that the user's data is passed directly to H in Catena, meaning
+there's a chance an attacker might gain knowledge of the data length.
+My favorite uses for data include adding a secondary key, so I'd
+prefer to protect data as strongly as a password.
+
+If I did roll-my-own, like Catena, I'd do something similar, hashing
+in a fixed size "tweak" that contains the input parameters, and I'd
+use a 256 byte pad on all variable sized inputs rather than 64 for
+just the password.  I only allow lengths up to 255 (uint8_t) on
+purpose, to avoid having to deal with crazy input lengths securely.
+
+I believe this would eliminate danger from guessing lengths based on
+runtimes of calls to hash input data, insure the output is always
+different when any input bit changes (unlike PBKDF2 - trailing 0's on
+a password make no difference).
+
+Thoughts?  Is it crazy to worry about PBKDF2 and even HMAC?  How dumb
+is rolling your own?
+
+Bill
+

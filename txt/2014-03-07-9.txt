@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAK9dnSxCpywovQa8EZ6FQaaQ1nW4Xt39x=RE_OSDKCW4tuxaqg@mail.gmail.com>
+Date: Fri, 7 Mar 2014 17:49:30 +0100
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+This results from PBKDF2 using the password as HMAC key instead of message.
+
+HMAC seems to be designed with a fixed length uniformly random key
+(i.e. it aims to be a PRF),
+so I consider using the password as key instead of message abuse.
+
+HMAC is a bit weird with variable size keys:
+
+* If the key is shorter than the block size, pad it with zero bytes
+* If the key is longer than the block size, hash it
+
+This is generally not a problem for the usual thread model of HMAC
+(assumes uniformly random keys with fixed size) and PBKDF2 (password
+hashing, only first pre-images matter).
+But it means that there are trivial collisions and even second
+pre-images (add a 0 byte at the end, if the original key was shorter
+than the block size, this won't have any effect).
+
+As an example with nice printable characters in both passwords:
+
+`plnlrtfpijpuhqylxbgqiiyipieyxvfsavzgxbbcfusqkozwpngsyejqlmjsytrmd`
+and `eBkXQTfuBqp'cTcar&g*` have the same PBKDF2-HMAC-SHA1 hash (no
+matter the salt or the number of iterations).
+
+I found those with a CPU and unoptimized code. One of our GPU hashing
+friends could easily find a similar pair for PBKDF2-HMAC-SHA-256.
+

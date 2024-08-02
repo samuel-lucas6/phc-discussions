@@ -1,0 +1,59 @@
+phc-discussions - BSTY - yescrypt-based cryptocoin
+
+Message-ID: <20140909115003.GA23270@openwall.com>
+Date: Tue, 9 Sep 2014 15:50:03 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: BSTY - yescrypt-based cryptocoin
+
+Hi,
+
+A yescrypt-based cryptocoin was launched ~12 hours ago:
+
+https://bitcointalk.org/index.php?topic=775289.0
+https://github.com/GlobalBoost/GlobalBoost-Y
+https://bst.globalboo.st/y/product.php?id=22
+
+They currently credit me for "recommendations", but actually my
+involvement was minimal, and I'd like to keep it minimal, so I am asking
+them to remove that wording (hopefully, it'll be gone by the time you
+read this).  I am not entirely happy with this cryptocoin, but I think
+it's a fine way to test yescrypt better if the coin ends up providing
+incentive for breaking/optimizing yescrypt.
+
+Currently, the only miner is the wallet.  As released, it uses
+yescrypt's SIMD-less code (with a minor incompatible change possibly
+inadvertently introduced by BSTY developers) and it has memory
+(de)allocation overhead in the loop.
+
+The attached patch introduces the change/bug into yescrypt's SIMD code
+in the wallet tree and uses thread-local storage (yes, a hack, and
+not universally supported) to easily move the memory (de)allocation
+overhead out of the loop.  Someone may reimplement the latter in a
+better way (without a dependency on thread-local storage).  Of course,
+the official yescrypt won't include these changes; they are BSTY-only.
+
+The official yescrypt's API allows for the caller to keep the memory
+(de)allocation overhead out of the loop, but this wallet code didn't use
+that.  And it was quicker for me to hack than to implement such use.
+
+Before this patch, BSTY mining ran at 1300 hashes/s on i7-4770K.  With
+the patch, it's the expected 3400 hashes/s (same as my "userom 0 2"
+benchmark reports for 8 threads).  However, the speed drops to zero
+whenever the wallet loses connection to network, which happens very
+often (perhaps overloaded nodes).
+
+BSTY uses yescrypt with: N=2048, r=8, p=1, t=0, (YESCRYPT_RW |
+YESCRYPT_PWXFORM).  The parameters are fixed (no growing N, unlike e.g.
+in YACoin).
+
+Luckily, BSTY's incompatible change to yescrypt does not affect its
+security, nor its performance.  So BSTY can serve to test yescrypt's
+important properties despite of this change.
+
+I am BCC'ing this to a BSTY developer.
+
+Alexander
+
+View attachment "GlobalBoost-Y-fast.diff" of type "text/plain" (3805 bytes)
+

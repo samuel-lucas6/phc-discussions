@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] PHC output specifics
+
+Message-ID: <20150315212049.GA24558@bolet.org>
+Date: Sun, 15 Mar 2015 22:20:49 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] PHC output specifics
+
+On Sun, Mar 15, 2015 at 05:19:12PM +0000, Zooko O'Whielacronx wrote:
+Encoding and normalization are only the first two tips of the iceberg.
+
+Actually stringprep does not address encoding.
+
+As for normalization, in stringprep you have the choice between no
+normalization at all, or NFKC. Section 4 of RFC 3454 includes this
+text:
+
+   There is a third form of normalization, Unicode normalization with
+   form C.  If a profile is going to use a Unicode normalization, it
+   MUST use Unicode normalization form KC.  Form KC maps many
+   "compatibility characters" to their equivalents.  Some user interface
+   systems make it possible to enter compatibility characters instead of
+   the base equivalents.  Thus, using form KC instead of form C will
+   cause more strings that users would expect to match to actually
+   match.
+
+See in particular the last sentence: using form KC will cause "more
+matching than expected", and for passwords I am not sure this is what we
+want. In fact I am inclined to think that password hashing should not
+use the K* forms; for instance, KC and KD map "²" (latin-1 superscript
+'2', easily accessible on some keyboard mappings, e.g. French "azerty")
+to "2". Ideal normalization is about suppressing unwanted variations in
+internal representations (and thus encodings) while not losing actual
+information. The KC and KD forms tend to lose too much information in
+the case of passwords: if I use the '²' key in my password, I do not do
+it as an alias for the '2' key; if I wanted a '2' I would have typed a
+'2', not a '²'. Password processing should keep these two characters
+distinct.
+
+(In the same way that if I use '£', it is not to have the same effect as
+'#' -- as it nevertheless happens with the old DES-based "crypt"
+password hashing, due to the ignored high bits.)
+
+But stringprep forces us to choose between KC normalization, and no
+normalization at all, both being, in my opinion, suboptimal.
+
+
+In general, stringprep is mostly a "mandatory checklist": it forces you,
+when you specify a stringprep profile, to think about what you are
+doing. It makes the designer aware that not every text is plain ASCII.
+This is a good thing. However, if we are to recommend an actual
+unambiguous processing scheme, I'd prefer it to be actually one
+appropriate for passwords -- so one with NFC (or NFD) normalization, and
+stringprep does not allow that.
+
+
+I don't know if stringprep comes with more baggage than it is worth
+
+Most of the RFC consists in a copy of the case folding tables from
+Unicode 3.2. Normally we do not want to fold cases in passwords; we
+might want to _switch_ cases, for the Facebook-like "recover from
+CapsLock" feature that we were discussing, but that's a rather different
+thing because case-switching is more about inferring the behaviour of
+the CapsLock key on the client machine than actually making
+Unicode-exact case inversions.
+
+
+	--Thomas Pornin
+

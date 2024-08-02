@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] PHC output specifics</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="../../../2015/03/17/1">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150315212049.GA24558&#64;bolet.org&gt;
+Date: Sun, 15 Mar 2015 22:20:49 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] PHC output specifics
+
+On Sun, Mar 15, 2015 at 05:19:12PM +0000, Zooko O'Whielacronx wrote:
+&gt; Encoding and normalization are only the first two tips of the iceberg.
+
+Actually stringprep does not address encoding.
+
+As for normalization, in stringprep you have the choice between no
+normalization at all, or NFKC. Section 4 of RFC 3454 includes this
+text:
+
+   There is a third form of normalization, Unicode normalization with
+   form C.  If a profile is going to use a Unicode normalization, it
+   MUST use Unicode normalization form KC.  Form KC maps many
+   "compatibility characters" to their equivalents.  Some user interface
+   systems make it possible to enter compatibility characters instead of
+   the base equivalents.  Thus, using form KC instead of form C will
+   cause more strings that users would expect to match to actually
+   match.
+
+See in particular the last sentence: using form KC will cause "more
+matching than expected", and for passwords I am not sure this is what we
+want. In fact I am inclined to think that password hashing should not
+use the K* forms; for instance, KC and KD map "²" (latin-1 superscript
+'2', easily accessible on some keyboard mappings, e.g. French "azerty")
+to "2". Ideal normalization is about suppressing unwanted variations in
+internal representations (and thus encodings) while not losing actual
+information. The KC and KD forms tend to lose too much information in
+the case of passwords: if I use the '²' key in my password, I do not do
+it as an alias for the '2' key; if I wanted a '2' I would have typed a
+'2', not a '²'. Password processing should keep these two characters
+distinct.
+
+(In the same way that if I use '£', it is not to have the same effect as
+'#' -- as it nevertheless happens with the old DES-based "crypt"
+password hashing, due to the ignored high bits.)
+
+But stringprep forces us to choose between KC normalization, and no
+normalization at all, both being, in my opinion, suboptimal.
+
+
+In general, stringprep is mostly a "mandatory checklist": it forces you,
+when you specify a stringprep profile, to think about what you are
+doing. It makes the designer aware that not every text is plain ASCII.
+This is a good thing. However, if we are to recommend an actual
+unambiguous processing scheme, I'd prefer it to be actually one
+appropriate for passwords -- so one with NFC (or NFD) normalization, and
+stringprep does not allow that.
+
+
+&gt; I don't know if stringprep comes with more baggage than it is worth
+
+Most of the RFC consists in a copy of the case folding tables from
+Unicode 3.2. Normally we do not want to fold cases in passwords; we
+might want to _switch_ cases, for the Facebook-like "recover from
+CapsLock" feature that we were discussing, but that's a rather different
+thing because case-switching is more about inferring the behaviour of
+the CapsLock key on the client machine than actually making
+Unicode-exact case inversions.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

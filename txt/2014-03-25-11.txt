@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] TwoCats multiplication chain
+
+Message-ID: <20140325170155.GA10343@openwall.com>
+Date: Tue, 25 Mar 2014 21:01:55 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Tue, Mar 25, 2014 at 07:36:58AM -0400, Bill Cox wrote:
+Here's my modified multiplication chain code.  It does two
+multiplications per loop, and uses only the upper 32 bits, which are
+harder to speed up in hardware than the lower 32:
+
+                // Compute the multiplication chain
+                for(uint8_t k = 0; k < multiplies; k++) {
+                    a ^= (uint64_t)b*c >32;
+                    b += c;
+                    c ^= (uint64_t)a*d >32;
+                    d += a;
+                }
+
+The 4 variables are initialized from the "state" values.  This
+function allows the additions to be done in parallel, but the
+multiplications and xors must be sequential.  It runs well on both 32
+and 64 bit Intel architectures in my tests.
+
+This looks very good at first glance, especially in terms of efficiency:
+you only spend one cycle on top of the multiplication latency.
+
+There is a multiplication poisoning issue, but with the 4 variables, I
+have not seen it occur after a billion iterations, so the percentage
+of blocks that would have poisoned chains is tiny.  The poisoning
+would occur if a and c both become 0 or 1 at the same time.
+Otherwise, if only a or c is 0 or 1, changes in b and d should kick
+them back into higher values.
+
+Is your use of four variables intended specifically to reduce the
+frequency of such poisoning, or were there other reasons as well?
+
+Will this do?
+
+Probably.
+
+Here's another thought I had, but didn't mention yet: what if the
+attacker makes their multiplier circuit such that it's not constant
+time, but rather that it may complete a cycle earlier in case the final
+carry chain is interrupted (has 0's) in places allowing for such
+speedup?  If sums of partial products for some of the output bits are
+zero, then higher output bits don't depend on sums of partial products
+for any bits lower than that.  This means that e.g. bit 63, which
+potentially depends on everything due to this final carry, may in fact
+be computed very quickly most of the time.
+
+Higher 32 bits are probably in fact "harder" to speed up in hardware
+than the lower 32, as you wrote, but once someone went for the effort of
+this variable-time multiplier circuit, maybe it'd actually run faster
+than it could otherwise?
+
+I've been thinking that maybe the middle 32 bits (16 to 47) are actually
+the slowest to compute, even in a variable-time optimized circuit, but I
+could be wrong.  This is more of a gut feeling than careful analysis.
+And on 32-bit archs this double-register shift may be costly.  On 32-bit
+x86, right now you simply pick EDX instead of EAX, but if going for bits
+16 to 47 you'd have a SHRD in there, wasting a cycle and thereby
+probably killing any advantage this would provide.  On ARM, I think it'd
+be even worse: LSR and OR-with-shift, meaning two cycles wasted.  (But
+I'm not familiar with ARM.  I merely looked these up in arch reference.
+Maybe there's a quicker way I overlooked.)  It's on 64-bit and on SIMD
+with 64-bit vector elements that we incur a similar shift anyway, and
+can adjust the shift count arbitrarily (be it 32 or 16).
+
+Another consideration in deciding between >32 vs. >16 vs. >20 (or
+21?) is that shifts by up to 20 (or 21?) only use multiplication result
+bits computable in double-precision floating-point, making this more
+JavaScript-friendly and maybe friendlier to some GPUs (such as high-end
+NVIDIAs).  This has both pros and cons.  Since I do currently have an
+arbitrary shift in a 64-bit value anyway (unlike you), this change is
+within consideration for me (whereas it'd cost 1+ cycle of overhead for
+you, so probably not worth it given that it has both pros and cons).
+Maybe this shift count may be a parameter (choice between 32 and 20?)
+
+I think you shouldn't make further changes to this now unless a major
+problem is found.  I'm just rambling.  I'd be interested in your
+comments, though, as this might affect my work on escrypt.
+
+Alexander
+

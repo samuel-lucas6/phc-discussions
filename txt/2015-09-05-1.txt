@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <20150905001153.GA22579@openwall.com>
+Date: Sat, 5 Sep 2015 03:11:53 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+Hi Bill,
+
+On Fri, Sep 04, 2015 at 04:51:31PM -0700, Bill Cox wrote:
+Argon2d memory for 1.2ms hash: 2200 KiB
+Serial multiplies: 2200*96 = 211,200
+ASIC attacker speed using 1ns multipliers: 0.211ms
+area-time product: 0.465 s-KiB
+
+TwoCats memory for 1.2ms hash: 8192 KiB
+Serial multiplies: 526336
+ASIC attacker speed using 1ns multipliers: 0.526ms
+area-time product: 4.31 s-KiB
+
+It looks like TwoCats will have about 9X improved time-area defense, when
+we take into account the multiplication chains.
+
+What is it that makes Argon2d so much slower?  Is it needing to perform
+two BLAKE2b rounds per sub-block, and the intermediate writes to state?
+
+Is memory (de)allocation overhead excluded from the 1.2ms for both of
+these?  And no zeroization done either?  At least we need to ensure the
+benchmarks are consistent in this respect.
+
+Can you tune Argon2d and TwoCats for same defensive throughput per CPU
+chip (with multiple independent concurrent instances), rather than for
+same defensive latency, for a comparison like this?
+
+I think it's primarily throughput per chip that matters at memory sizes
+and low latencies like this.  It doesn't really matter if it takes 1ms
+or 2ms of latency to reach a few MB, but it does matter what memory per
+hash you can reach within a given hashes per second budget (e.g. for
+5000 per second per chip).
+
+Alexander
+

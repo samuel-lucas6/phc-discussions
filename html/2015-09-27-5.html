@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2015/09/26/6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;56085DA3.6030308&#64;openwall.com&gt;
+Date: Mon, 28 Sep 2015 00:20:35 +0300
+From: Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On 2015-09-13 21:26, Thomas Pornin wrote:
+&gt;   -- The encoding should be deterministic: for a given set of parameters,
+&gt;   salt value and hash output, there shall be only one valid hash string.
+&gt;   Having a deterministic output makes it much easier to verify an
+&gt;   implementation against test vectors. It also helps interoperability.
+
+I applaud this idea and I think it's worth to be retained.
+
+&gt; The parameters MUST appear in lexicographic order
+&gt; of their names (using ASCII codes: '-', then digits, then letters).
+
+This requirement seems to be a bit artificial. IMHO it's better to fix 
+the order of parameters in every particular function instead of globally 
+for all functions.
+
+While lexicographic order permits to catch some bogus hashes without 
+knowing the function you cannot fully verify parameters in a generic way 
+anyway.
+
+&gt; If the function expects no parameter at all, then the complete list,
+&gt; including its terminating '$' sign, is omitted.  However, any decent
+&gt; password hashing function should have at least one configurable cost
+&gt; parameter, so in practice the parameter list is always present. Note
+&gt; that the '=' sign may appear within the complete string only as part of
+&gt; a list of parameters.
+
+It's not clear why omitting '$' is a good choice (but I'm not saying 
+that it's definitely a bad choice). It makes parsing for the specific 
+function easier but makes generic parsing harder (you need to search for 
+'=' between the second and third '$'). E.g. one could want to 
+differentiate between a "salt string" and a "hash string" without diving 
+into function specifics.
+
+Are functions without parameters worth to be covered at all?
+
+&gt; Consumers of salt strings and hash strings MUST validate the provided
+&gt; string, and reject invalid strings. In particular, they must verify
+&gt; that all parameters are present, in due order, with their unique valid
+&gt; encoding.
+
+Yay!
+
+ &gt; B64
+ &gt; ---
+
+ &gt;    -- If the last group does not contain exactly three bytes, then:
+ &gt;       1. The group is completed with one or two bytes of value 0x00,
+ &gt;          then processed as above.
+ &gt;       2. The resulting sequence of characters is truncated to its
+ &gt;          two first characters (if the group initially contained a single
+ &gt;          byte) or to its first three characters (if the group initially
+ &gt;          contained two bytes).
+ &gt;
+ &gt; A B64-encoded value thus yields a string whose length, taken modulo 4,
+ &gt; can be equal to 0, 2 or 3, but not to 1.
+
+It should probably be mentioned here that some trailing bits in the last 
+(incomplete) group must be validated to be zero on decoding.
+
+&gt; For Argon2
+&gt; ==========
+&gt;
+&gt; For Argon2, the following is specified:
+&gt;
+&gt;    -- The identifier for Argon2d is 'argon2d'.
+&gt;
+&gt;    -- The identifier for Argon2i is 'argon2i'.
+&gt;
+&gt;    -- The parameters are:
+&gt;
+&gt;       ** m    Memory size, expressed in kilobytes, between 1 and (2^32)-1.
+&gt;               Value is an integer in decimal, over 1 to 10 digits.
+
+Hm, there seems to be some indeterminism in Argon2 itself here? 
+According to spec: "The actual number of blocks is $m'$, which is $m$ 
+rounded down to the nearest multiple of $4p$."
+
+&gt;       ** p    Degree of parallelism, between 1 and 64.
+&gt;               Value is an integer in decimal, over 1 or 2 digits.
+
+In Argon2 v1.2.1, p could be up to 255.
+
+&gt; Rationale
+&gt; =========
+&gt;
+&gt; The format is inspired from what already exists for Unix crypt() and
+&gt; /etc/shadow files. Its alphabet is limited to: [a-zA-Z0-9./$=-]; as
+
+',' should be added to the alphabet. It's used between parameters.
+
+-- 
+Alexander Cherepanov
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

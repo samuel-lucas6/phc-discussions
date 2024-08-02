@@ -1,0 +1,60 @@
+phc-discussions - Re: [PHC] PHC output specifics
+
+Message-ID: <CA+hr98HMF8_ceULpsCuBz1CU7vVqU8oEG6xg-0rLy4hnVLXnAQ@mail.gmail.com>
+Date: Thu, 5 Mar 2015 13:52:34 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] PHC output specifics
+
+On Wed, Mar 4, 2015 at 8:12 PM, Marsh Ray <maray@...rosoft.comwrote:
+
+·         A recommendation for string encoding (e.g., UTF-8 code points)
+
+i would recommend the algo specification be oblivious to the encoding,
+and treat the password as binary. the standardization of a certain use
+case must deal with the encoding issues. the rationale is: the
+algorithm does not need to know, there is no difference from its point
+of view. use cases are so different, unifying has very little benefit
+and might have high cost.
+
+·         A standalone credential (hash value, salt, metadata, etc) format.
+Probably this would be binary with a standard Base64 encoding.
+
+this is tangential to the password hashing, and should be dealt with
+separately. in fact, such a serialization can be standardized
+independent of the used hash function.
+
+·         Conservative recommended default values for these parameters and
+advice on other reasonable choices.
+
+i think this turned out very wrong with bcrypt, which comes with the
+recommendation of 10, which most people carelessly adopted, despite on
+today's hardware it is rather small. i would suggest to have
+recommended values in terms of milliseconds and total memory
+percentage or other vague figure, as opposed to actual parameters.
+also there should be a relatively easy way of determining how the
+parameters translate to milliseconds and megabytes, or other
+resources.
+
+expressed logarithmically.
+
+i don't see the benefit of logarithmic parametrization. at a glance,
+it looks smart, but in fact it adds nothing. specifying the actual
+number instead is simpler, and i doubt that you will ever need numbers
+over 2 billion. one can raise the counterargument that on some limited
+systems, like 8 bit or 16 bit systems, it might be a problem. not a
+huge problem though, as the value must be converted back to a number
+inside the function anyway. you can't escape handling a counter of the
+necessary size. so why not take it directly as parameter?
+
+on the other hand, i see the downside of logarithmic parametrization.
+on a server, it is valuable to fine-tune the cost parameter, 100%
+increments might be impractical. of course one can devise an encoding
+that allows for finer grain control but still exponential (some sort
+of mini-floating point), but this sounds a little bit overkill, puts
+unnecessary burden on the implementor of the hash function.
+
+therefore my recommendation is to take the most natural parameters,
+and let the caller side or the use case standardization decide how it
+chooses, limits and stores parameters.
+

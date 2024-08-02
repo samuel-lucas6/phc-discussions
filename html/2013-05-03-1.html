@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Technical FAQ draft</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/04/25/1">[&lt;prev]</a> <a href="../../../2013/05/06/1">[next&gt;]</a> <a href="../../../2013/05/06/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAGiyFdeAV0nVSoUamGQ93-AYt16zUtETV3xvJP3m73tKmm78CQ&#64;mail.gmail.com&gt;
+Date: Fri, 3 May 2013 10:04:20 +0200
+From: Jean-Philippe Aumasson &lt;jeanphilippe.aumasson&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Technical FAQ draft
+
+Hello,
+
+I'd like to add more technical questions to the FAQ on
+<a href="https://password-hashing.net/faq.html" rel="nofollow">https://password-hashing.net/faq.html</a>, to assist submitters in the
+design of a password hash. Below is a first draft; what do you think
+should be changed/added?
+
+Thanks!
+
+(a copy of the draft FAQ is also available on
+<a href="https://password-hashing.net/techfaq.txt" rel="nofollow">https://password-hashing.net/techfaq.txt</a>)
+
+
+------------------------------------------------------------------------
+- How do requirements differ for password storage and key derivation?
+
+Password storage and key derivation are two classes of applications of
+password hashing:
+- Password storage is about verification of credentials for using a given
+service (typically a web service, but also for unlocking a mobile phone,
+logging in an OS, etc.).
+- Key derivation is about generating a cryptographic key from a pasword,
+typically to 'unlock' an encryption service (full-disk encryption, SSH
+or PGP private keys, etc.).
+
+Key derivation tolerates more costly hashing (both in time and memory)
+because typical applications are run on a client, whereas the typical
+application of password storage is a commercial web service hashing on a
+remote server; a too long delay impairs user experience
+and costs precious CPU time on the server which, like memory
+consumption, may be exploited for DoS unless specific countermeasures
+are implemented.
+
+
+------------------------------------------------------------------------
+- Why not hashing passwords on the client of a web service to eliminate
+  the risk of DoS on the server?
+
+If the server receives a hash rather than a password, a leak of the
+hashes database allows to impersonate users without finding their
+passwords (in the spirit of pass-the-hash attacks).
+
+
+------------------------------------------------------------------------
+- Why (not) requiring significant memory?
+
+Requiring a significant amount of non-volatile memory (as in scrypt)
+tends to decrease the cost-efficiency of massively parallel attacks on
+GPUs and hardware (FPGA or ASIC), whereas general-purpose CPUs tend to
+support fast-access RAM with several MB of CPU cache.
+
+Nevertheless, on platforms such as mobile devices or smartcards,
+significant memory requirements may impair performance and/or user
+experience.
+
+
+------------------------------------------------------------------------
+- 'Memory' what?
+
+Memory usage of a password hashing scheme can be characterized by
+- The amount of storage required (for example, at least 4 mebibytes)
+- The number of accesses ('reads') to the memory
+- The number of modifications ('writes') to the memory
+- The size of data blocks read and written
+- The order of memory addresses accessed (for example, sequential: X,
+  X+8, X+16, etc.)
+- The predictability of memory addresses accessed (for example,
+  sequentially-ordered accesses are predictable, whereas scrypt's ROMmix
+  accesses are not)
+
+All these characteristics affect the performance and thus security of
+the scheme. An example of attack may thus consist in showing that
+apparently-unpredictable memory accesses are partially predictable.
+
+
+------------------------------------------------------------------------
+- Why parallelism is often good for a password hashing algorithm?
+
+Consider a server equiped with an 8-core CPU, having to choose between
+two password hashing algorithms:
+
+-- Algorithm A cannot be parallelized, and the server uses a single core
+of its 8-core CPU to hash passwords (since using 2, 3, or more cores
+would not speed-up hashing).
+
+-- Algorithm B can be parallelized such that with 8 cores it is 8 times
+as fast as with a single core. The defender (that is, the server) can
+take advantage of this by using all 8 cores of its CPU to hash a
+password as fast as algorithm A, but making much more computations.
+
+Now consider an attacker: with N cores she evaluates N instances of
+algorithm A in parallel, but only N/8 instances of algorithm B in the
+same amount of time.
+
+In practice it may not be wise to allocate all cores of a busy server to
+password hashing. However for applications such as full-disk encryption
+or protection of private keys on desktops it is generally okay to use
+more than one core.
+
+
+------------------------------------------------------------------------
+- What is 'simplicity', and why is it good?
+
+Simplicity of an algorithm refers to
+- Simplicity of the specification: Clarity and conciseness, design
+  symmetries (for example, iteration of an identical round function),
+  reduced number of operations and components, prior knowledge required
+  (for example, do we need to understand finite fields algebra?).
+- Simplicity of implementation: Are the basic operation easily
+  translated into machine instructions? (Example: 64-bit integer addition;
+  counterexample: 128-bit finite-field multiplication.); Is an efficient
+  implementation similar to the textbook description? (Counterexample:
+  AES table-based implemetations.)
+
+Simpler is better for a number of reasons:
+- "the simplicity of a cipher contributes to the appeal it has for
+  cryptanalysts, and in the absence of successful cryptanalysis, to its
+  cryptographic credibility." (Daemen and Rijmen, in the AES book)
+- "complexity provides both opportunity and hiding places for attackers"
+  (Dan Geer)
+- The simpler the algorithm, the cheaper it costs to implement, debug,
+  and test.
+
+
+------------------------------------------------------------------------
+- It there a formal mathematical definition of the security of a
+  password hashing scheme?
+
+Attempts of formal definition of secure key-derivation scheme can be
+found in
+Yao, Yin; Design and Analysis of Password-Based Key Derivation
+Functions; CT-RSA 2005
+<a href="http://palms.ee.princeton.edu/PALMSopen/yao05design.pdf" rel="nofollow">http://palms.ee.princeton.edu/PALMSopen/yao05design.pdf</a>
+Krawczyk; Cryptographic Extraction and Key Derivation: The HKDF
+Scheme; CRYPTO 2010
+<a href="https://gnunet.org/sites/default/files/264.pdf" rel="nofollow">https://gnunet.org/sites/default/files/264.pdf</a>
+
+These definitions can be summarized as 'the hash should behave randomly
+with respect to any of its input'.  However these definitions only
+partially address the actual security of a key derivation scheme (and of
+a PHS more generally); they do not address the security informally
+defined as 'the scheme should minimize the efficiency of attackers
+working with GPUs and FPGAs'.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

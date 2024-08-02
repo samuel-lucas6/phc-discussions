@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Upgrade HKDF to HKDF2?
+
+Message-ID: <CAK9dnSxfbvC3JJaRJqzVCMmzWmuQEBueRPKxrNOhnmbq9drwGQ@mail.gmail.com>
+Date: Mon, 10 Mar 2014 12:33:59 +0100
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Upgrade HKDF to HKDF2?
+
+ It is not able to directly generate long output lengths, and has a limited input key length.
+
+Keyed BLAKE2 shares this trait with plain HMAC. You should not compare
+keyed BLAKE2 with HKDF, but with HMAC-SHA-2. Both take a uniformly
+random key and a message, producing a fixed length output.
+
+BTW you can use HKDF with any keyed hash, not just HMAC. For example
+if you're using BLAKE2, you can use its keyed mode instead of HMAC. I
+mainly view HKDF as a convention for how to expand input with
+different purpose strings.
+
+It also forces sensitive "info" data to remain in memory too long.
+
+The `info` string is usually not secret. It's not key material, it's a
+kind of purpose that avoids interactions between different
+protocols/applications using the same password. For example you could
+use something like "tls-client-encryption-key" or "myapp-user-login".
+
+This also explains why its an input of the expand step, you want to
+specify it *after* the expensive operation so you don't have to run it
+multiple times if you want multiple outputs.
+
+ However, it potentially leaks password length due to no padding.
+
+1. You can't avoid length leaks entirely with a `(char* password,
+size_t length)` API. You'd need a `(char* password, size_t length,
+size_t buffer_size)` API. But that's pretty hard to use with little
+gain.
+
+2. You can implement normal hashes with a chosen lower bound on the
+number of compression function calls. This is an implementation issue,
+not a specification issue. Doing so it pretty easy with BLAKE2 due to
+its simple padding and a bit harder with SHA-2 since the position of
+the non-zero padding depends on the data length.
+
+    You could argue that a specification should invite a correct
+implementation. This is the only argument for your forced padding
+plans I can think of.
+

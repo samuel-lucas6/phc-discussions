@@ -1,0 +1,142 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <20140313202712.GA483@openwall.com>
+Date: Fri, 14 Mar 2014 00:27:12 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Thomas,
+
+Thank you for your comments (and on "multiply latency reduction via
+table lookups" as well, which I didn't have a chance to thank you for
+yet, so I do now)!
+
+On Thu, Mar 13, 2014 at 06:52:00PM -0000, pornin@...et.org wrote:
+Actually this calls for further comments: RAM bandwidth is a scarce
+resource on busy servers.
+
+FWIW, I commented on this in here a month ago:
+
+http://thread.gmane.org/gmane.comp.security.phc/593/focus=604
+
+In short: I mostly disagree with the opinion you express, although I see
+how you (and others) can arrive at that opinion (it is intuitive).
+I'd probably be of that opinion too if it weren't for the benchmarks I
+ran on actual servers, etc.
+
+Theory of password hashing is often expressed as following: the defender
+wants to use a function for which the best possible cracking hardware is
+what the defender already uses, i.e. his server (which is, basically, a PC
+with a general purpose CPU, a few cores, and some gigabytes of RAM). But
+that assertion does not capture the whole thing. Indeed, the defender also
+wants that the function runs on the kind of resource that is available in
+largest amount on his side. All this password hashing business is a muscle
+contest: the attacker has more patience and strength, but the defender
+chooses the battleground and engagement rules. The defender ought to
+select rules which favours him.
+
+Correct.
+
+It seems to me that common servers are much more starved on memory
+bandwidth than on CPU.
+
+That's common wisdom, but it's not necessarily true.  It depends.
+
+On a typical server, the CPU spend substantial
+amounts of time waiting for the RAM to return a requested byte.
+
+"Substantial", yes.  However, RAM bandwidth is idle for "substantial"
+periods of time as well.
+
+Therefore,
+it is much easier for a server to allocate 10 ms worth of CPU time to a
+password hashing instance when the computation will fit and remain in the
+L1 cache for one core. If the function behaves nicely in that respect,
+then the cost is 10 ms for one core. If the function operates on a large
+RAM array, then it will clog the common RAM bus and virtually stall the
+other cores; the bill raises from "10 ms on one core" to (at most) "10 ms
+on _all_ cores".
+
+Oh, even the worst case is not that bad, by far.  Suppose we actually
+had only one memory channel (generally not true on current servers) and
+suppose we could fully use it from one core (also generally not true on
+current PC hardware(*)).  Under these unrealistic conditions, what would
+it take to "virtually stall" other cores, which compete for the shared
+memory bus equally with our password hashing core?  If they need memory
+bandwidth as much as we do, this would imply they're already "stalling"
+each other as much as you think we would, and this would also imply that
+they and not us would continue to be consuming most bandwidth.  If they
+don't need the memory bandwidth as much as we do, then we also don't
+slow them down that much (they have other work to do while we're using
+the shared bus).  And in practice things are much better than that.
+
+(*) http://stackoverflow.com/questions/19472036/does-software-prefetching-allocate-a-line-fill-buffer-lfb
+
+Here's another way to look at the (theoretical) worst case mentioned
+above: suppose all cores execute instruction streams such that each and
+every instruction would access the shared memory bus.  Suppose our
+password hashing task does this too, for its selfish needs, and does it
+for 10ms of memory bus time (would be 10ms of CPU time if the bus were
+idle).  Does it really steal 10ms of memory bus time from each other
+core, multiplying the effect (as you seem to imply)?  No, it steals 10ms
+from all of them combined, which is equivalent to stealing it from any
+_one_ of them (or stealing proportionately less than 10ms from each).
+So I think you have flawed logic there.
+
+RAM is not disks.  It is relatively painless to share between concurrent
+tasks, with low overhead.
+
+A currently typical server has roughly twice more CPU cores than memory
+channels (and four times more hardware threads than memory channels).
+Yes, this does make memory bandwidth a somewhat scarce resource, but
+there's nothing stopping us from tuning our password hashing scheme such
+that the full memory bandwidth usage is reached only when all hardware
+threads are running our code.  When the authentication request rate is
+lower than the maximum capacity we've planned for, there are both
+hardware threads and memory bandwidth left for other tasks.  In fact,
+even at the peak rate and above (which "shouldn't happen"), other tasks
+can still compete with us and get their fair share of both CPU time and
+memory bandwidth.  (Of course, temporarily running above capacity is
+risky in other ways.  What I am saying is that we haven't made things
+worse.  It's all the same risks and resource sharing.)
+
+In fact, in my testing nothing bad happens even if full memory bandwidth
+usage is reached way sooner.  The available memory bandwidth is shared
+fairly and gracefully between the tasks, just like CPU time is, and
+since most other tasks actually don't need memory bandwidth as much,
+they're not impacted much.  But there's no need to use settings like
+that, because the settings are to be tuned for sufficient throughput,
+not for higher resource usage at lower than peak throughput.
+
+Of course, all of this depends on the context (number of cores, available
+memory bandwidth depending on what the other cores do, average and peak
+number of hashes per second...).
+
+Right.
+
+However, it means that, generically
+speaking, scrypt-like functions which run on CPU are not necessarily a
+good idea, because they exercise resources which are already a bottleneck.
+
+scrypt was designed not to bump into the memory bandwidth, at least
+not when running only one thread.  At 8 rounds of Salsa20, it stays
+below saturating memory bandwidth on typical PC hardware (albeit for
+reasons other than what you give: it tries to have its "time" factor
+based on computation effort rather than on bandwidth).  OK, you said
+"scrypt-like", and yes some scrypt-like PHC candidates will deliberately
+use more memory bandwidth than scrypt does.
+
+(Or, said more succintly: if you want to engage in a sports contest, and
+you are 5' tall, then don't choose basketball.)
+
+Makes sense, but I think it primarily means that we shouldn't compete
+with attackers solely in terms of memory bandwidth per se.  The reason
+why TwoCats and escrypt use more memory bandwidth (than scrypt) is that
+they want to use more RAM within the allotted time (and discourage
+TMTO).  More RAM means more ASIC die area.  (For EARWORM, this is
+different.  Being ROM-only, it actually competes solely in terms of
+memory bandwidth, which is a drawback.)
+
+Alexander
+

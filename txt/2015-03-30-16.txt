@@ -1,0 +1,63 @@
+phc-discussions - On the Test Results (paper from Milan Broz)
+
+Message-ID: <alpine.DEB.2.11.1503301858510.31715@debian>
+Date: Mon, 30 Mar 2015 19:26:11 +0200 (CEST)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: On the Test Results (paper from Milan Broz)
+
+Dear Milan,
+
+ https://github.com/mbroz/PHCtest/blob/master/output/phc_round2.pdf
+
+thank you for your work!
+
+We (the Catena team) have two comments, a minor one and a major one.
+
+1. The minor one is that the output length for Cartena *appears* to be 
+limited to 64 bytes. But, if you really need longer outputs, it would be 
+straightforward to employ Catena-KG, the key generation variant of Catena. 
+Apart from key generation, we cannot think of any reason why one would 
+want to use longer password hashes, but there is nothing so special about 
+key generation, that you cannot use it for ordinary password hashing, if 
+you want to.
+
+2. The major concern is about your test for the KDF mode.
+
+In our design document, we have been very specific that we suggest to use 
+Catena-Butterfly, for the case that the defender's memory is quite 
+limited, and the defender desires to push back all attackers with even 
+less memory (per core). On the other hand, we explicitly recommend 
+Catena-Butterfly if the defender is going to use plenty of memory, 
+definitively with 100 MB or more.
+
+Using the Catena-Axungia tool,
+
+   https://github.com/medsec/catena-axungia
+
+we measured the following values:
+
+ 		1MB     100MB   1G
+Dragonfly	0.008   0.20    3.14
+Butterfly	0.034   1.78    33.7
+
+Our values for Catena-Butterfly are slightly faster than the one you 
+measured. This is not an issue. We guess, our machine is 5--10% faster 
+than the one you used.
+
+But unfortunately, you didn't benchmark Catena-Dragonfly, even though that 
+is the variant we recommend for big memory.
+
+As the results show, Catena-Dragonfly can easily allocate and use the 
+required memory while maintaining a speed of <<1 second (for 100 MB) or 
+<<20 seconds (for 1 GB).
+
+So long
+
+Stefan
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+

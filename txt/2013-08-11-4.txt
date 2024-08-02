@@ -1,0 +1,63 @@
+phc-discussions - RE: [PHC] C99 in reference implementations
+
+Message-ID: <005801ce96b4$bf387130$3da95390$@acm.org>
+Date: Sun, 11 Aug 2013 10:03:47 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] C99 in reference implementations
+
+I think I'm being misunderstood.  
+
+I personally use Clean C when I want to be producing highly-portable C code, not as a way to produce C++ code.
+
+For me, the use of casts is bearable and, in the case of PHS, I don't see it as much of a problem.
+
+Also, the signature for PHS is already fixed, so it strikes me that is a sufficient constraint (including not depending on stdint.h types at the interface).
+
+(To allow the C Language solution to be called from C++, the usual conditional use of 
+'extern "C" { ... }' wrappers is used in the PHS.h header, of course.)
+
+Finally, I am intrigued by the possibility of not requiring malloc in the first place.  It seems that one way to add to the storage cost is by using a mechanism that employs recursive descent in a way that can't be avoided in a brute-force attack and that can't be parallelized in any useful way.  That way, storage cost involves growth of the amount of stack required.  Having the recursion levels be such that they can't individually be profitably farmed out to a GPU is then the challenge.
+
+ - Dennis
+
+PS: It strikes me that requiring more storage is a complicated situation, whereas simply increasing the work factor on the time dimension seems more easily manageable as processing capabilities increase with time, especially if the PHC solution is not amenable to much parallelization.  I'm willing to implement a storage factor.  I'm just not clear this is a very good first-order provision.
+
+-----Original Message-----
+From: Rich Felker [mailto:dalias@...ifal.cx] 
+Sent: Saturday, August 10, 2013 17:08
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On Sat, Aug 10, 2013 at 04:18:19PM -0700, Dennis E. Hamilton wrote:
+
+<stdint.his implemented in Visual Studio 2010. (There is also
+<cstdint>) as a counterpart in C++ which uses a proper namespace,
+etc.)
+
+For older versions of Microsoft Visual Studio, you can find
+third-party versions on google code, github, and elsewhere. Just
+search for "stdint.h visual studio".
+
+My recommendation would be to use Clean C (C Language that is C++
+compatible) and also limit the solution to the free-standing subset
+
+I would strongly disagree with calling this "clean C". The language
+which is the intersection of C and C++ is very ugly; in particular, it
+forces you to use casts which are anti-idiomatic in C and hide bugs or
+result in difficult to maintain code. The best example of casting the
+result of malloc, which is against best practices of:
+
+    T *p = malloc(sizeof *p); // OR
+    T *p = calloc(sizeof *p, n);
+
+C and C++ are very different language, both in terms of subtle
+semantic differences and extreme differences in which idioms
+constitute best practices versus bad coding. Compiling C code as if it
+were C++ is inviting bugs, and serves no purpose, since well-factored
+C code for use in C++ projects can simply be kept in separate C source
+files or libraries.
+
+Rich
+
+

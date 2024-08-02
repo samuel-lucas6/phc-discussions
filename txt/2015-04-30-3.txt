@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Added multi-threading support to test suite
+
+Message-ID: <20150430045721.GA20813@openwall.com>
+Date: Thu, 30 Apr 2015 07:57:21 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Added multi-threading support to test suite
+
+On Wed, Apr 29, 2015 at 12:15:41PM -0700, Bill Cox wrote:
+Here's a summary of the fastest speeds, when run on my Xeon E5-1650 v2 @
+3.50GHz.
+
+How many and what kind of memory modules do you have installed?  I've
+just checked, and this CPU has 4 memory channels, giving up to 59.7 GB/s
+with 4x DDR3-1866.  What does dmidecode say?
+
+We only get:
+
+TwoCats:
+2^30/10^9*2/0.103 = 20.85 GB/s
+
+yescrypt PWXrounds=2:
+2^30/10^9*8/3/0.160 = 17.9 GB/s
+
+yescrypt PWXrounds=6:
+2^30/10^9*8/3/0.175 = 16.36 GB/s
+
+Argon2d:
+2^30/10^9*2/0.151 = 14.22 GB/s
+
+This includes memory allocation overhead, though, which could easily
+amount to 30% of the total running time, and possibly way more when
+we've sped up the computation with thread.  Those large malloc()'s or
+mmap()'s are sometimes surprisingly slow, perhaps because the kernel has
+to zeroize those pages before letting us have them.  So maybe we should
+actually count like this:
+
+TwoCats:
+2^30/10^9*3/0.103 = 31.27 GB/s
+
+and so on, for the defender's wasteful memory bandwidth use. :-(
+
+(A case for in-kernel KDF.  Ouch.)
+
+Alexander
+

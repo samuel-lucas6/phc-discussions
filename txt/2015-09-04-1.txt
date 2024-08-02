@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <20150904072541.GA17103@openwall.com>
+Date: Fri, 4 Sep 2015 10:25:41 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Thu, Sep 03, 2015 at 02:53:59PM -0700, Bill Cox wrote:
+Imagine you work at a large company like Facebook and want to convince your
+data center guys to use Argon2.  They might have a 1 ms time budget for
+password hashing, and be unwilling to budge on that.  In this case, you
+really want the algorithm to fill memory rapidly.  Worse, you're sharing
+the CPU with other services, so multiple threads are costly, again
+upsetting the data center guys.
+
+Here's a speed comparison of single-thread hashing of 4MiB between Argon2,
+Yescrypt-2p, and TwoCats on my Xeon E5-1650 CPU running at 3.50GHz:
+
+Argon2d: 2.6 ms
+Yescrypt-2p: 1.8 ms
+TwoCats: 0.72 ms
+
+What's Yescrypt-2p?  What do the 2 and p mean?
+
+Anyway, yescrypt was primarily optimized for the case when multiple
+concurrent instances are run, maximizing the throughput.  Latency of one
+computation is secondary.
+
+A natural solution is to use more threads.
+
+No, not threads within one hash computation.  That makes it sensitive to
+other server load (resulting in efficiency loss on thread synchronization
+when there is any unrelated server load).  The natural solution is to
+run independent concurrent instances, for different authentication
+requests.  Perhaps we'll have to use threads for one hash computation
+when typical server CPUs have hundreds of cores or more yet the latency
+budget is low, so it's good to have support for that, but it's not the
+desired way of doing things yet... until we're forced to.
+
+Wasn't Alexander getting something like 4,000 Yescrypt 4 MiB hashes per
+second?  If true, this is very impressive.
+
+I was getting 3400 yescrypt 2 MiB hashes per second on i7-4770K (with
+yescrypt's default 6 pwxform rounds).  On your 6-core, it may be 50%
+higher, so maybe 5100.  For 4 MiB, that would be maybe 2500.  If you
+reduce the pwxform rounds count, you can probably do 4000.
+
+I was also getting 10000 yescrypt hashes per second for 2 MiB, or for
+1.75 MiB + 112 GiB ROM, on 2x E5-2670.  That's also with 6 rounds.
+For 4 MiB, this would be almost 5000.
+
+I was also getting 4100 on i7-4770K for pwxform settings changed to use
+512-bit rather than 128-bit S-box lookups, still for 2 MiB with 6
+rounds.  With S-boxes increased to use L2 cache (64 KiB per instance,
+128 KiB per core), this runs at 3300.
+
+I haven't yet benchmarked the revised Argon2, but the original Argon2d
+performed faster than yescrypt at PWXrounds=6 on the i7-4770K.  That's
+not surprising given that it's 1 BLAKE2b round vs. 6 pwxform rounds per
+64-byte block.
+
+Alexander
+

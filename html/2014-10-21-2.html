@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] simplifying yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20141021020440.GA8628&#64;openwall.com&gt;
+Date: Tue, 21 Oct 2014 06:04:40 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+More detail on one of the possible changes:
+
+On Tue, Oct 21, 2014 at 05:58:37AM +0400, Solar Designer wrote:
+&gt; - Drop support for ROM access frequency mask.  In practice, this will
+&gt; mean no ROM-on-SSD support (only ROM-in-RAM will be supported).  The
+&gt; reason why I am considering dropping this is that in most cases where I
+&gt; would have recommended use of ROM-on-SSD I would _also_ recommend
+&gt; simultaneous use of ROM-in-RAM, and then it would need to be two ROMs,
+&gt; with different access frequency, resulting in even greater complexity.
+&gt; Perhaps just one mask (only for the ROM-on-SSD) would be enough even in
+&gt; that two-ROMs case, though.
+
+My options are:
+
+1. Leave things as-is, meaning that "large" yescrypt users (on dedicated
+authentication servers) will have to choose either ROM-in-RAM or
+ROM-on-SSD, but not both at once (well, except possibly by chaining two
+invocations of yescrypt, which is a suboptimal hack).
+
+2. Add support for two ROMs at once.
+
+3. Drop support for controlling ROM access frequency (and thus for
+ROM-on-SSD).
+
+Obviously, only #3 fits the topic of this posting, but I'd like this
+community's opinions on which option is best.  Technically, I'd be able
+to introduce #1 or #2 in a superset of yescrypt later even if I go with
+#3 now, so the question may be whether we want ROM-on-SSD considered a
+supported feature in PHC context (in the PHC candidate or in a currently
+existing superset of it).
+
+For ROM-in-RAM, there's normally no reason to use a mask other than 1,
+which means that 1/2 of reads (and obviously none of the writes) are
+from ROM.
+
+BTW, the current API is defined to be extensible to multiple ROMs:
+
+typedef yescrypt_region_t yescrypt_shared1_t;
+typedef struct {
+	yescrypt_shared1_t shared1;
+	uint32_t mask1;
+} yescrypt_shared_t;
+
+As you can see, it mostly already has the complexity that would be
+associated with two ROMs.  yescrypt_shared_t struct would become e.g.:
+
+typedef struct {
+	yescrypt_shared1_t shared1, shared2;
+	uint32_t mask1;
+} yescrypt_shared_t;
+
+On the other hand, removing the mask (and thus keeping just ROM-in-RAM)
+would allow for:
+
+typedef yescrypt_region_t yescrypt_shared_t;
+
+and the extra struct would be gone.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

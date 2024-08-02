@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] Is bandwidth all that counts?
+
+Message-ID: <20140212165621.GC2098@openwall.com>
+Date: Wed, 12 Feb 2014 20:56:21 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Is bandwidth all that counts?
+
+On Wed, Feb 12, 2014 at 03:01:45AM +0000, Peter Maxwell wrote:
+So essentially, a hardware attacker can:
+
+- use compute operations much cheaper than defender;
+
+Not in all respects: the latency of some compute operations stays about
+the same.  This is why we're doing those multiplies.  They're still
+cheaper in terms of how many the attacker can have per chip, but they
+may help us tie up attacker's other resources (memory).
+
+- use memory storage at the roughly the same cost as defender;
+
+- use memory bandwidth at roughly the same cost per hash operation as the
+defender.
+
+Have I got that correct?
+
+Mostly.
+
+From what I understand - and I don't know how far down the road they
+actually are - there are ASICs being produced to do scrypt hashes because
+it's used in Litecoin,
+
+The first generation of them is ~10x slower than GPUs, but they are more
+energy-efficient.  Perhaps they will become better with time.
+
+presumably with the side-effect that these
+appliances can be used for cracking password hashes too.
+
+Hardly.
+
+Bitcoin miners are generally not usable (with any decent efficiency, if
+at all) to crack passwords hashed with SHA-256, and Litecoin miners are
+_probably_ not usable to crack scrypt with parameters other than
+Litecoin's (which are way below what's recommended for use of scrypt as
+KDF or password hash).  I would not be surprised if a Litecoin ASIC is
+actually tunable to attack scrypt at other parameters, but it'd be slow
+(would have to use high TMTO factor, since there's no incentive to waste
+die area on putting much memory into such ASICs).
+
+Is it likely that
+the need for significantly improved memory bandwidth in other contexts -
+for example high-performance computing in the sciences - will drive an
+improvement in technology such that the assumptions on memory bandwidth
+limitations will fail in the near future?
+
+There are already HPC cards with several times higher memory bandwidth
+than what's available from server's main CPUs.  It is quite possible
+that this gap will be increasing, although the opposite is also possible.
+It may make sense for our password hashing schemes to be tunable for
+efficient use on such cards, so that they could be used defensively.
+
+It also makes sense to depend on more than just the bandwidth.  This is
+why we're introducing those multiply latencies.  This is also why I'm
+unhappy with fully cache-timing safe designs' pre-determined memory
+access patterns, as they remove the dependency on memory latency (only
+depending on the bandwidth, not latency) and on efficient small lookups.
+
+And as a slight tangential: is it worth candidate algorithms for PHC having
+a tunable to create ever-so-slight changes in computation such that any
+adoption by a crypto currency isn't going to indirectly encourage hardware
+specifically for cracking password hashes to be produced?
+
+We're not seeing such hardware with Bitcoin and Litecoin.  The ASICs
+produced so far are just enough to let us see what attack speeds would
+be possible, but they're not directly usable - unless and until the
+makers of such ASICs deliberately decide to make them dual-use (also
+usable for a subset of password cracking attacks), which they might do,
+possibly with some impact on mining speeds.
+
+We sort of already have such tunables - e.g., scrypt has 3, and most
+PHC candidates will likely have this many or more.  I don't see any
+reason to introduce an extra tunable specifically against cryptocurrency
+miners.  Whether we do that or not, it'd be up to those miners'
+developers to include support for each tunable parameter or not, and
+their choice will depend on their incentive vs. cost.  An extra tunable
+would not become a magic anti-cryptocurrency-ASIC one just because we
+say we intend it for this purpose.  Well, we could make it specifically
+costly to implement in an ASIC, or (in other words) to make it much
+cheaper to implement specialized versions without support for that
+tunable, but that's something we could consider outside of
+cryptocurrency context.
+
+Alexander
+

@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - yescrypt pre- and post-hashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/03/29/10">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140331023611.GA10613&#64;openwall.com&gt;
+Date: Mon, 31 Mar 2014 06:36:11 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: yescrypt pre- and post-hashing
+
+Bill, all -
+
+I added (HMAC-)SHA-256 pre- and post-hashing to yescrypt, enabled
+whenever it deviates from classic scrypt compatibility via any setting
+(any feature flag or/and non-default time cost).  The attached patch for
+the reference implementation illustrates this.  (I also made similar
+changes for the optimized scalar and the SIMD implementations, but
+there's no need to post those in here as well.)
+
+I'd appreciate your comments.
+
+In particular, is it a good idea to enable this on any (other) deviation
+from classic scrypt, without requiring that this feature itself be
+requested explicitly?
+
+Is it good to only enable this feature on any (other) deviation from
+classic scrypt, without supporting any way to enable just this feature
+while keeping everything else as in classic scrypt?
+
+The pre-hashing is a simple SHA-256 of the password prior to passing it
+to scrypt's first PBKDF2.  This matches what PBKDF2's HMAC would do
+anyway for passwords of 65 chars or longer.  In other words, this
+matches what would be happening if HMAC were defined to always invoke
+SHA-256 on the key, regardless of key length.
+
+This pre-hashing serves two purposes:
+
+1. Avoid the trivial "collisions" discussed in here, where a &gt;64 chars
+password and its SHA-256 hash would have produced the same yescrypt
+hash.  This is no longer the case, except in scrypt compatibility mode.
+
+2. Ability to upgrade raw SHA-256 hashes, which unfortunately are in use
+by some sites, to yescrypt hashes.  The specific choice of SHA-256 is
+simply because it's used in (ye)scrypt anyway, but it happens to be
+somewhat relevant for such upgrades.  Indeed, this sort of upgrades are
+always possible, but now for raw SHA-256's the resulting hashes would be
+genuine yescrypt hashes, with no need to record that they've been
+upgraded from raw SHA-256.  (For upgrading anything else to yescrypt,
+such info would still need to be recorded.)
+
+Another relevant change is that first block of output from the first
+PBKDF2 call is now preserved (during most computation) in place of the
+original password, and is rolled into the final PBKDF2.  This change
+serves two purposes:
+
+1. Not only password entropy, but also salt entropy, is (by)passed into
+the final PBKDF2, so that even if the memory-hard portion of yescrypt
+catastrophically fails to preserve entropy, both the password and the
+salt affect the final hash anyway.  This way, it can be said that
+yescrypt's cryptographic security depends solely on that of SHA-256,
+HMAC, and PBKDF2, but not on any of its heavy/custom/complicated parts.
+For scrypt, the same can be said for the password, but not for the salt.
+A catastrophic failure of SMix (and below) would potentially result in
+scrypt having easy collisions for same password with different salts.
+This is no longer so for yescrypt.
+
+2. It is possible to zeroize the password early on, keeping only the
+PBKDF2(SHA-256(password), salt) during most computation.  (I did not
+include this in the code yet, but now it's a matter of implementation.)
+Of course, PBKDF2 at 1 iteration is quick, yet it's better than
+plaintext, and better than a saltless hash.
+
+If desired, a tunable parameter may now be added to make it multiple
+iterations of PBKDF2 for this first block.  In terms of code, a
+separate instance of PBKDF2 would need to be invoked for 256-bit
+derived key size, and it would just happen to produce the same results
+as the current code when the iteration count is set to 1.  Before this
+change, hacking in more PBKDF2 iterations relative to classic scrypt
+would unnecessarily waste CPU time on additional PBKDF2 output blocks.
+
+The post-hashing allows for most computation to be done on the client
+while producing the same yescrypt hashes that are produced with 100%
+server-side computation.  This is similar to Catena's "Server Relief".
+I implemented it in a way that fits SCRAM (RFC 5802) to the extent
+possible, so that existing yescrypt hashes stored on a server (sometime
+in the future) would happen to be usable with a straightforward
+extension of RFC 5802 (to appear at an even later future time).
+
+BTW, there's some nice confusion in RFC 5802 regarding the order of
+arguments to HMAC().  Tweets:
+
+&lt;solardiz&gt; In RFCs, is it HMAC(msg, key) (per RFC 2104's code) or HMAC(key, msg)? RFC 5802 <a href="http://tools.ietf.org/html/rfc5802#page-8" rel="nofollow">http://tools.ietf.org/html/rfc5802#page-8</a> vs. Dovecot <a href="http://hg.dovecot.org/dovecot-2.2/file/d55ae5d268a2/src/auth/mech-scram-sha1.c#l223" rel="nofollow">http://hg.dovecot.org/dovecot-2.2/file/d55ae5d268a2/src/auth/mech-scram-sha1.c#l223</a>
+&lt;solardiz&gt; I guess RFC 5802 assumes HMAC(key, msg). Is the ordering of HMAC() args specified in an RFC? <a href="http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-scram.c#n346" rel="nofollow">http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-scram.c#n346</a> <a href="http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-utils.c#n43" rel="nofollow">http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-utils.c#n43</a>
+&lt;+&#64;...f&gt; @solardiz Well, the source code in Krawcyk's RFC does M(msg, key) :)
+&lt;@solardiz&gt; @tqbf Right. So RFC 5802's use of HMAC() looks inconsistent with RFC 2104. Either that, or multiple implementations got it wrong.
+&lt;@solardiz&gt; @tqbf It's easy to verify RFC 5802's intent, though: it includes test vectors. I just don't have time right now. Anyone?
+&lt;solardiz&gt; Impls of RFC 5802 with its test vectors, thus presumably tested: <a href="http://bm2.googlecode.com/svn-history/r1222/trunk/src/login/SASL_ScramSha1.java" rel="nofollow">http://bm2.googlecode.com/svn-history/r1222/trunk/src/login/SASL_ScramSha1.java</a> <a href="https://bitbucket.org/sco0ter/babbler/src/6e5daf195414/src/test/java/org/xmpp/sasl/?at=default" rel="nofollow">https://bitbucket.org/sco0ter/babbler/src/6e5daf195414/src/test/java/org/xmpp/sasl/?at=default</a> Confirms HMAC(key, msg)
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/1">yescrypt-pre-post-hashing.diff</a><strong>" of type "</strong>text/plain<strong>" (2223 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

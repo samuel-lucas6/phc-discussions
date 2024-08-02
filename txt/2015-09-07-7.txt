@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Re: Interest in specification of modular crypt format
+
+Message-ID: <55ED9315.4050901@devever.net>
+Date: Mon, 7 Sep 2015 14:37:25 +0100
+From: Hugo Landau <hlandau@...ever.net>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Interest in specification of modular crypt format
+
+On 06/09/15 21:02, Simon Josefsson wrote:
+I worked on this for scrypt, see >
+https://gitlab.com/jas/scrypt-unix-crypt/blob/master/unix-scrypt.txt >
+and I am interested in working on this for Argon2 too. I don't
+believe it is important to include this in the official >
+specification.  It should be fine to keep it in a separate document, and
+for a disjoint, or only partially overlapping group of people, to work
+on that project.  I do agree that a plethora of incompatible formats
+is a severe pain, but if a number of people now agree on a writeup and
+starts to experiment, I believe we can get closure on something that >
+should be "good enough" for others to accept.  That said, I'm not >
+opposed to including things in the official specification, if consensus
+on details can be established. /Simon
+I don't see that it's that important that things like the traditional
+crypt() base64 encoding be used. Ultimately so long as a format can be
+reliably disambiguated from other formats, is a reasonable length ASCII
+string and doesn't contain newlines or ':' (for /etc/shadow
+compatibility), I don't think there's an issue.
+
+In ignorance of the above specification I have been using my own, which
+looks like this:
+
+  $s2$N$r$p$salt$hash
+
+salt and hash are RFC 4648 base64-encoded strings, and N, r and p are
+ASCII decimal integers. The salt is properly decoded before use.
+Passwords are UTF-8.
+
+This seems like a simpler style of format.
+
+As a format invented in 30 seconds, this could work for Argon2i:
+
+  $a2i$p$m$t$nonce$hash
+
+This format assumes that K = "" and X = "" (or are contextually
+provided), which will probably(?) be appropriate for most use cases.
+Let tag length be 32 bytes. Let p, m and t be ASCII-encoded positive
+decimal integers. Let nonce and hash use RFC 4648 base64 encoding. Let
+the passphrase use UTF-8.
+
+What are the issues with this, I wonder?
+
+
+
+
+

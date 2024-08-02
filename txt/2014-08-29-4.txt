@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <20140829021859.GA6162@openwall.com>
+Date: Fri, 29 Aug 2014 06:19:00 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - TwoCats
+
+Bill,
+
+On Fri, Aug 29, 2014 at 05:27:28AM +0400, Solar Designer wrote:
+OK, you asked for it.  I don't recall all of my complaints about TwoCats
+anymore, but I think its small random lookups, which are meant to be
+bcrypt-like, might not actually provide as much GPU resistance as
+bcrypt's did.  I think TwoCats makes them 256-bit only, meaning that on
+pre-AVX2 CPUs they might not be frequent enough, and you might not be
+making enough of them per byte read/written to the large arena.  Have
+you actually checked TwoCats vs. defense-optimized bcrypt running on the
+same CPU when exhausting the machine's capacity (e.g., 8 independent
+concurrent hash computations on your i7-3770), in terms of frequency of
+those small random lookups?  And then you need to factor in how soon
+their results are needed (the available parallelism, compare it against
+bcrypt's four S-box lookups) and the total size of your equivalent of
+bcrypt S-boxes (if 4x larger, then you probably have 4x more room for
+parallelism while staying the same as bcrypt in terms of GPU resistance).
+
+... or not so much room, since global memory attacks become a concern
+when lookups are less frequent and/or parallelism is higher, and these
+are not affected by S-box size (until it becomes many times larger than
+our L1 cache, so not in our case).
+
+Alexander
+

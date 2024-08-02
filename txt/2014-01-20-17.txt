@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <CAOLP8p7c_M5e6s2CXepg+bfUAnU9oqOXAPrxWvao-cvjkg9+9w@mail.gmail.com>
+Date: Mon, 20 Jan 2014 09:02:24 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Mon, Jan 20, 2014 at 8:38 AM, Bill Cox <waywardgeek@...il.comwrote:
+- Even blake2b is too slow for this competition, though I seem to
+remain in the minority in feeling this way.  What's wrong with r[i] =
+r[i-1]*(prevRow[reverse(i)] | 1) + 12345?
+
+I replaced the hashing in inner loops with simple hashes like this,
+and catena-waywardgeek-test runs in 0.024 seconds.  That's a factor of
+12X speed-up!  That would put Catena in a competitive performance
+range.  It took me about 5 minutes to make the change.
+
+Obviously the output needs to appear more random than the hashed data
+I'm now writing to memory in catena-waywardgeek.  That's absolutely no
+problem.  Simply compute SHA-512 of the user password, and XOR in the
+last row over it.  You can't make random data less random by XORing in
+non-random data.  In addition, there is no good way for an ASIC
+attacker to speed up this inner loop, because our CPUs have highly
+optimized multipliers, and the multiplication now dominates the
+runtime.  This makes Catena both memory-hard and compute-time hard.
+
+So... now is it time for the theoreticians to spend 5 weeks to
+determine if such a simple hash is OK?  :-)
+
+Bill
+

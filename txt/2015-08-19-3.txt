@@ -1,0 +1,138 @@
+phc-discussions - Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Message-ID: <CALW8-7+MosW=JqwbKw2WjHgswxUKbcMv4mzyNK=j5HH7rH2Scw@mail.gmail.com>
+Date: Wed, 19 Aug 2015 12:13:06 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Hi Alexander,
+
+thank you for the benchmarks! We are still working to produce new code
+(enhanced + Maxform) that can be used for future testing. Please feel free
+to ask for specific code change that might favor GPU portability.
+
+I have several questions:
+
+1) Would you attribute these results to the existing Argon2 parallelism in
+the compression function (8 x parallel Blake2)? Do you already exploit this
+feature? If yes, then we already have a more sequential pattern in mind,
+that would be great to test with or without Maxform.
+
+2) How do you get these extrapolation numbers for Titan X? What are these
+numbers in the denominator?
+
+Best regards,
+Dmitry
+
+On Wed, Aug 19, 2015 at 4:09 AM, Solar Designer <solar@...nwall.comwrote:
+
+Hi,
+>
+Agnieszka Bielec produced OpenCL implementations of Argon2d and 2i, and
+ran benchmarks at the same 1.5 MiB level that we had used for Lyra2 vs.
+yescrypt testing.
+>
+IIUC, these are for Argon2 1.0, before BlaMka and the indexing function
+enhancement.
+>
+Argon2i t=3 m=1536
+i7-4770K - 2480
+GeForce GTX 960M - 1861
+Radeon HD 7970 GE (*) - 1288
+GeForce GTX TITAN (**) - 2805
+>
+Argon2d t=1 m=1536
+i7-4770K - 7808
+GeForce GTX 960M - 4227
+Radeon HD 7970 GE (*) - 2742
+GeForce GTX TITAN (**) - 6083
+>
+(*) We actually use one GPU in HD 7990 at 1.0 GHz, which is equivalent
+to HD 7970 GE.
+(**) With slight overclocking by the GPU card vendor.
+>
+Raw detail:
+>
+http://www.openwall.com/lists/john-dev/2015/08/17/62
+>
+I am especially concerned about the 960M (a mobile GPU with 65W TDP)
+performing surprisingly well, at 75% of CPU speed for 2i and 54% for 2d.
+This means that a larger desktop/gaming/server Maxwell GPU will
+trivially outperform the CPU.  Per these tables comparing Maxwell GPUs:
+>
+>
+https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units#GeForce_900M_.289xxM.29_Series
+>
+https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units#GeForce_900_Series
+>
+GTX Titan X is more than 4 times larger than the 960M.  We need to add
+it to the mix and see.
+>
+We also see the older Kepler architecture GTX TITAN outperform i7-4770K
+slightly for 2i (2805/2480 = 1.13) and reach a CPU-like speed for 2d
+(6083/7808 = 0.78).  This is much worse than what we saw for Lyra2 and
+yescrypt, but isn't as impressive as 960M's result.
+>
+The speeds on AMD GCN are worse than I had expected.  Perhaps there's
+still much room for optimization here.
+>
+Argon2i vs. Lyra2:
+>
+2480/1861 / (3792/629) = 0.22
+2480/1288 / (3792/2844) = 1.44
+2480/2805 / (3792/1638) = 0.38
+>
+Argon2d vs. Lyra2:
+>
+7808/4227 / (3792/629) = 0.31
+7808/2742 / (3792/2844) = 2.14
+7808/6083 / (3792/1638) = 0.55
+>
+Argon2 behaves a lot worse than Lyra2 on both NVIDIAs, but better on AMD
+GCN (it's unclear why; probably a current implementation issue).
+>
+Argon2i vs. yescrypt:
+>
+2480/1861 / (4736/419) = 0.12
+2480/1288 / (4736/914) = 0.37
+2480/2805 / (4736/1050) = 0.20
+>
+Argon2d vs. yescrypt:
+>
+7808/4227 / (4736/419) = 0.16
+7808/2742 / (4736/914) = 0.55
+7808/6083 / (4736/1050) = 0.28
+>
+Argon2 behaves a lot worse than yescrypt.
+>
+The gap on AMD GCN should grow once that code is properly optimized.
+>
+Potential results for GTX Titan X:
+>
+2480/(1861*3072/640*1000/1096) / (4736/419) = 0.027
+7808/(4227*3072/640*1000/1096) / (4736/419) = 0.037
+>
+or:
+>
+4736/419 / (2480/(1861*3072/640*1000/1096)) = 37.1
+4736/419 / (7808/(4227*3072/640*1000/1096)) = 26.8
+>
+Thus, Argon2i or 2d might perform 37 or 27 times worse than yescrypt,
+but that's just extrapolation based on the tables at Wikipedia.  We need
+to get a Titan X and see for ourselves.
+>
+On the other hand, the final Argon2 should behave better, especially if
+a MAXFORM chain is added.
+>
+Alexander
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

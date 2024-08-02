@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel
+ Attacks
+
+Message-ID: <alpine.DEB.2.11.1505041403550.939@debian>
+Date: Mon, 4 May 2015 14:19:38 +0200 (CEST)
+From: Stefan.Lucks@...-weimar.de
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel
+ Attacks
+
+On Thu, 30 Apr 2015, Bill Cox wrote:
+
+I consider garbage collector attacks to be a more common side-channel than cache-timing.  Yescrypt does a good job overwriting early memory
+fast, so that there's less chance of a devistating garbage collector attack.  I prefer what I did in TwoCats, which minimizes early garbage
+collector attacks by using a Catena-style increasing garlic, up to some reasonable size.
+
+Either attack cache timing and garbage collector, is unlikely to happen, 
+and either will eventually catch people not aware of these issues.
+
+I'd consider a password hash function vulnerable to either a time bomb -- 
+most of the time, nothing happens, but eventually, someone gets killed.
+
+As for side-channel resistance, Lyra2 (especially if we enhance it's 
+early walk pattern) has a cache-timing resistant first loop, 
+significantly reducing the damage from a successful cache-timing 
+attack. 
+
+Agreed. Cache-attacks don't allow to significantly speed-up "conventional" 
+attacks (by more than a factor of two or four or so).
+
+There is still the issue of enabling an offline-attack, where it would be 
+impossible otherwise, because the password file has not been compromised. 
+Alexander rightfully pointed out that the adversary needs to know the salt 
+for that kind of attack, but see my response to his post.
+
+Cache timing attacks remain a laboratory experiment,
+
+Not really. See, e.g, <https://eprint.iacr.org/2014/435.pdf>, which 
+appears to be a seriuos practical threat to virtual servers.
+
+Argon2i or Catena as a sole winner would be much worse for defense against these real-world off-line attacks than Scrypt. 
+
+While I don't quite agree with your usage of "much", this is actually the 
+reason why I would prefer more than one winner.
+
+However, I would prefer to have two winners, one from the fast 
+large-memory multi-threaded group (Argon2d, Lyra2, and Yescrypt), and 
+one that is cache-timing attack resistant (either Catena or Argon2i).  
+We could recommend the cache-timing resistant algorithm for algorithms 
+running on VMs which may also be running an attacker's code, and the 
+unpredictable algorithm for full-disk encryption, dedicated 
+authentication servers, and other cases where cache-timing attacks are 
+not likely.
+
+Agreed!
+
+Stefan
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

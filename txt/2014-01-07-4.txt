@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <CAOLP8p5wwnaOpPGW0rA+Q9nz-jYtKhEL0aujMALuRuG=8zQtRg@mail.gmail.com>
+Date: Tue, 7 Jan 2014 09:24:18 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Thanks for this very interesting link.  Lyra first fills a matrix with hash
+data which is derived from the password, and then randomly picks a "row"
+and for each location it updates the hash state from the location's value,
+and then XORs into the location the next output of the hashing engine.
+
+I only skimmed the slides, which mention a proof of exponential runtime
+with no memory, while scrypt is O(N^2).  Catena and Lyra both pick
+particular random-ish DAG architectures in order to prove security.  That's
+really awesome, but I think that a random DAG has better security than
+either, especially since both Lyra and Catena DAGs appear as sub-DAGs of
+random DAGs in fairly large sizes.
+
+The point of Lyra may be the proof.  If so, it's a good piece of work.  If
+the author would like to enter the competition, he may want to "borrow"
+some good ideas from other entries.  Catena's anti-timing attack stuff is
+very cool, and all Lyra has to do is pick a random row that does not depend
+on the password.  For decent security, Lyra needs it's outer time loop to
+run more than once, so that a large majority of rows have a good chance of
+impacting the values in other rows, and it does one read/write and a hash
+per memory location per loop.  So, it's not as fast as scrypt, escrypt,
+which do the job with one read/write and two hashes per location, or
+NoelKDF, which does it with one-ish read/write and one hash per location.
+ I say "one-ish" because I cheat, knowing that if I read V(i), then V(i+1)
+is most likely already cached, so I added V(i+1) into the hash.  He could
+also hash only the first item in each row into his hash state, allowing
+user-configurable parallelism.
+
+Bill
+
+
+

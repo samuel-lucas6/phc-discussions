@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <52BB31B1.7010003@dei.uc.pt>
+Date: Wed, 25 Dec 2013 19:27:45 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+On 25-12-2013 03:51, Bill Cox wrote:
+Sorry for this poorly informed post... I was unable to find a good
+source package for benchmarking salsa20.  Do you know where I can get
+one that simply spits out random numbers for a stream cipher that I
+can easily benchmark?
+
+Probably the best resource, as pointed out by Tony, is eBACS:
+http://bench.cr.yp.to/results-stream.html. The times are measured in
+cycles per byte, so lower is better.
+
+hydra7 (Intel Sandy Bridge) seems to have AES-NI implementations, which
+are still slower than Chacha8:
+http://bench.cr.yp.to/results-stream.html#amd64-hydra7
+
+>
+MARC speeds up ARC4 by almost 2X, making it speed competitive with
+Blake2.  Blake2 is based on ChaCha, which in turn is based on Salsa20.
+ From what I've read so far, ChaCha claimed to be faster than Slasa20,
+and Blake claimed to be based on ChaCha.  Why would Salsa20 be faster
+than Blake2?
+BLAKE2 is a hash function. It has different security requirements, which
+end up requiring more computation (i.e., it's slower) than a dedicated
+stream cipher like Salsa20. How are you even using it as a PRNG? It can
+be used to make one, but that's not the first option I'd consider.
+

@@ -1,0 +1,159 @@
+phc-discussions - Re: [PHC] Re: Second factor (was A review per day - Schvrch)
+
+Message-ID: <CALCETrUQERY-JuFUoZXc=POuaz6v7Umy5RJa=EH=0z9xY9wQRA@mail.gmail.com>
+Date: Wed, 3 Sep 2014 13:13:13 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: Second factor (was A review per day - Schvrch)
+
+On Wed, Sep 3, 2014 at 12:31 PM, Alex Elsayed <eternaleye@...il.comwrote:
+Andy Lutomirski wrote:
+>
+>On Sep 3, 2014 3:44 AM, "Bill Cox"
+><waywardgeek@...hershed.orgwrote:
+>>>
+>>-----BEGIN PGP SIGNED MESSAGE-----
+>>Hash: SHA1
+>>>
+>>On 09/03/2014 02:41 AM, Krisztián Pintér wrote:
+>>>
+>>Bill Cox (at Wednesday, September 3, 2014, 3:33:27 AM):
+>>>
+>>>Is this why you included a ROM in Gambit?
+>>>
+>>no, i wanted a second factor in the auth scheme, namely the "have",
+>>and i wanted it to be relatively hard to steal. not that i achieved
+>>this goal, because stealing a ~100MB file is not particularly
+>>difficult these days. not much more difficult than stealing a 32
+>>byte file.
+>>>
+>>>
+>>Second factor is something that I think a lot of entries with a secret
+>>key or local parameter or data field.  I don't think it has to be
+>>integrated in the memory hashing part unless we're trying to build a
+>>Yescrypt or EARWORM style authentication server, though it is best if
+>>the user isn't expected to hash the ROM himself.  TrueCrypt has a
+>>minor weakness in that they use CRC32 hashes for key files rather than
+>>a real hash, enabling files to be tweaked such that they don't impact
+>>the hash result.
+>>>
+>>There is a second factor hack for TrueCrypt using a bootable USB
+>>stick.  The cool part is you no longer need a master boot record or
+>>volume header on the encrypted hard-disk, which is basically a little
+>>header saying, "I am a TrueCrypt Drive and here are the salt and
+>>password hash you need to brute-force attack me.  I'm bending over for
+>>you."
+>>>
+>>The hard part about second factor is protecting it, IMO.  I have a
+>>GnuPG smartcard now in my pocket, which may mean that my secret
+>>signing key is harder to steal than before.  Without such a device,
+>>how can users keep any random infected machine they plug it into from
+>>hacking them?
+>>>
+>>Even with such a device, how can I know that malware isn't signing
+>>random things left and right while I have it plugged in?  It could
+>>locate my encrypted BitCoin wallet, and just sit there for years
+>>waiting for me to plug in my USB key.
+>>>
+>>A dumb problem with existing second factor schemes where you have a
+>>security token is that they seem to simply share a secret with the
+>>server.  I see popular security companies like Forticlient have lame
+>>processes going on at the protocol level, meaning if the client
+>>doesn't see it, they feel no need to make it very secure.  For second
+>>factor, they first tell you your token guess is wrong before asking
+>>for the password, and they do nothing to protect a password once it's
+>>typed in.  My point is we *can't* trust these closed-source companies
+>>to protect the shared secret in a way that makes it hard for an
+>>attacker to gain both the password and security token databases.
+>>>
+>>In other words, the security token you get from work may be quite lame
+>>as defense against brute-force offline attacks.
+>>>
+>>Getting second factor right is hard!  Anyone have any really good
+>>non-patented ideas?
+>>
+>[mostly off topic]
+>>
+>Yes, sort of, I think.
+>>
+>Ideally, I want a security token with a few properties:
+>>
+>a) Use of the token is protected by a passphrase.
+>>
+>b) The token can't tell whether a given passphrase is correct or not.
+>>
+>c) If the token is honest, then no one can test a candidate passphrase
+>without querying the token once per passphrase tested.
+>>
+>d) If the token is stolen but the computer it's in remains
+>uncompromised, then the token is completely useless to an attacker.
+>>
+>A naive ECC-based protocol that attempts to have these properties
+>works like this:
+>>
+>Choose a secure elliptic curve E with order r.  Choose an encryption
+>function E_k which acts like an ideal cipher mod r (there are standard
+>constructions for these things, although modular addition or possibly
+>multiplication might actually be good enough for this use case).
+>>
+>The token has a secret symmetric key K_master.  An actual client
+>credential is a scalar S = S_c + S_t.  S_c is the computer's share of
+>the scalar and S_t is the token's share.  A server's verifier for a
+>client credential is g^S.
+>>
+>The token stores none of the credential at all.  The client user knows
+>a passphrase.  The client's computer stores a salt, and it can compute
+>derive kc and kt by some suitable algorithm (presumably using a PHC
+>winner!) on the passphrase and the salt.  The client stores E_kc(S_c)
+>and E_kt(E_K_master(S_t)).
+>>
+>The token is willing to take some input mod r, decrypt it using
+>K_master, and multiple an EC point by the result.  When the client uer
+>enters a passphrase, the computer can obtain S_c and E_K_master(S_t)
+>and use the token along with its knowledge of S_c to multiply things
+>by S.  It uses this to participate in a zero-knowledge proof of
+>knowledge with the server to prove knowledge of S such that g^S
+>matches the verifier.
+>>
+>Why is this good?
+>>
+>The token doesn't store any credential at all, so stealing it by
+>itself is mostly worthless (U2F is like this, too, as is a TPM,
+>although stealing a TPM without also stealing the computer it's in
+>would be a rather strange attack).
+>>
+>The client computer and the token, even colluding, can't test a
+>passphrase without knowing the verifier.  As far as they're concerned,
+>any trial passphrase generates some S value, but the correct S is a
+>uniform random number mod r, so correct and incorrect S values are
+>indistinguishable.
+>>
+>If a secure ZK proof is used (see PAKE schemes for examples of how to
+>do this), the client and token, even colluding, can only test one
+>passphrase value at a time.
+>>
+>One tricky thing, though: you'd want to carefully encrypt the client
+><-token communication.  Otherwise someone could potentially sniff it
+>and learn something that could be used to test passphrases if they
+>watch the communication during a successful authentication.
+>>
+>NB: In practice, you'd need to be very careful if you use this in a
+>protocol with a group of composite order.  I think that the simplest
+>approach would be to have the token multiply by the cofactor times its
+>share instead of just multiplying by its share.
+>
+...this sounds to me like far more complexity than is needed.
+
+Probably true.
+
+>
+If you have the token act as the server for an augmented PAKE, and the
+PAKE's "failed authentication" mode is "return different keys to each
+party", eliding the check step and blindly using the (potentially incorrect)
+derived key as an input to the password scrambler gives the full benefits.
+
+I don't quite follow.  Who's the "client" for the PAKE, and what's the
+"password"?
+
+--Andy
+

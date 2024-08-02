@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A review per day - Makwa</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/09/04/14">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/09/04/13">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5409F59D.1080401&#64;ciphershed.org&gt;
+Date: Fri, 05 Sep 2014 13:40:45 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A review per day - Makwa
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+I am finding difficult to skip Makwa, since I think it has such
+potential.  Makwa is in a category where the code doesn't matter.  It
+could totally suck, and that would be OK.  So long as the *idea* is
+solid, it should move forward.  However, the code does not suck.  It
+looks decent, though I have no intention of doing a careful code
+review right now.
+
+Instead of moving on, I am busy trying to convince myself that Makwa
+is secure from a mathematical point of view.
+
+The concern I am working through right now is trying to convince
+myself that Makwa will have good long cycle lengths when squaring over
+and over, with effectively zero chance of getting a weak cycle where
+finding the square root is many times easier.
+
+Makwa chooses random large primes of similar size that are "safe
+primes" (if it doesn't, it needs to!), and that are congruent to 3 mod 4.
+
+My theory is that we want p and q to be "good" primes, in that the
+squaring group will contain all residues other than 1.  That would be
+(p-1)/2 - 1 elements.  About half of all safe primes congruent to 3
+mod 4 seem to have this property.  The other half don't.
+
+Here's some basic data about the "good" and "bad" safe primes below
+1000 that are congruent to 3 mod 4:
+
+Good primes: 7 11 23 59 107 167 263 347 359 587 839 887 983
+Bad primes: 47 83 179 227 383 467 479 503 563 719 863
+
+Good prime 7:  Order 3 numMaxOrder 2
+Good prime 11:  Order 5 numMaxOrder 4
+Good prime 23:  Order 11 numMaxOrder 10
+Good prime 59:  Order 29 numMaxOrder 28
+Good prime 107:  Order 53 numMaxOrder 52
+Good prime 167:  Order 83 numMaxOrder 82
+Good prime 263:  Order 131 numMaxOrder 130
+Good prime 347:  Order 173 numMaxOrder 172
+Good prime 359:  Order 179 numMaxOrder 178
+Good prime 587:  Order 293 numMaxOrder 292
+Good prime 839:  Order 419 numMaxOrder 418
+Good prime 887:  Order 443 numMaxOrder 442
+Good prime 983:  Order 491 numMaxOrder 490
+
+Bad prime 47:  Order 12 numMaxOrder 22
+Bad prime 83:  Order 21 numMaxOrder 40
+Bad prime 179:  Order 12 numMaxOrder 88
+Bad prime 227:  Order 29 numMaxOrder 112
+Bad prime 383:  Order 96 numMaxOrder 190
+Bad prime 467:  Order 30 numMaxOrder 232
+Bad prime 479:  Order 120 numMaxOrder 238
+Bad prime 503:  Order 51 numMaxOrder 250
+Bad prime 563:  Order 71 numMaxOrder 280
+Bad prime 719:  Order 180 numMaxOrder 358
+Bad prime 863:  Order 44 numMaxOrder 430
+
+Is there any fast way to determine if a prime is a "good" vs "bad" prime?
+
+Note that the squaring sub-groups can have significantly lower order
+for "bad" primes.  This does not exactly translate to the typical
+squaring group orders for Blum integers, but from my testing in
+Python, there is a strong correlation with higher group orders when
+when we start with "good" primes.
+
+A property that these groups share is that the order of any particular
+sub-group starting with any residue of n minus 1 divides numMaxOrder.
+ NumMaxOrder is always (p-3)/2, which is even because p is = 3 mod 4.
+ If we just want to avoid the worst bad primes, we could require that
+(p-3)/4 be equal to twice a prime.
+
+Here's "good" primes up to 10,000:
+
+7, 11, 23, 59, 107, 167, 263, 347, 359, 587, 839, 887, 983, 1019,
+1307, 1319, 2039, 2459, 2903, 2999, 3467, 3803, 3863, 3947, 4139,
+4283, 4679, 4919, 5099, 5387, 5399, 5483, 5639, 5879, 5927, 6599,
+6827, 6983, 7079, 7559, 7607, 7703, 8039, 8699, 8747
+
+Here's "bad" primes up to 10,000:
+
+47, 83, 179, 227, 383, 467, 479, 503, 563, 719, 863, 1187, 1283, 1367,
+1439, 1487, 1523, 1619, 1823, 1907, 2027, 2063, 2099, 2207, 2447,
+2579, 2819, 2879, 2963, 3023, 3119, 3167, 3203, 3623, 3779, 4007,
+4079, 4127, 4259, 4547, 4703, 4787, 4799, 5087, 5507, 5807, 5939,
+6047, 6659, 6719, 6779, 6899, 7187, 7247, 7523, 7643, 7727, 7823,
+8147, 8423, 8543, 8783, 8819, 8963, 9467, 9587, 9743, 9839, 9887
+
+Here's 10 random "good" runs using "good" primes:
+
+Finding totals for 5879 5099
+Average = 1 , distribution = {1: 3, 2938: 5876, 287924: 7486024, 2548:
+5096} , chance of sub-optimal = 0.146391909616 %
+Finding totals for 5483 5399
+Average = 1 , distribution = {1: 3, 2698: 5396, 2740: 5480, 3696260:
+7392520} , chance of sub-optimal = 0.146946017633 %
+Finding totals for 6983 4139
+Average = 1 , distribution = {1: 3, 3490: 6980, 3608660: 7217320,
+2068: 4136} , chance of sub-optimal = 0.153822976164 %
+Finding totals for 5099 6983
+Average = 1 , distribution = {1: 3, 3490: 6980, 4446260: 8892520,
+2548: 5096} , chance of sub-optimal = 0.135649005643 %
+Finding totals for 5927 7559
+Average = 1 , distribution = {1: 3, 5595218: 11190436, 3778: 7556,
+2962: 5924} , chance of sub-optimal = 0.120341819679 %
+Finding totals for 7703 4679
+Average = 1 , distribution = {1: 3, 3850: 7700, 2338: 4676, 642950:
+9001300} , chance of sub-optimal = 0.137335709426 %
+Finding totals for 3863 5483
+Average = 1 , distribution = {1: 3, 1930: 3860, 2740: 5480, 528820:
+5288200} , chance of sub-optimal = 0.176364778917 %
+Finding totals for 7079 5099
+Average = 1 , distribution = {1: 3, 3538: 7076, 4507412: 9014824,
+2548: 5096} , chance of sub-optimal = 0.134873173244 %
+Finding totals for 8747 5927
+Average = 1 , distribution = {1: 3, 2962: 5924, 6474932: 12949864,
+4372: 8744} , chance of sub-optimal = 0.113162562329 %
+
+The number before the : in the total number of residues in cycles with
+this length.
+
+Here's 10 random "bad runs using "bad" primes:
+
+Finding totals for 6779 8819
+Average = 1 , distribution = {1: 3, 266684: 14934304, 484: 6776, 551:
+8816} , chance of sub-optimal = 0.104315086008 %
+Finding totals for 4259 7523
+Average = 1 , distribution = {1: 3, 188: 7520, 25004: 8001280, 532:
+4256} , chance of sub-optimal = 0.146997544883 %
+Finding totals for 5807 3779
+Average = 1 , distribution = {684872: 5478976, 1: 3, 1451: 5804, 472:
+3776} , chance of sub-optimal = 0.174599562472 %
+Finding totals for 4799 7643
+Average = 1 , distribution = {1: 3, 916036: 9160360, 764: 7640, 1199:
+4796} , chance of sub-optimal = 0.135607462891 %
+Finding totals for 5807 9839
+Average = 1 , distribution = {3568009: 14272036, 1451: 5804, 2459:
+9836, 1: 3} , chance of sub-optimal = 0.109485942398 %
+Finding totals for 4127 9743
+Average = 1 , distribution = {502097: 10041940, 1031: 4124, 487: 9740,
+1: 3} , chance of sub-optimal = 0.137900419131 %
+Finding totals for 4007 8819
+Average = 1 , distribution = {1: 3, 157586: 8824816, 286: 4004, 551:
+8816} , chance of sub-optimal = 0.145095313352 %
+Finding totals for 8423 5507
+Average = 1 , distribution = {579296: 11585920, 1: 3, 842: 8420, 1376:
+5504} , chance of sub-optimal = 0.120061928403 %
+Finding totals for 6659 9467
+Average = 1 , distribution = {11648: 15748096, 1: 3, 1664: 6656, 364:
+9464} , chance of sub-optimal = 0.102275919917 %
+Finding totals for 7187 4127
+Average = 1 , distribution = {1: 3, 1851676: 7406704, 1796: 7184,
+1031: 4124} , chance of sub-optimal = 0.152480144621 %
+
+The bad run has quite a bit lower cycle lengths on average.  I've seen
+runs with bad primes where the max cycle lengths were lower than p and q.
+
+Can anyone point me to the relavant literature so I don't keep working
+on stuff that's well known?
+
+Thanks,
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUCfWZAAoJEAcQZQdOpZUZ8IoP/2Bz+Tf5lLdV32JD8rKfogqT
+TDedgzJ6HGSuE4tcfGoEqr0pjs3qOoAE7tYHdYG2Tp7bw6wiWLQTSf2rb044B3Ac
+sG/94srUvQ2yFzGYEi9PfpW2CFj1S9RZvZMGdHD9uK1YNK1cgqDh3/9W7I2cdSWs
+n/9v6dIvEu0uwz8w/2lDv8cqjjpcLGk2f30lEQ22HRbBWesDN4xSZOVn6QDxWDG1
+KWXwxl0bvIeZB+WhW4issXNqelJAhCSQEsHqVezbCGEZezSLb2fNlKo4qqE5ES2P
+v1RmtfBCteWHeq7rK0/YLF2lH8GKrMrbEXrfeDghMSBjeVq+7OpubIPIsPr06Sxm
+7mmK7tdQIPO2P8Pkd+J1WLiCu3EvdyCrP6hqoE/dqGqwilm69q4qo55l/wT9ULbd
+1Zgrqym9PksT7ABgJeFKvi5J30OX5sVNiN5e+DvLtDq1LCqfYjOK7GsBMO+YQpEm
+8Dk2lpHz9VGy8uwgpo/qXe3SHQqDyC3E4kEd7TQqMF3h2kH1n7hsMTmGReVfVxt9
+rp1217OCfUZSjbk0Cn1Mvij+pPBRrkIK7HldR8q+35mymDe6PtN2aBHgbffq2JUt
+sVFpaMXvMJv5XZUXs/FlAm5AW1hA64NYvWB2T0rT5gr19XrLDhFkUs1jB9WkwWmx
+W6ur6LEgWWOVA2gEd6+i
+=uEr5
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

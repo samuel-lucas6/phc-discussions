@@ -1,0 +1,69 @@
+phc-discussions - [OT] Improvement to Momentum PoW
+
+Message-ID: <CAOLP8p5V=m--XjXkxeNouKGupByFEKJpD+QeppdgTSoYpt0BHw@mail.gmail.com>
+Date: Mon, 27 Jul 2015 11:29:09 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, 
+	"cryptography@...zdowd.com" <cryptography@...zdowd.com>
+Subject: [OT] Improvement to Momentum PoW
+
+A problem with Momentum as currently implemented is that it can be run with
+reduced memory, enabling efficient GPU attacks
+<http://da-data.blogspot.com/2014/01/gaining-momentum-duplicate-detection-in.html>.
+I think we can get around this problem simply by changing the parameters it
+uses.  Here's what Momentum computes:
+
+for i, j in [0 .. 2^n-1]:
+    if Hb(i) == Hb[j] and H(i || j) < threshold:
+        report i, j
+
+In this case, Hb is specific to a block-chain digest and nonce, as is H.
+In the current implementations, n is 2^26 and the size of Hb's output is 50
+bits.  H's output is far larger, either 256 or 512 bits.  This leads to on
+average something like 3-ish collisions per nonce tried.
+
+If instead, we run with n == 26, and Hb's output also being 26 bits, then
+we get around 2^26 collisions.  Each needs to be tested to see if H(i || j)
+< threshold.  The obvious algorithm is to do this rapidly is:
+
+Initialize array M to 2^26 empty lists.
+for i in [0 .. 2^n-1]:
+    list = M[Hb(i)]
+    for j in list:
+        # i collides with j
+        if H(i || j) < threshold:
+            report i, j
+        if H(j || i) < threshold:
+            report j, i
+    list.append(i)
+
+This seems to defeat Bloom filters and similar memory reduction
+techniques.  While a parallel Pollard Rho algorithm would work, it's slow
+and reduces memory no more than the simple TMTO attack where we only store
+some small range of Hb(i) in the hash table to reduce it's size.
+
+I am not sure why this approach is not used in current implementations.  Is
+there some attack I'm not seeing?
+
+While this slight modification might enable Momentum to resist GPU attacks,
+it's runtime is still dominated by Hb and H calculations, which an ASIC
+will speed up dramatically.  I get around that by generating 32
+non-cryptographic hash values for each cryptographic hash generated,
+getting a speed-up of over 16X.  However, modern Intel CPUs seem to be very
+weak at running buffered radix-sort.  An ASIC will run at full memory
+bandwidth, which might be far higher than a typical CPU's bandwidth.  For
+example, I can fill 1 GiB with unsorted birthday hashes in 0.2 seconds on
+my machine.  When I create 256 buffers of 4KiB each, and do a byte-based
+radix-sort pass, this delay jumps up to about 0.65 seconds.  This is with
+temporal streaming writes, so I'm not polluting L2 or L3 cache with my
+buffer writes.  An ASIC would see no such additional delay, and would
+likely have significantly higher bandwidth to memory as well.
+
+I'm think that ASICs will still win significantly vs CPUs on every
+implementation I've seen of Momentum.  The enhancements above should, if
+I'm not mistaken, at least stop GPUs.
+
+Bill
+
+
+

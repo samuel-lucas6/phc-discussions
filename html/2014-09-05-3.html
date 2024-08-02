@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A review per day - skipping Makwa</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;540A18B0.5070307&#64;ciphershed.org&gt;
+Date: Fri, 05 Sep 2014 16:10:24 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A review per day - skipping Makwa
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+So, I was unable to resist reviewing Makwa in depth.  It's super cool!
+ I have a few comment to finish my review, unless there is follow-on
+discussion.
+
+First, Makwa has potential that even the author probably may not
+suspect.  This is because his estimate than an ASIC attack would be
+ineffective is wrong, by a very large margin.  An ASIC attack will be
+devastatingly faster against Makwa than any memory-hard entry in the
+competition.  I'll discuss the outline of an ASIC attack at the end.
+However, Makwa hashes can be remotely computed on untrusted ASIC based
+Makwa servers securely, unlike any other password hashing system.
+Once ASIC based servers come online in the cloud, everyone will be
+able to benefit from them.
+
+Makwa is in the unique position that a solid ASIC attack is probably a
+*good* thing.
+
+Some notes I made:
+
+- - Step 4 on page 8 scrambles V, so that step 5 has a V which may
+contain 0x1 values, so the 0x1 is not easily seen as a terminator.
+Should step 4 be removed?
+- - Step 8 generates Hs(m) which is trivially determined to be
+non-random.  Should he simply append a counter and hash for each
+output word instead?
+- - Note: 10 byte output hash is recommended as the minimum, but if that
+is used, we will be able to find input collisions with only 2^40
+tries.  This could be used by an attacker to exploit bugs in some
+cases, so I would prefer to use 20 byte output as the minimum
+- - My preference would be to use a Catena-like garlic wrapper to do
+offline work increase without storing all 2048 bits of the hash.  This
+is not as efficient but 2048 bits is a lot to store, and I am not
+convinced that 4096 bits is a bad idea.
+- - If we do pre and post hashing, supporting to 4096 isn't too ugly
+- - Page 18, step 2, is that really x^2?  It makes sense to me if it's
+just x.
+- - Experimentally, I see that the only primes that have full cycle
+length are "safe" primes congruent to 3 mod 4
+
+For Makwa to be secure, we need some assurance that picking a random x
+value and squaring it many times continues to do useful work, and will
+not cycle back on itself quickly.  If it does cycle back too soon, and
+an attacker can determine the cycle length, he likely can determine
+the secret values p and q, breaking the system.  Choosing random safe
+primes that are congruent to 3 mod 4 sometimes leads to cycle lengths
+less than p or q, potentially weakening security.
+
+Therefore, I recommend using what I'm calling "solid" Makwa primes.
+The must be safe primes congruent to 3 mod 4 which also have (p-3)/4
+prime.  Experimentally, the group structures are very uniform when
+this is true, and the minimum cycle length any randomly chosen x will
+have is (p-3)(q-3)/16.  There are always 4 different sizes of groups:
+1, groups of size either (p-3)/4 or (p-3)/2, groups of size (q-3)/4 or
+(q-3)/2, and groups of size (p-3)(q-3)/16 or (p-3)(q-3)/8.  The total
+number of residues is always 3 + (p-3) + (q-3) + (p-3)(q-3)/4.  The
+chance of picking a random residue (by squaring a random x), and
+getting anything but the largest sub-group is about:
+
+4*(p + q)/(p*q)
+
+Assuming p and q are about the same size, this is just:
+
+8/sqrt(n)
+
+For n being on the order of 2^2048, this is 8/(2^1024), meaning this
+will *never* happen anytime in the life of our universe, unless
+someone monkey's with the random number generator (or if there are bugs).
+
+The security of Makwa when using solid Makwa primes seems to be
+limited by the factoring problem, of determining p*q given n.  The
+Knapsack problem used for obfuscating X when delegating is a random
+instance of an NP-Complete problem I've played with quite a bit, and
+Makwa's version looks solid to me.
+
+ASIC Attack
+- -----------
+
+Both attackers and Makwa cloud based authentication servers will g
+high password hashing throughput compared to a user's computer.  The
+2048-bit multiplies, SFAIK, are not even the hardest part.  The mod n
+takes up more area.  I estimate a 1-bit carry save adder with an extra
+XOR (for Booth encoding) in 22nm to be about 1u^2.  While that is a
+WAG, I arrive at it by taking a carry save adder in a structured ASIC
+I designed in .35u, and putting about 16 of them in a block about
+40ux40u.  That comes out to exactly 100u^2 each.  Shrinking to 35nm
+gives me a 1u^2 cell, and since I have to go to fin-fets and all sorts
+of crud down at this size, I assume I lose about 1 process generation
+vs a straight shrink.  Therefore, 1u^2 at 22nm, the same process as my
+Ivy Bridge CPU :-)
+
+I can build the Booth encoded circuit with an array of 2048 by 1024 of
+these cells, which is 2mm by 1mm.  I'm not sure if I would want to put
+more than 1 per ASIC, as when I introduce a 1024-deep pipeline,
+diagonally through the multiplier and modulus circuit, this thing will
+produce a 2048-bit multiplication/mod result every clock.  This needs
+to be built in a low-power process, because running a Makwa ASIC box
+will probably be dominated by power cost.  Also, the ASIC will
+generate insane amounts of power compared to most chips, because of
+the massive fully pipelined data paths.  These chips will run as hot
+as your GPU at full steam.
+
+2mm^2 for the multiplier is no biggie.  I could afford several of
+them.  However, the mod n operation also has to be pipelined, and the
+simple implementation I understand has 2048 subtractors and
+comparitors.  This is 2X to 3X larger than the multiplier, so let's
+call it a total of 8mm^2 per hashing engine.
+
+Comparing to my high-end Intel CPU, each engine should easily run at
+3.4GHz.
+
+The trick with this ASIC is optimizing the ability to suck power out.
+ There are some packages, like QFN, which do a decent job sucking
+power out through the back of the die.  The cost under $1.  I would be
+tempted to consider placing just one instance of this ASIC hashing
+core in a tiny ASIC to see if this leads to the lowest total cost of
+ownership.  The other high-power option is flip-chip, at about
+$100/package, if things haven't changed much.  In that case, I could
+suck 70W out of one ASIC with a bunch of Makwa cores on it.  I'd guess
+at least 10 cores could be cooled enough, but that's a shot in the
+dark.  I believe it will be power limited, not area limited.
+
+To be cost effective, each ASIC should be computing 1024 password
+hashes in parallel at peak load.  Each computation would be many times
+faster than a CPU based approach because the multiplier and modulus
+are fully implemented with 2048-bit data paths.  I'm not sure what the
+CPU can do a 2048-bit multiply/mod operation in.  The ASIC should be
+able to do it in about 1/3 us, and it does that on about 1000
+passwords in parallel at the same time.  With work factors up to
+1,000,000, that would take up to 1/3 second latency, with a throughput
+of about 3000 password hashes per second per core.
+
+How fast would my CPU do this?  Can we use my 4 CPUs with their 4 128
+or 256(Haswell) bit data paths to accelerate it?  I'll bet Samuel
+Neves or Alexander could just tell us the answer :-)
+
+For this to be an effective strategy, Makwa delegation is a *must*.
+Users trying to do a 1 second 1,000,000 work factor on their own CPUs
+will wind up killing the job before it finishes.  For effective
+protection, delegation to an ASIC based Makwa farm is the only thing
+that makes sense to me.
+
+That's all I have for now for Makwa!  I hope my mathematical analysis
+didn't totally suck!  It's definitely out of my comfort zone...
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUChisAAoJEAcQZQdOpZUZ6koQAKbjKaFJ1dssaUqxoXW06DVb
+865WxPcp7FVR+5scwXuEqRUrBDkoPLvOSmihx9+jI8oI1vo6F5xHlEVumQGjUCfK
+z7PctgkpwUBmE5e2sclxShqIhUKG83R8cBo+ZBaXptOPnK8JBk/Z+Eudl6OBTVP3
+XcIYnn65g9CNz7kxMXO2hoR8nw47YTaR57jiB8iLSRWHKxW9GJ1vG4YcwGZAEYvX
+df/sTzYnNHz/h7aYG7Ic7qQjzYZ9T7RRSQs4DqgNSZO+UZNS1qX/evfidG6q4OzH
+Vedn9sf1HHhUYmm+agN46tXHbpdrVqtkF2T2KPWGnt4+QEK8IKj4tqn9s0tlLOwe
+H0ruGz65RSPueisyeYc+5/4X515hTB049tYnJ9s/cU4sZEN5JP+fAJrXj6J+C/VP
+epK1QC02AWQo3Au/tBHCyakGUwYHjlPc/h6GcO6fk8CIe/cOElZEbtOEifSlAv65
+/xXyrMmRzPvJ+viT7ff0jZSlQkqCOkiMzhJtWCLDgQcKF50FqfVr+u5x3t3bSNdl
+tg5aAt13QSdG951IZu9EiXrav3joLEk6jjUJNvRl0fQS4e6T0FXU/uDv6nm0BnlQ
+83sF6alf39ODgp0PPSKxgdKX2RuZ/EOZteaZWPLri+6t1paBjsTTbAGQpdL1qJJB
+mT6Vp4OtjyV7ISlvzZvr
+=Yllu
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

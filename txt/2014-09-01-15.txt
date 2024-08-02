@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] friendly warning about randomness tests
+
+Message-ID: <20140901222119.GB2249@openwall.com>
+Date: Tue, 2 Sep 2014 02:21:19 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] friendly warning about randomness tests
+
+On Mon, Sep 01, 2014 at 09:53:08PM +0000, Brandon Enright wrote:
+Yes.  Nmap (the port scanner) uses a LCG with some basic tweaks to it
+for generating "random" IP addresses to be scanned without producing
+any duplicates before cycling through all 2^32 IPs (Nmap's -iR feature).
+This passes every Dieharder randomness test.  It's probably not
+surprising but Dieharder doesn't have a check for treating the output
+as 32 bit numbers and then looking for expected duplicates.  If it did
+though Nmap's PRNG would obviously fail.
+
+FWIW, extra/analyze.c included in the yescrypt submission should detect
+the lack of duplicate 32-bit numbers.
+
+Maybe we should run it on pre-final-hashing memory contents of PHC
+candidates too.  (Naturally, I already did that for yescrypt.)
+
+Failing randomness tests on pre-final-hashing memory contents is not
+necessarily fatal (on actual PHS() outputs, it is), but it's useful
+information for our analysis and decision-making.
+
+Randomness tests give me zero additional confidence in any candidate.
+
+... but failing randomness tests give us additional concerns.
+
+Alexander
+

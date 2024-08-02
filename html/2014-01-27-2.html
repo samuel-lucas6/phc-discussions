@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Opinions sought on whether a specific side-channel leakage is ok.</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CA+aY-u5TJ6=GLUd5rgF4MR+7TSaT7LzO8Jj=AnEzPoXZyUHSDg&#64;mail.gmail.com&gt;
+Date: Mon, 27 Jan 2014 15:20:55 +0000
+From: Peter Maxwell &lt;peter&#64;...icient.co.uk&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Opinions sought on whether a specific side-channel leakage is ok.
+
+Without exposing too much of my intended design, I'd like to garner some
+opinion if that is possible.
+
+As a specific feature of my design, I'm intending on adjusting the
+computational &amp; memory work requirement based on password complexity, in a
+somewhat probabilistic manner.
+
+So, lets say we can associate a given password with a scalar password
+complexity measure in the interval [0,1] with an as yet to be defined
+distribution.  To keep things nice and fair, lets assume that upon a
+password registration with password complexity p_c the algorithm calculates
+an interval [p_min,p_max], 0 &lt; p_min &lt; p_c &lt; p_max &lt; 1, st. the integral
+over the distribution from p_min to p_max is kept at a fixed global
+constant and the interval is, intuitively at least, centred around p_c.
+ Now, as a final step, the algorithm chooses a random value within
+[p_min,p_max], say p_r, and determines a computational &amp; memory work
+requirement deterministically based on p_r, for example a function w: [0,1]
+-&gt; R where w(p_r) maps the complexity measure to something tangible.
+
+Each password complexity measure is kept a secret and after registration of
+a password is not known even to the server.  This allows another little
+trick that very much benefits the defender but isn't relevant here, only
+that the complexity measure is considered secret.
+
+The consequence of this model is that the defender can force weak passwords
+to take considerably more work per password guess, thus ameliorating much
+of the problem of users picking poor passwords.  Instead of an attacker
+being able to get some proportion of passwords almost guaranteed, they'll
+have to work just as hard for the low entropy passwords as the high entropy
+ones while the defender doesn't - on average - face any computational
+disadvantage, assuming login frequency is not dependent on password
+complexity and that I get my maths correct (which is dubious given I can't
+concentrate due to the pile-driving going on in the building site next
+door... the whole building is thumping at around 1Hz).
+
+The problem - and it's a not an insignificant problem - is that there is a
+rather obvious side-channel: the time taken to compute a valid login
+betrays some information about the password complexity.  Given password
+complexity is at least partially related to length, it may fall foul of the
+call for submission guideline:
+
+*"Resilience to side-channel attacks (timing attacks, leakages, etc.). In
+particular, information should not leak on a password's length."*
+
+The algorithm doesn't leak password bits, it only leaks a password
+complexity range that may give some information as to password length or a
+fairly large set to which the password may belong.  The other item to note
+is that repeated measurements don't give more information, the best an
+attacker can do is invert w() to get p_r, and get a rough idea of the range
+[p_min,p_max] but they cannot accurately determine p_c.  The interval
+p_min,p_max would be controlled by the previous mentioned fixed constant
+with obvious implications.
+
+The question is, whether this is an acceptable trade-off, at least as an
+optional feature?
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

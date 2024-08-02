@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Re: Proposed changes to author's code
+
+Message-ID: <20140406215311.GA18688@bolet.org>
+Date: Sun, 6 Apr 2014 23:53:11 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Proposed changes to author's code
+
+On Sun, Apr 06, 2014 at 03:31:59PM -0400, Bill Cox wrote:
+Also, I want to start recording some data for each entry that will
+help in automated testing.  In particular the legal input ranges for
+t_cost and m_cost.  It would also be great if the authors could let me
+know their prefered t_cost and m_cost settings for the different modes
+they support, for example L1 cache such as Blowfish, L1 or L2/L3 cache
+such as Catena, L1 or L2/L3 or main memory such as Yescript.
+
+For Makwa:
+
+ -- Input length is arbitrary, including empty (length = 0)
+ -- Salt length is arbitrary, including empty, which is of course not
+    recommended. Normal salt length is 16 bytes, but that's just a
+    convention.
+ -- t_cost is the unique cost parameter. Computation time is proportional
+    to that parameter; on my 2.7 GHz i7, computation time is about 1
+    second when t_cost is close to 600000.
+ -- m_cost is completely ignored.
+
+Internally, the code will allocate a buffer in which both the input and
+the salt are copied, so don't call the function with a salt or input
+in the gigabyte range -- which would hardly make sense anyway. Salt
+and input length do not noticeably impact computing time. The whole
+processing remains in CPU L1 cache; Makwa is not memory-hard.
+
+
+Mind the comments in makwa.h about the PHS() function, though.
+Basically, this function is good only for tests. Makwa uses a RSA
+modulus as parameter; for PHS(), this is a hardcoded modulus (in phc.c).
+Since the factors for that modulus are not known, this misses out on
+some of Makwa functionalities, such as the "fast path" and the escrow
+system. More importantly, you would have to trust me for not having
+saved these factors somewhere. I cannot logically prove that I did not
+do exactly that.
+
+Moreover, PHS() is hardcoded to use both pre- and post-hashing, which
+is fine for what you intend to do (run statistical tests) but, again,
+disables some other features (e.g. offline work factor increase).
+
+
+Performance relies quite heavily on that of OpenSSL. On MacOS X machines,
+the system-provided OpenSSL is old and slow; compiling a fresh one from
+recent sources is highly recommended (we are talking about a factor of 5
+or so here, which is not negligible at all).
+
+
+For testing, I have access to my own machine, which is biased towards
+my own TwoCats entry since that's where I tuned it, and probably also
+Alexander's two machines he gave me accounts on, one a Haswell
+processor, and the other a nice high-memory-bandwidth Sandybridge
+server.  I don't know where else to test.
+
+You may want to ask for an account on the GCC compile farm:
+http://gcc.gnu.org/wiki/CompileFarm
+
+As long as the project is free software, this should not be problematic.
+Since these machines are shared, you have to exercise some care when
+running performance tests (i.e. check whether the machine is presently
+idle, otherwise you may get skewed results).
+
+
+	--Thomas Pornin
+

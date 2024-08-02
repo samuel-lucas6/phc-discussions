@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] A review per day - PufferFish
+
+Message-ID: <20140901165444.GA31199@openwall.com>
+Date: Mon, 1 Sep 2014 20:54:44 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - PufferFish
+
+On Mon, Sep 01, 2014 at 11:58:15AM -0400, Bill Cox wrote:
+I read through the code.  I did not properly analyze it for security
+vs the original bcrypt.  I just read the code.  Others more familiar
+with bcrypt will have to do a proper cryptanalysis.
+
+I think we can proceed with that if Pufferfish becomes a finalist.
+I don't expect any issues there that couldn't be easily tweaked.
+
+However:
+
+Bill, you were going to do pre-final-hashing randomness tests on all PHC
+candidates.  What's happened to that plan?
+
+In short, PufferFish is very similar to bcrypt, except that the 4
+S-boxes can be bigger, controlled by m_cost, and the iteration count
+is controlled by t_cost.  It uses 64-bit arithmetic, and just in case
+it's this modified version of BlowFish is not very secure, it hashes
+the inputs first with SHA512-HMAC.  The author got the details of the
+password and salt hashing right, working around the input collisions
+of HMAC.  Very nice!
+
+I guess the pre-hashing is needed to avoid a bcrypt-like password length
+limit.  For bcrypt it's 72; while 144 would be much better and would
+satisfy PHC requirements as-is (128+), it would still be a drawback.
+
+Overall, for an algorithm that simply wants to extend the life of
+bcrypt by using more than 4KiB of L1 cache and using 64-bit data
+types, PufferFish looks great.  It's nice to have an easy review for
+Labor Day :-)
+
+Great.
+
+A drawback of going 64-bit, yet keeping the 4x lookups parallelism, is
+that Pufferfish may be 2x weaker than bcrypt on old or low-end 32-bit
+systems (e.g. some ARM), which use little instruction-level parallelism.
+On newer and high-end 32-bit systems, I think the extra parallelism is
+fine, as seen via bcrypt attack vs. defense speedup on CPUs, which is up
+to 2x on many x86-64 CPUs.  In fact, Pufferfish might still lack enough
+parallelism to fully use modern x86-64 CPUs in 64-bit mode, with 1
+instance of it per core, so CPU-based attacks may achieve some speedup
+by interleaving (like we do for attacks on bcrypt).  This may be a fine
+tradeoff, though, since like I said adding more parallelism "hurts"
+defensive use on smaller systems (or more precisely, it provides speedup
+to attacks on some kinds of hardware without a matching speedup for
+defensive use on those smaller systems).  Making instruction-level
+parallelism configurable would add complexity.
+
+Many other PHC entries, including yescrypt at default settings, share
+this sort of drawback too.  So Pufferfish isn't actually worse than them
+when run on too-old or too-small CPUs.  It's just that many PHC entries
+are (in a way) worse than bcrypt on too-old and too-small CPUs.  I'm
+considering ways of dealing with that in yescrypt (non-default settings
+for such uses; yescrypt is very generic and complicated anyway).
+
+Alexander
+

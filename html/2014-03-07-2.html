@@ -1,0 +1,248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TigerKDF paper and code ready for review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140307024552.GA21090&#64;openwall.com&gt;
+Date: Fri, 7 Mar 2014 06:45:52 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+On Thu, Mar 06, 2014 at 07:12:27PM -0500, Bill Cox wrote:
+&gt; I still have to do a bit of work on the paper, but it's nearly ready:
+&gt; 
+&gt;     <a href="http://waywardgeek.net/TigerKDF.pdf" rel="nofollow">http://waywardgeek.net/TigerKDF.pdf</a>
+&gt; 
+&gt; The code is on github and can be checked out with:
+&gt; 
+&gt;     git clone git://github.com/waywardgeek/tigerkdf.git
+&gt; 
+&gt; I suspect TigerKDF, my 3rd major rewrite in 2 months, may be
+&gt; competitive.
+
+I think it is competitive.
+
+I didn't fully read the paper yet, but here's some criticism, which I
+hope might make TigerKDF and/or the paper better:
+
+&gt; * Fills and hashes memory rapidly - 1/2 as fast as memmove
+
+Cool.  Somehow in the paper you give GB/s figures for scrypt when
+running a single thread only.  Why don't you mention that when running
+as many threads as there are logical CPUs, meaning 8 on a currently
+typical quad-core CPU, optimized scrypt code (such as in escrypt, and I
+think also floodyberry's) processes 8 GiB in 2.4 seconds, which means
+6.7 GiB/s (considering that memory is first written and then read back),
+or &gt;1/4 of theoretical peak memory bandwidth on those machines?  In fact,
+a trivial change to scrypt - reducing the Salsa20 round count to 2 -
+makes scrypt faster yet, perhaps as fast as TigerKDF when you run enough
+threads.  This may well be a baseline to compete against, since you need
+to justify the major differences vs. that 3-line change (e.g., in
+escrypt's crypto_scrypt-sse.c it's a matter of deleting 3
+SALSA20_2ROUNDS lines, leaving just one).
+
+In terms of memory bandwidth, TigerKDF may have advantage in that it
+achieves high memory bandwidth usage at lower thread counts, which means
+at lower parallelism.  As we know, excessive parallelism benefits some
+attackers, so this property of TigerKDF may be good.  You may brag about
+that. :-)  On the other hand, bumping into memory bandwidth way sooner
+than we've put all of the suitable CPU execution units to use makes us
+more vulnerable to attacks on _some_ future CPU-based systems where
+balance _might_ be shifted towards higher memory bandwidth (then the
+attacker will be able to run more instances in parallel, for different
+candidate passwords).
+
+I think it is best to stay balanced in terms of all of: memory bandwidth
+usage, CPU usage, and multiply time hardness.  e.g. bumping into one of
+these while using 80% of the other two is great, whereas bumping into one
+of these while using &lt;50% of one or both of the other two is not as good.
+And yes, this may require tunable parameters (you might already have
+enough of them to allow for such tuning).
+
+&gt; * Provides strong defense against GPU, FPGA, and ASIC attacks
+
+I'm afraid the defense against GPUs is still not as strong as you claim
+it is.  You compare TigerKDF's 64-byte random lookups against bcrypt's
+16-byte lookups - but bcrypt actually does 4 independent 4-byte lookups
+per round.  This difference is subtle in that the 4 lookups may proceed
+in parallel, but it is crucial in requiring use of local memory for
+optimal performance on current GPUs, vs. use of off-chip memory (where
+entire cache lines would be fetched, which is too wasteful for 4-byte
+lookups, but is 4x less inefficient for 16-byte ones).  Specifically,
+bcrypt $2a$05 cracking using local memory runs at ~4k c/s on HD 7970
+(925 MHz), whereas using global memory it slows down to ~2k c/s.  From
+these numbers, I'd expect ~8k c/s (4 times the ~2k c/s it gets with
+global memory) if it made 16-byte lookups instead of 4x 4-byte lookups.
+In other words, it'd be roughly twice faster per-chip on that GPU than
+on its contemporary quad-core CPUs (which deliver ~5k c/s).  Increasing
+this further to 64 bytes would give ~32k c/s, or 8 times faster than
+original, and the increase from 4 KiB to 32 KiB that you claim should
+prevent this actually would not, because at these lookup sizes we're
+talking global memory, which we have lots of (compared to either 4 KiB
+or 32 KiB).  In fact, this gets close to and is consistent with
+Litecoin's 128-byte lookups, which also use global memory fine.  Yes, in
+Litecoin the lookup results are not needed as soon, but when we're using
+global memory this difference is unimportant (as long as we have enough
+extra global memory), because the latencies are hidden by having lots of
+extra concurrent instances.
+
+Now, I understand that it's wasteful to do lookups smaller than 16 bytes
+e.g. on Sandy Bridge and better (where we can do two 16-byte lookups
+from L1 cache per cycle, or only the same number of smaller lookups).
+Good news: to be as GPU-resistant as bcrypt, you don't need your lookups
+to be as small as bcrypt's.  Rather, you need them to be as rapid as
+bcrypt's, with results required as soon as bcrypt does, and with no more
+parallelism than bcrypt has.  (These last two conditions are actually
+one.)  It is not a problem per se if an implementation turns out to be
+more efficient using global rather than local memory, as long as the
+accesses are as rapid as bcrypt's.  Those conditions imply that it won't
+run faster than bcrypt, using either type of memory.  So your comparison
+of GPU resistance vs. bcrypt's compares the wrong thing.  Now, if your
+random lookup results are not required as soon as bcrypt does require
+them (meaning you have more parallelism in one instance), you may in
+fact compensate for that by making the random lookups arena larger.
+
+BTW, why do you mention 32 KiB there?  Your random lookups arena is
+only 16 KiB, and you can't make it larger than that on current CPUs with
+32 KiB L1d cache and 2 hardware threads/core, without incurring much
+extra L1 cache thrashing.  TigerKDF's total memory usage is irrelevant.
+In other words, you may compensate for up to 4x more latency tolerance or
+parallelism than bcrypt has.  But you can't necessarily compensate for
+less frequent lookups (make them 2x+ less frequent than bcrypt's, and
+use of global memory becomes beneficial on HD 7970, regardless of lookup
+size).  I am fighting with the same problem in escrypt.  It's tough,
+especially when we consider running on smaller SIMD-less CPUs with
+settings that are also good for SIMD-enabled CPUs.  I'm afraid this
+combination of desirable properties - common settings for SIMD-less and
+SIMD-enabled (up to certain sane vector width), yet GPU resistance no
+worse than bcrypt's - is just not possible.  Have to tune for SIMD-less
+and SIMD-enabled separately if we don't accept giving up on having GPU
+resistance no worse than bcrypt's.
+
+Another aspect (I had mentioned before but didn't emphasize enough) is
+that while you need something like a 16 KiB small random lookup arena
+for the anti-GPU lookups, it is excessive for the higher-level scrypt-like
+lookups.  I think it is actually undesirable to make these higher-level
+lookups that large.  scrypt paper recommends r=8 for a reason: just high
+enough to amortize the overhead of TLB misses.  In my testing, I mostly
+use values of r between 5 and 8 (thus, 640 to 1024 bytes).  Yes, I could
+get slightly higher memory bandwidth with higher r, but then there's
+less of a dependency on the memory being the fairly low latency RAM that
+we have in typical defender's systems.  An attacker would gain extra
+flexibility in using other types of memory, including e.g. SSDs or
+combined RAM of multiple machines.  I don't know how much of an issue
+this is going to be in practice (might be a non-issue, I admit).  I think
+this issue is more relevant when there's a ROM lookup table that might
+not fit in a certain attack node's RAM, so more relevant to some use
+cases for escrypt than to TigerKDF.
+
+&gt; 8. Inter-thread memory hashing to thwart TMTOs (Solar Designer)
+
+In another message, you mentioned you introduced multiple thread syncs
+per hash computation.  Why?  I think it is best to have just one more
+than scrypt does (so 2 instead of 1).  Each threads sync is potentially a
+huge performance loss when the system is under other load (overbooked),
+which is a common occurrence on servers (OK, perhaps they should fully
+avoid "our" threads anyway, using solely their own coming from nearly
+concurrent authentication attempts).
+
+I am sorry for providing solely the criticism.  I actually like many
+things about TigerKDF, naturally. ;-)  It's just that saying "I like
+this" about specific things is probably less helpful (unless you were
+going to drop any of the good things, which I think you are not).
+
+Thanks!
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

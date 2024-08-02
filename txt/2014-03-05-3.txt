@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <20140305010309.GB14550@openwall.com>
+Date: Wed, 5 Mar 2014 05:03:09 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On Tue, Mar 04, 2014 at 06:41:44PM -0500, Bill Cox wrote:
+On Mon, Mar 3, 2014 at 9:13 PM, Solar Designer <solar@...nwall.comwrote:
+Normally, on 32-bit x86 without SSE2 (thus, on Pentium 3 and older, or
+when code is compiled such that SSE2 is not enabled) the widest integer
+multiply available is 32x32->64, via the [I]MUL instruction.  There are
+two problems with this: the instruction uses the specific EDX:EAX
+registers, so we can't have more than one such multiply in progress
+until we've read/replaced at least the EAX contents(*), and 32x32->64 is
+not very wide.
+
+You've talked me into 32x32->64 rather than 32x32->32.  It's slightly
+slower, but not enough to justify sticking with 32x32->32.  The
+slowdown is because in 64-bit mode, I have to right-shift the high
+32-bits down to the low 32-bits to add it into a 32-bit register.
+That's pretty much the only difference.  It runs fast in 64-bit and
+32-bit compiled versions.
+
+It sounds like the slowdown you mention is actually from specifics of
+your hash function, and could be avoided with a different hash function.
+
+To me, a primary reason to prefer 32x32->64 is that it fits SIMD well
+on both x86/SSE2+ and recent ARM.  As you can see in escrypt 0.3.1, I am
+still trying to do both the SSE* memory accesses and the multiplies via
+the same instructions, rather than via separate intermixed SIMD and
+scalar instruction streams (as I think you're doing now per my earlier
+suggestion).  I might fall back to that SIMD+scalar approach too, but I
+don't want to give up on using the multipliers more fully just yet.
+
+Alexander
+

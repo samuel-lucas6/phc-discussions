@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <20150422171448.GB14797@bolet.org>
+Date: Wed, 22 Apr 2015 19:14:48 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 modulo division
+
+On Tue, Apr 21, 2015 at 07:01:29PM +0200, Krisztián Pintér wrote:
+side channel attacks not only bypass the computational hardness. it is
+false that in case of a succesful attack, the hashing scheme reverts
+back to a single hash, or a half-hash if there are two phases. side
+channels are much more sinister. it is possible to steal the password
+in situations when it was not at all possible without them.
+
+However, one should note that when side channel attacks apply, they tend
+to have a large scope. For instance, if you have two VM running on the
+same multi-core hardware, code from one VM may spy on the processing in
+the other VM through cache timing analysis (it has been demonstrated in
+lab conditions, but I have not -- yet -- heard about an actual case
+spotted in the wild). Of course this means that the attacker (the evil
+VM) will try to get passwords and encryption keys; but the attacker
+may also try to attack every single other processing that occurs within
+the target VM.
+
+Arguably, if a machine hashes passwords, then this means that it
+enforces some sort of explicit or implicit authentication system, and,
+in many cases, that the machine processes at some point confidential
+data. Any such processing is a potential target for side-channel attacks.
+
+We cryptographers tend to concentrate on cryptographic algorithms,
+because that's our jobs, and also because cryptographic keys (and
+passwords) concentrate secrecy: guessing a key or password unlocks
+access to a lot of things. But we must remember that using constant-time
+cryptographic algorithms handles only the "tip of the iceberg". It would
+be wrong to believe, or make users believe, that by using a
+"constant-time password hashing function" all security issues have been
+addressed.
+
+A consequence is that if you are really serious about the security of
+your server, then you will take wider protective measures against timing
+attacks -- basically, you rent a physical server, not a VM(*). At which
+point side-channel leaks from the password hashing function have ceased
+to be an issue.
+
+
+This is not a simple problem. What I want to say is that the context
+matters. It is _nice_ if a password hashing function offers protection
+against side-channel leaks, because it opens up some new possibilities,
+but only as part of a whole-system design that protects every
+confidential data within it against the same kind of leak. Unfortunately
+this is very hard to do, unless you use heavy artillery (dedicated
+hardware), and the nice protection offered by the password hashing
+function then loses a lot of its relevance.
+
+Therefore, I don't think that offering constant-time processing is a
+_mandatory_ part of any password-hashing function. It is good to have,
+it scores extra points, but a function that does not do anything special
+against side-channel leaks is not irremediably unsuable either.
+
+
+(That being said, Makwa offers constant-time processing, leaking only
+the password length, not the password contents; and, as I wrote in
+another email, this can and should be fixed in the caller, not the
+function itself.)
+
+
+	--Thomas Pornin
+
+(*) Cache-timing attacks on a physical server, from the outside, have
+also been demonstrated, but they required some rather specific
+conditions, in particular an attacker on the same LAN, and a lot of
+attacker-triggered requests, something which is not easy to obtain when
+the target is a password entered by a legitimate user.
+

@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Upgrade HKDF to HKDF2?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;531DBCB1.1060507&#64;bindshell.nl&gt;
+Date: Mon, 10 Mar 2014 06:22:57 -0700
+From: Jeremi Gosney &lt;epixoip&#64;...dshell.nl&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Upgrade HKDF to HKDF2?
+
+On 3/10/2014 4:36 AM, Bill Cox wrote:
+&gt; On Mon, Mar 10, 2014 at 5:38 AM,  &lt;Stefan.Lucks&#64;...-weimar.de&gt; wrote:
+&gt;&gt; On Sun, 9 Mar 2014, Bill Cox wrote:
+&gt;&gt;&gt; for(i = 0; i &lt; passwordLength; i += 256) {
+&gt;&gt;&gt;    for(j = 0; j &lt; 256; j++) {
+&gt;&gt;&gt;        buf[i] = password[(i + j) % passwordLength];
+&gt;&gt;&gt;    }
+&gt;&gt;&gt;    Hash_Update(hashCtx, buf, 256);
+&gt;&gt;&gt; }
+&gt;&gt; Welcome password collisions!
+&gt;&gt;
+&gt;&gt; Consider, e.g., passwords such as "abcd", "abcdabcd", "abcdabcdabcd" ...
+&gt; That's why PBKDF2 hash has collisions for this reason, but I'm
+&gt; prepending all lengths with an extra Update call before adding padded
+&gt; data.  This should eliminate the collision problem, shouldn't it?
+
+
+No, this isn't why PBKDF2 has collisions. The issues with this code are
+much more severe than PBKDF2's collisions.
+
+First, I think you meant to do buf[i+j] in your code, not buf[i].
+Otherwise your code basically just becomes buf[i] =
+password[passwordLength - 1], as you are continuously overwriting the
+same buffer position with each character of password until the end of
+the string. Observe the output of your code with some debug statements
+added in:
+
+  int main()
+  {
+      int i, j, k;
+      unsigned char buf[256] = { 0 };
+      unsigned char *password = "abcd";
+      unsigned int passwordLength = strlen (password);
+
+      for (i = 0; i &lt; passwordLength; i += 256)
+      {
+          for (j = 0; j &lt; 256; j++)
+          {
+              printf ("writing 0x%02x to buf[%d]\n",
+                  password[(i + j) % passwordLength], i);
+
+              buf[i] = password[(i + j) % passwordLength];
+          }
+
+          printf ("\nunsigned char buf[] = {\n");
+
+          for (j = 0; j &lt; 256; j+=16)
+          {
+              printf ("  ");
+
+              for (k = 0; k &lt; 16; k++)
+                  printf ("0x%02x, ", buf[j+k]);
+
+              printf ("\n");
+          }
+
+          printf ("};\n\nHash_Update(hashCtx, buf, 256);\n\n");
+      }
+  }
+
+
+This code would have some egregious collisions, as you're essentially
+hashing just a single character and any password ending in the same
+character would collide. But now, even if we do make the necessary
+correction, we still run into a very very bad problem:
+
+
+  int main()
+  {
+      int i, j;
+      unsigned char buf1[256] = { 0 };
+      unsigned char buf2[256] = { 0 };
+      unsigned char buf3[256] = { 0 };
+      unsigned char *password1 = "abcd";
+      unsigned char *password2 = "abcdabcd";
+      unsigned char *password3 = "abcdabcdabcd";
+      unsigned int passwordLength1 = strlen (password1);
+      unsigned int passwordLength2 = strlen (password2);
+      unsigned int passwordLength3 = strlen (password3);
+
+      for (i = 0; i &lt; passwordLength1; i += 256)
+          for (j = 0; j &lt; 256; j++)
+              buf1[i+j] = password1[(i+j)%passwordLength1];
+
+      for(i = 0; i &lt; passwordLength2; i += 256)
+          for(j = 0; j &lt; 256; j++)
+              buf2[i+j] = password2[(i+j)%passwordLength2];
+
+      for(i = 0; i &lt; passwordLength3; i += 256)
+          for(j = 0; j &lt; 256; j++)
+              buf3[i+j] = password3[(i+j)%passwordLength3];
+
+      if (0 == strncmp (buf1, buf2, 256) &amp;&amp; 0 == strncmp (buf2, buf3, 256))
+          puts ("we have a srsly big problem.");
+  }
+
+
+This is the point Stefan is making, and you can see how this is very bad.
+
+Anyway, I don't think this problem really worth solving, especially when
+the prototype specifies `const void *in, size_t inlen'. I don't see a
+real need for any sort of constant time buffer copies.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Message-ID: <20140112151249.GA10864@openwall.com>
+Date: Sun, 12 Jan 2014 19:12:49 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On Sat, Jan 11, 2014 at 09:09:11AM -0600, Steve Thomas wrote:
+I wanted to get benchmarks to compare a hashing algorithm optimized for a
+scripting language vs another algorithm that did not consider this. Since I'm
+familiar with Catena I decided to implement Catena-3-SHA512 in PHP.
+
+This is very helpful.  Thank you!
+
+Current scripting memory (not so) high vs current Catena:
+2 MiB: 544 ms vs 2030 ms (3.73x)
+1 MiB: 249 ms vs 1040 ms (4.17x)
+[...]
+Optimized scripting memory (not so) high vs optimized Catena:
+2 MiB: 431 ms vs 995 ms (2.31x)
+1 MiB: 195 ms vs 499 ms (2.56x)
+
+I was getting ~560 ms for 10 hashes at 1 MiB on i7-4770K.  Your Q9300 is
+maybe up to twice slower, but you're reporting twice lower time.  Yet if
+it was for just one hash computation rather than 10, then it'd be much
+lower.  So I am puzzled.
+
+I've attached a new revision of smhkdf (still highly experimental, work
+in progress).  It is about twice faster than the first revision, mainly
+due to reduced iteration count in the last loop.  With $k 1, that loop
+doesn't need as many iterations; rather, to maximize ASIC area*time, we
+want the memory filling and memory using loops to run for roughly the
+same amount of real time.  (Another aspect, though, is that for attacks
+with e.g. CPUs we may want to optimize for greater SHA-512 efficiency,
+even if it reduces the AT cost somewhat.  For this reason, maybe the
+optimal iteration count for the last loop needs to be somewhere inbetween
+of what I had in the first revision and in this new one.)
+
+This new revision also discourages TMTO to a slightly greater extent.
+
+On i7-4770K, the speed at 1 MiB is 37 c/s for 1 instance, 136 c/s
+cumulative for 8 concurrent instances.  Can you benchmark it on your
+system, including against your Catena scripts?
+
+Scripting memory (not so) high:
+        $ja = unpack('V', $x);
+vs
+        $ja = unpack('V', substr($x, -4));
+
+I've included this change now.  The reason for substr($x, -4) was to
+prevent an optimized (non-PHP) implementation from prefetching the next
+block a few steps (3 steps, I think) before completing the SHA-512
+computation.  But if this costs us too much in terms of PHP overhead,
+let's omit it.  Besides, such prefetching may be helpful for defensive
+native code implementations as well.
+
+The optimized version's look ups are aligned to 384 bytes with a $blocksize of
+384 bytes vs byte aligned with a $blocksize of 431 bytes. Note both require four
+SHA512 blocks.
+
+The alignment is both good and bad.  It improves code efficiency, but it
+means that fewer previously computed blocks are needed to compute the
+new one.  Having a dependency on one extra block due to misalignment
+(which occurs most of the time) makes us slightly more TMTO resistant.
+
+        $m_cost = ceil($blocksize / 64);
+
+I chose to use right shifts instead of floating-point division followed
+by ceil() or floor().
+
+    $v = array();
+
+BTW, if we do that, we can also discourage TMTO by random writes in the
+last loop:
+
+http://www.openwall.com/lists/crypt-dev/2013/11/20/1
+
+I think the same is not easy to do on a string, where substr() can only
+be used on the right hand side, right?  We're lacking an equivalent of
+Perl's vec() in PHP, right?
+
+I think PHP arrays are always associative (they use hash tables), which
+means they're somewhat inefficient for our needs here.  Right?
+
+I'm not very familiar with PHP.
+
+Alexander
+
+View attachment "smhkdf-v2.php" of type "text/plain" (1205 bytes)
+

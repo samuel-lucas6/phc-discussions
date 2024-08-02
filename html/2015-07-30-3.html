@@ -1,0 +1,392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon Indexing Function</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="../../../2015/07/29/2">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-Id: &lt;6719A3B7-6767-43A0-8122-8DBFD5A5DFA0&#64;gmail.com&gt;
+Date: Thu, 30 Jul 2015 13:54:08 +0200
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Argon Indexing Function
+
+Hi Henry,
+
+A short reply is that the specification is incorrect a bit. It should use not x=L_1 % R but x= L_1 / R where an integer approximation is used for /, as in Bill's code.
+
+I will update the specification accordingly.
+
+&gt; On 29 Jul 2015, at 00:46, Henry Corrigan-Gibbs &lt;henrycg&#64;...nford.edu&gt; wrote:
+&gt; 
+&gt; Hello,
+&gt; 
+&gt; I have a question about the indexing function in the Argon2 v1.2 spec. The function described in section 3.1.1 takes as input a pseudo-random 24-bit integer L_1 and outputs an integer \phi in the range {0, ..., R-1}. There is also a parameter \alpha, which defaults to 2.
+&gt; 
+&gt; To save a bit of space, let x = L_1 % R. Then the value \phi is computed as:
+&gt;  \phi = ceiling[ (x/R)^\alpha R ]
+&gt; Setting \alpha=2:
+&gt;  \phi = ceiling[ (x/R)^2 R ]
+&gt;           = ceiling[ x^2 / R ]
+&gt; 
+&gt; It seems like there might be a problem with the indexing function here. For example, take R=256. As x ranges across all of the values in the set {0, ..., 255}, \phi takes on only a subset of the possible values in the range {0, ..., 255}. Is this the desired behavior?
+&gt; 
+&gt; For example, when R=256, \phi can never be equal to 254. For \phi to equal 254, the value (x^2 / 256) would have to fall in the range (253, 254]. This only happens when x^2 is between 253*256=64768 and 254*256 = 65024. However, there is no perfect square in this range, so no such x exists and \phi is never equal to 254.
+&gt; 
+&gt; There are a number of other values that \phi never takes on (see table below), so it seems like an attacker could use the gaps in the distribution of \phi values to her advantage.
+&gt; 
+&gt; The reference implementation on Github (in the "enhanced" branch) is computing \phi in a slightly different way, so maybe the spec just needs to be updated to match what is in the code. Or did I miss something here?
+&gt; 
+&gt; Henry
+&gt; 
+&gt; 
+&gt; 
+&gt; ##################################
+&gt; \phi value : Number of times outputted after 2^20 trials
+&gt; -----------
+&gt; 0 : 4083
+&gt; 1 : 65209
+&gt; 2 : 24501
+&gt; 3 : 20470
+&gt; 4 : 20545
+&gt; 5 : 12391
+&gt; 6 : 16525
+&gt; 7 : 12352
+&gt; 8 : 12257
+&gt; 9 : 12366
+&gt; 10 : 8142
+&gt; 11 : 12352
+&gt; 12 : 8228
+&gt; 13 : 8136
+&gt; 14 : 8203
+&gt; 15 : 8173
+&gt; 16 : 12411
+&gt; 17 : 4119
+&gt; 18 : 8263
+&gt; 19 : 8160
+&gt; 20 : 8022
+&gt; 21 : 8141
+&gt; 22 : 8183
+&gt; 23 : 4051
+&gt; 24 : 8246
+&gt; 25 : 8182
+&gt; 26 : 4114
+&gt; 27 : 8176
+&gt; 28 : 4109
+&gt; 29 : 8262
+&gt; 30 : 4124
+&gt; 31 : 8192
+&gt; 32 : 3914
+&gt; 33 : 4024
+&gt; 34 : 8301
+&gt; 35 : 4115
+&gt; 36 : 8121
+&gt; 37 : 4072
+&gt; 38 : 4097
+&gt; 39 : 4044
+&gt; 40 : 8182
+&gt; 41 : 4061
+&gt; 42 : 4056
+&gt; 43 : 3967
+&gt; 44 : 8124
+&gt; 45 : 4058
+&gt; 46 : 4157
+&gt; 47 : 4176
+&gt; 48 : 4062
+&gt; 49 : 8244
+&gt; 50 : 4119
+&gt; 51 : 4028
+&gt; 52 : 4022
+&gt; 53 : 4149
+&gt; 54 : 4022
+&gt; 55 : 4028
+&gt; 56 : 4067
+&gt; 57 : 4068
+&gt; 58 : 4017
+&gt; 59 : 4064
+&gt; 60 : 4104
+&gt; 61 : 4125
+&gt; 62 : 4013
+&gt; 63 : 4192
+&gt; 64 : 8388
+&gt; 65 : 0
+&gt; 66 : 4129
+&gt; 67 : 4118
+&gt; 68 : 4088
+&gt; 69 : 4090
+&gt; 70 : 4142
+&gt; 71 : 4195
+&gt; 72 : 4032
+&gt; 73 : 3996
+&gt; 74 : 4047
+&gt; 75 : 4061
+&gt; 76 : 4125
+&gt; 77 : 4083
+&gt; 78 : 4017
+&gt; 79 : 4091
+&gt; 80 : 4105
+&gt; 81 : 4114
+&gt; 82 : 0
+&gt; 83 : 4117
+&gt; 84 : 4129
+&gt; 85 : 4078
+&gt; 86 : 4061
+&gt; 87 : 4101
+&gt; 88 : 4061
+&gt; 89 : 0
+&gt; 90 : 4153
+&gt; 91 : 4024
+&gt; 92 : 4047
+&gt; 93 : 4137
+&gt; 94 : 4112
+&gt; 95 : 0
+&gt; 96 : 3949
+&gt; 97 : 4093
+&gt; 98 : 4198
+&gt; 99 : 4249
+&gt; 100 : 4014
+&gt; 101 : 0
+&gt; 102 : 4133
+&gt; 103 : 4107
+&gt; 104 : 4212
+&gt; 105 : 0
+&gt; 106 : 4046
+&gt; 107 : 4077
+&gt; 108 : 4065
+&gt; 109 : 4125
+&gt; 110 : 0
+&gt; 111 : 4212
+&gt; 112 : 4071
+&gt; 113 : 4063
+&gt; 114 : 0
+&gt; 115 : 4032
+&gt; 116 : 4191
+&gt; 117 : 4150
+&gt; 118 : 0
+&gt; 119 : 4133
+&gt; 120 : 4022
+&gt; 121 : 4100
+&gt; 122 : 0
+&gt; 123 : 4068
+&gt; 124 : 4242
+&gt; 125 : 0
+&gt; 126 : 4069
+&gt; 127 : 4184
+&gt; 128 : 4048
+&gt; 129 : 0
+&gt; 130 : 4039
+&gt; 131 : 4019
+&gt; 132 : 0
+&gt; 133 : 4155
+&gt; 134 : 4091
+&gt; 135 : 0
+&gt; 136 : 4109
+&gt; 137 : 4071
+&gt; 138 : 0
+&gt; 139 : 4134
+&gt; 140 : 3985
+&gt; 141 : 0
+&gt; 142 : 4158
+&gt; 143 : 4074
+&gt; 144 : 4066
+&gt; 145 : 0
+&gt; 146 : 4176
+&gt; 147 : 0
+&gt; 148 : 4099
+&gt; 149 : 4138
+&gt; 150 : 0
+&gt; 151 : 4087
+&gt; 152 : 4092
+&gt; 153 : 0
+&gt; 154 : 4098
+&gt; 155 : 4163
+&gt; 156 : 0
+&gt; 157 : 4166
+&gt; 158 : 4103
+&gt; 159 : 0
+&gt; 160 : 3927
+&gt; 161 : 4150
+&gt; 162 : 0
+&gt; 163 : 4108
+&gt; 164 : 0
+&gt; 165 : 4067
+&gt; 166 : 3976
+&gt; 167 : 0
+&gt; 168 : 4001
+&gt; 169 : 4137
+&gt; 170 : 0
+&gt; 171 : 4118
+&gt; 172 : 0
+&gt; 173 : 4085
+&gt; 174 : 4141
+&gt; 175 : 0
+&gt; 176 : 4102
+&gt; 177 : 0
+&gt; 178 : 4047
+&gt; 179 : 3986
+&gt; 180 : 0
+&gt; 181 : 4056
+&gt; 182 : 0
+&gt; 183 : 4070
+&gt; 184 : 4091
+&gt; 185 : 0
+&gt; 186 : 4055
+&gt; 187 : 0
+&gt; 188 : 4170
+&gt; 189 : 0
+&gt; 190 : 4105
+&gt; 191 : 4082
+&gt; 192 : 0
+&gt; 193 : 4026
+&gt; 194 : 0
+&gt; 195 : 3995
+&gt; 196 : 4051
+&gt; 197 : 0
+&gt; 198 : 4133
+&gt; 199 : 0
+&gt; 200 : 4023
+&gt; 201 : 0
+&gt; 202 : 4105
+&gt; 203 : 0
+&gt; 204 : 4221
+&gt; 205 : 4119
+&gt; 206 : 0
+&gt; 207 : 4089
+&gt; 208 : 0
+&gt; 209 : 4099
+&gt; 210 : 0
+&gt; 211 : 4130
+&gt; 212 : 0
+&gt; 213 : 4170
+&gt; 214 : 4144
+&gt; 215 : 0
+&gt; 216 : 4085
+&gt; 217 : 0
+&gt; 218 : 4116
+&gt; 219 : 0
+&gt; 220 : 4011
+&gt; 221 : 0
+&gt; 222 : 4216
+&gt; 223 : 0
+&gt; 224 : 4096
+&gt; 225 : 4057
+&gt; 226 : 0
+&gt; 227 : 4127
+&gt; 228 : 0
+&gt; 229 : 4146
+&gt; 230 : 0
+&gt; 231 : 4198
+&gt; 232 : 0
+&gt; 233 : 4082
+&gt; 234 : 0
+&gt; 235 : 4158
+&gt; 236 : 0
+&gt; 237 : 4141
+&gt; 238 : 0
+&gt; 239 : 4198
+&gt; 240 : 0
+&gt; 241 : 4095
+&gt; 242 : 0
+&gt; 243 : 4082
+&gt; 244 : 0
+&gt; 245 : 4136
+&gt; 246 : 0
+&gt; 247 : 4109
+&gt; 248 : 0
+&gt; 249 : 4115
+&gt; 250 : 0
+&gt; 251 : 4177
+&gt; 252 : 0
+&gt; 253 : 4091
+&gt; 254 : 0
+&gt; 255 : 4163
+&gt; 
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

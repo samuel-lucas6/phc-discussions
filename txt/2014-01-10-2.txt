@@ -1,0 +1,104 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <345989176.572692.1389343069533.open-xchange@email.1and1.com>
+Date: Fri, 10 Jan 2014 02:37:49 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+On January 9, 2014 at 10:32 PM Solar Designer <solar@...nwall.comwrote:
+>
+Disclaimer: there may be bugs in the smhkdf code (e.g., some off-by-ones
+are likely). Implementations in other languages will be needed before
+we can have much confidence in its correctness. Besides, several
+enhancements relative to scrypt's SMix structure may be implemented.
+These possible errors and enhancements may affect smhkdf's performance,
+although I expect its performance to stay within a factor of 2 of the
+numbers given above.
+>
+Alexander
+
+Found two:
+Line 13: $m_cost = floor(($blocksize + 63) / 64);
+Line 22: $mod = ($m_cost * 64) - $blocksize + 1;
+
+
+BTW I was just working on a scripting language hash. It's about 2.8x faster
+with the same defense against using less memory (both aren't that good at
+this). For mine $t_cost = 1 runs 5x over the memory. For yours $k = 4 runs 3.4x
+over the memory, but accesses 4x-5x blocks. Which is why I went to 5x.
+
+Reference code (ie slow):
+function pwhash_ref($pw, $salt, $m_cost, $t_cost)
+{
+    $m_cost = ($m_cost + 7) & 0xfffffff8;
+    $h = $salt . $pw;
+    $mem = '';
+    for ($i = 0; $i < $m_cost; $i++)
+    {
+        $h = hash('sha512', $h, true);
+        $mem = $h . $mem;
+    }
+
+    // Hash mem $t_cost+4 times
+    $ctx = hash_init('sha512');
+    for ($i = 0; $i < $t_cost + 4; $i++)
+    {
+        hash_update($ctx, $mem);
+    }
+    return hash_final($ctx);
+}
+
+Optimized code:
+function pwhash($pw, $salt, $m_cost, $t_cost)
+{
+    $h = $salt . $pw;
+    $m_cost = ($m_cost + 7) & 0xfffffff8;
+    $mem = array();
+    $memPos = floor(($m_cost - 1) / 8);
+    for ($i = 0; $i <= $memPos; $i++)
+    {
+        $mem[] = null;
+    }
+    for ($i = 0; $i < $m_cost; $i += 8)
+    {
+        $h0 = $h = hash('sha512', $h, true);
+        $h1 = $h = hash('sha512', $h, true);
+        $h2 = $h = hash('sha512', $h, true);
+        $h3 = $h = hash('sha512', $h, true);
+        $h4 = $h = hash('sha512', $h, true);
+        $h5 = $h = hash('sha512', $h, true);
+        $h6 = $h = hash('sha512', $h, true);
+        $h7 = $h = hash('sha512', $h, true);
+        $mem[$memPos--] = $h7 . $h6 . $h5 . $h4 . $h3 . $h2 . $h1 . $h0;
+    }
+    $mem = implode('', $mem);
+
+    // Hash mem $t_cost+4 times
+    $ctx = hash_init('sha512');
+    hash_update($ctx, $mem);
+    hash_update($ctx, $mem);
+    hash_update($ctx, $mem);
+    hash_update($ctx, $mem);
+    for ($i = 0; $i < $t_cost; $i++)
+    {
+        hash_update($ctx, $mem);
+    }
+    return hash_final($ctx);
+}
+
+I originally used md5() then switched to SHA512 because you did :). Also if
+hash, hash_init, hash_update, hash_final are not available switching to
+md5() and doing the following is a good alternative but does not scale well
+with large $t_cost:
+    for ($i = -3; $i < $t_cost; $i++)
+    {
+        $mem = md5($mem, true) . $mem;
+    }
+    return md5($mem);
+
+It's only a little slower with md5() vs SHA512 with $t_cost = 12. Also I had a
+more elaborate optimization for the memory expansion part (5% gain). It was
+removed in the SHA512 version because there was no difference in speed.
+
+

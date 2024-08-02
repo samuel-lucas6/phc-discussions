@@ -1,0 +1,55 @@
+phc-discussions - Some updates on EARWORM
+
+Message-ID: <87sixzkglp.fsf@wolfjaw.dfranke.us>
+Date: Fri, 23 Aug 2013 21:44:18 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Some updates on EARWORM
+
+Here are some updates on EARWORM.  See
+http://article.gmane.org/gmane.comp.security.phc/226 if you missed the
+original thread.
+
+* I've cut CHUNK_WIDTH from 4 to 2, leaving CHUNK_LENGTH at 128. Testing
+  on my workstation seems to indicate that neither the reduction in
+  internal parallelism nor the increased frequency of random memory
+  accesses results in any performance penalty.
+
+* I wrote a GPU implementation of EARWORM today. It computes batches of
+  256 workunits of a single hash computation, doing the initial and
+  final PRF computations sequentially on the host, while farming out the
+  expensive main loops to the GPU for parallel execution.  A 25600
+  workunit computation over a 256MiB arena takes about 3.05 seconds on
+  my Radeon 7850. The same computation on two CPU threads takes about
+  2.25 seconds. I was struck by how similar these numbers are.
+
+* Answering bitweasil's question from earlier:
+
+  What does performance look like if you're doing a parallel build on
+  half your cores?  That should stress the memory system significantly
+  without choking CPU throughput too badly, and would resemble the type
+  of activity a busy webserver would likely see.  It may be the case
+  that the memory access to compute ratio is such that there is no
+  penalty for this - worth trying, though.
+
+  I ran some EARWORM benchmarks while simulatanously building coreutils
+  with -j 4 and streaming music from Pandora.  The benchmarks typically
+  took about 10% longer to run than they would on a quiet system, though
+  occasionally as much as 50% longer, due, I guess, to some quirk in the
+  Linux scheduler or maybe my memory controller.  There was never any
+  interruption in the Pandora audio.
+
+* I'll be posting reference and AES-NI-optimized implementations of
+  EARWORM to GitHub this weekend, as soon as I'm done with some
+  finishing touches on the test harness.  Note that these
+  implementations are designed for benchmarking and validation only, and
+  lack the user-level API that I plan to include in later
+  implementations (Obviously, nobody should be using EARWORM in
+  production right now anyway!).
+
+* The GPU implementation is currently a disgusting hairball and won't be
+  included in this initial release. I'll eventually get around to
+  cleaning it up, but my next major task for EARWORM is to write a spec,
+  and I don't plan to do much more work on the software until that's in
+  good shape.
+

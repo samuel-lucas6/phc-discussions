@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <236756765.296969.1418439606979.JavaMail.open-xchange@oxuslxltgw02.lxa.perfora.net>
+Date: Fri, 12 Dec 2014 21:00:06 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On December 12, 2014 at 6:23 PM Ben Harris <ben@...rr.iswrote:
+>
+>
+On 13/12/2014 2:57 am, "Steve Thomas" <steve@...tu.com
+<mailto:steve@...tu.comwrote:
+Cool that part got cleared up. Also that "attack passwords before you get
+the
+hash" is only theoretical because you probably don't know the hashing
+algorithm.
+Is it MD5(pw), SHA1(pw), MD5(SHA1(pw)), MD5("deliciously-salty-" || pw).
+>
+Have a look at bitcoin brain wallets for a practical attack when a salt isn't
+used. I've not seen if anyone has estimated the size of the lookup tables in
+use in those attacks, but I've tested with some obscure and long passwords and
+they are stolen in a second.
+>
+I get your point, but for the same reason 12bit salts are a thing there
+aren't many hash combinations in practice (only based off my experience using
+software, though I think WordPress has a server salt for the passwords like
+your deliciously-salty).
+>
+
+I thought about writing a cracker for that but I don't think I'd stay on the
+side of legal. Also there's a better one that has a salt. You enter your email
+address, name, or some other identifier. Yes, it's not exactly salt since it's
+not cryptographic random and the user has to enter it. It uses scrypt and
+PBKDF2. Don't know why they do both but it's not SHA256(pw).
+
+Database cost is "3 bytes/password"... well in this case since there are two
+possible addresses for each password, it's "6 bytes/password". Assuming you
+can do 1,000,000 password to address conversions/second it will take 150 ms per
+lookup with 2^40 entries ( I made a calculator for this forever ago
+<http://www.tobtu.com/lhtcalc.php?keySpace=1099511627776&pwBits=22&speed=1&hdSpeed=50&hdSeek=8&mphfMagic=2.27&mphfExtraPWBits=0&mphfSpeed=400&efExtraPWBits=1&piExtraPWBits=1&efPrefixBits=38>
+). Hm it's
+probably much slower than 1 M/s like 50 k/s.
+
+P.S. MD5("deliciously-salty-" || pw) is from an infamous article that gets salt
+wrong :). It's near the top of Google when searching for rainbow tables.
+
+

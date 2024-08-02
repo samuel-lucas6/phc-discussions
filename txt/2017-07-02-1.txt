@@ -1,0 +1,76 @@
+phc-discussions - [PHC] Rig team "shows that Argon2i fails to maintain the claimed memory hardness"
+
+
+Message-ID: <20170702203043.GA18870@openwall.com>
+Date: Sun, 2 Jul 2017 22:30:43 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: [PHC] Rig team "shows that Argon2i fails to maintain the claimed memory hardness"
+
+Hi,
+
+I think this should be in here:
+
+https://eprint.iacr.org/2017/603
+
+"Cryptanalytic Time-Memory Tradeoff for Password Hashing Schemes
+
+Donghoon Chang and Arpan Jati and Sweta Mishra and Somitra Kumar Sanadhya
+
+Abstract: A cryptanalytic technique known as time-memory tradeoff (TMTO)
+was proposed by Hellman for finding the secret key of a block cipher.
+This technique allows sharing the effort of key search between the two
+extremes of exhaustively enumerating all keys versus listing all
+possible ciphertext mappings produced by a given plaintext (i.e. table
+lookups).  The TMTO technique has also been used as an effective
+cryptanalytic approach for password hashing schemes (PHS).  Increasing
+threat of password leakage from compromised password hashes demands a
+resource consuming algorithm to prevent the precomputation of the
+password hashes.  A class of password hashing designs provide such a
+defense against TMTO attack by ensuring that any reduction in the memory
+leads to exponential increase in runtime.  These are called
+\textit{Memory hard} designs.  However, it is generally difficult to
+evaluate the ``memory hardness" of a given PHS design.  In this work,
+we present a simple technique to analyze TMTO for any password hashing
+schemes which can be represented as a directed acyclic graph (DAG).  The
+nodes of the DAG correspond to the storage required by the algorithm and
+the edges correspond to the flow of the execution.  Our proposed
+technique provides expected run-times at varied levels of available
+storage for the DAG.  Although our technique is generic, we show its
+efficacy by applying it on three designs from the ``Password Hashing
+Competition" (PHC) - Argon2i (the PHC winner), Catena and Rig.  Our
+analysis shows that Argon2i fails to maintain the claimed memory
+hardness.  In a recent work Corrigan-Gibbs et al. indeed showed an attack
+highlighting the weak memory hardening of Argon2i.  We also analyze these
+PHS for performance under various settings of time and memory
+complexities."
+
+I only skimmed the paper so far.  It looks like Argon2i 1.3 does show
+prohibitively large recomputation penalties, but perhaps less than was
+claimed by Argon team?  I think the paper would benefit from citing the
+specific claims that it says are not met.  Also, unlike Argon team's own
+approach, here we don't see the separation between computation and
+depth penalties.  It would be preferable to see both metrics.
+
+Per the paper, Rig shows much higher recomputation penalty than all
+Argon2i and Catena versions and settings tested.
+
+The paper also shows Rig as the fastest on the authors' machine (IIRC,
+the same as they used before).  This is great (for Rig) and perhaps
+mostly right, but there are two caveats: the machine has 50% higher
+memory bandwidth than is typical for that CPU, and this is
+single-threaded performance (if I get it right).  In practice, users of
+these schemes will probably either use multi-threaded operation (when
+deriving crypto keys at large memory usage) or have multiple instances
+run in parallel (in the password hashing use case, and at lower memory
+per instance than can be seen in the comparison chart).  I think we
+discussed this before, and there were multi-threaded and parallel
+instances zoom-in results posted as well.  I don't recall how well Rig
+fared per those - I'd expect it to appear very good, but not nearly that
+good.  OTOH, the paper is generous in how it benchmarks scrypt, using an
+incompatible faster revision (not just a faster implementation).
+
+Overall, it's very good to see continued research in this area!
+
+Alexander
+

@@ -1,0 +1,115 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324112701.GA8705@openwall.com>
+Date: Thu, 24 Mar 2016 14:27:01 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Wed, Mar 23, 2016 at 09:18:41AM -0700, Andy Lutomirski wrote:
+On Tue, Mar 22, 2016 at 9:38 PM, Solar Designer <solar@...nwall.comwrote:
+In other words, 128-bit security for a 256-bit block is what
+Luby-Rackoff's usual 3 or 4 rounds provide (it's 4 for chosen ciphertext
+attacks, which might or might not be relevant here).
+>
+Almost 256-bit security for a 256-bit block is achieved at 7 rounds, as
+shown in that other paper above.  I did not verify their results.
+
+It seems like it would be simpler to pick a round count and stick with
+it regardless of key length, especially if performance doesn't really
+matter.
+
+Simpler, yes.
+
+Performance somewhat matters.  We're talking something like 0.1% of
+total yescrypt running time for some of its typical uses (at 2 MiB).
+This is very small, but measurable.
+
+>Hashing the key length in before the key would avoid needing to think about
+>related-key attacks that might lose you one round or so of security under
+>some circumstances.  Using a short-key variant as an oracle against a
+>long-key variant would be nasty
+>
+That's an interesting thought.  SHA-256 already hashes in the full
+message length in bits, and with only the key being of variable length
+here this feels sufficient.  Do you think it might not be, and why?
+
+Suppose we ignore the round count variability and further weaken the
+scheme by forcing either one or two rounds (obviously insecure).  Then
+imagine we have two related keys k1 and k2.  k2 = k1 || padding1 || a
+few more bits.  That is, k2 is what you get when you extend k1 by the
+Merkle-Damgard padding you'd have if you fed k1 into your cipher
+followed by some more bits.  (IOW this is a classic length-extension
+setup, assuming I did it right.)
+
+Now an attacker can use the block cipher under k1 as an oracle to
+learn hash values under k1, which gives the attacker the entire
+internal state of the round function prior to hashing in the extra
+bits in k2.
+
+This is obviously a useless attack as is (weird related key assumption
+and only works directly on one or two rounds), but I can imagine
+adaptive chosen plaintext/ciphertext variants extending to an extra
+round or two.
+
+The possibility of this type of attack would go away completely if you
+used a wide-pipe hash or if you hashed in the key length.
+
+Hashing the key length at a fixed offset (rather than only within the
+Merkle-Damgard padding, which is already happening) would remove the
+possibility of this type of attack because the longer k2 would then
+change the initial k1 length's worth of computation as well through the
+necessarily changing full k2 length embedded in that portion.  Going
+from that reasoning, here's another way to achieve the same effect:
+
+Don't hash the key length, but instead hash in the round number after
+rather than before the key.  Since the round number is different for
+each round whereas the key is fixed across all rounds, the round numbers
+used for k1 can't (except for any one of them) be part of the longer k2.
+
+Hashing in the full key length may be tricky to implement because it'd
+require converting it to an endianness-independent layout first.  I am
+trying to avoid cluttering the code with unneeded(?) stuff like this.
+
+The alternative I suggested above avoids this complexity.
+
+Round number was much easier since those numbers are definitely small
+enough to fit in 1 byte, and this is a requirement for the Luby-Rackoff
+proof (independent functions for each round).
+>
+BTW, I am considering changing:
+>
+                SHA256_Update(&ctx, &round, 1);
+>
+to:
+>
+                {
+                        uint8_t round_bytes[4] = {round};
+                        SHA256_Update(&ctx, round_bytes, sizeof(round_bytes));
+                }
+
+The alternative I suggested above also eliminates the key alignment
+problem: the key will directly follow the half-block, so will be 128-bit
+aligned (and thus aligned to SHA-256's 32-bit words).  Only the 1-byte
+round count will be potentially unaligned, and may need to be merged
+with the last partial 32-bit word coming from the key, but that's easier
+than dealing with a potentially unaligned key.
+
+The code I posted will change from:
+
+		SHA256_Update(&ctx, &block[half], 16);
+		SHA256_Update(&ctx, &round, 1);
+		SHA256_Update(&ctx, key, keylen);
+
+to:
+
+		SHA256_Update(&ctx, &block[half], 16);
+		SHA256_Update(&ctx, key, keylen);
+		SHA256_Update(&ctx, &round, 1);
+
+As simple as that.
+
+What do you think?
+
+Alexander
+

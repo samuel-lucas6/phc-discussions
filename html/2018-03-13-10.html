@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - [PHC] yescrypt vs. Argon2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="../../../2018/03/14/1">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20180313172259.GA26773&#64;openwall.com&gt;
+Date: Tue, 13 Mar 2018 18:22:59 +0100
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: [PHC] yescrypt vs. Argon2
+
+Hi,
+
+I just wrote the below for the yescrypt web page and maybe the included
+documentation (later), and I think it's best reviewed by this community.
+I really want to make sure I got everything right, so please correct me
+if anything looks wrong to you or anything important is missing.
+
+yescrypt's advantages:
+
+* Greater resistance to offline attacks (increasing attacker's cost at
+same defender's cost), including because:
+
+  * yescrypt supports optional ROM for protection from use of botnet
+    nodes (and other relatively small memory devices)
+
+  * yescrypt has a dependency not only on RAM and maybe ROM, but also on
+    fast on-die local memory, which provides bcrypt-like anti-GPU
+    properties even at very low per-hash RAM sizes (where Argon2 might
+    even lose to bcrypt in terms of GPU attack speed)
+
+  * yescrypt currently has less low-level parallelism within processing
+    of a block, yet allows for tuning it later, whereas Argon2 has a
+    fixed and currently commonly excessive amount of such parallelism,
+    which may be extracted to speed up e.g. GPU attacks through use of
+    more computing resources per the same total memory size due to each
+    hash computation's memory needs being split between 32 threads[1]
+    (yescrypt currently has four 16-byte lanes that can be processed in
+    parallel within a 64-byte sub-block before running into a likely
+    data dependency for the next sub-block, whereas Argon2 allows for
+    parallel processing of eight 128-byte chunks within a 1 KiB block
+    with only two synchronization points for the entire block, as well
+    as of four 32-byte parts of the 128-byte chunks with only two more
+    synchronization points for the entire 1 KiB block)
+
+  * yescrypt uses computation latency hardening based on integer
+    multiplication and local memory access speed, which ties its
+    per-hash RAMs up for a guaranteed minimum amount of time regardless
+    of possibly much higher memory bandwidth on the attacker's hardware,
+    whereas Argon2 uses only the multiplications and performs 6 times
+    fewer of those sequentially (96 sequential multiplications per 1 KiB
+    for yescrypt vs. 16 per 1 KiB for Argon2, providing correspondingly
+    different minimum time guarantees)
+
+* yescrypt has or will have extra optional built-in features: hash
+  encryption (now), hash upgrade (temporarily removed from 1.0, to be
+  re-added later), SCRAM-like client-side computation of challenge
+  responses (already part of the algorithm, not yet exposed via the API)
+
+* yescrypt's cryptographic security is provided by SHA-256, HMAC, and
+  PBKDF2, which are NIST-approved and time-tested (the rest of
+  yescrypt's processing, while most crucial for its offline attack
+  resistance properties, provably does not affect its basic
+  cryptographic hash properties), whereas Argon2 relies on the newer
+  BLAKE2 (either choice is just fine for security, but use of approved
+  algorithms may sometimes be required for compliance)
+
+* yescrypt source tree also provides SHA-256, HMAC, PBKDF2, and scrypt,
+  which may reduce total complexity if you need any of those anyway
+
+yescrypt's drawbacks:
+
+* yescrypt is more complex, which complicates design analysis and code
+  review, and increases the risk of human error
+
+* yescrypt is cache-timing unsafe (like bcrypt, scrypt, and Argon2d, but
+  unlike Argon2i)
+
+* yescrypt isn't the PHC winner (Argon2 is), but is merely a "special
+  recognition"
+
+* yescrypt isn't available in third-party libraries yet (Argon2 is)
+
+Other observations:
+
+* yescrypt's complexity is related to its current primary target use
+  case (mass user authentication) and is relatively small compared to
+  the total complexity of the authentication service, so the risk may be
+  justified
+
+* Cache-timing safety is unimportant on dedicated servers, is mitigated
+  for some use cases and threat models by proper use of salts, and is
+  fully achieved in Argon2 only in its 2i flavor and only through
+  reduction of resistance to the usual offline attacks compared to the
+  2d flavor
+
+* yescrypt's single-threaded memory filling speed on an otherwise idle
+  machine and at our currently recommended settings is lower than
+  Argon2's, but that's a result of our deliberate tuning (there's a knob
+  to change that, but we don't recommend doing so) preventing yescrypt
+  from bumping into memory access speed prematurely, and is irrelevant
+  for determining server request rate capacity and maximum response
+  latency where multiple instances or threads would be run (under that
+  scenario, the algorithms deliver similar speeds[2])
+
+* yescrypt has been designed and currently configured to fit the SSE2
+  and NEON instruction sets and 128-bit SIMD perfectly, not benefiting
+  from AVX's 3-register instructions nor from AVX2's and AVX-512's wider
+  SIMD (although it can be reconfigured for wider SIMD later), whereas
+  Argon2 significantly benefits from those at least when running fewer
+  threads or concurrent instances than are supported by the hardware
+  (yet yescrypt's SSE2 code is competitive with Argon2's AVX2 code under
+  full server load)
+
+* yescrypt vs. Argon2 benchmarks are further complicated by these two
+  schemes having different minimum amount of processing over memory, and
+  thus different average memory usage, which needs to be taken into
+  account (yescrypt's minimum processing is 4/3 of Argon2's, and its
+  average memory usage is 5/8 of peak for yescrypt t=0 vs. 1/2 of peak
+  for Argon2 t=1)
+
+[1] <a href="https://gitlab.com/omos/argon2-gpu/blob/master/data/kernels/argon2_kernel.cl" rel="nofollow">https://gitlab.com/omos/argon2-gpu/blob/master/data/kernels/argon2_kernel.cl</a>
+[2] <a href="https://github.com/P-H-C/phc-winner-argon2/issues/231" rel="nofollow">https://github.com/P-H-C/phc-winner-argon2/issues/231</a>
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

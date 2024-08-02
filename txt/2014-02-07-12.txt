@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Re: NoelKDF ready for submission
+
+Message-ID: <CAOLP8p7+=J+vrzLRF5hnJcJjnKc=V2nWonE-BBX7om+C2To+AA@mail.gmail.com>
+Date: Fri, 7 Feb 2014 17:32:45 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: NoelKDF ready for submission
+
+On Fri, Feb 7, 2014 at 1:35 PM, Steve Thomas <steve@...tu.comwrote:
+>On February 6, 2014 at 11:38 PM Bill Cox <waywardgeek@...il.comwrote:
+>>
+>On Thu, Feb 6, 2014 at 10:48 PM, Steve Thomas <steve@...tu.comwrote:
+>hash = PBKDF2_SHA256(password, salt, 1, hashSize)
+>...
+>return hash ^ lastHashSizeBytesOfMem
+>Make a guess and xor "PBKDF2_SHA256(password, salt, 1, hashSize)" to the
+>hash
+>you are trying to crack. You now have the assumed last bytes of mem.
+>>
+>Holy cow! These hashed bits are not meant to be cryptographically
+>indistinguishable from random, so with a correct password guess, you
+>might be able to check if it's correct just by analyzing the hashed
+>memory bits.
+>>
+>I added another PBKDF2-SHA256 as a post-process to the XORed hash.
+>This should defeat such attacks, shouldn't it?
+>
+Yes this is why I said to make xorIntoHash a cryptographic hash function.
+Doing
+it after xorIntoHash is fine. You just need to prevent leaking data about
+mem.
+
+Got it.
+
+>Wow. So, modulo 4, the multiply goes away and you developed an attack
+>from there that can be highly parallel and memory efficient. Nice.
+>>
+>With an additional application of H at the end of the loop to the hash
+>value, this attack becomes unfeasible, doesn't it?
+>
+Yes. I was going to also suggest doing the following, but I don't see how
+doing
+the first half modulo 4  (or some other) would benefit  the attacker now.
+>
+value = ROTATE_LEFT(value*(mem[prevAddr + i] | 3) + mem[fromAddr + i], 1);
+
+It's still a little creepy having that modulo 4 math eliminating the
+multiply.  Gary sent a quick response to my initial NoelKDF hash
+function, where he thought the OR was an AND, and his complaint that
+an attacker could skip the multiply wasn't as far off as I'd thought.
+If anyone can think of a reason to worry about it, I'll put in the
+rotate, or something like it.  I do want to keep the number of
+non-multiply operations to a minimum.
+
+>Is there any
+>reason to apply H to more of the data than the last hashlen bits of
+>each thread's memory, or is a post-process application of H to the
+>existing XOR-hash just as good? This is what my revised version
+>currently does, but if there's a reason to change this, I will.
+>
+I originally said to do more than just hashlen bits, but I don't know if
+that's
+really necessary.
+
+I ran 1,000,000 runs of NoelKDF with 1MiB memory and the last 32 bits
+had 113 collisions, right in the middle of the expected range.  That's
+in addtion to the dieharder tests.
+
+Bill
+

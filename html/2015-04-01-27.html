@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Compute time hardness</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="26">[&lt;prev]</a> <a href="28">[next&gt;]</a> <a href="26">[&lt;thread-prev]</a> <a href="28">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150401173431.GA14812&#64;openwall.com&gt;
+Date: Wed, 1 Apr 2015 20:34:31 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+On Wed, Apr 01, 2015 at 03:48:40PM +0000, Gregory Maxwell wrote:
+&gt; Was I was curious about was mostly if there were any large separations
+&gt; among the leaders of the high memory fill-rate/bandwidth algorithms;
+&gt; e.g. is one doing a much better job of making use of processor
+&gt; resources than another which is otherwise close to in terms of
+&gt; bandwidth. If there is a large separation it may not matter how its
+&gt; counted.
+
+Of course, yescrypt is supposed to win this game, with "a large
+separation". ;-)  With the current default settings, it does 6
+sequential rounds of MUL + ADD + XOR per 64 bytes processed.  Per my
+previous message, that's equivalent to something like 7.5 32-bit ADD +
+1 64-bit ADD + XOR, or let's say 9 32-bit ADDs, for each of those
+rounds.  That's a total of ~54 sequential 32-bit ADDs per 64 bytes
+processed.  (And in case MUL is somehow faster, there are also S-box
+lookups occurring in parallel with each MUL + ADD, but in sequence with
+the rest of processing.  So there's not much room for speedup here.)
+
+What are the comparable numbers for Lyra2, POMELO, and Catena?  I guess
+for Lyra2 and Catena it's 8 ADDs + 8 XORs per 128 bytes, right?
+
+&gt; (Rationale being that among algorithms which are relatively closely
+&gt; matched in their ability to use memory-area and bandwidth one may
+&gt; prefer the algorithm that requires more computation (however you
+&gt; measure it) per unit wall-clock as a hedge against the economics of
+&gt; attacking the memory area/bandwidth changing in the future.)
+
+Sure.
+
+Besides the latencies considered above, I think yescrypt also wins in
+terms of its use of concurrent execution units and pipeline stages.
+With current default settings, it can have 8 concurrent MULs and 8
+concurrent 128-bit S-box lookups in flight at a time, per thread.
+
+In fact, there's a tradeoff here: the latency hardening may be improved
+some further at the expense of reduced parallelism.  On current and
+especially older CPUs, this may be an improvement, but on future CPUs a
+drawback.  So the current default settings are somewhere in the middle.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

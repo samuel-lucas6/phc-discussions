@@ -1,0 +1,136 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <20140227141640.GA11062@openwall.com>
+Date: Thu, 27 Feb 2014 18:16:40 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 07:20:45AM -0500, Bill Cox wrote:
+I'm trying to figure out how effective GPUs could be against
+multiplication based compute-time hardened KDFs.
+
+At the 2 GiB memory cost setting you consider below, I guess you'd bump
+into other bottlenecks first.  The multiplies might (not) make it
+measurably slower.  It is hard to tell without trying.
+
+I'd consider these things primarily at much lower memory cost settings,
+on the order of 1 MiB and below.  Yes, there are use cases for these.
+
+A modern CPU does  a
+multiply in about 1ns.  If I am not mistaken, a GPU takes 4 or more
+clocks to do an integer multiply, and they run no faster than about
+1GHz, meaning at least 4ns per multiply.
+
+Where did you find this 4 cycles figure?  While it is realistic for a
+multiply, note that GPUs are optimized for high throughput given high
+concurrency.  Not for low latency.  If on an x86(-64) CPU it is
+currently normal to run 1 or 2 threads/core, and you might get decent
+performance even when you run 1, on a GPU you need at least 10 to
+achieve full throughput (and this will be called differently depending
+on whether you read it in NVIDIA/CUDA or OpenCL context, but it's
+roughly the same concept as SMT on CPUs).  This is without multiplies -
+it applies even when you do XORs and ADDs.  So if you assume your
+concurrency is below (or equal to) the number of GPU's physical "cores",
+then you possibly incur stalls of 10 cycles right there, without any
+multiplies.  Does this increase to 40 or to 14 with multiplies, or
+does it stay at 10?  You'll need to experiment to find out.
+
+OK, here's a test for what happens with insufficient concurrency for
+GPU-friendly algorithm and code without multiplies.  Optimal:
+
+$ ./john -te -form=mscash2-opencl -dev=1
+Device 1: Tahiti (AMD Radeon HD 7900 Series)
+Optimal Work Group Size:256
+Kernel Execution Speed (Higher is better):1.517161
+Optimal Global Work Size:253952
+Benchmarking: mscash2-opencl, MS Cache Hash 2 (DCC2) [PBKDF2-SHA1 OpenCL]... DONE
+Raw:    102400 c/s real, 102400 c/s virtual
+
+Concurrency limited to exactly match physical resources (2048 x 32-bit):
+
+$ GWS=2048 ./john -te -form=mscash2-opencl -dev=1
+Device 1: Tahiti (AMD Radeon HD 7900 Series)
+Optimal Work Group Size:128
+Kernel Execution Speed (Higher is better):1.517110
+Benchmarking: mscash2-opencl, MS Cache Hash 2 (DCC2) [PBKDF2-SHA1 OpenCL]... DONE
+Raw:    20277 c/s real, 682666 c/s virtual
+
+OK, only a 5x hit here, not the 10x I mentioned above.  So while
+253952/2048 = 124x concurrency was found optimal by the program in this
+case, and it is 10x+ per AMD docs, not having any concurrency greater
+than available physical resources has only a 5x hit here, for this card
+(HD 7970 at stock clocks, meaning 925 MHz core) and this algorithm and
+code.  Yet 5x is significant - more so than the presumed 1 vs. 3+ cycles
+difference for ADD vs. MUL.
+
+BTW, this is somewhat similar on Xeon Phi, just to a smaller extent: it
+is capable of up to 4 threads/core, and it requires at least 2
+threads/core for optimal performance, even with instructions that you'd
+normally expect to complete in 1 cycle each.  So in this sense Xeon Phi
+is half way between a CPU and a GPU.  Similar things are also observed
+on UltraSPARC T1 (4 threads/core) and later (8 threads/core), where
+running almost the maximum number of supported hardware threads is
+essential to achieving full performance, even for trivial integer code.
+
+Regarding the clock rate, you're right - modern GPUs have it at around
+1 GHz.  [ Older NVIDIA GPUs (circa 2010) ran the shaders (which is what's
+relevant here) at double the core clock, so e.g. the vendor overclocked
+GTX 570 we're using for some JtR benchmarks runs at 1.6 GHz - but it's
+also a lot smaller than NVIDIA's latest GPUs. ]
+
+In terms of throughput, today's CPUs and GPUs can all be expected to do
+one multiply or multiply-add (if available) per SIMD lane per cycle, for
+up to whatever SIMD multipliers size they have in hardware in sufficient
+quantity (as you found, for some GPUs it's 24x24).  Bigger may be much
+slower, even in otherwise optimal conditions.
+
+(BTW, I am still playing with 32x32->64 as it's suitable for both scalar
+and SIMD on both current x86(-64) and recent ARM, and considering that
+it's roughly 2x the circuit size of 32x32->32 in ASIC.  64x64->64 would
+be 2x bigger yet, but it's unfriendly to some relevant CPUs/modes.)
+
+If a defender hashes his password using 2GiB in 0.5 seconds on his PC
+in a multiplication limited loop (easily done on 1 thread on a 3GHz+
+Sandy Bridge, Ivy Bridge, or Haswell CPU and a single bank of 1,666MHz
+DDR3 RAM), and an attacker has an 8GiB graphics card (do they sell
+bigger?),
+
+NVIDIA has Tesla K40 with 12 GB, AMD is planning a revision of FirePro
+S10000 with 12 GB.
+
+http://www.nvidia.com/object/tesla-servers.html
+
+Xeon Phi is available with 16 GB.
+
+then the attacker could only do 2 guesses in parallel, and
+each guess will take 4 times longer, at about 2 seconds per guess, or
+1 guesses per second total throughput.  That's half what the CPU can
+do.
+
+Yes, and if you're not memory-bound the performance hit may be even
+bigger.  However, if you're memory-bound, then the improved memory
+bandwidth may give advantage to GPUs.
+
+So, yes, having some computation so that you don't bump solely into the
+memory bandwidth, but also into compute latency on CPUs, is good to
+discourage GPUs.
+
+The multiplies specifically don't matter as much as they do against
+ASICs and FPGAs, but are good to use nevertheless.  There's probably
+some latency hardening advantage over ADDs even for GPUs, but it might
+not be much.  This is assuming that you do small multiplies; bigger
+ones might be much slower on specific GPUs.
+
+Are my numbers right?  My Google-fu is failing me this morning.  I
+could not find a table of NVDA or ATI GPU instruction latencies.  I
+did find one post suggesting to use 24x24 multiplication because it's
+only 4 clocks, but there was no mention of 32x32 latencies.
+
+Oh, that's curious.  As far as I can tell, information on instruction
+latencies on GPUs is generally not published, and it doesn't make as
+much sense as it would on CPUs given that higher concurrency needs to be
+maintained for optimal performance anyway.
+
+Alexander
+

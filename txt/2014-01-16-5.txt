@@ -1,0 +1,45 @@
+phc-discussions - RE: [PHC] Best RNG for filling memory?
+
+Message-ID: <004901cf12e9$0b3227b0$21967710$@cfl.rr.com>
+Date: Thu, 16 Jan 2014 13:30:33 -0500
+From: "Gary W. Hvizdak" <gary.hvizdak@....rr.com>
+To: <discussions@...sword-hashing.net>
+Cc: <waywardgeek@...il.com>
+Subject: RE: [PHC] Best RNG for filling memory?
+
+On Wednesday 25 Dec 2013 at 1411, Bill Cox wrote . . .
+
+"Second, I only used the salt to initialize the RNG, hoping that I could
+better protect the password in case the large memory array got cached to
+disk.  I'm not that comfortable having 1GB of MARC4 data out there to be
+analyzed to try and guess the key. ... So, how do I force the entire memory
+to depend on the password without risking some attack on the stream itself?
+... Or would it be better just to keep the password from impacting what we
+write to DRAM at all, and accept the improved attack?"
+
+--
+
+Hi Bill,
+
+I'm a total newbie and am curious how/why "this" is of greater concern than
+the password itself being swapped to disk?  Is it that only heap space ever
+gets swapped whereas stack/local memory never does?
+
+My current strategy for filling memory (subject to change) is the addition
+of a "seed" parameter to PHC().  Kind of like a "pepper" except that it
+wouldn't necessary need to be secret.  As you point out, an attacker need
+only generate the fill pattern once.  However, if the amount of memory we
+fill is sufficiently large, and well fill it quickly enough, the attacker
+will still suffer some overhead to keep a second pristine copy on hand.
+(I'm assuming memory will be modified as part of the "waking" process.)
+
+Thanks,
+Gary
+
+P.S.  Although my scheme is not yet implemented, my seed parameter will be
+combined with the salt and/or password in some way, to seed the PRNG that
+ultimately fills memory.  This way at least an attacker will have to redo
+the calculation for each password.
+
+
+

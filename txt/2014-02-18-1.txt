@@ -1,0 +1,43 @@
+phc-discussions - More speed results
+
+
+Message-ID: <CAOLP8p63JCAg9wSRvLUvu0zgeq-6OzW5zogLqnG9-z3LgUJf4A@mail.gmail.com>
+Date: Mon, 17 Feb 2014 20:55:41 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: More speed results
+
+I've built a reworked version of NoelKDf using an upgraded SSE
+optimized password hashing algorithm almost entirely motivated from
+recent great ideas from Solar Designer.  If the user specifies more
+than 1 thread, then 1 thread is devoted to multiplication-based
+compute-time hardening.  All other threads hash memory as fast as they
+can with an SSE friendly simple hash function.  I switched to Blake2
+for faster crypto-strength hashing between blocks, and wrote two new
+hash functions: a permutation for the multiplication compute time
+hardening, and a simple one-way memory intensive SSE friendly hash
+using ADD, XOR, and SHIFT.
+
+If these trivial hash functions stand up to scrutiny, the performance
+seems amazing.  Here's the numbers on my 3.4GHz quad-core Ivy Bridge
+processor with 2 banks of 1,666MHz DDR3 memory, running Arch Linux:
+
+Scrypt, single-threaded, with SSE enabled: 500MB in 1 second, 1GB/s bandwidth
+upgraded NoelKDF, 2 threads (1 multiplication, 1 memory): 2GB in 0.39
+seconds, 10.2GB/s bandwidth
+upgraded NoelKDF, 3 threads (1 multiplication, 2 memory): 2GB in 0.31
+seconds, 13GB/s bandwidth
+memmove: 2GB in .23 seconds, 17.4GB/s bandwidth
+
+The first benchmark ran 328201784 multiplication hashes, or about 2.9
+seconds in the first benchmark of nothing but multiplications.  The
+second one did 196605000 multiplications, or about 1.7 seconds.  The
+multiplication compute hardening seems to be working quite well, while
+not interfering with the memory hashing threads.
+
+To keep the memory hashing thread from running faster than the
+multiplication thread, once per block they read the multiplication
+thread's result.
+
+Bill
+

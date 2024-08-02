@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Message-ID: <20140120141415.GA25339@openwall.com>
+Date: Mon, 20 Jan 2014 18:14:15 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On Wed, Jan 15, 2014 at 09:27:06PM -0600, Steve Thomas wrote:
+You might want to change:
+        $v .= $x = hash('sha512', $x . substr($v, $j, $blocksize1), TRUE);
+and
+        $x = hash('sha512', $x . substr($v, $j, $blocksize2), TRUE);
+to:
+        $v .= $x = hash('sha512', substr($v, $j, $blocksize1) . $x, TRUE);
+and
+        $x = hash('sha512', substr($v, $j, $blocksize2) . $x, TRUE);
+
+This way the attacker can't do anything until you get the data from $v.
+
+Thanks!  I wanted to have this sequential on $x, but we achieve that via
+$j being dependent on $x anyway, so you're right - we can introduce the
+other sequential dependency here.
+
+This has an added benefit of forcing the attacker to shift $x by 7 bytes
+instead of using $x as is.
+
+This is not necessarily good: this fixed shift is a cost for some
+software implementations (possibly defensive), but not for ASICs.  That
+said, in PHP it's relatively cheaper than in native code, so may be OK.
+
+Alexander
+

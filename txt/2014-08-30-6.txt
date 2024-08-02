@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <CAOLP8p65nusthA5ey10H5wxkWN_3eWgUaFx7L8d3zeoXR3fmrQ@mail.gmail.com>
+Date: Sat, 30 Aug 2014 07:35:29 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] A review per day - TwoCats
+
+On Sat, Aug 30, 2014 at 12:50 AM, Solar Designer <solar@...nwall.comwrote:
+
+How fast does bcrypt do random reads?
+>
+According to that posting I referenced above, it's:
+>
+2176000*3072 = 6.7 billion/s per FX-8120 chip
+2176000*493 = 1.1 billion/s with 1 instance (with other cores idle)
+>
+That's for defensive-use bcrypt code, which is what's relevant here.
+>
+So your "2.8B 16-byte random reads per second on Ivy Bridge" is very
+good if it's for 1 thread, but not good enough if it's for entire chip.
+And you also need to compare the available parallelism vs. bcrypt's.
+>
+
+2.8B reads/s was for 4 threads on my quad-core Ivy Bridge processor.  I
+tweaked the inner loop just a bit, and benchmarked it against the simplest
+loop I could write for doing unpredictable reads.  Here's my one thread
+numbers vs what is possible:
+
+Max possible w/ no parallelism: 0.56B/s
+TwoCats w/ no parallelism: 0.435B/s
+Max possible w/ 4-way parallelism: 1.28B/s
+
+TwoCats is very close to maxed-out speed-wise for no parallelism.  However,
+bcrypt has 4-way parallelism in the reads, meaning that we can do all four
+reads in parallel.  When I unroll the inner loop 4 times and read 4
+different locations in parallel in my test code, I get 1.29B reads/second.
+This should match bcrypt's upper speed fairly well, assuming that the
+rounds computations dominate.  I seem to be doing about 1/3 as well as
+Bcrypt on one thread.  Not as good as Yescrypt, but not too bad :-)
+
+Bill
+
+
+

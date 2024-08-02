@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20140104202941.GB4592@openwall.com>
+Date: Sun, 5 Jan 2014 00:29:42 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Sat, Jan 04, 2014 at 06:14:26AM -0500, Bill Cox wrote:
+On Sat, Jan 4, 2014 at 3:19 AM, Solar Designer <solar@...nwall.comwrote:
+I think what helped the optimizer is your addition of lots of
+parallelism (way too much for current CPUs, in fact).  The sequential
+nature of reads allows PAGE_LENGTH to be beyond L1 data cache size.
+>
+I think it'd be better to have random reads, keep PAGE_LENGTH*3*2 within
+L1 data cache size, and have just enough parallelism for current and
+near-future CPUs (preferably, have it tunable).  Also, make it SIMD
+friendly (tricky with random reads - would need to make them the size of
+a SIMD vector, so that you don't require gather loads).
+
+I'll play around with hashing within the page, but I honestly don't think
+it's needed for improving the hashing.
+
+Not for improving the hashing, but for defeating attacks with
+pre-existing devices such as GPUs, especially with use cases where the
+total running time is very limited.
+
+The data in memory is already
+hashed well enough.  Trying to make it SIMD friendly while simultaneously
+trying to make it unfriendly for a GPU or FPGA are opposing goals,
+
+Sort of.  However, if a CPU can perform random 128-bit lookups as fast
+as random 32-bit lookups (e.g. 1 cycle/lookup either way), then going
+for 128-bit does not make the KDF _relatively_ any more GPU friendly.
+
+when in reality it's memory bandwidth that really counts.
+
+Not when we try to be more CPU than e.g. GPU friendly, since memory
+bandwidth available for CPUs is currently a few times lower.
+
+I converted it to 32-bit, and it runs exactly the same speed as before.  I
+guess in that case I'll leave it 32-bit so that it will be more SIMD
+friendly and 32-bit processor friendly.  I feel a lot better about those 32
+bit multiplies.
+
+OK.  I have mixed feelings about this.
+
+Another SIMD-friendliness aspect is how those SIMD accesses would be
+aligned.  You seem to be using inputs that have different (off by one)
+alignment than outputs.
+
+Alexander
+

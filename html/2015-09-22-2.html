@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150922160934.GA15228&#64;openwall.com&gt;
+Date: Tue, 22 Sep 2015 19:09:34 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+Hi Thomas and all,
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+&gt; here is my take at specifying a string format for the output of a
+&gt; password hashing function; this aims at supporting password verification
+&gt; in a way compatible, in particular, with the Unix crypt() API and the
+&gt; /etc/shadow files. This is not for use of a function as a KDF. I tried
+&gt; to remain as generic as possible, although of course the primary target
+&gt; is Argon2.
+
+First of all, thank you for working on this!
+
+Then, I'm sorry for being a bit late with my feedback.  Yet maybe better
+late than never, so here goes:
+
+I dislike use of &lt;param&gt;=&lt;value&gt;, as opposed to just listing the values.
+
+I also find it inconsistent that the proposed syntax mixes bloated
+constructions such as long identifier names, use of &lt;param&gt;=&lt;value&gt;, and
+use of decimal with the more compact choice of crypt(3) base64 encoding
+rather than RFC Base64.  I think we should consistently opt for a
+compact or a bloated encoding, and I'd prefer compact, but if you do
+bloated, then do it to the fullest extent (and we'll have a compact
+alternative then).
+
+I do see value in listing of the parameters in a fixed order (and in
+having no defaults and in listing all parameters all the time as well,
+despite of the drawbacks).  However, when that fixed order comes from
+lexicographic order of parameter names it may end up being otherwise
+weird, and inconsistent with what we already have for scrypt.  Given
+that yescrypt builds upon scrypt and supports scrypt compatible mode,
+I'd like to have its parameters common with scrypt listed first and in
+the same order as is commonly used with scrypt.  This is N, r, p, but
+lexicographic order would result in N, p, r.  I find having to introduce
+this inconsistency, if we adopt your proposal as currently specified,
+unfortunate.
+
+It could also be nice to be able to omit yescrypt's additional
+parameters that are not in scrypt - in other words, use this opportunity
+to introduce a syntax for scrypt that would address some limitations of
+what we previously defined for scrypt, without having to list yescrypt's
+parameters.  Well, I guess we can do that within your specification by
+allocating a separate identifier string for scrypt.
+
+The use of crypt(3) base64 could help encode the parameters in a more
+compact way, e.g. use just one char (and no separator before/after it)
+for (ye)scrypt's log2(N).  I find it suboptimal to go for crypt(3)
+base64 yet not take full advantage of it.
+
+Overall, I think this verbose syntax might hamper adoption by some
+projects.  I also think that if we go for a verbose and human and
+scripting friendly syntax for the parameters anyway, we should as well
+bite the bullet of RFC Base64 with its extra padding characters.  Having
+3 extra characters is negligible compared to the bloat we already have
+in the proposed long identifiers and the encoding of parameters.
+I actually prefer crypt(3) base64, but I dislike the bloat already
+proposed enough that going for RFC Base64 just doesn't make it all that
+much worse for me, while making it better for others.  I'll probably
+come up with an alternative compact encoding anyway, and this one may be
+bloated to the fullest extent then.  OTOH, it's nice to have a common
+encoding type (and common code) between the compact and bloated forms,
+so maybe your choice is right from that point of view.
+
+Also, if we go for a bloated syntax anyway, we probably should use the
+opportunity to allow for encoding of arbitrarily small or large salts,
+and arbitrary hash sizes.  So that e.g. if crypt() is available via
+pgcrypto or something, thus via SQL queries in this example, its support
+for a PHC scheme could then be reused to compute that scheme with
+arbitrary inputs with no artificial restrictions.  e.g. to derive
+multiple keys at once (where 256 bits could be too little).  I don't
+feel about this strongly, but overall I feel that we should either avoid
+bloat or use the potential advantages of the bloat to the fullest,
+whereas the proposed encoding does neither.
+
+Sorry for the criticism.  Again, I appreciate the effort.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

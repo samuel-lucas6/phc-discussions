@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <CALW8-7L9ufj+KZAQyqLx6dj9bJKJer1Y3mdxYddZUcO+LQV3Yw@mail.gmail.com>
+Date: Tue, 31 Mar 2015 12:11:28 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2
+
+Hi Alexander,
+
+On Tue, Mar 31, 2015 at 1:18 AM, Solar Designer <solar@...nwall.comwrote:
+>
+Note that your yescrypt benchmark also invokes 8 rounds of Salsa20 per
+1024-byte block.  That's equivalent to 1/2 a round of Salsa20 per 64-byte
+sub-block, so you're actually comparing 2 rounds of pwxform + 0.5 rounds
+of Salsa20 vs. 2 rounds of Blake2b in Argon2.  I am lucky yescrypt is on
+par with Argon2 in this test, despite of doing maybe 1.25x more computation
+per byte (and containing a lot less parallelism, see below).  (And even
+more than that if we consider hardware rather than software.)
+
+I think there is some confusion about the total computational
+complexity of both schemes. To produce a 1 KB-block,
+Argon2d applies the Blake2b round 16 times in total. 1 Blake2b round
+is equivalent to 2 rounds of Salsa20, extended to 64-bit words.
+
+As I understand the yescrypt pseudocode, r=8 yields 1 KB blocks.
+BlockMIX then applies pwxform r1=16 times, and Salsa20/8 one time.
+
+The latency of the compression function/block of Argon2d is 2 Blake2b
+rounds. Since the compression function has full diffusion (every input
+bit of 1 KB-block affects every output bit), any output byte has also
+latency of 2 Blake2b rounds.
+
+In yescrypt, the SIMD lanes are mixed only in the Salsa20 call, which
+means that the block latency is not 16 pwxform calls+ 8 Salsa rounds,
+but far smaller, only the equivalent of 4 pwxform+8 Salsa rounds. This
+is for the block; all the subblocks but the last one do not need
+Salsa, so their individual latencies are only 4 pwxform.
+
+Thus indeed, yescrypt block function has higher latency, though not
+that much higher compared to Argon2d (2-3x for most of the blocks).
+However, the yescrypt's BlockMIX is not memory-hard, as most of it can
+be computed using only 16 bytes of RAM (not including the storage) by
+computing it lanewise. This property might be mitigated by subblock
+shuffling, but I have not analyzed it.
+
+Do I understand yescrypt right?
+
+
+>
+>>
+>
+That's cool, but that's 8192-bit parallelism, right?
+
+I would like to comment on this as well, but I do not quite understand
+how you measure the parallelism. Maybe the compression function
+picture in Argon2 specification helps.
+
+Thanks for other thanks:) and to Bill too,
+
+Dmitry
+

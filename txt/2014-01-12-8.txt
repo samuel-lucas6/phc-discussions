@@ -1,0 +1,84 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+Message-ID: <CA+aY-u4KRshDgyAsURN1V=tpesdRaR5Ynonn_R=ySW-3+M3=xg@mail.gmail.com>
+Date: Sun, 12 Jan 2014 13:43:21 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On 12 January 2014 12:45, Bill Cox <waywardgeek@...il.comwrote:
+
+>
+Generally, people refer to me as a "router guy."  I've written a lot
+of routers to connect stuff on chips.  One mistake I see over and over
+when people come up with ideas for improving the speed of computation
+is forgetting to take the routing penalties into account.  For
+example, data flow machines would have dominated decades ago if not
+for data routing delays.
+>
+Our CPUs are stuck with tremendous routing delays that just don't
+exist on an ASIC when computing our inner-loops.  Any attempt to
+protect passwords with computation-limited inner loops is not going to
+get us very far.
+>
+>
+​This is probably a very daft question but what's "routing" in this
+context? (my hardware knowledge is abysmal)​
+
+
+
+
+If I really wanted to force an attacker to have a nice expensive CPU
+like mine, I would fill instruction memory with pseudo-random
+instructions.  Java is everywhere, so we could generate a megabyte of
+bytecode in a way that we know it will execute a certain number of
+hashing instructions before returning a hash result.  An attacker
+would have to execute the code to make a password guess, and there's
+no way he's going to execute that code faster than an Intel or AMD
+CPU.  That would destroy his speed advantage, and we could still
+hammer memory to reduce his cost advantage.  That would be awesome.
+>
+>
+There have been a few discussions on this before, e.g. either using
+bytecode/interpreted setup or abusing the peculiarities and compliexities
+of the x86 instruction set (on Twitter irrc).
+
+While I think it's potentially more promising that it first appears, there
+are problems with portability and avoiding an attacker being able to reduce
+the instructions to more simple logic operations, e.g. if an attacker knows
+the generated instructions are taken from a small set, how easily can that
+be mapped to simple logic operations.
+
+
+
+
+However, that complicates the algorithm dramatically, hurts
+portability, and brings all the security holes in Java to our password
+KDF.  I think the security experts' heads would explode if we tried to
+standardize such a KDF.
+>
+
+​Definitely, but it doesn't necessarily need to be Java.  I'd even pondered
+on whether it was possible to abuse Python... not that I'm a particular fan
+of Python but it is at least fairly portable.​
+
+
+
+
+>
+I think the next significant layer of protection after off-chip memory
+should be using GPUs for KDF.  Most smart phones and likely all future
+desktop and laptop CPUs have significant GPU hardware, and we could
+use that in parallel with hashing external memory.  That's why I think
+a KDF should be designed with an adjustable parallelism parameter.
+>
+
+I agree - internal parallelism is good in my book: an attacker can always
+gain advantages by guessing multiple passwords in parallel but a defender
+can may only be able to use the parallelism within a single instance of the
+algorithm.
+
+
+

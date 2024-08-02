@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20150507180241.GA14575@openwall.com>
+Date: Thu, 7 May 2015 21:02:41 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+On Sat, May 02, 2015 at 05:34:27AM +0300, Solar Designer wrote:
+The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+(with tiny bits of inline PTX assembly, even - for things such as the
+pwxform MULs):
+
+https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741
+
+The code is still very dirty.  I expect it won't build or work for most
+people as-is, yet.  However, it looks reasonably well optimized, and
+specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+are precomputed and hard-coded, etc.)
+
+Further in that thread, djm34 mentions getting 1.5 kh/s on GTX 980.  The
+best speed another person reported so far is 980 h/s on GTX 750 Ti.
+
+For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+
+To be fair, GTX 750 Ti is cheap, so its speed is impressive.  This
+suggests a higher-end GPU (perhaps Titan X) should reach CPU speed.
+I am puzzled why higher speeds aren't being reported yet, if 750 Ti in
+fact reaches 980 h/s.  Maybe it's just too few people trying this out.
+
+OTOH, there are bigger CPUs, too.
+
+bsty     27511 99.7  0.1 242304 216548 pts/1   R+   04:47 100:23 cicc -arch compute_35 -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 -maxreg 128 -nvvmir-library /usr/local/cuda/bin/../nvvm/libdevice/libdevice.compute_35.10.bc --orig_src_file_name yescrypt/cuda_yescrypt.cu /tmp/tmpxft_00006af6_00000000-9_cuda_yescrypt.cpp3.i -o /tmp/tmpxft_00006af6_00000000-5_cuda_yescrypt.ptx
+
+I restarted this build in "screen", but it was still still building a
+day later, so I stopped it:
+
+bsty     14657 99.7 14.9 19924888 19761748 pts/12 R+ May02 1795:55 cicc -arch compute_35 -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 -maxreg 128 -nvvmir-library /usr/local/cuda/bin/../nvvm/libdevice/libdevice.compute_35.10.bc --orig_src_file_name yescrypt/cuda_yescrypt.cu /tmp/tmpxft_00003887_00000000-9_cuda_yescrypt.cpp3.i -o /tmp/tmpxft_00003887_00000000-5_cuda_yescrypt.ptx
+
+Yesterday, I also tried out djm34's newer sgminer commit.  This time,
+the kernel built for both AMD and NVIDIA, but it was giving HW errors on
+HD 7990 (at a reported speed of ~730 h/s for both GPUs combined) and a
+poor speed on GTX TITAN (as low as 35 h/s).
+
+I guess I could have better luck with different Catalyst and CUDA SDK
+versions, but I didn't bother trying yet.
+
+Alexander
+

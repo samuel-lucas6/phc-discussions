@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Updated tests document
+
+Message-ID: <552F5C4C.60202@gmail.com>
+Date: Thu, 16 Apr 2015 08:53:00 +0200
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Updated tests document
+
+On 04/06/2015 11:17 PM, Solar Designer wrote:
+On Mon, Apr 06, 2015 at 11:10:27PM +0200, Milan Broz wrote:
+>It would be very nice to test also parallel attribute but then functions should
+>export some unified interface.
+>If it is not too late, maybe addinng m_parallel to PHS() as a tweak...
+
+I know it's not right for your use case, but for password hashing on a
+server the parallelism would be external to PHS(), so maybe you can
+simply have your own wrapper start multiple independent threads, for
+independent password hashes computed with their own PHS() calls?  And
+provide a chart showing throughput in requests/second vs. memory usage
+(e.g. 128 KB to 128 MB), at the lowest supported t_cost and the maximum
+number of concurrent threads supported in hardware (e.g. 8 on a
+currently typical quad-core CPU).  I'd find such results helpful.
+
+Hi,
+
+I tried to hack something, it is not perfect but it could provide some overview,
+but please take it with a grain of (non-crypto) salt :-)
+
+- using memory table from Steve (128k/1M/16M/128M)
+
+- test forks N processes, parent waits 60 seconds (in this tests) and then
+*waits* for all children to finish the last hash (this time is measured).
+I am using SHM quite stupid way here to sync it, but it works it this case.
+(Pufferfish and Argon1 on 100MiB run time exceeds 60 seconds, so measurement
+is really not reliable here.)
+
+(Moreover, all hashes all the same but this should not be a problem.)
+
+- config is here Lenovo x230, dual-core with hyperthreading enabled
+https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/lscpu
+
+- it increases # processes up to 8, 4 cpu it should not add anything.
+
+Output looks like this:
+
+128kiB
+https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/r_parallel_0/parallel_threads_0.png
+
+1MiB
+https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/r_parallel_1/parallel_threads_1.png
+
+16MiB
+https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/r_parallel_2/parallel_threads_2.png
+
+128MiB
+https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/r_parallel_3/parallel_threads_3.png
+
+NOTE: yescrypt is here updated to yescrypt-opt, reference implementation is no longer used.
+Catena is updated as well (but this is not performance related).
+
+I guess there are some bugs, pls let me know if you spot something apparently wrong there,
+I partially hacked it during a meeting with many distractions:-)
+
+I'll update other test run & report later, need to run everything again and it will take several hours.
+
+I also added yescrypt with reduced 2 PWXrounds to repo, but I guess it makes sense only
+for "normalized" test chart...
+
+Thanks,
+Milan
+

@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Quick gripe... in case there's ever another contest
+
+Message-ID: <20140405224752.GA18787@openwall.com>
+Date: Sun, 6 Apr 2014 02:47:52 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Quick gripe... in case there's ever another contest
+
+On Sat, Apr 05, 2014 at 08:14:10PM +0200, Thomas Pornin wrote:
+For SHA-3
+[...]
+More insidiously, some candidate codes used "dangerous" code patterns
+which resulted in breakage when used on a big-endian machine, or when
+compiled with different optimisation flags (C's strict aliasing rules
+are rarely well understood). Also, a number of candidate implementations
+used static read-write variables, resulting in code which was not
+thread-safe, or even stateful code (hash the same buffer twice from the
+same program, and you don't get the same output...).
+
+FWIW, I did make an attempt at avoiding all of the above in the yescrypt
+code that I submitted.  I tested on 64-bit and 32-bit x86, and on 32-bit
+big-endian PPC (albeit not the latest revision, so I'll need to
+re-test).  (For a production release, I'd test on more platforms.)
+I also made a good attempt to meet C strict aliasing rules, fixing two
+such issues that were present in scrypt code (one of them was actually
+triggerable in scrypt's crypto-nosse.c with unusual gcc options - forced
+function inlining beyond what -O3 does - I did report it to Colin a
+while ago).  The thread-safety status of each API function is documented
+in yescrypt.h.
+
+Potential stateful (or unstable) behavior of the hashing function would
+likely be detected by my tests.c's invocation of it on the same password
+and salt and ROM with the ROM having been regenerated with different
+memory allocation (this was initially introduced to test that extra API
+feature, but it also works to detect potential inadvertent statefulness).
+Additionally, the included userom.c program makes sure that the same
+hashes are computed for random inputs generated from the same seed for
+calls to yescrypt from a single thread and from multiple threads further
+in the same program (this is not shown in program output, which is
+limited to benchmark results, but if a mismatch does occur, the program
+will complain).
+
+So I think I did a pretty good job with the code, for its present status
+as a PHC submission rather than as a production release.  Unfortunately,
+I didn't do nearly as well with the specification, which I started
+writing way too late and have yet to improve.
+
+(In fact, my opinion is that a _reference_ implementation, meant to test
+other implementations for correctness, should be done in a language
+which does NOT have undefined or architecture-dependent behaviour. C
+should be banned for that; reference implementations should be in Java
+or C#, or ideally something even stricter because even Java or C# may
+offer non-portable behaviour when using floating-point types.)
+
+This is not without merit, but which approach is best is unclear to me.
+
+As you pointed out, there may be language-related bugs in Java code too,
+and here's a relevant example:
+
+http://mindrot.org/files/jBCrypt/internat.adv
+
+Alexander
+

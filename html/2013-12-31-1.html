@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/12/30/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2013/12/30/1">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20131231014241.GA18601&#64;openwall.com&gt;
+Date: Tue, 31 Dec 2013 05:42:41 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Sun, Dec 29, 2013 at 05:29:02PM -0500, Bill Cox wrote:
+&gt; I have written an initial hacked-up version of a program that for now I'm
+&gt; simply calling "keystretch".  Here's some ways it compares to scrypt:
+
+Thank you for contributing your ideas!
+
+&gt; - On my Core i7 linux box, it's over 8X faster for a given memory size,
+&gt; single-threaded, no SSE
+
+... but don't we mostly care about the performance _with_ SSE (or
+better), and depending on use case, also with concurrent use of all
+cores (for computation of one or of many separate hashes, also depending
+on use case and other factors)?
+
+8x can easily be the difference between scrypt's -ref and -sse (once
+it's optimized like I did), although perhaps not between -nosse and
+-sse.  I guess your benchmark is for scrypt's -nosse.
+
+In my testing (with optimized scrypt code using AVX or better) reducing
+Salsa20 rounds count from 8 to 2 (4x reduction in round count) results
+in less than 2x speedup, which suggests that replacing Salsa20/N with
+something way simpler is not going to make all that much difference
+either.  I guess you may be seeing much more of a difference in part
+because you're only benchmarking a single thread.
+
+&gt; - Memory is hashed as it's filled, rather than filling, then hashing.
+
+This sounds similar to my changes to SMix first loop:
+
+<a href="http://www.openwall.com/lists/crypt-dev/2013/11/25/3">http://www.openwall.com/lists/crypt-dev/2013/11/25/3</a>
+
+but extended to the second loop as well, replacing both of them with one
+combined loop.  I thought of this too, but a drawback I saw was that
+either I'd have to avoid random writes (which I had implemented as an
+optional anti-TMTO feature) or I'd have to be computing two hashes (two
+BlockMix'es in scrypt terms) per loop iteration (so that I write two
+different values: one to the newly allocated V element and another to
+the currently selected random element).  At that point, it is unclear if
+there's any benefit from continuing to expand the size of V after
+filling time/2 elements (if the price we pay is spending twice more time
+per element filled).
+
+You might (or might not) have avoided this dilemma with careful design
+of your RNG (or whatever you call it), having it produce two distinct
+outputs in less than 2x time.
+
+That said, in a TMTO-friendly mode (if deliberately supported and
+enabled), we may in fact use this approach and not run into the same
+dilemma.
+
+Another drawback is the very low probability that the last few V
+elements written will ever be accessed.
+
+&gt; - 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+&gt; intermediate derived key.
+
+I dislike this.  It's very wasteful in use cases where our total running
+time is very limited.  This may be all running time we can afford (if at
+all), not leaving any time for the memory-hard portion.
+
+Additionally, when p&gt;1 this adds implementation complexity for
+implementations that actually try to make use of the parallelism.
+In original scrypt, they don't need to bother parallelizing the PBKDF2
+step, because it's very fast anyway (no iterations).  When you have
+bumped up the iterations to a non-negligible number, PBKDF2 will now
+need to be parallelized.
+
+&gt; - The derived key does not depend on the number of threads
+
+... as long as the number of threads is not greater than a pre-specified
+maximum.  I can claim this too. ;-)  And scrypt can claim it too,
+although with scrypt there's a reduction in area-time from increasing p,
+so it better not be done unnecessarily.
+
+&gt; - All threads hash randomly from all of memory at the same time, so you
+&gt; can't run p smaller runs in series, where p is scrypt's parallelization
+&gt; parameter
+&gt; 
+&gt; Credit for hashing all of memory with each thread goes to Alexander.  It's
+&gt; a good idea, IMO:
+&gt; 
+&gt; <a href="http://www.openwall.com/lists/crypt-dev/2013/11/20/1">http://www.openwall.com/lists/crypt-dev/2013/11/20/1</a>
+
+You wanted to refer to:
+
+<a href="http://www.openwall.com/lists/crypt-dev/2013/12/19/1">http://www.openwall.com/lists/crypt-dev/2013/12/19/1</a>
+
+I like this too. ;-)
+
+Looking at your code, you're resolving the higher area-time vs. number
+of thread synchronizations tradeoff differently than I did, though.
+I suggested having just one extra synchronization point (between the
+equivalent of SMix's two loops), whereas in your case the
+synchronization is continuous and the number of times a thread will have
+to wait for other threads' data to become available is not pre-specified.
+
+&gt; Performing the typical 2048 SHA-256 rounds on the password at the start,
+&gt; and then clearing the password, insures that we have security at least as
+&gt; good as OpenSLL can provide today for our ssh private keys.  Any additional
+&gt; security is in positive territory.
+
+That's good, but for many use cases the price is too high.
+
+I see the advantage of being able to wipe the password early on, though,
+and not fill lots of memory with data that is quickly derived from the
+password (so, if leaked, may provide for quick password cracking too).
+
+Also, for password hashing bcrypt is a better baseline, and you don't
+reach it - as it relates to attacks with GPUs - by 2048 iterations of
+PBKDF2-HMAC-SHA-256.
+
+You appear to use random 64-bit lookups within a page, and that's quite
+similar to how bcrypt happens to defeat GPUs now (with 32-bit lookups in
+4x1 KB S-boxes), so you might be lucky in that respect.
+
+Unfortunately, the same property prevents a defensive implementation of
+your hash from using SIMD (without 64-bit gather loads).
+
+&gt; Having the hash result not depend on the number of threads, and also
+&gt; filling memory as we hash, allows me to have a stop pattern that I look for
+&gt; when decrypting.  Along with salt, I can store the final hash value, which
+&gt; also looks random.  When decrypting, I fill memory until this stop value is
+&gt; seen.  This allows better deniability for the encrypted file, as both the
+&gt; hash and stop value appear to be random.  This is important for TrueCrypt.
+
+Nice.  I think this has a drawback, though: a TrueCrypt cracker, if
+aware of the settings that were used (or if can guess them fairly
+reliably), will be able to reject wrong keys right after the KDF,
+without proceeding with actual decryption of the user's data and
+checking its checksum.
+
+&gt; A weakness of the hashing function vs scrypt is that it is a simple
+&gt; non-cryptographic hash, rather than script's Salsa20/8.  This is the
+&gt; primary reason it runs faster.  If we do not need a strong cryptographic
+&gt; hash, there is significant opportunity for improving performance.
+&gt; 
+&gt; Is there any reason such a simple hash function should not be used?  I am
+&gt; particularly interested in feedback on this point.
+
+This is a tough question.  I think the required properties of the hash
+you use on every iteration depend on how your loops are structured.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

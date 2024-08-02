@@ -1,0 +1,67 @@
+phc-discussions - Data port hardness in key stretching and PoW?
+
+
+Message-ID: <CAOLP8p47UhkSV0tduWRomTA4Qip=11tL5thFL795TVqQR04K7w@mail.gmail.com>
+Date: Fri, 10 Jul 2015 06:54:10 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: John Tromp <john.tromp@...il.com>
+Subject: Data port hardness in key stretching and PoW?
+
+I think Alexander used the term "port-hardness" a couple of times, but I
+did not see this topic analyzed anywhere.  How secure is a scheme for
+password hashing or PoW which depends on the high cost of transmitting and
+receiving data over IC I/O ports?
+
+I've been trying to figure out why my design for a massively parallel ASIC
++ router attack on the Momentum PoW system will not easily reduce system
+cost.  I can increase the workers arbitrarily without adding significant
+amounts of RAM, so the memory*time cost can be arbitrarily reduced.  This
+proves that Momentum is not sequential-memory-hard, or as we generally say
+on this list, just "memory-hard".  However, when I tried to figure out how
+to build the system cheaply, I ran into the high cost of routing chips with
+high speed interconnect.  DRAM, which not cheap, is still comparatively
+cheaper than routing chips.
+
+To execute Momentum fast, my single-CPU algorithm writes hashes to external
+memory once, and reads it once.  With a decent on-chip hardware hashing
+core, which costs essentially nothing, this system will be memory bandwidth
+bound rather than CPU compute time bound or external memory latency bound.
+All of my favorite memory-hard algorithms in  this competition are
+similarly memory bandwidth bound, at least in some modes of operation (this
+is true for Yescrypt, Lyra2, and Argon2, and with the right choice of hash
+function, also Catena).
+
+I was not able to prove that Momentum requires any particular threshold of
+data to be transmitted across IC boundaries, so I can't yet prove it's
+"port-hard".  However I can easily prove this for an EARWORM-like password
+hashing scheme.  In particular, we can use a large ROM and small RAM for a
+PoW system with reasonably fast verification, as I posted recently.  There
+is no way to generate the password hashes without bringing together the RAM
+data and ROM data, requiring a minimum amount of data to be transmitted.
+Any parallel attack on such a system will have to transmit the ROM data
+and/or RAM data over I/O ports to complete hashing.  While the expense of
+the large ROM can be shared among workers, the I/O bandwidth to the ROM
+increases linearly with the number of workers.  The algorithm is not
+memory-hard, but it is port-hard.
+
+What makes a port-hard algorithm hard to attack in a custom ASIC?  I know
+that most ASICs have their I/Os around the edge, and thus the chip area is
+proportional to the square of the number of pads.  It is also difficult to
+design high-speed serial ports, and the IC's available with such ports are
+pricey.  However, IBM has a technology for distributing pads uniformly
+throughout the die, though there is a large unusable area of silicon around
+each, IIRC.  Also, as the number of pins on a chip grows, the package cost
+can get out of control.  High-end flip-chip packaging required for IBM's
+technology never did come down enough in cost to make them attractive for
+anything but very high-end systems, as far as I know.
+
+Can we build a secure password hashing scheme or PoW based on port-hardness?
+
+Bill
+
+Thanks,
+Bill
+
+
+

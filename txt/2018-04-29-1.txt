@@ -1,0 +1,144 @@
+phc-discussions - Re: [PHC] yescrypt & Lyra2 on GPU
+Message-ID: <20180429133923.GA2525@openwall.com>
+Date: Sun, 29 Apr 2018 15:39:23 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt & Lyra2 on GPU
+
+Thinking out loud and making minor corrections on a few sub-topics I
+brought up yesterday:
+
+On Sat, Apr 28, 2018 at 11:23:32PM +0200, Solar Designer wrote:
+For yescrypt, the split is across 16 SIMT threads, but due to yescrypt's
+use of 64-bit math each pair of those threads ends up doing duplicate
+work by two threads within the pair, so it's actually a split into 8
+rather than into 16 parallel computations.  I guess such duplicate work
+isn't any worse than leaving those threads unused would have been (if
+we're bumping into NVIDIA's shared memory size) whereas the extra data
+exchanges that would be needed otherwise would have cost extra.
+
+I seem to have imagined those "extra data exchanges that would be needed
+otherwise".  I now think that none of those would be needed with a split
+into 8 rather than 16 threads.
+
+#define Shared(a) *(uint2*)&shared_mem[(threadIdx.y * 512 + (a)) * 4 + (threadIdx.x & 2)]
+
+This results in the same duplicate 64-bit lookups by adjacent threads
+(thread index bit 0 is ignored here).
+
+                uint2 buf;
+                uint32_t x[256];
+
+With a split into 8 threads, the x array (holding the current thread's
+lane in the current block being worked on) would have to be of uint2's,
+so twice larger in each thread.
+
+                        for (k = 0; k < r * 2; k++) {
+                                x[k] ^= x[(k + r * 2 - 1) & (r * 2 - 1)];
+
+Also, we only do one 32-bit XOR here.  With a split into 8 threads, it'd
+be a 64-bit XOR here, which means pair(s) of 32-bit instructions.
+
+                                buf.x = __shfl_sync(0xFFFFFFFF, x[k], 0, 2);
+                                buf.y = __shfl_sync(0xFFFFFFFF, x[k], 1, 2);
+#pragma unroll
+                                for (j = 0; j < 6; j++) {
+                                        x0 = ((__shfl_sync(0xFFFFFFFF, buf.x, 0, 4) >4) & 255) + 0;
+                                        x1 = ((__shfl_sync(0xFFFFFFFF, buf.y, 0, 4) >4) & 255) + 256;
+                                        buf = mad64(buf.x, buf.y, Shared(x0));
+                                        buf ^= Shared(x1);
+                                }
+                                if (threadIdx.x & 1) x[k] = buf.y;
+                                else x[k] = buf.x;
+                        }
+
+The 32- vs. 64-bit XOR mentioned above would be counter-balanced by
+simplification at the end of the loop, where it'd be an unconditional
+64-bit write into x[k] instead of the if/else (which on SIMT means that
+all threads pass through both 32-bit writes anyway, just with one of
+those masked out).  Overall, it's a minor difference not obviously in
+favor of either approach, and it's outside of the pwxform rounds loop.
+
+So this leaves splitting the size of x as the likely primary reason for
+going for the duplicate work.
+
+OTOH, the code has the size of x hard-coded with generous 256 elements,
+which allows for up to r=128, which I think is more than any cryptocoin
+currently uses.  So maybe the size of x is not limiting anything yet,
+and the split into 16 rather than 8 is there for no reason or for some
+yet unmentioned potential reason.
+
+Another reason could be what happens in other code beyond the most
+performance critical excerpts I posted.  Maybe the split is beneficial
+for some less performance critical code.  Just to give it the benefit of
+the doubt.  But overall, I expect little difference in performance
+achieved with 16 vs. 8 threads per yescrypt instance.
+
+yescrypt 0.5'ish (PHC v0 from 2014) at N=4096 r=16 p=1 t=0 (8 MiB)
+
+GTX 1080 Ti - 3600-4200 h/s
+
+But we're interested in the performance figures here for how they'd
+relate to uses of yescrypt for password hashing, where there wouldn't
+necessarily be a "more profitable" hash to crack.  Well, yescrypt 1.0 by
+default uses 12 KiB for S-boxes vs. 0.5's 8 KiB.  So maybe the number of
+concurrent warps would have to be lowered accordingly, which will slow
+things down by up to as much (that is, up to by a third).  There are
+also the added writes into S-boxes, which are essentially free on CPU
+(the L1 cache write ports and the execution port for store instructions
+would have been idle otherwise), but will probably cost a little bit of
+time within each thread on GPU.
+
+Overall, it looks like with current yescrypt a dual-CPU server doing
+password hashing at low to moderate memory cost (a few megabytes per
+hash) will be roughly on par with one of the largest GPUs, when not
+using a ROM.
+
+To clarify: I assume that those dual CPUs in a server would also have
+higher core count (each) than typical desktop CPUs I mentioned in the
+mining context.  For example, yescrypt-1.0.1/PERFORMANCE shows a dual
+Xeon Gold 5120 server (28 physical cores) achieve 2400 h/s at 16 MiB.
+At half that memory, it'd achieve around 5000 h/s, and that's with
+yescrypt 1.0+.  From the cryptocoin mining speeds, we see that a GTX
+1080 Ti achieves less than that with yescrypt 0.5, and we expect a
+further 1.5x or so slowdown on GPU for 1.0 compared to 0.5.  This gives
+5000 for CPU vs. estimated (3600+4200)/2/1.5 = 2600 for GPU.  The
+largest NVIDIA Volta GPU would probably be at around 5000 again.
+
+For yescrypt with a ROM, there are no GPU implementations (that I'm
+aware of) yet.  I suppose they could eventually use CUDA uniform memory
+
+It's called "unified", not "uniform".
+
+to access host's or/and other GPUs' memory (as the ROM is meant to be
+much larger than a single GPU card's memory).  This will increase
+latency, and to compensate for that even more concurrent instances would
+need to be run on each GPU, again bumping into the GPU's memory sizes
+(on-die and/or on-card, whichever is hit first), so the speed will be
+impacted.
+
+So I think for yescrypt with a ROM this isn't too severe a threat yet,
+but bumping up the S-boxes size could make sense anyway.
+
+Actually, latency will probably only matter once per block, so will
+significantly affect overall speed at low r and not so much at higher r.
+
+The unified memory bandwidth will definitely limit overall performance,
+so it could become a matter of how much bandwidth to yescrypt's ROM
+we're using defensively.  And frankly it's not that much: we split the
+host's memory bandwidth between yescrypt RAM writes, RAM reads, and
+finally ROM reads.  In a GPU attack, the yescrypt RAM accesses will
+presumably stay in that GPU card's global memory, so only the ROM
+accesses will compete e.g. for the host memory and PCIe bandwidth.
+Nevertheless, this will be limiting possible attack speed.
+
+The above code for yescrypt does not try to split the two S-box lookups
+across threads, though.  (It only splits the four portions of each of
+the two 128-bit lookups.)
+
+No, the code doesn't split "the four portions of each of the two 128-bit
+lookups".  It splits each 128-bit lookup into two 64-bit lookups done
+twice (duplicate work).
+
+Alexander
+

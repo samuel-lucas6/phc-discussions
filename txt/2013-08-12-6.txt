@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] The EARWORM password hash
+
+Message-ID: <CALn24pCTYGjakQXeVEh_J37KBn340YJBw5sJJanjq-_Y6Gg8qw@mail.gmail.com>
+Date: Mon, 12 Aug 2013 10:32:33 -0700
+From: "Bitweasil ." <bitweasil@...ptohaze.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] The EARWORM password hash
+
+I really like the use of the AES intrinsic operations for performance.
+ Unfortunately, right now, this does seem to make the algorithm very
+x86-centric - I am not aware of AES hardware acceleration on ARM
+processors, which means that this wouldn't work well for anything not-x86.
+ However, it also (right now) badly cripples GPUs as they have to AES in
+software.  I'm not sure that it would offer much of a benefit over FPGAs,
+though if you've forced an attacker to FPGAs to get major speedups, you're
+doing well.
+
+I'm not entirely convinced of the merits of bandwidth limited access.  The
+access patterns are certainly optimized, but on a busy multicore server
+with, perhaps, 16 hardware threads, I don't know that you'd have great
+streaming bandwidth to main memory.  The variety of accesses from all the
+other threads may badly hurt the bandwidth delivered.  The attacker can run
+on a quiet system for optimum memory bandwidth, and GPUs have plenty of
+streaming bandwidth (though as noted, no AES primatives).
+
+What does performance look like if you're doing a parallel build on half
+your cores?  That should stress the memory system significantly without
+choking CPU throughput too badly, and would resemble the type of activity a
+busy webserver would likely see.  It may be the case that the memory access
+to compute ratio is such that there is no penalty for this - worth trying,
+though.
+
+
+On Mon, Aug 12, 2013 at 8:57 AM, CodesInChaos <codesinchaos@...il.com>wrote:
+
+With memory hard schemes like scrypt it's easy to put a lower bound on the
+cost specialized hardware incurs per password guess.
+>
+With bandwidth based schemes this isn't so obvious. Are there any papers
+analyzing this cost?
+>
+>
+
+
+

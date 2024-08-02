@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] Updated tests document
+
+Message-ID: <20150414151905.GA4356@openwall.com>
+Date: Tue, 14 Apr 2015 18:19:05 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Updated tests document
+
+Milan,
+
+On Tue, Apr 07, 2015 at 08:02:36AM +0200, Milan Broz wrote:
+BTW simd version seems to not "easily" provide way how to decrease
+PWXrounds (in other two it is just define, here is more complex macro IIRC).
+
+In current yescrypt-simd.c, it's this macro:
+
+#define PWXFORM \
+	{ \
+		PWXFORM_X_T x0, x1, x2, x3; \
+		__m128i s00, s01, s10, s11, s20, s21, s30, s31; \
+		PWXFORM_ROUND PWXFORM_ROUND \
+		PWXFORM_ROUND PWXFORM_ROUND \
+		PWXFORM_ROUND PWXFORM_ROUND \
+	}
+
+You simply delete any number of instances of PWXFORM_ROUND from it,
+leaving at least one.  For example, this works:
+
+#define PWXFORM \
+	{ \
+		PWXFORM_X_T x0, x1, x2, x3; \
+		__m128i s00, s01, s10, s11, s20, s21, s30, s31; \
+		PWXFORM_ROUND \
+	}
+
+I should probably turn this into a loop to make such tuning easier.
+
+Alexander
+

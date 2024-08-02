@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] IETF draft
+
+Message-ID: <CAK9dnSw3OJJVQw3AF+SYZuAuULrOc_sJkCLWk0e0LYdzOTwU8g@mail.gmail.com>
+Date: Wed, 11 Dec 2013 11:11:10 +0100
+From: CodesInChaos <codesinchaos@...il.com>
+To: Poul-Henning Kamp <phk@....freebsd.dk>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] IETF draft
+
+On Tue, Dec 10, 2013 at 8:06 PM, Poul-Henning Kamp <phk@....freebsd.dkwrote:
+If the database is stolen, any accidental salt+password collisions
+with previous collections would be useful.
+That's why we use salts with sufficient entropy, at least 64 bits,
+preferably 128. At that
+point salt collisions are extremely rare and don't offer a practical
+advantage to the attacker
+
+This was the major attack vector on the DES based unix crypt(3),
+Which resulted from their insufficient 12 bit salt.
+
+My 1994 proposal:
+>
+        DB(salt, hash(site_key + salt + password))
+>
+Frustrates that attack, even if the site_key is also stolen, because
+there will not be any salt collisions -- as the site_key is
+effectively a part of the salt.
+Why bother frustrating an already irrelevant attack?
+
+That is sort of what you propose, so your proposal is not
+without merit, it just doesn't adds a different kind of security
+than the IETF draft and my 1994 prior art.
+If you use the key as input to the slow hash, you can't store it on a
+low power device,
+which is one of the advantages of encryption. I'd like to store the
+key in a HSM which can't
+afford to compute a proper slow hash like scrypt.
+
+You can also gain this advantage by computing a cheap MAC of the slow hash.
+MAC(site_key, slow_hash(salt, password))
+
+But then you loose the re-encryption advantage. For example consider a
+leak of the config file
+containing the key without leaking the db. With encryption, you can
+simply decrypt the database
+and re-encrypt using a new key. With a MAC or pepper you can't.
+

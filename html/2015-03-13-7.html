@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Password hashing by itself is not enough</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150313142613.GA2303&#64;bolet.org&gt;
+Date: Fri, 13 Mar 2015 15:26:13 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Password hashing by itself is not enough
+
+On Thu, Mar 12, 2015 at 09:19:00PM -0700, Bill Cox wrote:
+&gt; Should the PHC recommend that master secrets of some sort be added to
+&gt; the key material, so that if the password database is stolen, but not
+&gt; the master secret, no harm is done?  There is no parameter for
+&gt; additional secret key material in the PHS function.
+
+Adding an additional secret key can be added generically, in (at least)
+four ways, to any password hashing function:
+
+ 1. Store: salt + HMAC_K(PHS(pass, salt))
+ 2. Store: salt + PHS(HMAC_K(pass), salt)
+ 3. Store: salt + AES_K(PHS(pass, salt))
+ 4. Store: salt + PHS(AES_K(pass), salt)
+
+I have used here "HMAC" to mean "some appropriate MAC function" and
+"AES" to mean "some symmetric encryption scheme".
+
+These methods are not completely equivalent:
+
+ -- With method 1, you forfeit any offline work factor extension that
+ the PHS may offer (i.e. you can no longer raise the work factor of a
+ hash without knowing the password). With methods 2 and 4 such work
+ factor extension can be done easily (if the PHS supports it, of
+ course). With method 3, you can do it but you need the key.
+
+ -- With methods 2 and 4, you must either encode the output of HMAC
+ or AES with Base64 or equivalent; or the PHS must support arbitrary
+ binary input (all candidates should support arbitrary binary input
+ anyway, it was part of the CfP).
+
+ -- Method 4 requires some form of symmetric encryption that is either
+ deterministic, or can be made deterministic (e.g. an extra IV is
+ stored). ECB mode, for all its shortcomings, would work.
+
+ -- Method 3 can be rather simple if you configure PHS to output exactly
+ 128 bits, in which case you can do "raw" single-block encryption.
+
+ -- Methods 1 and 3 require obtaining the "raw" PHS output, not a
+ composite string that encodes the output and the salt. In that sense,
+ they can be a bit cumbersome to retrofit on, say, an existing bcrypt
+ library.
+
+
+The important points (in my opinion) to take into account are:
+
+ 1. This key strengthening (some people have coined the expression
+ "peppering" as a bad pun on "salting") can be done generically; the
+ underlying PHS needs not be modified or even made aware of it.
+
+ 2. Keys imply key management, always a tricky thing. Key should be
+ generated appropriately (that's not hard but it can be botched in
+ horrible ways), and stored with care. Sometimes the OS or programming
+ framework can help (e.g. DPAPI on Windows). Sometimes it makes things
+ more difficult. You need backups (a lost key implies losing all the
+ stored passwords), but stolen backups are a classical source of
+ password hashes leakage, so if you do not take enough care of the
+ security of your backups then the advantage offered by the key can go
+ to naught.
+
+ 3. For some historical reasons, many people feel the need to change
+ keys regularly. This is rather misguided: key rotation makes sense in
+ an army or spy network where there are many keys, and partial
+ compromissions are the normal and expected situation, so a spy network
+ must, by necessity, be in permanent self-cleansing recovery mode; when
+ there is a single key and the normal situation is that the key is NOT
+ compromised, changing it brings no tangible advantage. Nevertheless,
+ people insist on it, and this is difficult. The "method 3" above
+ (encryption of the PHS result) is the one that makes key rotation
+ easiest since you can process all stored hashes in one go, as a
+ night-time administrative procedure.
+
+ 4. Key strengthening makes sense only insofar as you can keep the key
+ secret even when the attacker can see the hashes. In a classical
+ Web-server-verifies-user-passwords context, the hashes are in the
+ database; one can argue that database contents can be dumped through a
+ SQL injection attack, but a key stored outside the database might evade
+ this partial breach. But if the key is in the database, or the breach
+ is a stolen whole-server backup, then the key does not bring any
+ advantage.
+
+ 5. If you _can_ store a key that attackers won't steal, even if they
+ get all the hashes, then you can forget all this PHS nonsense and just
+ use HMAC_K(pass) (or HMAC_K(user+pass)). The key must thus be
+ envisioned as an additional protection, a third layer (first layer is:
+ don't let outsiders read your hashes; second layer is: make it so that
+ your hashes are expensive to compute, in case the first layer was
+ broken through).
+
+
+&gt;From all of the above, I recommend the following:
+
+ -- Publish a PHS "standard API" that does not include any provision for
+ an additional secret key.
+
+ -- Publish _another_ API, possibly even an _implementation_, that wraps
+ around the previous one, and provides key-based password hashing with
+ the "method 3": PHS is used to produce a 128-bit output, and that output
+ is encrypted symmetrically with AES (single-block encryption).
+
+ -- Write a note that states that an additional key is _possible_, and
+ if one wants it then it should be done properly (as demonstrated by the
+ implementation from the previous point), but cannot be recommended in
+ all generality because whether it is a good idea or not depends on the
+ context. Keys mean key management, an often underestimated thorny
+ issue.
+
+Arguably, doing anything with such key strengthening is outside of the
+scope of PHC and may/should be left to other people.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

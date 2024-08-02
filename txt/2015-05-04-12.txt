@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+Message-ID: <182643115.20150504193605@gmail.com>
+Date: Mon, 4 May 2015 19:36:05 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+
+Solar Designer (at Thursday, April 30, 2015, 5:55:05 PM):
+
+While you're mostly correct, you're somehow omitting important detail.
+As discussed before, salting may defeat side-channel attacks on password
+hashes, as long as the salts are not known/predictable by the attacker.
+
+this wording is actually accurate, because even secret salts does not
+guarantee safety against side channel attacks. they *may* defeat them,
+but may not.
+
+side channel attacks, obviously, have two phases: 1, gathering data
+that is in some relation with the secret and 2, evaluating said data
+to gain knowledge about secret.
+
+the question now is the second phase. can you simply calculate the
+secret from the gathered data? or you can just exclude some
+candidates? establish constraints?
+
+for example if we can reduce the search space significantly, like for
+example by 50 bit, it can be a break against regular passwords,
+reducing a strong 60 bit passphrase to a trivial 10 bit. however,
+with 128 bit unknown salt, this is still unbreakable 138 bit.
+
+but what if the attack is stronger? what if we can actually calculate
+the secret precisely from the acquired data? in this case, we can
+simply infer both the password and the salt at the same time.
+
+this latter scenario is made more "probable" by the fact that we emit
+a *lot* of data during the processing. this is what password hashing
+is about: filling megabytes of memory with secret-dependent data, and
+doing billions of operations. if at all possible to do exact secret
+recovery without brute force, we can expect password hashing be the
+most susceptible of all use cases.
+
+i understand that this scenario still isn't exactly "probable". and
+using irreversible mixing functions early can thwart such attempts.
+however for example lyra2 or pomelo, i would not tell at a glance
+whether they can be traced backwards if the internal state is
+partially recovered.
+
+
+

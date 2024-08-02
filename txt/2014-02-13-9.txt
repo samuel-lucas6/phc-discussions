@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213155643.GA6212@openwall.com>
+Date: Thu, 13 Feb 2014 19:56:43 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Bill,
+
+On Thu, Feb 13, 2014 at 07:47:28PM +0400, Solar Designer wrote:
+In fact, once we add low-level parallelism we also need something very
+much like a crypto hash to be applied at least once or twice per block
+anyway, for data mixing between the parallel lanes
+
+I don't know how exactly you were adding SIMD (as an experiment), but
+please note that occasional data mixing between the lanes is a must,
+since otherwise it becomes possible to compute the whole heavy part of
+the KDF as a few sequential portions, one per lane, with the memory
+needs reduced accordingly (it'll be number-of-lanes times smaller).
+(This is similar to how scrypt's p>1 allows for computation with less
+memory when the parallelism is not fully made use of as such.)
+
+For the random access portion of computation, it is also important that
+the random index depends on output of all lanes in the most recent block
+computed.  Otherwise some of the lanes may finish computation later.
+
+Alexander
+

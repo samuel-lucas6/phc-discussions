@@ -1,0 +1,42 @@
+phc-discussions - RE: [PHC] blakerypt sequential memory-hard function
+
+Message-ID: <005701cef1d5$4b6e4910$e24adb30$@acm.org>
+Date: Thu, 5 Dec 2013 08:16:02 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] blakerypt sequential memory-hard function
+
+I favor Fibonacci indexes for this sort of thing.  That is k, in a small number of bits, produces work factor fib(k+n) where n is some value that assures a reasonable minimum and the maximum fib(k+n) is decisively out of reach for any forseeable time into the future.
+
+The advantage is that the Fibonacci recurrence provides a nice way of deriving k on the fly by seeing how much time is being taken in real time, and incrementing by the next step if a target threshold has not been reached.  This does mean that k is not known until the hashing has been completed, and the protocol has to accommodate that.  
+
+The advantage is that k will grow along with growth in processor power.  One disadvantage in certain applications is that the speed of the system where the hash is first created determines the work factor that less powerful systems will need to employ in order to verify the hash.
+
+This technique is applicable in the SHA1DK method proposed at <https://www.oasis-open.org/committees/document.php?document_id=49071>.
+
+ - Dennis
+
+-----Original Message-----
+From: Krisztián Pintér [mailto:pinterkr@...il.com] 
+Sent: Thursday, December 5, 2013 00:04
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+
+Andy Lutomirski (at Thursday, December 5, 2013, 2:26:19 AM):
+Using 2^f_time as the iteration count seems unnecessarily restrictive
+-- is there any reason not to just use f_time?
+
+IMO such things should not be part of the algorithm unless intrinsic,
+and also should not be part of the submission. it is part of the
+interface.
+
+but if we are at it, this could be used as a sort of middle ground
+parametrization: take f_a and f_b parameters, and use f_time = f_a <<
+f_b . this grants fine control over f_time even if f_a and f_b are
+small, like bytes. but still scalable up to ridiculous levels
+(255*2^255).
+
+but again, this is part of the interface, and not the algorithm.
+
+

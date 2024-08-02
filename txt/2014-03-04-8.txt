@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <20140304122406.GA5614@bolet.org>
+Date: Tue, 4 Mar 2014 13:24:06 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On Tue, Mar 04, 2014 at 06:13:39AM +0400, Solar Designer wrote:
+Some bigint library could use this trick, perhaps for some nice
+speedup on those older CPUs/builds (does any use it already?)
+
+Use of FPU and similar tricks for bigints has been studied quite a lot
+back in the late 1990s and early 2000s. A driving force was the x86
+architecture, where the FPU offered much wider registers. GMP source
+code ( https://gmplib.org/ ) should contain remnants of these
+FPU-enhanced implementations. Nowadays, with 64-bit registers and the
+64x64->128 opcodes, FPU has fallen out of favour for bigints.
+
+The usual problem with using FPU is that most ARM CPU don't have any. If
+an algorithm must run well on ARM (and given today's trend on using ARM
+in server farms, the future PHS should aim at running well on ARM) then
+it should avoid operations which are too FPU-tied. The ARM has a
+reasonably fast 32x32->64 integer multiply, though.
+
+
+	--Thomas Pornin
+

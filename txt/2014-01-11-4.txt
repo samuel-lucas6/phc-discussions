@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <20140111074356.GA4152@openwall.com>
+Date: Sat, 11 Jan 2014 11:43:56 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+I am just catching up with this thread (as well as with some other
+postings in here that I didn't get around to reading in time), but FWIW
+I posted some comments on the Lyra presentation slides here:
+
+http://www.openwall.com/lists/crypt-dev/2014/01/11/1
+
+On Thu, Jan 09, 2014 at 10:58:09AM -0500, Bill Cox wrote:
+SFAIK, there's no reason memory needs to appear truly random.  For example,
+if Alexander were to use Salsa20/20 instead of Salsa20/8 in escrypt, but
+instead of writing out only the resulting hash he wrote out every
+intermediate computed value (there are very many values computed in
+Salsa20/20), he could easily fill memory as rapidly as he liked.
+
+I had thought of that.  One of the reasons I didn't do it yet is that
+it's actually quite similar to simply reducing the Salsa20 rounds count
+(which I can easily experiment with already), with the difference being
+some extra ADDs (in Salsa20 finalization) and XORs (in BlockMix).  Yes,
+I could save a few cycles by avoiding those ADDs and maybe also the XORs
+(only in SMix's first loop?) and instead chaining Salsa20 rounds
+directly, like it's normally done during Salsa20/N computation.
+A reason why I didn't do it yet is staying closer to scrypt, so that
+classic scrypt may still be provided in the same source tree, and so
+that much of the shared code may even be tested against scrypt test
+vectors (when running in classic scrypt mode).  Yet another reason is
+that BlockMix might then need to differ between SMix's first and second
+loop (if I were to save on the XORs in first loop).  This is becoming
+off-topic for the thread on Lyra, though.
+
+Alexander
+

@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] Cryptographically strong salt is not overkill
+
+Message-ID: <20140903224529.GA5396@bolet.org>
+Date: Thu, 4 Sep 2014 00:45:29 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Cryptographically strong salt is not overkill
+
+On Wed, Sep 03, 2014 at 05:37:27PM -0400, Bill Cox wrote:
+If any salt generator that produces data that is distinguishable from
+random data makes it into CipherShed, I will be pretty pissed off.
+Don't forget that some users have a valid need to store the salt in
+plain-text without letting an attacker know that it is in fact not
+just random data.
+
+I'll still stand by my assertion. A cryptographically strong PRNG
+is overkill for a salt.
+
+It so happens that a cryptographically strong PRNG is needed for the
+generation of any value which must be able to disguise as random bytes.
+In your case, you seem to have a scenario where some piece of data must
+fulfil two distinct set of constraints simultaneously: it must be good
+as a salt (i.e. it offers uniqueness with overwhelming probability), AND
+it must also be indistinguishable from random data. In that case, a
+CSPRNG will do the trick. However, the need for strong randomness does
+not come from the saltness, but from the other, completely orthogonal
+constraint coming from your specific scenario.
+
+To state things simply: while salts don't need a CSPRNG, a salt which
+also needs for some other reason to "look random", well, must look
+random, and that implies a CSPRNG at some point. There is nothing
+special about salts here.
+
+
+In any case, while the Makwa reference code can generate salts for you
+(and this is good for a simple, string-based API: automatic salt
+generation reduces risks of misusage), it can also work on externally
+provided salt values (Makwa accepts any sequence of bytes as salt).
+
+
+	--Thomas Pornin
+

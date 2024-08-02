@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] A little nit which bothers me...
+
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C738A3439CD@uxcn10-tdc06.UoA.auckland.ac.nz>
+Date: Wed, 2 Apr 2014 05:55:07 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] A little nit which bothers me...
+
+Poul-Henning Kamp <phk@....freebsd.dkwrites:
+
+>When the static value goes into the HASH before the entropy, it can be
+>integrated into the initialization of the hash function, both in hardware and
+>software, trading space for time.
+>
+>This bothers me because I specifically addressed and commented on this little
+>detail in my md5crypt 20 years ago:
+
+I also used this to break Microsoft's PFX/PKCS #12 back in 1997:
+
+  As it turns out, we can eliminate 6 of the 8 passes, cutting our workload by
+  75%.  First, we observe that the diversifier is a constant value, so instead
+  of setting it up and hashing it, we precompute the hash and store the hash
+  value.  This eliminates the diversifier, and one pass through SHA-1.
+
+  Next, we observe that the salt never changes for the file being attacked, so
+  again instead of setting it up and hashing it, we precompute the hash and
+  store the hash value.  This eliminates the diversifier, and another pass
+  through SHA-1.
+
+This still works today, seventeen years later :-).
+
+>And yes, I realize it's all my own fault for not publishing an article about
+>my thinking back then, but as far as I am concerned this is a firm rule now:
+>
+       Feed data into hash functions in order of decreasing entropy.
+
+Good point!  Note though that it only becomes critical if the function doesn't
+have a feedback path that feeds its output back to the input.  For example
+PBKDF2 hashes some static data on the first iteration but then feeds the
+output back to the input, and the salt is (typically) smaller than the block
+size, so you lose, at most, one round of hashing, but most likely zero.  The
+PFX derivation, OTOH, is about as bad as you can make it.
+
+Peter.

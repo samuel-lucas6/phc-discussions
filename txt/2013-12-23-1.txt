@@ -1,0 +1,85 @@
+phc-discussions - Ideas for password hashing from a non-expert
+
+
+Message-ID: <CAOLP8p6M_enEmBRtvbY8DQ7JOTmSF-s1hQucV3EbvU_Ca6mtTA@mail.gmail.com>
+Date: Mon, 23 Dec 2013 13:51:06 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Ideas for password hashing from a non-expert
+
+I'd like to know if it is worthwhile for me to enter an algorithm to this
+competition.  The algorithm I have so far is motivated from scrypt, with
+following goals for improvements for weaknesses I believe I see:
+
+- Improve the matching of the algorithm to real desktop computers to make
+it harder to cost-reduce in custom hardware.  This would be done by taking
+modern DRAM/cache and multiple cores into account.
+- Provide an option for better deniability, by having a default hashing
+scheme that requires no hashing parameters to be saved with the salt.
+- Support an adjustable combination of both client and server key
+stretching.
+
+DRAM memory interfaces, and multiple CPU cores would be kept busy at near
+full efficiency.  I've not built a multi-thread version yet, but I'm
+thinking one thread which sleeps most of the time due to cache misses would
+load data from memory one cache-miss worth of data at a time, while N other
+threads hash the cached data, never causing a cache miss.   Each core
+should run at close to full speed in parallel.
+
+Deniability is a big issue for the TrueCrypt application.  Storing salt is
+fine, because it is indistinguishable from random data.  Scrypt actually
+stores the word "scrypt" in the saved hashed password, making it unsuitable
+for TrueCrypt.  My non-parameterized KDF would assume the weakest compute
+setting, test the password, and if it fails increase to the next level,
+until the "current" maximum supported by TrueCrypt is reached, or until
+there is not enough memory for the next level.  Similarly, memory would be
+increased along with compute power, on a fixed schedule, not a factor of 2
+each time.  Since each level is twice the computation, this only slows down
+the algorithm by 2X, and if the TrueCrypt user doesn't care about
+deniability (the typical case), the successful hashing parameters could be
+cached along with the encrypted volume file location which is already
+cached unless the user disables it.  Users could select the level of
+difficulty, but by default TrueCrypt could just run the hash for the
+default length of time desired, like 1-ish seconds, and auto-select a
+reasonable default key stretching level for the user.
+
+In client/server applications, the KDF would optionally be split between
+the client and server.  Some clients are slow (javascript, low-end
+smart-phones), and some servers can't handle the load of long key
+stretching and would rather offload it to clients.  This also means both
+the client and server have to be compromised to compromise the derived key,
+allowing users to verify client code, and server admins to verify server
+code, hopefully keeping both happy while ending the debate over server vs
+client side KDFs.  If you guys really want to continue that debate, and
+don't what to split the load, I'll throw my vote in for client side KDF.
+
+Currently, I just fill memory with ARC4 data, and then use the user's key
+to do a random walk through memory, hashing one cache-miss of data at a
+time.  It's super-simple, and I'm not sure how to improve over ARC4, which
+I believe will typically be limited by DRAM write speed.  Is there a need
+for a better RNG than ARC4?  Given that we're hashing based on the password
+and a large NONCE, the only reason to fill memory with random-ish data is
+so that we actually have to load the data from memory to compute the hash.
+ If it were something simple, like a counter filling memory, we could just
+compute it on the fly instead.  ARC4 has flaws such as long-term
+correlations, but I do not believe anyone knows a shortcut for computing
+what is at position X in the stream that is faster than a cache miss (often
+around 40-80 cycles).  However, I also use ARC4 for determining the next
+"page" to load, and how each core hashes the page of data.  Should I use
+another RNG to generate page addresses and how to hash each page, or is
+plain old ARC4 good enough?  I like that ARC4 isn't as highly accelerated
+in custom hardware, and that it requires fast access to 256 bytes of
+memory, so compared to SHA-256 it does not cost-reduce nearly as much in a
+custom ASIC.
+
+Sorry I am not up to speed on this competition, nor am I a crypto expert.
+ I do understand what slows down code, however, so making parallel use of
+available resources is something I'm comfortable with.  Would you guys
+suggest I continue with this code and provide a submission?  What changes
+should I make if I do?
+
+Thanks,
+Bill
+
+
+

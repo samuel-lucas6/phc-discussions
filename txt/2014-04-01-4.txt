@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Questions about Lyra
+
+Message-ID: <533ACEAF.2030009@larc.usp.br>
+Date: Tue, 01 Apr 2014 11:35:27 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Questions about Lyra
+
+Hi, there.
+
+Thank you for pointing out unclear points! We try to provide some
+answers inline and we will update the eprint/code to reflect them.
+
+BTW, you may want to take a look at Lyra2, the newer version of the
+algorithm available at http://lyra-kdf.net/ and that was actually
+submitted to the PHC, which (we hope) already solves some of those issues.
+
+BR,
+
+Marcos.
+
+On 31-Mar-14 18:39, Greg Zaverucha wrote:
+Hi
+After reading the Lyra ePrint and looking at the reference implementation I have a few questions about the spec (Algorithm 2, page 10).  I guess the designers would be the best to answer but others who've looked at the design might have input as well.
+
+1. For line 16: "col <- M[row][C-1] mod C", doesn't this require multiprecision modular arithmetic in the general case?  C will usually fit in a machine word, but elements of M will probably not.  In the reference implementation C is hard-coded to 64, so this is a non-issue.  Will C always be a power of two?   It's my preference that key derivation not depend on multiprecision arithmetic.
+
+In the general case, it does require multiprecision arithmetic. The
+point is that we did not want to unnecessarily constraint the underlying
+design at the point it would prevent users from choosing "esoteric"
+values of C.
+
+However, we do agree that this liberty is likely to become an issue from
+an implementation point of view (which was ignored in our
+benchmark-oriented implementation). So we are going to do the same thing
+we did with Lyra2: to use the truncation of M[row][col] to 1 word
+whenever we need any modulo operation.
+
+
+2. On line 17, how is |R| defined?  I initially thought it was the number of bits required to represent R, but in the reference implementation |R| is fixed to 64.  Maybe it would be better to fix |R| = 64 and require R < 2^64. The implementation of line 17 is slightly more awkward when |R| varies.
+
+Same issue as above, so one should go with the same solution.
+
+
+3. On lines 16 and 17 a byte array must be converted to an integer, but the endianness is not specified.  In the reference implementation the endianness of the processor is used; so a different result would be computed on a big and little endian machines.
+
+Good point! And now I believe this was not made clear on Lyra2's
+specification either... :(
+
+We were thinking about x86 architectures, so the more usual is to go
+with little-endian.
+
+
+4. Does the paper define what the initial state should be?  In the code it's the Blake2b IV, but for another choice of f how should it be chosen?
+
+This is a tricky issue. Usually, sponges are initialized with zeros
+(according to the specifications in http://sponge.noekeon.org/), so in
+principle this also applies to any f used in Lyra/Lyra2.
+
+With Blake2b, however, we added a disclaimer on the code (but not on the
+specification... our bad...) saying that we are using Blake2b's IV to
+initialize the sponge's state. The reason is that Blake2b's G function
+has a fixed point at 0s. This should not be a huge issue for Lyra/Lyra2
+unless both the password and the salt are strings of zeros long enough
+to fill whole blocks (otherwise, the 10*1 padding would already avoid
+the fixed point), but we went with the "better safe than sorry" approach
+here.
+
+
+A general comment: you might consider breaking up the current "Setup" phase (lines 1-8) into two pieces, Setup (lines 1-3) and Initialization (lines 4-8), because after line 3 the input password is no longer required and can be zeroized.  Or maybe make Setup be lines 1-3 and call lines 3-19 "Derive" or similar.
+>
+Looking forward to your response, thanks
+Greg
+
+
+---
+This email is free from viruses and malware because avast! Antivirus protection is active.
+http://www.avast.com
+
+

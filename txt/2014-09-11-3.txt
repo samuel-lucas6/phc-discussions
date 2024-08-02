@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Makwa is broken given p and q
+
+Message-ID: <541122FD.4000200@ciphershed.org>
+Date: Thu, 11 Sep 2014 00:20:13 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/10/2014 11:55 PM, Steve Thomas wrote:
+Given p and q you can do: e  = 2 ** cost e' = 2 ** cost (mod
+(p-1)*(q-1)) x ** e = x ** e' (mod p*q)
+
+
+You could pick the cost to be 2 ** 128. Without p and q you can't
+test a password. powConst = powm(2, pow(2, 128), (p-1)*(q-1)) hash
+= powm(password, powConst, p*q) but you could just do
+HMAC(password, secretKey)
+
+Sorry but even if you came up with the perfect server-specific
+shortcut, HMAC or encryption with a secret key is better.
+
+If you don't know the secret, it takes 3x longer. vs If you don't
+know the secret, you can't do anything.
+
+
+Hi, Steve.  I can see you've been trying to attack Makwa, just like
+me, though probably with a better mathematical understanding to launch
+such attacks.
+
+Of course Makwa is broken if an attacker knows p or q.  It is pretty
+worthless in that case.  Also, I agree that a master secret key is
+better than a fast-path computation with p and q.  Delegation is the
+thing that I like about Makwa.  The other features are not
+particularly special, IMO.
+
+Here's an "attack" slash "feature" I came up with today.  We can't
+efficiently compute X^(2^w), but we can do so for g^(X^(2^w)) using
+the binary decomposition of X.  This is true for all choices of
+generator g.  In other words, you don't have to solve a particular
+discreet log to break Makwa, but cracking *any* discreet log (with g a
+group generator) will do.  I've been thinking particularly of powers
+of 2 and it's inverse, but haven't gotten too far.
+
+One cool thing -- in a mod n group, where n is odd, dividing or
+multiplying by 2^m is approximately the same as doing an m-bit
+bit-reversal.  When n is a power of 2, it becomes *exactly* a bit
+reversal.
+
+A possibly useful feature for Makwa making use of this would be
+password specific fast-paths.  If we derived X, and then computed X' =
+g^X, and used X' everywhere rather than X, then the server could save
+the original X, encrypted with a master key, which would allow the
+fast-path to be applied per password, reducing the likelyhood of a
+disaster such as leaking p or q.
+
+Or... we could simply have the password hash directly encrypted with
+the master key.  That would be better.  And... better is gooder.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUESL5AAoJEAcQZQdOpZUZjFEP/1cvMMu+lWzM1rhvDIHDLLme
+n2ldB57SZWKO4PGzOx83cMI+G8nQkOilrcZH+D6Jb6kK4KLYbhGHQRxTigogJoKx
+Khr7LBKJq2Rtb1qvcduzZLo6dOlot8mJjZUm2ZtXoSZsov/036G1bOHPjayyh/rA
+EO6S//08EkSxTniVwdOwFxXmpOzS4dF33H+bTZDXH7MU6JR8WA0bh0edYzZBOAtI
+vzoWlR2oiwCzEJWXPkR6jhx5v8NoyTjf9KtepaHVq1MJqcLZXsWjAnQfuakiKuU7
+70GuCGY50oT8Hjqsuxgsbx20gZHsXMZq6y3Tdl04VqVLEjrS1CohixBKv/6mM35A
+WO92XL9s57u6M1kg3V2TrFc3FG0XKDHzKMJ97+3tp4teJdoHrVP7Zoq8u1zxysa9
+nFcX9LhMPcLgfav35ayzgSkK/mEnJ1mfXYcQyrRmugalxn/pF8FWOm0pYh6TTP62
+s3p6tAIMs4a4/XLyLLS+3dXqaz5ZMFpXGrCsbMSCi6lZmmrB4N6f7y+biyY6ZDIA
+WVWzZYXBHkRpH8aVLIsXriLkbo5W2mSqFqvMIaMzQ1DkWZqIfwenTpXx9E+AeyoO
+tBYKMddkJF1icFrp29eVlPJYH/gTH0w8PU03zZx94TxuQ6rYHalSKDxUhsAMWuu9
+jyDQ0zcFqqJ74c/kttGA
+=prun
+-----END PGP SIGNATURE-----
+

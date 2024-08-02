@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] not bossy
+
+Message-ID: <20140623225556.GD4438@openwall.com>
+Date: Tue, 24 Jun 2014 02:55:56 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] not bossy
+
+Per, Jeremi -
+
+That's a very nice selection of topics!  Somehow I didn't expect there
+would be so much PHC-related material at Passwords14 LV.
+
+On Mon, Jun 23, 2014 at 11:31:50PM +0200, Per Thorsheim wrote:
+Steve 'Sc00bz' Thomas
+Bitslice DES with LOP3.LUT
+
+Steve, I guess you're already aware of this, but in case not: we're also
+going to have this instruction in AVX-512, it's called
+VPTERNLOGD/VPTERNLOGQ there.  I learned about it from Samuel Neves in
+February.  I also found this table now:
+
+http://sandpile.org/x86/ternlog.htm
+
+I think we should ask for it to be added to next revision of Epiphany,
+too, although only a 3-operand form fits in 32 bits comfortably (18 bits
+for 3 registers, 8 bits for truth table, and 6 bits for opcode).
+
+For historical related work, you could take a look at and maybe refer to
+DES crackers (plain DES, not descrypt) for UltraSPARC from RSA's DES
+challenges in late 1990s.  UltraSPARC VIS implements all 16 binary
+bitwise ops (10 non-trivial and 6 trivial), and there were DES cracking
+clients for distributed.net (and for competing networks before
+distributed.net became a definitive winner in terms of computing power)
+that actually implemented bitslice DES using these VIS instructions.
+I don't know whether they simply used the subset usable with Matthew
+Kwan's nonstd.c, or if they actually made some/much use of the extra
+instructions (maybe only those easily seen from adjacent operations in
+nonstd.c?)  IIRC, a hurdle was that Solaris of the time would clobber
+high 32 bits of 64-bit integer registers on context switches (the kernel
+was 64-bit, but userland 32-bit), so those DES cracker clients for
+Solaris had to detect such clobbering and restart the last iteration
+(retest the last group of keys).  The floating-point registers that VIS
+worked on were immune from that, but IIRC the clients used both integer
+registers (with restricted set of bitwise ops) and floating-point
+registers (with all 16 binary bitwise ops available via VIS), perhaps
+for higher instruction issue rate.
+
+A hurdle for bitslice DES, etc. is that the more types of gates you
+have, the higher the complexity of the optimization task is.  While
+arriving at the absolute lowest gate count (and having any sort of
+certainty of that) is already intractable for DES S-boxes even with few
+gate types, an interesting question is whether we likely get closer or
+stay farther away from that holy grail in practice when we have more
+gate types.  (Another detail is that, of course, lowest gate count does
+not necessarily lead to the highest possible speed on actual hardware,
+where other factors such as parallelism and register pressure play a
+role too.)
+
+I have no doubt that even with relatively simple approaches the gate
+count can be reduced (and speed increased), as compared to what we're
+getting with bitselect.  I guess you already have specific numbers?
+
+I am looking forward to seeing your slides and talk video (I won't be at
+Passwords14 LV in person, unfortunately).
+
+Thanks,
+
+Alexander
+

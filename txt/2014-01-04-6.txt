@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104063142.GA2858@openwall.com>
+Date: Sat, 4 Jan 2014 10:31:42 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Fri, Jan 03, 2014 at 03:12:40PM -0500, Bill Cox wrote:
+The code is at:
+
+https://github.com/waywardgeek/noelkdf
+
+Two more comments on it:
+
+This appears to select the random page index based on the first
+uint64_t of a page:
+
+        // Select a random from page
+        fromPage = mem + PAGE_LENGTH*(*prevPage % i);
+
+and you appear to be computing uint64_t's of a page sequentially, in
+increasing order.  Thus, the next random page index becomes known
+almost as soon as you've started processing a page.  This may be
+intentional (e.g., EARWORM deliberately allows for one-ahead prefetch,
+but it targets memory bandwidth and doesn't try to be sequential
+memory-hard), but probably it is not (it provides extra parallelism and
+allows for much higher latency memory to be used efficiently, which
+you're not making use of - at least not yet - so it benefits attackers).
+scrypt uses the last (not the first) element of a block to determine the
+random index.
+
+PAGE_LENGTH of 16 KB is probably too large for currently common CPUs,
+considering that you're working with 3 such pages at once (prev, from,
+to), you'd optimally run 2 threads/core on many current CPUs, and the
+CPUs have only 32 KB of L1 data cache per core.  I think you need to set
+PAGE_LENGTH to 4 KB, which means that you'd be using 24 KB of L1 data
+cache for the pages (and some of the rest for other temporary data).
+
+If you make the from page loads non-temporal, you might be able to
+increase PAGE_LENGTH to 8 KB and use the full 32 KB in this way (with a
+little bit of cache thrashing because of other temporary data).  The
+stores should continue to go to cache+memory, because you're reading
+from prev page (so you need it cached) and the next iteration will
+similarly read from the current page (so you need the current stores to
+be cached, too).  A further optimization may then be to start using the
+non-temporal hint only once a size threshold is exceeded (e.g., once the
+amount of data written exceeds L3 cache size times a coefficient to be
+tuned).
+
+All of this assumes sufficient L1 data cache associativity, which is
+generally the case on current x86 CPUs.
+
+Alexander
+

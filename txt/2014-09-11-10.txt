@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] Makwa is broken given p and q
+
+Message-ID: <54117F3D.2060304@ciphershed.org>
+Date: Thu, 11 Sep 2014 06:53:49 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/11/2014 03:21 AM, Steve Thomas wrote:
+>On September 11, 2014 at 12:57 AM Andy Lutomirski
+><luto@...capital.netwrote:
+>
+>
+>On Wed, Sep 10, 2014 at 8:55 PM, Steve Thomas <steve@...tu.com>
+>wrote:
+>>Given p and q you can do: e = 2 ** cost e' = 2 ** cost (mod
+>>(p-1)*(q-1)) x ** e = x ** e' (mod p*q)
+>
+>This is described (in the CRT formulation) in the Makwa paper.
+>
+
+So it was known that you can modulus the exponent and have it run
+in constant time, in comparison to the cost factor.
+
+Yes.  This exact algorithm is described in the "False Path" section on
+page 13.  He recommends using this trick to compute the 300-ish
+alpha/beta pairs.
+
+A significant weakness in Makwa is that p and q are essentially a
+shared secret key between all passwords using the same p and q, which
+would typically be all the passwords hashed by a particular company.
+Revealing p and q could destroy the security of an entire database of
+passwords.  Once the alph/beta pairs are computed, p and q should be
+securely scrubbed from memory.
+
+However, what's to keep all the major online companies from being
+NSL-ed with demands to hand over p and q to the government before they
+are scrubbed from memory?  Makwa is a dream come true for Big Brother
+governments.
+
+>>
+>>You could pick the cost to be 2 ** 128. Without p and q you
+>>can't test a password. powConst = powm(2, pow(2, 128),
+>>(p-1)*(q-1)) hash = powm(password, powConst, p*q) but you could
+>>just do HMAC(password, secretKey)
+>>
+>>Sorry but even if you came up with the perfect server-specific
+>>shortcut, HMAC or encryption with a secret key is better.
+>>
+>>If you don't know the secret, it takes 3x longer. vs If you
+>>don't know the secret, you can't do anything.
+>
+>Huh? I don't think that anyone is proposing using Makwa with cost
+>2^128.
+>
+
+I was picking an absurd number to prove a point that apparently was
+known. I guess the escrow should have tipped me off that we don't
+see eye to eye on what we think is secure.
+
+I stand corrected, not broken, but my opinion is this is bad.
+
+Calling "Escrow" a positive feature of Makwa kind of gave me chills.
+At least the author was quite explicit about how p and q might be used
+by governments that demand a fast path.
+
+I would like Makwa more if we could securely compute n once for every
+user, and make sure that all knowledge of p an q are destroyed.  This
+would simplify implementations a lot, though security would be lower
+in the sense that a single factored number would compromise the whole
+world's password databases.
+
+Short of that, I would want every user to generate p and q locally and
+scrub them from memory, so p and q never leave a smart-phone, for
+example.  In order to log in from multiple devices, the server would
+have to pre-compute alpha/beta pairs, without the benefit of the false
+path - either that or complicate the authentication protocol and have
+the device send alpha/beta pairs to the server.
+
+In my P2P Internet of Things vision, this is less of a problem.  A
+user trying to control his home devices remotely would authenticate
+with his personal home server device, which would authenticate him
+using remote ASIC based Makwa boxes.  Also, remember that Makwa gives
+an ASIC attacker a very large computational advantage vs our PCs, so
+Makwa needs to be built with ASICs from the start.
+
+I still put Makwa in the "other" category.  It is not a memory hard
+password hashing algorithm, and cannot replace Scrypt in many
+applications.  However, it's delegation feature is potentially
+game-changing in applications which don't even exist yet because we
+could not get the security right.  One of our biggest challenges is
+figuring how a toaster's worth of compute power can protect it's
+communication as securely as a mainframe.  Delegation solves a major
+problem.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUEX85AAoJEAcQZQdOpZUZl6MP/2SrtigwOz1a1DdpBlxYPuq8
+8hiwCy4B7kUAbAdITJqnfKORPDQKFgo3d1FhCZO2W5m69VuAKSqPv4IxRMGe6XFj
+SIac9Umh+vCZUQMAhsGK9oWgO+Jykaxrpq3MtFJ8QYmYGx3vKyb5t1uO9ouPkivV
+t82qMx4Xx/AsoNtzfDBP62tLNmL/bnSQRMc8oIUz+jMCjbHqKSsuUgzn3Z+Q3Dfz
+KPYTHqRYvxt7uEYT2Fn/9xH/CEeh6cEmjicFfag0Zzrccsgl5+UP7Qorm5N4fpcO
+HCB78/Okhi8NxYVURXcctYbq8ABlH9/zN/ruw0vyC5ALEQY+tfrSLwW+AZcPXxmN
+JgG1+y+L5fziCIzF/OUclduumvlsPswMXJKM8MLHpxBURHzLDlgrdPO9Dg1ihagG
+21b9ie1I7TczNsvXJ1ottDyy1ovQp/29sLwRtWXvzpKJTR15lAI3sfpp2CpEUPds
+WtYbs+E7nOs6Fn0TWwICFV5iHCIiuOp+h4O0FiuByxeIHteeBu/9utSLCk9QFan4
+4lJeyAGG+QSDmJ3MAugOFxR5xQuNPraOvdbMhS0yVfK8o5IQcfZ0VI5JN51ZUxeX
+APwgEAHFuxD9SnEFE978i1aijdei7vlXKlp4K/8+eCca9/WDjfkji9wuQimbNdZQ
+nvxlo6VGVJtnbG8s/fRf
+=UR0z
+-----END PGP SIGNATURE-----
+

@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Makwa parameter generation
+
+Message-ID: <5b46dfc9af0a7e47ab82cf1e94f938f0.squirrel@www.bolet.org>
+Date: Thu, 11 Sep 2014 17:36:51 +0200
+From: pornin@...et.org
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa parameter generation
+
+If you'd use a big modulus, you should be able to optimize it with CRT.
+
+Thinking about it, this has serious implications. Suppose that there is
+a big modulus N and that a (smallish) prime factor r of N is known
+(even if the complete factorization of N is not known). Then, given
+a Makwa output using N, one can compute modulo r to see whether a
+given password matches or not -- and since r is prime, the "fast path"
+is applicable. This yields an efficient, fast dictionary attack.
+
+Thus, unless post-hashing is used, NONE of the factors of N must be
+known by outsiders (post-hashing would save the day here, but it is
+incompatible with offline work factor increase). An RSA-UFO would not
+be appropriate for Makwa without post-hashing. With post-hashing, this
+is still open (but this example demonstrates that it requires some more
+thinking).
+
+
+Why does montgomery multiplication have larger asymptotic cost
+compared to multiplication modulo a power of two?
+
+Montgomery multiplication is the combination of a "normal
+multiplication" (which could be optimized with Karatsuba or FFT)
+and a special reduction which works word-by-word, on the least
+significant bits. That reduction is quadratic.
+
+To get below quadratic cost, one must use other methods which are
+more complex and are not worth the effort for "normal"-sized modulus,
+but would be appropriate for a large modulus as we are envisioning
+here.
+
+
+        --Thomas Pornin
+
+
+

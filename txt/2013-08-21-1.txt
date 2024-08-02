@@ -1,0 +1,33 @@
+phc-discussions - RE: [PHC] Terminology goals
+
+
+Message-ID: <6183302625f644e7a80717a2f9ef4903@BLUPR03MB166.namprd03.prod.outlook.com>
+Date: Wed, 21 Aug 2013 01:15:04 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: Colin Percival <cperciva@...snap.com>, "discussions@...sword-hashing.net"
+	<discussions@...sword-hashing.net>
+Subject: RE: [PHC] Terminology goals
+
+-----Original Message-----
+From: Colin Percival [mailto:cperciva@...snap.com]
+Sent: Tuesday, August 20, 2013 2:11 PM
+
+I fail to see the differences between the security properties required for
+"hashing" passwords for login purposes and deriving keys from passwords
+for other purposes (say, encryption).
+
+I agree that they are far more alike than different. But the result of a password validation operation is either 'valid' or 'reject', while result of key derivation is 'string of super-secret bits'. So the semantics are at least a little different.
+
+In the absence of a formal model (the kind in LaTeX and with all the fancy hollow letters and stuff) I think of a few ways that the differences could have an effect on the needed security properties.
+
+1. What happens if we use a PBKDF and then compare the output using memcmp() and leak timing information about the comparison? This could allow an attacker who knows the salt to remotely discover the entire hash value, or at least verify guesses about the salt.
+
+2. We usually think about password logins as the attacker can't provide any inputs to the *online* system other than a username and a trial password string. But key derivation *might* be used in a situation where the attacker is able to supply chosen ciphertext, IVs or salts, iteration counts, etc. over the network.
+
+3. If the salt is well randomized, for passwords maybe we don't actually need collision resistance in the hash per se? But with key derivation, nonces are sometimes assumed to be predictable. Maybe there could be problems if a bad guy were able to find a way to derive the same crypto or MAC key (heaven forbid DSS or ECDH nonces) from two different passwords. (Chosen target forced prefix a la Flamer MD5?)
+
+Just some thoughts.
+
+- Marsh
+
+

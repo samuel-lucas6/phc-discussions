@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150926152513.GA13077@openwall.com>
+Date: Sat, 26 Sep 2015 18:25:13 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Sat, Sep 26, 2015 at 05:06:00AM +0300, Solar Designer wrote:
+char *encode64_uint32(char *dst, size_t dstlen, uint32_t src);
+const char *decode64_uint32(uint32_t *dst, const char *src);
+
+encode64_uint32() encodes the number in src into the string pointed to
+by dst, and returns a pointer to right after the encoded number.
+
+decode64_uint32() decodes the number in the string src into dst, and
+returns a pointer to right after the encoded number.
+
+The intent is that we can easily call these functions multiple times in
+a row, to encode/decode multiple numbers.
+
+As you can see, the encoding/decoding functions are quite simple.
+
+Attached is a slightly shorter version: I removed the "base" variable,
+and instead update src or *dst (when encoding or decoding) directly.
+Perhaps this can be shortened further, but this wouldn't necessarily
+make it simpler.
+
+gcc sim-encode.c -o sim-encode -s -O2 -march=native -fopenmp -Wall && ./sim-encode
+
+Alexander
+
+View attachment "sim-encode.c" of type "text/x-c" (4697 bytes)
+

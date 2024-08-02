@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] EARWORM speed and improved defense
+
+Message-ID: <20140421202441.GA29214@openwall.com>
+Date: Tue, 22 Apr 2014 00:24:41 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] EARWORM speed and improved defense
+
+On Mon, Apr 21, 2014 at 01:50:12PM -0400, Bill Cox wrote:
+I reran EARWORM with some tweaks.  I set the "width" to 512, and the
+"depth" to 2, leaving each work unit as 1MiB, but increasing the internal
+scratchpad size to 8KiB from 512 bits.  I also had to comment out some
+calls to prf, since they were slowing down the algorithm considerably.  The
+modified code does:
+
+14.48 GiB/s
+
+Wow!  That's the new record.
+
+That's really cool, but let's not forget that EARWORM is useful (only?)
+on authentication servers, which means that we mostly care about
+throughput during request rate spikes - so for many threads, not for one
+thread.  It's not a KDF you would use e.g. in TrueCrypt.
+
+This tweaked version has better ROM bandwidth
+hardening, because an attacker splitting the ROM into N pieces will have to
+transmit 4KiB of scratchpad data between nodes every time it updates a
+scratchpad state, and the new node will only be able to hash 4KiB of data
+into the scratchpad state before it has to be transmitted again.  However,
+it has worse runtime hardening, because all 256 AESINC hashes can be
+computed in parallel.  This is likely also why the bandwidth increased.
+
+I put back the constants the way they were originally, made the scratchpad
+array EARWORM_CHUNK_AREA+4 in size, and then I chained the AESINC
+computations in 4 lanes, with a simple hack, and now I get:
+
+12.44 GiB/s
+
+This version has both large enough state size and compute time hardening.
+
+Cool.
+
+Why did you choose 4 lanes?  Current CPUs need 5 to 9 cycles to compute
+AESENC, so 4 lanes are probably (barely) enough when running 2
+threads/core, but not enough on Intel CPUs lacking HT (OK, these are not
+meant to be used in servers, and older ones of these lack AES-NI) and
+with HT disabled (OK, maybe it's those admins' problem).
+
+In EARWORM, I think there's almost no harm from including excessive
+parallelism (unlike e.g. in yescrypt, where excessive parallelism hurts
+some of the non-ROM defenses), so maybe make it 8 or 16 lanes?
+
+Not including enough parallelism gives attackers extra advantage.
+
+AuthenticAMD0600F12_Interlagos_InstLatX86.txt:Inst 1597 AESNI : AESENC xmm, xmm               L:   4.09ns=  9.0c  T:   0.45ns=  1.00c
+AuthenticAMD0600F12_K15_Zambezi8C_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   2.49ns=  9.0c  T:   0.28ns=  1.00c
+AuthenticAMD0600F20_K15_Vishera_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   2.24ns=  9.0c  T:   0.25ns=  1.00c
+AuthenticAMD0610F31_K15_Richland_InstLatX86.txt:1597 AESNI :AESENC xmm, xmm             L:   2.20ns=  9.0c  T:   0.24ns=  1.00c
+AuthenticAMD0700F01_K16_Kabini_InstLatX86.txt:1597 AESNI :AESENC xmm, xmm             L:   3.34ns=  5.0c  T:   0.67ns=  1.00c
+GenuineIntel0020652_Clarkdale_InstLatX64.txt:1202 AESNI :AESENC xmm, xmm             L:   1.88ns=  6.0c  T:   0.63ns=  2.00c
+GenuineIntel00206A7_SandyBridge3_InstLatX64.txt:Inst 1597 AESNI : AESENC xmm, xmm               L:   2.35ns=  8.0c  T:   0.29ns=  1.00c
+GenuineIntel00206F2_Eagleton_InstLatX86.txt:Inst 1597 AESNI : AESENC xmm, xmm               L:   2.50ns=  6.0c  T:   0.83ns=  2.00c
+GenuineIntel00306A9_IvyBridge_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   2.29ns=  8.0c  T:   0.29ns=  1.00c
+GenuineIntel00306C3_HaswellXeon_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   2.06ns=  7.0c  T:   0.29ns=  1.00c
+GenuineIntel00306C3_Haswell_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   2.06ns=  7.0c  T:   0.29ns=  1.00c
+GenuineIntel00406D8_Avoton_InstLatX64.txt:1597 AESNI :AESENC xmm, xmm             L:   3.75ns=  9.0c  T:   2.08ns=  5.00c
+
+Oh, low throughput on Avoton.  That's nasty.  So if we include more
+parallelism, we incur 5x slowdown on Avoton compared e.g. to Haswell.
+And if we don't include more parallelism, we leave that speedup on
+Haswell, etc. (as well as on GPUs) for the attacker only.  We just have
+to use that speedup ourselves, and accept that Avoton will be slow at
+EARWORM.
+
+I think this is on the right track.  In particular, EARWORM in its current
+form can be attacked both in terms of cost per guessing node (reducing the
+ROM per node by a factor of N) and how many guesses can be computed in
+parallel on each node, attacking both the time and cost dimensions of
+EARWORM's defense.  With only 512 state bits per ongoing password hash, and
+a 1TiB ROM split 256 ways, it is reasonable for each node to have 100
+million or more password guesses stored in local RAM, giving us an
+opportunity for 100 EARWORM hashing cores to work in parallel per node.
+ This modification above seems to harden EARWORM's time dimension against
+attacks that split the ROM N ways.  With this change, each node will only
+be able to do about one EARWORM hash at a time.
+
+I haven't looked at EARWORM recently, so can't review your changes, but
+what you write above sounds reasonable.
+
+Alexander
+

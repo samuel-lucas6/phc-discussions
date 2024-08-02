@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] pufferfish</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140327211619.GA24757&#64;openwall.com&gt;
+Date: Fri, 28 Mar 2014 01:16:19 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Thu, Mar 27, 2014 at 08:55:25PM +0400, Solar Designer wrote:
+&gt; On Tue, Mar 25, 2014 at 01:39:58AM +0400, Solar Designer wrote:
+&gt; &gt; OK, maybe it makes sense to apply this approach to L2, despite of the
+&gt; &gt; inefficiency.  Or maybe not.  Typical L2 is 256 KB/core (it has actually
+&gt; &gt; decreased in size when L3 was introduced), meaning 64 KB/thread may be
+&gt; &gt; "safe" to use.  At this size, my guess is you give advantage to some GPU
+&gt; &gt; attackers vs. your typical defender, for the reason explained above.
+&gt; 
+&gt; I did some testing with escrypt's S-boxes, and things are reasonably
+&gt; good.  For the first few doublings of S-box size, beyond L1 cache size
+&gt; but still fitting in L2 cache, there's only a ~10% performance hit per
+&gt; doubling on Sandy Bridge-EP.  It's not worse than that in part because
+&gt; escrypt also does some L2/L3/RAM accesses anyway, so there's some L1
+&gt; cache thrashing going on anyway.
+[...]
+&gt; This is for AVX builds of current development escrypt.  The random
+&gt; lookups are 128-bit wide, made with AVX instructions.  They're uniformly
+&gt; distributed over the S-boxes of the sizes given above.
+
+I forgot to mention: this is with 8x parallelism of the lookups in each
+thread (4 parallel groups of 2 parallel lookups).  This is maybe ~2x
+more parallelism than these CPUs I tested actually need when I run two
+threads/core.  This is easily tested by running 1 thread/core.
+Performance is above 80% of what 2 threads achieve.  This percentage is
+higher than what it is e.g. with original scrypt or bcrypt, which have
+less parallelism and thus benefit from 2 threads/core more (for two
+independent instances, indeed).
+
+I included this extra parallelism in this combination of settings (which
+I have specialized code for) because I recognize that some otherwise
+similar CPUs will only run 1 thread/core (e.g. some(?) Core i5's lack
+HT) and to better support newer CPUs (not-yet-written specialized code
+for these settings can partially take advantage of AVX2 and even AVX-512
+for the computation, albeit not for the 128-bit lookups themselves).
+
+The inclusion of extra parallelism must have been very helpful to reduce
+the performance impact from higher latency accesses in these tests (that
+go from L2).  Unfortunately, it also helps some attacks, such as with
+local memory on GPUs (as compared to those attacks on same S-box size
+but with less parallelism per instance).  For attacks with global memory
+on GPUs, parallelism doesn't matter (not at these low sizes).
+
+Another drawback of including extra parallelism is that non-SIMD builds,
+which some people will inevitably happen to be making and using and
+having other people use, will then have even more parallelism than those
+crippled builds can use themselves - thereby leaving more room for
+relative speedup of attacks even on similar hardware (same CPU types).
+This makes me appreciate the original bcrypt even more: it's only about
+2x slower for defense than for attack on current CPUs simply because it
+can't use SIMD - not even for attack on CPUs until we gain fast gather
+loads there.
+
+If pufferfish has 4 parallel lookups rather than 8, it'll probably be
+impacted by the size increases (beyond L1 cache size) more.  However,
+going to 8x parallelism has major drawbacks (mentioned above).  It's
+unclear what to do, other than to make the parallelism tunable and
+thereby postpone/move the tough decision onto those configuring our
+schemes for specific uses... which is obviously not great either.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

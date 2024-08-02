@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140118094706.GA13099@openwall.com>
+Date: Sat, 18 Jan 2014 13:47:07 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sat, Jan 18, 2014 at 08:40:08AM +0000, Peter Maxwell wrote:
+And therein lies the rub.  Saturating the memory bandwidth will not be
+practical - or even nearly so - for the majority of use-cases.  Similarly,
+the idea of the defender using GPUs will not be reasonable in most
+instances either.  Yes, there are specific cases where it might be useful
+but one needs to address far more mundane scenarios like busy web-servers
+on current hardware.
+
+There's no problem with saturating the memory bandwidth for password
+hashing on busy web servers.
+
+As to GPUs, I agree - currently not reasonable for most use cases.
+
+Most of the big password thefts have occurred on websites, and more
+recently arguably also with these fancy games services.  With the former
+we'll be lucky to convince folk to use anything more than a salted-hash let
+alone something that will hog all their processor cores and memory for each
+login attempt (whether that attempt is valid or not).
+
+On a busy web server, given current not-so-high CPU core counts, it is
+currently sufficient to use one CPU core (and whatever memory bandwidth
+is accessible from one thread) per password hashed.  The t_cost limiting
+factor is typically the desired throughput, not latency for end-users
+(the desired maximum supported throughput is usually high enough that
+the latency is low enough not to be noticed under normal conditions).
+Thus, we don't have to introduce our own thread-level parallelism: when
+the maximum throughput is almost reached, sufficient parallelism is
+coming from concurrent authentication attempts anyway.  And yes, this
+implies that we have lower than optimal area-time cost for the attacker
+when the maximum throughput is not reached, but we have to accept that.
+
+RAM is not disk.  Sharing RAM bandwidth between concurrent tasks works
+about as well as sharing CPU time.
+
+Alexander
+

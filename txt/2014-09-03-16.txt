@@ -1,0 +1,134 @@
+phc-discussions - Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <54073958.6080004@larc.usp.br>
+Date: Wed, 03 Sep 2014 12:52:56 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+
+On 03-Sep-14 11:59, Bill Cox wrote:
+On 09/03/2014 10:30 AM, Dmitry Khovratovich wrote:
+>Some more details for the ASIC discussion.
+
+>1) An ASIC-equipped adversary will aim to minimize the running
+>costs, which on the long term will be dominated by the power
+>consumption and cooling.
+
+I don't agree.
+
+I have a simple on-paper ASIC attack assuming the attacker is going
+high-end, using Intel's same process as my Ivy Bridge processor.  In
+that case, with the expensive flip-chip packaging required for this
+power and GDDR5 interfaces, I estimated the cost of the ASIC at $350
+each in fairly high volume, similar to a reasonably high-end CPU made
+in this process.  I also estimated the 16GiB GDDR5 DRAM at $150, for a
+$500, plus another $100 for power supply and building a board.  I
+estimated the whole system power at about 118W, with 70W in the ASIC
+(similar to an Intel CPU), and the total cost of ownership for 5 years
+came out to about $1,100.
+
+The power budge came out just under the hardware budget.  It's not
+clear to me that power is going to dominate, but it is a major
+component, sometimes over half, but not always.
+
+The NRE for such a device is probably about $10M, so you'd better be
+buying several 10's of thousands of boards, preferably 100's of
+thousands.  This is really a government-scale attack.
+
+>2) A high-budget adversary will not restrict himself to
+>commercially available memory chips only, but will definitely
+>consider custom designs.
+
+I agree, but only for government-scale attacks.  It's one thing to pay
+Intel enough cache to get your chip in their fab.  It's a very
+different thing to start mucking with their processor directly, which
+is their bread-and-butter.  Same goes for Samsung GDDR5 chips.
+
+>3) The memory power consumption (roughly) consists of retention
+>power (to sustain the state) and active energy (to read or write).
+
+>4) Regarding active energy, it would be natural to prefer a memory 
+>architecture that consumes 0.0001 J to read 1 Gbit (one of SRAM
+>designs - [1]) to the one that consumes 0.5J to read 1 Gbit
+>(DDR5).
+
+>5) I did not calculate the retention power for DDR5, but to match
+>[1] ( 0.1 W ) it must be around 3% of the maximum power
+>consumption, not speaking of 0.0001 W for the design [2].
+
+If you think you have a better way to design 4GiB ultra-fast DRAM
+chips better than Samsung, be my guest, but I don't buy it.  Go pick a
+real commercial DRAM part, and use it's specs for your estimate,
+rather than guessing what you think they *should* be building.  Trust
+me, if they thought they could lower the power even 2X, and maintain
+the density and speed, they would!
+
+>6) There are other, low-power DRAM designs, that can be considered
+>here.
+
+True, and some might have lower total cost of ownership per number of
+broken passwords.  It would require a lower-speed lower-power ASIC
+attack.  This might be more cost effective than the high-end attack
+I've been considering.  However, I doubt that the ASIC power will
+dominate, or the DRAM power will dominate, or the hardware cost will
+dominate, or the power cost will dominaate.  If any of those things
+were true, clever engineers would engineer a better solution.
+
+>7) Large on-chip memory is needed mainly to reduce the latency.
+>However, for the schemes currently attacked this is not a problem.
+>Catena has memory-independent addressing, and Lyra2 has huge blocks
+>sequentially stored in the memory. As a result, off-chip memory
+>with latency up to 10-15 cycles is still suitable for the tradeoff
+>attacks as the latency of the entire scheme remains pretty much the
+>same.
+
+This is true for Catena, Lyra2, TwoCats, Yescrypt, and others.  It is
+not true for Argon, where a specially crafted cache architecture h
+speed up cache-bound hashing, which is what most Argon hashes would
+be.  Catena, based on the full Blake2b hash, would run slowly enough
+to make having on-chip cache pointless, but that's a Catena problem.
+
+Just to be precise: in Lyra2 the blocks are just as huge or small as you
+want them to be, since C (the number of columns per row) is a
+user-defined parameter... In other words, it can be made as
+cache-bounded as the user wants (be it a bad or a good thing)
+
+
+>8) If we consider DRAM-restrictive adversaries, then Lyra2 can be
+>run with 1/2 of memory with no energy penalty: the increase of
+>memory reads from 6 GB to 7.6 GB per password and 20% increase in
+>the running time is compensated by the 50% memory reduction. It may
+>even be that running Lyra2 with 1/2 of memory takes less energy
+>than with full memory.
+
+I'll take a closer look at Lyra2 when I get to it's review.  I don't
+see this as a major problem for Lyra2, assuming these numbers are
+right.  
+
+We have been working on finding tighter bounds to attacks against Lyra2
+since the original submission, for different memory usages (not only
+O(1)). I would like to confront your numbers (for T=1) with our results
+(for any T), but it is not always easy to grasp all the details from a
+presentation. Do you have an article or something similar that
+accompanies the presentation?
+
+
+Once Lyra2 is multi-threaded, it should easily max out the
+external memory bandwidth.  My high-end ASIC attack would not benefit
+from a 1/2 TMTO against a multi-threaded Lyra2, because it will be
+memory bandwidth limited against Lyra2, doing about 32X faster than my
+Ivy Bridge PC (12GiB/s banwidth for my PC vs 16X24GiB/s for my ASIC).
+
+I would prefer some better compute-time hardening in Lyra2 though, for
+protection of very small memory hashes that do fit on an ASIC.
+
+Since the latest discussions on the matter, I have been thinking more
+seriously about testing a "multiplication hardened" underlying
+permutation in Lyra2's sponge. There are some cryptographic schemes that
+do use multiplications in their designs, so we will probably start there...
+
+BR,
+
+Marcos
+

@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] The SkinnyCat lives
+
+Message-ID: <CAAyV7nG8c4y2GnZ78HSnE5LhHd5pQJ0xj+2YrsH4vbRp8Kh=fQ@mail.gmail.com>
+Date: Wed, 26 Mar 2014 11:58:51 -0400
+From: Anthony Ferrara <ircmaxell@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] The SkinnyCat lives
+
+Bill,
+
+I opened a quick issue. It appears that SkinnyCat limits passwords to 255
+bytes due to the length parameter being declared as a `uint8_t`. The
+algorithm itself seems to support longer passwords as everywhere else it is
+used internally other than the 2 function headers is represented by a
+`unit32_t` field. So not sure if this is intentional or not, nor if it is
+an issue or not. Just pointing out an observation.
+
+Anthony
+
+
+On Wed, Mar 26, 2014 at 8:40 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+In case anyone's interested, I've checked in a reference
+implementation of "SkinnyCat", a stripped-down version of TwoCats.
+It's in the skinnycat subdirectory of twocats, which as always, is at:
+>
+    https://github.com/waywardgeek/twocats
+>
+It came out nicer than I thought it would.  The purpose of SkinnyCat
+is to be simple to implement while providing "good-enough" memory-hard
+password security for applications that need a simpler PHS than
+TwoCats.
+>
+Basically, it still hashes memory in two loops, the first one being
+resistant to cache-timing attacks, and the second loop being
+unpredictable to increase defense against brute force guessing
+attacks.  It results in a 256 bit hash, and works currently with
+Blake2s and SHA256.  It's a bit over 200 lines of code.  It takes only
+one cost parameter: memCost, which causes it to hash 1KiB * 2^memCost.
+ The reference implementation hashes 2GiB in 0.451 seconds on my
+3.4GHz Ivy Bridge Core i7, using 1 thread.  It does 16MiB in 4ms.
+There's room for some speed improvement with SSE/AVX2 optimization,
+but I'm not planning on complicating this little project that way.
+TwoCats on one thread does 2GiB of SkinnyCat hashing in 0.425 seconds,
+with SSE2 optimization.
+>
+The reference TwoCats main.c wrapper implements a SkinnyCat interface
+with the -a skinnycat flag, and I've verified it generates the same
+hashes for memCost up to 21.
+>
+I'm still working on updating the documentation to include SkinnyCat,
+but the code should be pretty clear.
+>
+Bill
+>
+
+
+

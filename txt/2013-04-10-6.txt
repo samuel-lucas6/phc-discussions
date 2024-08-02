@@ -1,0 +1,139 @@
+phc-discussions - Re: [PHC] Random Hash Functions
+
+Message-ID: <CA+aY-u5FrmRNogKpfVDzNnwHRLhS4bqJf709gZ_rRD5jsvKCbg@mail.gmail.com>
+Date: Wed, 10 Apr 2013 23:56:55 +0100
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Random Hash Functions
+
+On 10 April 2013 02:20, havoc <havoc@...use.cawrote:
+
+Here's a quick idea for PHC, that you're all free to expand on:
+>
+Generating the hash:
+>
+Input: The password P.
+1. Generate a random salt S.
+2. Generate a random hash algorithm F.
+3. D = H(S, F, P).
+3. Return <D, S, F>.
+>
+Checking the hash:
+>
+Input: <D, S, Fand test password P'.
+4. Return D == H(S, F, P').
+>
+Where H(S, F, P) is some iterated stretching function that involves the
+random hash function F, a well-tested hash function (e.g. SHA3), and
+whatever else you want, in each iteration.
+>
+The idea is that every hash would have not only a random salt, but a
+random hash algorithm. By "random hash algorithm", I don't mean simply a
+random hash function which you could easily get by prefixing a random
+salt, I mean really generating random *code*.
+>
+
+This idea had been briefly discussed on Twitter a month or so back, irrc
+Dan Kaminsky & Marsh Ray (correct me if I'm wrong).
+
+The suggestion was that one would try to use as much of the x86 instruction
+set as possible to make it difficult to replicate in FPGA/ASIC.  While it's
+an idea to ponder, I don't personally think it's a fantastic approach for
+at least the following reasons:
+
+i) you can replicate a fair number of instructions & conditionals on
+hardware and if one goes to the lengths of using really unusual x86
+instructions the construct becomes difficult to port to other processors,
+e.g. ARM;
+
+ii) you have to use many different and unusual x86 instructions to achieve
+your goal, otherwise one can replicate most of it in hardware;
+
+iii) it makes the algorithm very hard to analyse in terms of how it will
+operate on a real system, i.e. is it likely to leak entropy in
+side-channels and such like;
+
+iv) you will likely have to prove that any random function generated does
+not cause degenerate states either by losing entropy or getting caught in
+predictable short-cycles;
+
+v) the instructions that come to my mind that would be difficult to
+replicate in hardware would all open the algorithm up to side-channel
+attacks;
+
+vi) for the verification routine, you are essentially creating executable
+code that is data-dependent... in security applications. I would argue that
+is not particularly wise.
+
+
+
+
+>
+This has interesting implications for hardware cracking. The crackers
+will have to either,
+>
+1. Create custom hardware for each hash they want to crack, or
+2. Build lots of small processors that can of compute any of the random
+hash algorithms.
+>
+
+I suspect your assertion is flawed.
+
+For 1. the attacker needs to be able to replicate the subset of CPU
+instructions you are using, if you limit yourself to something you can
+study and easily implement then it's probably not too bad to implement in
+hardware (although I can think of a few difficult scenarios).  Granted it's
+more tricky but it's still one item of hardware.
+
+For 2., as per 1 or using a combination of hardware and an x86.
+
+
+
+>
+Currently, the best way to do it is probably to use an FPGA with method
+(1). To counter this, it should be very time consuming to find (either
+by hand or by automated process) an FPGA implementation of any F, that
+is faster than a well-designed general processor (method (2)).
+>
+
+Therein lies the rub: how do you design something that is both provably
+non-degenerate and immune to side-channel attacks while still being very
+difficult to implement as a general algorithm in hardware?
+
+
+
+>
+The random hash algorithm F should be encoded in a simple, standard,
+machine language, and either interpreted by the host system or
+translated into the host system's native instructions (safely!) before
+execution.
+>
+Of course, generating a random *secure* cryptographic hash function is
+NOT easy, since it takes years of design and testing to become confident
+in just one. However, except for very valuable hashes, attackers
+probably won't spend a lot of time cryptanalyzing them, so it's OK for
+them to be not-so-secure.
+>
+
+I've heard that line a fair few times before ;-)  Attackers do spend quite
+a large amount of their time, resources and effort in inverting password
+hashes.
+
+Seriously though, some of the problems can be overcome by using a standard
+hash before and after any random hash function, however you still must
+ensure the intermediate random hash function does not create degenerate
+states, leak information or poses a potential hazard from a vulnerability
+point of view.
+
+
+
+>
+Does anyone know of existing similar work?
+>
+Thanks,
+--
+Taylor (was: Havoc)
+>
+
+
+

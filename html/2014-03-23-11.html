@@ -1,0 +1,221 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="17">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;op.xc5wkyo1yldrnw&#64;laptop-air&gt;
+Date: Sat, 22 Mar 2014 23:35:12 -0700
+From: "Jeremy Spilman" &lt;jeremy&#64;...link.co&gt;
+To: "Solar Designer" &lt;solar&#64;...nwall.com&gt;
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Sat, 22 Mar 2014 18:57:24 -0700, Solar Designer &lt;solar&#64;...nwall.com&gt;  
+wrote:
+
+&gt; However, how can you keep "stretching" at this higher level while also
+&gt; providing a "memory-hard" underlying function?  Wouldn't the stretching
+&gt; need to be inside that function, then?
+
+I think one shortcoming of PBKDF2 is that I don't want to do multiple  
+rounds of hash 'h', I want to do one round of hash 'h1' with cost  
+parameters of 'c1'. An offline upgrade could add an additional round of  
+PHF 'h2' with cost of 'c2'. The subsequent online upgrade would replace  
+with a single round of 'h3' with cost of 'c3', etc.
+
+Depending on how much flexibility you want to give, and what language is  
+being used, this could be extremely clean or a total mess... If you can  
+pass in a lamda which encompasses the hash+cost, and you keep a collection  
+of those in a lookup table, your serialization is easy, the code is pretty  
+simple, and I think you can do better than most 'baked in' solutions.
+
+&gt;
+&gt; It's nice to hear you've implemented this by now.  Are your 16 TB ROMs
+&gt; on SSDs or on HDDs?
+&gt;
+
+It has taken a lot longer than I anticipated. :-(
+
+Running on SSDs. One extremely nice property is that the larger the ROM,  
+the lower the latency to run a single blind hash, and the more hashes you  
+can run per second.
+
+In other words, while typically with hashing the level of security and  
+latency within a given hash function are negatively correlated, in this  
+case we get a positive correlation.
+
+&gt; How do you (re)initialize them?  e.g. are they filled from /dev/urandom
+&gt; (meaning you need to transfer 16 TB to each new data center?) or are they
+&gt; generated from a seed that you store in a safe place?  In the latter
+&gt; case, do you ensure a portion of the ROM can't be used to recompute the
+&gt; rest of it?
+
+Filled from /dev/urandom, which is exactly as much fun as it sounds! I've  
+gone back and forth on the seed vs random initialization. Despite the  
+drawbacks, it just seemed to cheat the whole point of security through  
+obesity by using a seed.
+
+On the plus side, trying to transfer the pool over the network sets off  
+all sorts of alarms, as it should, so having this happen semi-regularly to  
+properly test the alarms is not a bad thing.
+
+&gt;
+&gt; The multiple data centers are for redundancy, right?  Do you use some
+&gt; custom protocol or DNS or anycast or a combination of these to route
+&gt; requests to portions of your Service?
+
+Multiple levels of redundancy within each "data pool" -- hardware parity  
+in the SSD, filesystem parity, application layer checksum stored alongside  
+each block, and separate PAR2 files. Multiple SSDs per machine, multiple  
+machines per rack, and finally multiple data centers.
+
+But not just redundancy. There are data pools which exist on all servers,  
+but in the future tere may be data pools which exist only on certain  
+servers, like servers outside the US.
+
+I thought about making the routing transparent, but for now the Site can  
+rank the blind hashing servers based on their expected network latency,  
+and/or the library can do some client-side load balancing if needed.
+
+Anycast would be good for spreading DDoS, which really is the biggest  
+concern. But I haven't gone to ARIN yet for the micro-allocation and ASN.
+
+
+&gt;
+&gt; Yes.  With the scheme you've described, which is pretty much what I had
+&gt; in mind as well, the Service can also estimate the number of (active?)
+&gt; user accounts, by counting different partial hashes.  In an active
+&gt; attack, probing for valid usernames might also be possible (depending on
+&gt; implementation and whether fake requests to the Service are made for
+&gt; unknown usernames).
+&gt;
+
+Active is the key word, since the easiest way to filter invalid attempts  
+would be to try only counting after some number of repeats. That assumes  
+the Site isn't inflating it, and that a user doesn't often try the same  
+wrong password before the right one (which is surprisingly common).
+
+To get any closer you would have to know the ratio of valid/invalid login  
+attempts. You could probably make a pretty good guess, but it's actually a  
+bit harder. It's not just invalid login attempts, but unique invalid login  
+attempts.
+
+Which brings up a point I've been thinking about... can we use the pattern  
+and frequency of invalid login attempts to help detect online attacks?  
+Specifically, when the RIGHT user is trying to remember their password but  
+failing, I would guess there's a discernible pattern to the passwords that  
+they try. Eg. 'secret' &lt;click&gt; [FAIL]. Let's make sure I didn't mess that  
+up...  'secret' &lt;click&gt; [FAIL].  Hmmm. How about 'Secret' &lt;click&gt; [FAIL],  
+no wait, 'Secret12' &lt;click&gt; [SUCCESS].
+
+This would differ considerably from a typical online attack which is  
+probably going to guess in order of expected success across all users, and  
+not waste guesses on repeats.
+
+In theory you could store the hash of every invalid password, and detect  
+online attacks from the number of *unique* invalid passwords attempted.  
+This has massive trade-offs, the worst being it increases the value of  
+your database to an attacker tremendously. As in, wait, they didn't just  
+steal one of your passwords, they stole ALL of them!
+
+Another thought... can we keep a running sum score of the invalid  
+passwords that were attempted, where low-entropy guesses contribute  
+exponentially more to the sum? But could keeping this sum around at all be  
+used to target users with low-entropy passwords? Resetting the sum after  
+each successful login would help guard against this, but I'm still not  
+sure I'm comfortable with tracking any kind of meta-data related to  
+invalid login attempts.
+
+Sorry, getting way off topic :-)
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

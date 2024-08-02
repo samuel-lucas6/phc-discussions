@@ -1,0 +1,284 @@
+phc-discussions - Re: [PHC] TigerKDF paper and code ready for review
+
+Message-ID: <CAOLP8p6MJwZownaTJjY6o2g7dUFPh4w1JSdzfSMO1vZk6gpKzQ@mail.gmail.com>
+Date: Fri, 7 Mar 2014 10:50:48 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+On Thu, Mar 6, 2014 at 9:45 PM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Mar 06, 2014 at 07:12:27PM -0500, Bill Cox wrote:
+>I still have to do a bit of work on the paper, but it's nearly ready:
+>>
+>    http://waywardgeek.net/TigerKDF.pdf
+>>
+>The code is on github and can be checked out with:
+>>
+>    git clone git://github.com/waywardgeek/tigerkdf.git
+>>
+>I suspect TigerKDF, my 3rd major rewrite in 2 months, may be
+>competitive.
+>
+I think it is competitive.
+>
+I didn't fully read the paper yet, but here's some criticism, which I
+hope might make TigerKDF and/or the paper better:
+>
+>* Fills and hashes memory rapidly - 1/2 as fast as memmove
+>
+Cool.  Somehow in the paper you give GB/s figures for scrypt when
+running a single thread only.  Why don't you mention that when running
+as many threads as there are logical CPUs, meaning 8 on a currently
+typical quad-core CPU, optimized scrypt code (such as in escrypt, and I
+think also floodyberry's) processes 8 GiB in 2.4 seconds, which means
+6.7 GiB/s (considering that memory is first written and then read back),
+or >1/4 of theoretical peak memory bandwidth on those machines?  In fact,
+a trivial change to scrypt - reducing the Salsa20 round count to 2 -
+makes scrypt faster yet, perhaps as fast as TigerKDF when you run enough
+threads.  This may well be a baseline to compete against, since you need
+to justify the major differences vs. that 3-line change (e.g., in
+escrypt's crypto_scrypt-sse.c it's a matter of deleting 3
+SALSA20_2ROUNDS lines, leaving just one).
+
+Thanks for this feedback!  I'll update Scrypt hashing speeds for
+multiple threads.  I'm afraid I thought the p value wasn't working,
+since I didn't realize increasing p increased memory -- D'oh!  You set
+me straight on that the other day, but it didn't occur to me to go
+update the benchmarks.
+
+I need to overhaul the benchmarks.  I'm still noodling what to report.
+ Should I drop direct Scrypt numbers and only report the improved
+Escrypt numbers, or list both?  I feel bad already about listing my
+Catena numbers - these aren't even official entries yet, but I wanted
+to justify the need for the unpredictable second loop, and the Catena
+benchmarks are useful for that.  Also, I only want to list numbers for
+the case where all else is equal - last time I substituted the exact
+same hash function into Catena that I used in NoelKDF, and I should
+probably do the same this time and update Catena to use the SSE/AVX2
+optimized memory hash function I use.
+
+I'm also not sure I'm measuring the critical parameters correctly -
+for example Catena uses 1/4th the memory compared to it's DAG size,
+but it fills memory in the first 1/6th of the runtime (1st write pass
+out of a total of 6 read/write passes, assuming memory bandwidth
+limited), meaning it has an average memory usage of 11/12ths the peak,
+while TigerKDF has 1/2 the average relative to peak, and Scrypt has
+3/4ths (with the naive assumption that every pass has equal speed).
+Maybe I should report both average and peak time*memory costs?  Also,
+is it fair to only list single-thread numbers for Catena when it is
+still possible to use pepper?  Single-thread is probably the most
+important case, but how do we highlight the advantage of a
+multi-threaded implementation, especially since we're hashing memory
+between threads?  In reality, most implementations will probably use p
+1 with our KDFs, but with Catena, they'll mostly not use pepper.
+
+One of my favorite changes to Scrypt would be reducing it from
+Salsa20/8 to Salsa20/2.  If it were me, I'd make the default Escrypt
+hashing Salsa20/2 or faster (ChaCha/Blake2 based).  Do you mind if I
+make that 3-line change to your Escrypt version and add those numbers
+to the table?  I think there's value in promoting this change for
+Scrypt, in addition to contrasting it to TigerKDF benchmarks.
+
+Also, I should probably list TigerKDF numbers without SSE enabled as
+well.  I currently haven't implemented the optimized non-SEE version,
+but it wont be too hard.
+
+Anyway, your feedback is especially helpful.  If I'm submitting dumb
+data, I'd rather hear about it now.
+
+In terms of memory bandwidth, TigerKDF may have advantage in that it
+achieves high memory bandwidth usage at lower thread counts, which means
+at lower parallelism.  As we know, excessive parallelism benefits some
+attackers, so this property of TigerKDF may be good.  You may brag about
+that. :-)  On the other hand, bumping into memory bandwidth way sooner
+than we've put all of the suitable CPU execution units to use makes us
+more vulnerable to attacks on _some_ future CPU-based systems where
+balance _might_ be shifted towards higher memory bandwidth (then the
+attacker will be able to run more instances in parallel, for different
+candidate passwords).
+
+Frankly, I'm not as skilled at designing code for so many different
+cases.  For example, I followed your thread about making use of
+multiple CPU multipliers, and I understand the potential benefit, but
+I'm sticking to just 1.  My head will explode otherwise.
+
+I'm also trying to figure out how to best auto-select parameters.
+Both repetitions and number of multiplies effect runtime, but for most
+users, I'd like to let them just specify a timeCost parameter.  The
+default "full" interface just has a timeCost right now.  Maybe I
+should add an extended interface.
+
+I think it is best to stay balanced in terms of all of: memory bandwidth
+usage, CPU usage, and multiply time hardness.  e.g. bumping into one of
+these while using 80% of the other two is great, whereas bumping into one
+of these while using <50% of one or both of the other two is not as good.
+And yes, this may require tunable parameters (you might already have
+enough of them to allow for such tuning).
+
+That is the best case.  My current interface just gives the user
+memCost, timeCost, and parallelism.  That is enough to balance total
+memory (memCost), compute time (timeCost), and # of CPUs
+(parallelism), but not enough to balance bandwidth at the same time.
+I'm one parameter short.  Splitting timeCost into separate multiplies
+and repetitions works, though.
+
+There's also an issue with blocksize.  For only 1 repetition and large
+memory, I've found 16KiB to be superior to 4KiB, but some CPUs may
+have only 4KiB or 8KiB L1 caches, and I'm tempted to reduce the block
+size down to 4KiB.  If I do, I probably wont make it adjustable, since
+the performance penalty at 4KiB block sizes on high end machines isn't
+too bad.
+
+However, I do adjust the block size and sub-block size downwards if
+low memory is used.  Currently, if there are less than 256 blocks per
+thread, I decrease the block size, all the way down to 32 bytes for a
+1KiB hash (which is what memCost == 0 means).
+
+>* Provides strong defense against GPU, FPGA, and ASIC attacks
+>
+I'm afraid the defense against GPUs is still not as strong as you claim
+it is.  You compare TigerKDF's 64-byte random lookups against bcrypt's
+16-byte lookups - but bcrypt actually does 4 independent 4-byte lookups
+per round.  This difference is subtle in that the 4 lookups may proceed
+in parallel, but it is crucial in requiring use of local memory for
+optimal performance on current GPUs, vs. use of off-chip memory (where
+entire cache lines would be fetched, which is too wasteful for 4-byte
+lookups, but is 4x less inefficient for 16-byte ones).  Specifically,
+bcrypt $2a$05 cracking using local memory runs at ~4k c/s on HD 7970
+(925 MHz), whereas using global memory it slows down to ~2k c/s.  From
+these numbers, I'd expect ~8k c/s (4 times the ~2k c/s it gets with
+global memory) if it made 16-byte lookups instead of 4x 4-byte lookups.
+In other words, it'd be roughly twice faster per-chip on that GPU than
+on its contemporary quad-core CPUs (which deliver ~5k c/s).  Increasing
+this further to 64 bytes would give ~32k c/s, or 8 times faster than
+original, and the increase from 4 KiB to 32 KiB that you claim should
+prevent this actually would not, because at these lookup sizes we're
+talking global memory, which we have lots of (compared to either 4 KiB
+or 32 KiB).  In fact, this gets close to and is consistent with
+Litecoin's 128-byte lookups, which also use global memory fine.  Yes, in
+Litecoin the lookup results are not needed as soon, but when we're using
+global memory this difference is unimportant (as long as we have enough
+extra global memory), because the latencies are hidden by having lots of
+extra concurrent instances.
+>
+Now, I understand that it's wasteful to do lookups smaller than 16 bytes
+e.g. on Sandy Bridge and better (where we can do two 16-byte lookups
+from L1 cache per cycle, or only the same number of smaller lookups).
+Good news: to be as GPU-resistant as bcrypt, you don't need your lookups
+to be as small as bcrypt's.  Rather, you need them to be as rapid as
+bcrypt's, with results required as soon as bcrypt does, and with no more
+parallelism than bcrypt has.  (These last two conditions are actually
+one.)  It is not a problem per se if an implementation turns out to be
+more efficient using global rather than local memory, as long as the
+accesses are as rapid as bcrypt's.  Those conditions imply that it won't
+run faster than bcrypt, using either type of memory.  So your comparison
+of GPU resistance vs. bcrypt's compares the wrong thing.  Now, if your
+random lookup results are not required as soon as bcrypt does require
+them (meaning you have more parallelism in one instance), you may in
+fact compensate for that by making the random lookups arena larger.
+
+Thanks for that description.  I was definitely confused about how
+Bcrypt limits GPUs.  I'm going to have to noodle some more on this.
+
+One concern I have is the possibility that chips with many CPUs and
+tiny caches are coming in the near future.  I see nothing stopping
+cheap 28nm or lower 256 core chips with 4KiB local caches from being
+built, with each CPU running at 1GHz or more.  An array of chips like
+that on a board would tear through Bcrypt hashes, wouldn't it?
+
+I think I should move my repetitions parameter to the outer loop so
+that if I repeat N times, it repeats the entire memory hash N times
+rather than rehashing the same blocks N times before moving on to the
+next one.  Moving computations out of small local memories seems to be
+a decent defense against chips with more parallelism but small local
+memories.
+
+BTW, why do you mention 32 KiB there?  Your random lookups arena is
+only 16 KiB, and you can't make it larger than that on current CPUs with
+32 KiB L1d cache and 2 hardware threads/core, without incurring much
+extra L1 cache thrashing.  TigerKDF's total memory usage is irrelevant.
+In other words, you may compensate for up to 4x more latency tolerance or
+parallelism than bcrypt has.  But you can't necessarily compensate for
+less frequent lookups (make them 2x+ less frequent than bcrypt's, and
+use of global memory becomes beneficial on HD 7970, regardless of lookup
+size).  I am fighting with the same problem in escrypt.  It's tough,
+especially when we consider running on smaller SIMD-less CPUs with
+settings that are also good for SIMD-enabled CPUs.  I'm afraid this
+combination of desirable properties - common settings for SIMD-less and
+SIMD-enabled (up to certain sane vector width), yet GPU resistance no
+worse than bcrypt's - is just not possible.  Have to tune for SIMD-less
+and SIMD-enabled separately if we don't accept giving up on having GPU
+resistance no worse than bcrypt's.
+
+I'm not trying to have resistance as strong as Bcrypt at 4KiB, but I
+would like the resistance to be stronger for a small size, preferably
+much less than 1MiB.  Any 4KiB hashing algorithm is highly
+parallelizable on a custom ASIC, and with high CPU count generic
+processors coming, I doubt anyone should count on a 4KiB hash being
+secure.  Even 1MiB fast cache memories can likely integrate somewhere
+between 16 to 64 on a reasonable sized 28nm ASIC, and I don't even
+want to think about how many 4KiB cores we could integrate.
+
+At least with AVX2 on Haswell, I would be surprised if Bcrypt's inner
+loop were faster, so for hashing out of just L1 cache, I'm probably
+good on that platform vs current GPUs.  As you say, it's the older
+CPUs that are problematic for GPU defense.
+
+Another aspect (I had mentioned before but didn't emphasize enough) is
+that while you need something like a 16 KiB small random lookup arena
+for the anti-GPU lookups, it is excessive for the higher-level scrypt-like
+lookups.  I think it is actually undesirable to make these higher-level
+lookups that large.  scrypt paper recommends r=8 for a reason: just high
+enough to amortize the overhead of TLB misses.  In my testing, I mostly
+use values of r between 5 and 8 (thus, 640 to 1024 bytes).  Yes, I could
+get slightly higher memory bandwidth with higher r, but then there's
+less of a dependency on the memory being the fairly low latency RAM that
+we have in typical defender's systems.  An attacker would gain extra
+flexibility in using other types of memory, including e.g. SSDs or
+combined RAM of multiple machines.  I don't know how much of an issue
+this is going to be in practice (might be a non-issue, I admit).  I think
+this issue is more relevant when there's a ROM lookup table that might
+not fit in a certain attack node's RAM, so more relevant to some use
+cases for escrypt than to TigerKDF.
+
+I'm thinking of reducing the default block size to either 4KiB or
+8KiB.  I think you'll find that with Salsa20/2 hashing, that 1KiB
+Scrypt hashing is significantly slower than 4KiB hashing.  Of course,
+I am working with two sticks of very fast 4GiB RAM, probably faster
+than most defenders.  I'll do some benchmarks on your Sandy Bridge and
+Haswell machines to help pick a better default size.
+
+>8. Inter-thread memory hashing to thwart TMTOs (Solar Designer)
+>
+In another message, you mentioned you introduced multiple thread syncs
+per hash computation.  Why?  I think it is best to have just one more
+than scrypt does (so 2 instead of 1).  Each threads sync is potentially a
+huge performance loss when the system is under other load (overbooked),
+which is a common occurrence on servers (OK, perhaps they should fully
+avoid "our" threads anyway, using solely their own coming from nearly
+concurrent authentication attempts).
+
+Doing several thread syncs is the most recent enhancement I've made.
+In NoelKDF, I only did one in the middle and one at the end, and only
+the first half of memory was accessed by multiple threads.  Perhaps
+the additional complexity is not worth it, but without more sync
+points, an attacker has fewer TMTO options.  For example, if he can
+fit 1/2 the memory, but not all of it, he can fill the first half and
+then run the second half threads sequentially.  This results in a
+higher time*memory cost though.
+
+What do you think?  Should I revert back to just 2 sync point?
+
+I am sorry for providing solely the criticism.  I actually like many
+things about TigerKDF, naturally. ;-)  It's just that saying "I like
+this" about specific things is probably less helpful (unless you were
+going to drop any of the good things, which I think you are not).
+>
+Thanks!
+>
+Alexander
+
+This is great feedback!  I really appreciate it.
+
+Bill
+

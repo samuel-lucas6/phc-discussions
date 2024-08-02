@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150423063936.GA2816@openwall.com>
+Date: Thu, 23 Apr 2015 09:39:37 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+On Sun, Apr 19, 2015 at 03:03:33AM -0300, Marcos Antonio Simplicio Junior wrote:
+----- Mensagem original -----
+De: "Solar Designer" <solar@...nwall.com>
+On Sat, Apr 18, 2015 at 10:55:54PM -0300, Marcos Antonio Simplicio
+Junior wrote:
+After the initialization, though, the row is always read in the
+same order, so no further latency penalties apply as the
+recomputation depth grows.
+
+Why does this mean no further latency penalties? The recomputation
+algorithm is unlikely to encounter the same missing row again before the
+row has to be thrown out of the algorithm's temporary storage. And the
+row's columns are still needed in reverse order of computation, so the
+first-computed column, which has to be stored, is the last-needed one.
+Am I missing something?
+
+I'm not sure we are talking about the same thing, so I decided to draw what I was trying to say (see attached image): 
+
+1) If we initialize a row and later read/update it in the same order, then the recomputation of *that row* after several updates takes only C, since the updates can be pipelined 
+
+2) If we initialize a row in one order and all subsequent read/updates are done in the reverse order, then the recomputation of *that row* after several updates takes 2C, since the updates can be pipelined among themselves, but not before the row is fully initialized. (note: this is what we are doing with Lyra2) 
+
+3) If we initialize a row in one order, and each subsequent read/update is done in the same but the columns are themselves reversed, then there is no easy pipelining (unless, of course, if some extra columns besides the first one are kept in memory to accelerate computations) 
+
+Thank you!  Of course, there was a misunderstanding.  I interpreted your
+words as implying that the original reversal's effect on latency would
+be lost after the first recomputation of the row, whereas you meant that
+it would not be added for further read/updates unless those also involve
+an order reversal.
+
+And of course I meant approach (3), where every BlockMix would write the
+block in reverse order from reading.  (This might be easier implemented
+by reading in reverse order and writing in sequential order, since we're
+already starting with the last sub-block in (ye)scrypt now.  Also,
+keeping the writes in sequential order allows to keep Integerify()
+defined in the same way as it is in scrypt, using the last sub-block.
+OTOH, sequential reads could be friendlier to the hardware prefetcher.)
+
+Why do you use approach (2) in Lyra2?
+
+Also, why do you call this attack "pipelining"?  While extra computation
+parallelism may allow for more efficient use of compute cores, including
+by unrolling them and keeping their resulting pipeline stages busy at
+more times, this does not appear to be essential, nor specific to this
+one attack.  The attack appears to be primarily about parallel
+computation and latency reduction rather than specifically about an
+extra opportunity for pipelining (which might be e.g. a 2x performance
+improvement over an iterative implementation of the primitive, which
+would then not have been unrolled not to waste the area).  This is a
+reason why scrypt's paper wording about pipelining (and only it) as
+rationale for the sub-block shuffling continues to puzzle me.  Am I
+still missing something?  Or is this in fact just weird wording,
+focusing on a relatively minor aspect rather than on the major one?
+
+Alexander
+

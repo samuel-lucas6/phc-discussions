@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] my pre (if) submit proposal
+
+Message-ID: <12410290339.20140120091344@gmail.com>
+Date: Mon, 20 Jan 2014 09:13:44 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] my pre (if) submit proposal
+
+
+
+
+Steve Thomas (at Monday, January 20, 2014, 12:37:58 AM):
+
+>https://docs.google.com/document/d/18R-qEAmL9WWh5zhGeBlvI7C6ikBAz6TF7MEtfPJK7m0
+
+This is broken:  
+    * Mem is only read once. So once read you can discard it.     
+
+    * In the paper you state f=-1 is a perfect choice. Except from i=0 to t/2-1 you
+    are just reading zeros. So you don't even need the second half of Mem.
+
+
+this is not broken and also not true. the number of zero-reads is m/2,
+independent of t. the number of unnecessary writes is also m/2. it is
+explained in the document. it is not a break, because it does not
+affect the minimum memory needed, and omitting reads and writes does
+not matter when the algorithm is cpu-bound.
+
+i considered some tuning to address this, but discarded for its
+awkwardness and negative impact on simplicity.
+
+
+    * With (C * (t/2) ** (1/2)) ram it will take 2 times longer. C is the size of the
+    context of your sponge function. In general this is (C * size ** (1/N)) ram and
+    N times more computations. Max N is ln(size). I keep hearing about "parallel
+    cores" I believe it's the same thing or at least similar.      
+
+it is not a break, and i'm not sure if true.
+
+not a break, because sequential memory hardness is not claimed.
+
+i don't understand your algorithm. by context, i assume you mean
+state. if you want to calculate a missing state, you need to evaluate
+a whole bunch of other states since it relies on r other states, and
+those also rely on other states, and so on.
+
+i don't have the math, but i believe with the maximum m, the cost is
+indeed n^1.5, but if you go higher with the t/m ratio, it should rise,
+hopefully toward n^2 as limit.
+
+it is questionable whether sequential memory hard functions exist
+without indexing by secret.
+
+

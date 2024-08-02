@@ -1,0 +1,29 @@
+phc-discussions - Re: OT: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p5+SX6DkWfxMhUURnBeGitwTBUwbNc8-8O96jT989f+pg@mail.gmail.com>
+Date: Tue, 18 Feb 2014 15:53:26 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: OT: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Hi, Samuel.  I read your name in several places of the blake2 source
+code.  It's very impressive work, from what I can tell.  I pasted the
+blake2s interface into Colin Percival's sha256.c to build a
+PBKDF2_BLAKE2S function.  I also put a wrapper around blake2s to
+generate long blocks of hashed data wherever I need it, such as when
+initializing the first block of memory.  In that case, I use the key
+and input hash to generate the first 32 bytes, and after that I just
+feed the 32 bytes from the output of the previous call as the input to
+the next, with no key.  I'm using Blake2s vs Blake2b because it's more
+efficient with 32-byte blocks.  I'm making this the smallest block of
+memory I can hash, and also the size of the "state" of both the memory
+intensive hashing function and the multiplication intensive hashing
+function.
+
+Does this approach seem sound to you?  I just want to be sure I'm not
+doing something dumb (which is unfortunately often the case).  There
+isn't a standard library with PBKDF2_BLAKE2S somewhere, is there?
+
+Thanks,
+Bill
+

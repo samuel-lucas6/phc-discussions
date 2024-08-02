@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] Re: TwoCats multiplication chain
+
+Message-ID: <20140625110504.GA413@bolet.org>
+Date: Wed, 25 Jun 2014 13:05:04 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: TwoCats multiplication chain
+
+On Tue, Jun 24, 2014 at 11:03:48PM -0700, Alex Elsayed wrote:
+I wonder if it'd be feasible to piggyback on the push for GCM and use CLMUL 
+and its (prospective?) siblings on other architectures.
+
+CLMUL implements a multiplication on GF(2)[X], i.e. "carryless
+multiplication". If you try to implement it in hardware, you will find
+it to be substantially simpler and faster than "normal" multiplication.
+This is why people working on hardware acceleration of elliptic curves
+really prefer binary curves (on GF(2^m)) over prime curves (on GF(p)
+with p prime).
+
+Strangely enough, on modern 64-bit x86 CPU which implement CLMUL, the
+64x64->128 multiplication with carries is still faster than its
+carryless counterpart. This is due to the former being much more
+thoroughly optimized, and, in particular, using up a lot more
+transistors within the CPU.
+
+Since, for password hashing, we want code which is faster on a PC than
+on a FPGA, we should build up on operations that work best on a PC and
+worst on a FPGA. From this point of view, using CLMUL looks like a
+not-so-good idea.
+
+
+	--Thomas Pornin
+

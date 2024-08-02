@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <5411BF88.2030002@ciphershed.org>
+Date: Thu, 11 Sep 2014 11:28:08 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/11/2014 03:24 AM, Solar Designer wrote:
+On Wed, Sep 10, 2014 at 07:15:43AM +0400, Solar Designer wrote:
+...
+and the effect of context switches).  So the reduction in compute 
+latency hardening is much smaller than I previously thought:
+
+6*3400/(2*6500) = 1.57
+
+This actually might be a better fit for such use, because it uses 
+much more bandwidth (to cache or RAM or whatever memory the 
+attacker provides):
+
+6500/3400 = 1.91
+
+So perhaps I should in fact export the pwxform rounds count as a 
+parameter, perhaps with some granularity.
+
+This would help single-thread performance a lot, which is important
+for low-end CPUs.
+
+I did more 2MiB benchmarks.  I needed to tweak it to initialize the
+first block faster, but after that, I got:
+
+1 thread, 2MiB: 4,216 h/s
+3 thread, 2MiB: 11,013 h/s
+1 thread, 1MiB: 8,695 h/s
+3 thread, 1MiB: 17,452 h/s
+
+Also interesting is what happens with 1 MiB per hash:
+
+6 rounds, 4 threads: 6300 6 rounds, 8 threads: 7300 2 rounds, 4 
+threads: 13400 2 rounds, 8 threads: 14550 to 15400 (unstable 
+speed)
+
+As expected, this makes 8 threads the optimal choice again.  The 
+speed and bandwidth usage difference between 6 and 2 rounds 
+improves to 2x+. Of course, like before this is countered by the
+3x reduction in compute hardening per hash computed (so up to 1.5x 
+overall).
+
+When AVX2 code is written, it will improve speeds at 6 rounds 
+slightly (but less so at 2 rounds).
+
+I think these numbers are fairly comparable, given the difference
+between machines, and that you're using a bit higher memory bandwidth.
+ I did uncover the need to initialize the first block faster for this
+size of hashing, so if TwoCats makes it to the next round, that's a
+tweak I will request to make.
+
+I prefer staying at 2MiB for PoW for a crypto-currency.  This is small
+enough to fit into most Intel compatible on-chip caches, while making
+it bigger would begin to blow out of them.  If you cut cache down by a
+factor of X, that makes an ASIC attack X times more effective,
+especially since it seems they are running the PoW algorithm
+single-threaded and applying threading in an outer loop.  Over time,
+it would be good to increase the memory size to keep up with cache
+size growth, or eventually an ASIC will have too much of an advantage.
+
+It will be interesting to see Arm benchmarks using their SIMD units.
+This is another reason for a low-round Yescrypt option.  They may not
+win on hashes/second, but they might win on power/hash.  I would not
+be surprised to see mining rigs full of Raspberry Pis!
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUEb+EAAoJEAcQZQdOpZUZLZsP/i16uyBD/XRdiupRrUMAEWUg
+HW6E3ZWjhoksFpAKz1yPPow6tUiNmYzLLdTvoEVK08S6fQWzoddkHRwo4yIAYLTX
+2VHrTpZN8EXP64SecFSFkbFmh12g5wAfL8eUP+MznXinfId0WJqy9a8R3siXSEtJ
+fRnEBu9HQ0EUL/iJmiegq2OT4GxfiOkJ2Hmd0dC2E2XGk1riw4cfQgZ6tUe+SDcz
+2+H+ZJP6sIMf6ClT7BdZSgR2svYGKXa+P3Mlf1J4YR9k30MmSy4fiqFsWw6P2+3C
+CXReJ79jvN0pFGtNmjCM5knhSXrEjtMmZZ/lmi9vK9xLdpUMTefp5+xysylhIWLN
+Dd8U0teBUXTLtP+1xOBdaBD1txNhY4RXYuHlKwzJJDgtr+/+opeP1vebF/7mWrIy
+nwUqpMDwV/6SIluhZcwOCt1buYrPMyKRBFCzY1HKTQRec72P3C5D1DM04KGgUUTz
+dyDQDgxhiLetpFJp6nHGGyDULUqIVaxEMegBdVm7iofW+gf0EPFBYh/Q+BNNA2fd
+63B9KsM/KR7LIIK8AaISY9fRc1An98KQIGbrGT5kWezfPS0Rpx7/YeEcWZO0LjKA
+AF49TewXcfx4C+L+J8dmD2lomnCvFad7AH39yvajMAVJvB5o082XpK5HC1CzPTKs
+bVT5p1zlZ6Kye7M1jgvM
+=PAWC
+-----END PGP SIGNATURE-----
+

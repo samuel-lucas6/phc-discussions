@@ -1,0 +1,41 @@
+phc-discussions - A possible bandwidth limitation attack
+
+
+Message-ID: <CAOLP8p7LvNEd-LCkTny22Vrtsp6ZbDnu5EJpv=qM2g2SG5tG-Q@mail.gmail.com>
+Date: Sat, 1 Mar 2014 11:00:25 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: A possible bandwidth limitation attack
+
+If I were a government trying to crack Script or one of it's ancestors
+that has a fast and efficient hardware implementation for the hash
+function (such as pretty much all the ARX and SHA2 families), I'd
+force a large DRAM maker to integrate the hashing core directly on the
+chip for me, dramatically reducing the I/O bandwidth bottleneck.
+
+DRAM chips support 16 gigabits per die, if I'm not mistaken.  That's
+2GB per chip.  Any memory-hard KDF hashing less than 2GB is
+susceptible to this bandwidth limitation attack.  We can expect this
+to grow in the future, like by around 4X to 8GB per chip.  Since most
+users will likely use smaller amounts of memory, I'd just replicate
+the hashing core so that I'd have high bandwidth down as small as say
+64MiB (or whatever the basic repeated DRAM block size is on the die),
+which would allow parallel attacks on the die against these smaller
+hashes.
+
+I think this could only be done by large governments.  No one else
+could force Samsung or Micron to let them muck with their cutting edge
+products.  Doing a similar attack with lower integration chips is
+possible through exotic 3D interconnect, but I'm not sure it would be
+cost effective.
+
+I think this is a another argument for compute-time hardening.  Feel
+free to rely on multiplication chains in your hash function the way I
+do.  I do one multiply followed by an XOR in a long chain to force an
+attacker to take his time computing the hash, tying up the memory for
+that long.  My code is at:
+
+https://github.com/waywardgeek/tigerkdf
+
+Bill
+

@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <CAOLP8p4uPxD4CtYxh6CD=ah+mATRqYsUbhQh4uGMG3-0cJ-Beg@mail.gmail.com>
+Date: Thu, 27 Feb 2014 10:03:37 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 9:32 AM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 27, 2014 at 09:13:52AM -0500, Bill Cox wrote:
+As I mentioned before, the threshold where current GPUs are on par with
+current CPUs per chip appears to be at around 4 MiB for scrypt, as we
+know from YAC mining.  How much slower the GPUs will become when the
+per-hash memory cost setting grows further we'll know in a few months
+when YAC moves to 8 MiB.  Indeed, you can simulate this right now (just
+hack a YAC miner's source code), but a monetary incentive might mean more.
+
+Got it.  Thanks for the detailed reply and many answers!  The 4-cycle
+multiply post I read was just some random forum.  There wasn't enough
+context to be sure what he meant by 4 cycles, and his main point was
+that it's better to use 24x24 multiplication.
+
+My main take-aways are that multiplication is nothing special for
+GPUs, and that small random reads do the trick, as well as large
+memory size.  FPGAs have some trouble with multiplication, but like a
+GPU, they can do a ton in parallel
+
+(BTW, I am still playing with 32x32->64 as it's suitable for both scalar
+and SIMD on both current x86(-64) and recent ARM, and considering that
+it's roughly 2x the circuit size of 32x32->32 in ASIC.  64x64->64 would
+be 2x bigger yet, but it's unfriendly to some relevant CPUs/modes.)
+
+Excellent.  I took another look at those, too.  I think I've got the
+scalar multiply working well now in parallel with the AVX2 and SSE
+instructions, and since it's faster, I prefer that.  However, you're
+right that the multiplier will be 1/2 the size.  Maybe if you do this
+in parallel on all the cores in a GPU that will matter, but just using
+8 or 16 32x32->64 multipliers will never take up much area on a 28nm
+ASIC compared to the cache or external memories feeding them  A 4KiB
+cache should be a few times bigger, I think.  You're going to have to
+go massively parallel before they add up to much area, and the
+memories involved will have to be tiny.  If you're able to do a GPU
+optimized hashing algorithm, the multipliers will probably add up to
+some real defense.
+
+However, a custom hand designed 32x32->32 multiplier can be faster
+than a 32x32->64, and that's a problem.  In a simple carry-save
+multiplier, the critical path is reduce from 64-ish addition cells to
+32-ish, though in an optimized multiplier I think the difference would
+be a factor of sqrt(2)-ish rather than 2X.  If you make the multiplier
+square, and have the critical path run from one corner to the other,
+you get the sqrt(2) number.
+
+I'll play a bit more with 32x32->64 on the scalar portion of the CPU.
+Thanks again for access to your Haswell server!  It would not be
+possible to do a decent job optimizing this hashing function without
+it.
+
+BTW, the trick for fast multiplication based hashing on the scalar
+side in parallel with the AVX2 side is to have all the data needed for
+hashing in scalar registers, rather than memory.  That goal conflicts
+with random addressing, so I do random addressing in the AVX2 side,
+but predictable addressing modulo 8 on the scalar side.  Since the
+AVX2 side needs a pseudorandom value in the inner loop for
+unpredictable addressing, I just hash in that pseudorandom value on
+the scalar side.
+
+Bill
+

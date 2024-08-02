@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/04/16/12">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/04/16/11">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140417124631.GB8732&#64;openwall.com&gt;
+Date: Thu, 17 Apr 2014 16:46:31 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Wed, Apr 16, 2014 at 04:54:58PM -0400, Bill Cox wrote:
+&gt; On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+&gt; 
+&gt; &gt; 1.47GiB/s of memory hashing (.57GiB/.39s) peak
+&gt; &gt; 1.10GiB/s average
+&gt; &gt; 4.41 GiB/s DRAM bandwidth
+&gt; 
+&gt; I made a mistake on the memory bandwidth computation.  I forgot to add in
+&gt; the 2 reads and 2 writes on average per location in the wandering phase.  I
+&gt; should have multiplied by 7 instead of 3!  The fixed numbers are:
+&gt; 
+&gt; 1.47GiB/s of memory hashing (.57GiB/.39s) peak
+&gt; 1.10GiB/s average
+&gt; 10.3 GiB/s DRAM bandwidth
+&gt; 
+&gt; That bandwidth is close to maxed out for one thread on my machine.  12GiB/s
+&gt; seems to be about the limit (EARWORM maxes out at 12GiB/s, with a far
+&gt; simpler inner loop).
+
+Bill, this sounds cool, but let's not forget that maximizing single
+thread's memory bandwidth usage is a goal only in a subset of use cases
+(in 1 out of 3 categories, as I tried to explain earlier), whereas in
+others it's actually a drawback (it means that other resources are not
+fully made use of for defense when the defender is running more than one
+thread).  yescrypt's defaults (most notably, pwxform rounds count) have
+been tuned such that it achieves nearly its highest memory bandwidth
+usage only when the number of concurrent threads gets close to what is
+supported in hardware.  I think it makes sense to make the rounds count
+tunable, so that it'd be possible to maximize single thread's memory
+bandwidth usage when desired - but this isn't made a tunable parameter
+in the currently submitted yescrypt yet.
+
+When comparing against scrypt or yescrypt in terms of single thread's
+memory bandwidth usage, I think we need to compare against reduced
+rounds versions of scrypt and yescrypt.  This means scrypt with 2 rounds
+of Salsa20 (just delete 3 out of 4 uses of SALSA20_2ROUNDS from
+SALSA20_8_BASE in yescrypt-simd.c) and yescrypt native mode with 1 round
+of pwxform (just delete 5 out of 6 uses of PWXFORM_ROUND in PWXFORM).
+
+A hashing scheme pretending to win solely(?) in these terms would need
+to show that it outperforms these trivial modifications of [ye]scrypt.
+And there's not a lot of room to outperform them, even when we do, as
+we're getting quite close to the available bandwidth.
+
+I don't think single-thread performance is such a good metric for
+comparing default settings (including hard-coded parameters) of the
+different hashing schemes now.  Easy to achieve, but why and what's
+next?  I can answer the "why" for a subset of use cases, though.
+
+It is a better metric for comparing the potential of reduced-round
+versions of the different hashing schemes, to see how we may tweak them
+for use cases where optimization in these terms is desirable.
+
+For context, here's an excerpt from a message I wrote last month:
+
+---
+Date: Sat, 8 Mar 2014 06:27:18 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+[...] I think all 3 of these cases are important, and
+should be considered when designing a KDF/PHS:
+
+1. Single-threaded, single instance runs.  This is what happens in apps
+that choose not to use threads for whatever reason (or lack thereof) and
+need to generate a key for en/decrypting some data.
+
+2. Multi-threaded, single instance runs.  This is what happens in apps
+like above, but which do enable threads.
+
+3. Single-threaded, multi instance runs.  This is what happens on
+authentication servers.  The multiple instances may be threads in the
+authentication service, or they may be separate processes, or they may
+even be in different VMs.  Whatever they are, the settings of our
+password hashing scheme should be chosen such that sufficient capacity
+for concurrent authentication attempts is achieved.
+
+Maybe optimizing for multi-threaded or/and multi-instance case (#2 or #3
+above) is more important than for single-threaded, single instance case
+(#1 above), because this is two use cases vs. one.
+---
+
+I would actually be (somewhat) interested if you do this sort of
+comparison for Lyra2 vs. scrypt with Salsa20/2 vs. yescrypt with 1 round
+of pwxform (and, if you like, also with Salsa20/2 instead of /8 for the
+final, real crypto sub-block per block).  I wrote "somewhat" because I
+expect all of these to be similar, since we're getting close to full
+memory bandwidth available from one thread in hardware. ;-)
+
+Thank you for helping review PHC candidates!
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

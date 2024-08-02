@@ -1,0 +1,55 @@
+phc-discussions - RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+Message-ID: <012a01d0b54f$3b1b8ed0$b152ac70$@acm.org>
+Date: Thu, 2 Jul 2015 22:15:07 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+Concerning claims for Turing Completeness, here is an argument to the contrary, below.
+ 
+-   Dennis
+ 
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Thursday, July 2, 2015 14:53
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine
+ 
+On Thu, Jul 2, 2015 at 11:16 AM, Dennis E. Hamilton <dennis.hamilton@....org <mailto:dennis.hamilton@....orgwrote:
+I don't understand this hand-waving about Turing completeness.  Or, as has been said in other contexts, "I don't think this means what it is being used to mean."
+
+In particular, it is not enough to be a Turing Machine in order to be a Universal Turing Machine.  Collapsing the terms together creates mischief''
+ 
+Ugh... this is trivially Turing complete.  Can I ask you do to a bit of the proof yourself?
+ 
+ARX instructions are Turing complete.  Google it.  He's got all kinds of constants in the data space to use in operations.  I let the salt determine branching, which leads to O(n^2) memory to write any regular program of length n.  Can you figure it out or do I have to spell it out?  I hate showing my work :-)
+ 
+Bill
+ 
+<orcmid>
+The fact that the ARX processor is Turing complete (to within finiteness) does not mean that the little interpreter that implements the self-overwriting “Turing Machine” is Turing Complete.  Turing Completeness is not transitive to programs running on a Turing Complete Machine (although a few might simulate the original Turing Complete machine or some other Turing Complete machine, most will not).
+ 
+One test is to prove that you can simulate a Universal Turing machine (or equivalent) with it.  For example, can you construct inputs that cause the self-overwriting guy to simulate the ARX processor itself?   
+ 
+Or, forgetting ARX itself, can you prove that there are configurations of the BusyBeaverKDF parameters that basically provide for all computable functions from n-bit unsigned integers to n-bit unsigned integers.  That is, capture all of the subset of computable functions that are n-bit to n-bit.
+ 
+I think not.  Look at it this way.  
+ 
+BusyBeaverKDF can be viewed as a function BBK(nrOps): S x Z -Z  where S and Z are both 64-byte unsigned integers.  So S and Z are independent 2^512 value domains.  
+ 
+You can look at BBK(nrOps)(salt) one being essentially one of 2^512 functions, Z -Z for each fixed parameter nrOps (probably 32 bits, not more than 64 bits typically.  
+ 
+Now, the supposed total number of functions, Z -Z for Z having 2^512 members is 2^(2^512).  That’s a *lot* more than the number of functions than the 2^512 values in S can select among (and that assumes no duplicates arise in the selection).  
+ 
+In addition, *all* of the 2^(2^512) are computable.  Z is a finite domain, so they are enumerable.  
+ 
+While nrOps complicates things, it is too small (not more than 8 bytes) to overcome this limitation and very large values of nrOps impact running time too much.  Also, too small values of nrOps don’t produce much transformation in the iterative BusyBeaver operations.
+ 
+So, whatever properties BusyBeaverKDF has, and many of them are doubtless very interesting to understand from a security perspective, being Turing Complete is not one of them.  Turing Completeness might even be a bad idea in this context.
+ 
+We can look deeper into the construction of BusyBeaverKDF to show that it does not escape the above limitations.  They are inescapable just from the restrictions on the parameters though.  
+</orcmid>
+ 
+
+
+

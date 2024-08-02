@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] How to: A super-efficient cryptographic accumulator?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;alpine.DEB.2.21.1803130946480.6218&#64;hexenstieg&gt;
+Date: Tue, 13 Mar 2018 10:31:22 +0100 (CET)
+From: Stefan.Lucks&#64;...-weimar.de
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Hey Denis,
+
+you have a nice idea, but it won't work for information-theoretical 
+reasons. I'll explain below.
+
+&gt; [...] the best measure for password safety is probably to prevent users 
+&gt; from using any of billions of known revealed passwords, but the 
+&gt; compressed database is 5 GB in size:
+&gt;
+&gt; <a href="https://github.com/berzerk0/Probable-Wordlists/blob/master/Downloads.md" rel="nofollow">https://github.com/berzerk0/Probable-Wordlists/blob/master/Downloads.md</a>
+
+Let us denote this list of bad passwords as "L", and the universe of 
+passwords not in L (up to a fixed length) as "U".
+
+&gt; Now. I sort of have this intuition that it’s possible to compress this crap
+&gt; into 20 bytes. That's not a typo – 20 bytes, not megabytes or something.
+&gt; But I don’t know how.
+&gt;
+&gt; If we have an infinitely fast computer, then we can simply find X such 
+&gt; that:
+&gt;
+&gt; TruncateTo32Bits ( SHA256 ( X | P1 ) ) == 0x00000000
+&gt; TruncateTo32Bits ( SHA256 ( X | P2 ) ) == 0x00000000
+&gt; TruncateTo32Bits ( SHA256 ( X | anything else ) ) == whatever
+
+What you mean is
+
+   (1)  Trunc32 ( SHA256 ( X | P ) ) == 0x00000000
+        for all P in L
+
+and ideally
+
+   (2)  Trunc32 ( SHA256 ( X | Q ) ) != 0x00000000
+        for all Q in U
+
+or, for a
+
+   (2') Pr [Trunc32 ( SHA256 ( X  | Q ) ) == 0x00000000] &lt; 0.01
+        for Q in U chosen at random
+
+&gt; If we crank the infinitely fast computer long enough, we should be able to
+&gt; find this X,
+
+If we consider SHA256 as a "random oracle", such an X exists, and, 
+assuming an unlimited amount of computer power, we can find it.
+
+&gt; and it should be small in size.
+
+Why do you think it would be small in size? That is the whole point: X 
+will be HUGE! If we want to meet both (1) and (2), then we can 
+statistically expect X to be as big as L. The reason is simple: Whenever 
+we change L, we need another X.
+
+Changing from (2) to (2') doesn't safe the day: X can be slightly smaller, 
+but only by a few bits.
+
+&gt; The only reason we should not be able to find this X is if SHA256 has 
+&gt; some structural issue that prohibits an X like that from existing.
+
+Yes, the iterated structure of SHA256 (and essentially all other hash 
+functions ever published) makes the existence of X extremely unlikely.
+Neither SHA512 nor SHA3 will do, nor Blake, JH, Groestl, Skein, ...
+
+BTW, if X where actually small in size, the iterated structure would not 
+pose a problem, and even SHA256 would do.
+
+&gt; In that case we use a better hash function.
+
+Good luck with designing an entirely new type of cryptographic hash 
+function!
+
+&gt; Now, the reason we can’t do that is, the way SHA256 is designed, it
+&gt; requires us to have an infinitely fast computer.
+
+There are three obstacles to doing that:
+
+1. The way SHA256 and essentially all other hash functions are designed, 
+such an X is unlikely to exist.
+
+2. Given an ideal hash function (a "random oracle") X should exist, but we 
+would need an absurdly fast computer to find X.
+
+3. Given an ideal hash function and an absurdly fast computer, X would 
+still be about as large as L. So even then, there is not much of an 
+advantage over using L directly.
+
+Finally, you asked about a quantum computer. If s is the expected size of 
+X (in bits), the search for X will take about 2^(2^s) steps on a classical 
+computer. Using a quantum computer, we can apply Grover's algorithm to 
+reduce this value to its square-root: 2^((2^s)-1). If L is a few 
+Gigabytes, then s is 30 or larger. Even using a quantum computer, the sun 
+will long be cold before your quantum computer can output X.
+
+
+Stefan
+
+--------  I  love  the  taste  of  Cryptanalysis  in  the morning!  --------
+www.uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+----Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany----
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

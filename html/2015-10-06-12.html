@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="../../../2015/10/04/6">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20151006114500.GA9118&#64;openwall.com&gt;
+Date: Tue, 6 Oct 2015 14:45:00 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt
+
+On Sun, Oct 04, 2015 at 02:47:37PM +0300, Solar Designer wrote:
+&gt; S-box overwrites in BlockMix_pwxform may defeat the same kind of attacks
+&gt; that sub-block shuffling would try to mitigate.  The overwrites would
+&gt; not directly deal with those attacks - the "pipelining" would still work
+&gt; just as well
+
+I mean it would still work just as well when no shuffling is done.
+When shuffling is done as well, the S-box overwrites do also work
+against "pipelining".  It's just that this combination of both
+mitigations appears excessive, and the S-box overwrites appear to be
+more effective on their own than shuffling does on its own.
+
+&gt; - however, having to store or/and recompute (portions of)
+&gt; the S-boxes may introduce enough extra storage needs or/and extra
+&gt; latency that the attacks would not be worthwhile overall.
+
+&gt; Here's what I am able to fit within +/-10% of yescrypt 0.7.1's
+&gt; performance (mostly as tested for max threads at 2 MB per independent
+&gt; instance, but also tested with other memory sizes and single thread):
+&gt; 
+&gt; Option 1: reduce PWXrounds from 6 to 5, but introduce a third S-box
+&gt; (thus, e.g. 8 KB to 12 KB total) and rapid S-box writes inbetween rounds
+&gt; (writing to the third S-box, which is inactive for reads at that time,
+&gt; and then rotating the 3 S-boxes at each sub-block).
+
+I've since managed to retain PWXrounds = 6 yet also add the third S-box
+and the 4 stores.  Due to some other optimizations, this achieves about
+the same performance as yescrypt 0.7.1 on Sandy Bridge and Haswell.
+Unfortunately, not on Bulldozer: 4% (1 GB KDF) to 13% (2 MB password
+hashing) performance impact there (most of it from going from 8 KB to
+12 KB, and not from the stores).  Yet I think this is acceptable.
+
+&gt; This means that 12
+&gt; gather loads (6 rounds times 2 gather loads) are replaced with 10 gather
+&gt; loads and 4 sequential stores.  (Counted in sub-block sized operations.)
+
+Now it's 12 gather loads alone, vs. 12 gather loads and 4 sequential
+stores (the stores are almost free in this code on these 3 CPUs).
+
+&gt; The total L1 bandwidth usage increases by a factor of 7/6, and the GPU
+
+Now it's 4/3.
+
+&gt; local memory attack resistance by a factor of 3/2*5/6 = 5/4 (even
+&gt; assuming the stores are somehow free, which they are not).
+
+Now it's 3/2, assuming same speed as before (so not on Bulldozer, where
+this improvement is smaller) and ignoring possible additional effect of
+the stores.
+
+&gt; Drawbacks
+&gt; are that multiplication latency hardening decreases to 5/6, and that
+&gt; GPU(-like) global memory attacks (if the S-boxes would be put in global
+&gt; memory anyway) might become up to 6/5 times faster (again, assuming the
+&gt; sequential and perfectly coalesced stores are somehow free).
+
+These drawbacks no longer apply, except that the slight performance loss
+on Bulldozer might help some attackers (those whose hardware would not
+be impacted to at least the same extent - e.g., Intel CPUs).
+
+&gt; Valid PWXrounds settings for this design are "a power of 2, plus 1", so
+&gt; e.g. 2, 3, 5.
+
+It's "a power of 2, plus 2" now, so 3, 4, 6, 10.
+
+&gt; Option 2: since the above means introduction of "pwxform context"
+&gt; anyway, it now becomes straightforward to add similar handling of a
+&gt; larger S-box, targeting L2 cache.  Reduce PWXrounds from 6 to 4,
+&gt; introduce a third small S-box (thus, e.g. 8 KB to 12 KB total) like
+&gt; above, and introduce a 128 KB S-box also including the smaller 3
+&gt; S-boxes as its part.  Have the rest of the larger S-box (beyond the
+&gt; 12 KB holding the smaller S-boxes) lazy-initialized during the main SMix
+&gt; operation (keep the current bitmask in the pwxform context).  Unlike the
+&gt; above, perform only two S-box writes per sub-block: one write to the
+&gt; currently inactive small S-box (which gets activated at next sub-block,
+&gt; like above), and one write to the remainder of the large S-box.  (This
+&gt; means maintaining a sequential write offset for the larger S-box, and
+&gt; masking it for writes to the smaller S-box.)  These are the extra
+&gt; actions in two of the four rounds.  In two other rounds, the extra
+&gt; actions are cache line sized random lookups against the large S-box.
+&gt; Alternatively, random lookups against the large S-box are performed in
+&gt; all four rounds
+
+I've since managed to introduce multiply-adds into the L2 cache reading
+rounds as well, so the total multiplication latency hardening remains at
+6 (or even becomes 8) per sub-block while achieving similar performance
+as before.
+
+The remaining major drawback is that the random lookups become less
+frequent - there's still the rounds count reduction from 6 to 4 in that
+respect.  For GPU attacks that placed the S-boxes in global memory
+anyway, this reduction in frequency of random lookups would result in a
+speed advantage.  With 6 rounds, 2 active S-boxes, and 4 gather lanes,
+we had 48 random lookups per sub-block.  With 4 rounds, we have just
+32+2=34 or 32+4=36.  (Counting the L2 lookups the same as L1 ones here,
+as they would be similar if all are done from GPU global memory anyway.)
+
+This may well be the primary reason why I probably won't go for
+introducing an L2 layer into yescrypt now.  Other reasons include the
+complexity increase, and the design starting to look specialized
+rather than generic.
+
+That's a pity, as having an L2 layer in the arsenal of defenses could
+help against some attack hardware, including specific GPUs that would
+have preferred to use local memory otherwise.
+
+&gt; This requires attackers to either provide 128 KB of (semi-)local memory
+&gt; per instance, or transfer that data off-chip.  The latter approach would
+&gt; increase the attack chip's external bandwidth needs by a factor of 2.5.
+&gt; (We had 1 read and 1 write per block, so 2 total.  Now we also have 2
+&gt; reads and 1 write to the large S-box, so 5 total.  In fact, in the
+&gt; Haswell-enabled variation pasted above, it's 4 rather than 2 reads from
+&gt; the large S-box, so 7 total, and a 3.5x increase.)
+&gt; 
+&gt; The choice of 128 KB is since it's how much L2 cache we have per thread
+&gt; on many modern CPUs.  Bulldozer could do more (1 MB L2 per "core"),
+
+I tested that Bulldozer works reasonably well for up to 512 KB used as
+yescrypt's L2 per thread.  There is performance decline relative to
+smaller sizes, but it's not sharp (until the 512 KB to 1 MB increase).
+
+&gt; Knights Corner/Landing would probably need less (256 KB per 4 threads,
+&gt; so 64 KB).
+
+I wrongly listed Knights Landing here - apparently, it will have 1 MB of
+L2 cache per 2 cores, so 128 KB per thread.
+
+&gt; 128 KB works great on Haswell, but is a few percent slower
+&gt; than 64 KB on Sandy Bridge; I don't know exactly why (maybe something to
+&gt; do with when L1 lines also have to be present in L2, although neither
+&gt; CPU has L2 forcibly inclusive of L1, as far as I could find).
+
+Also, 128 KB results in lower and less stable speeds than 64 KB when
+using a large ROM (multi-GB on huge pages).  Maybe the page table
+entries significantly benefit from being in L2 rather than in L3, or
+something.
+
+&gt; So what do we prefer - the more elegant option 1 (with crazy frequent
+&gt; S-box writes, because we can?) or the more extensive option 2?
+
+I am leaning towards staying with a variation of option 1 at this time.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

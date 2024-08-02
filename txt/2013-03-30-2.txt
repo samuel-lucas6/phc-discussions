@@ -1,0 +1,69 @@
+phc-discussions - RE: [PHC] Re: Suggestion: API should include a verifier function
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E0906F649@TK5EX14MBXC286.redmond.corp.microsoft.com>
+Date: Sat, 30 Mar 2013 03:13:36 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+If the implementation allows an attacker to learn the password hash (via a timing channel or whatever), that would be considered a serious vulnerability by most users/admins. If an attacker is found to have learned the hash it would be considered a data breach.
+
+A proposal that was somehow naturally resistant to implementation defects leaking side channels would seem like a bonus to me. I.e., it allowed the naïve implementation to be secure.
+
+This would seem to necessitate a scheme defined in terms of discrete generate/verify functions.
+
+
+-          Marsh
+
+
+
+
+From: bascule@...il.com [mailto:bascule@...il.com] On Behalf Of Tony Arcieri
+Sent: Friday, March 29, 2013 6:37 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+So upon further reflection, I really think the threat model of PHC is: the attacker has the password hash. If you can solve that problem, the issue of timing attacks should be irrelevant (I think this was e.g. Solar Designer's point)
+
+There's been quite interesting discussion to the contrary however.
+
+I still think a verifier API is probably a good idea, regardless? If nothing else, I think a separate verifier API is a good cryptographer <=end user interface ;)
+
+On Wed, Mar 27, 2013 at 6:15 AM, Watson Ladd <watsonbladd@...il.com<mailto:watsonbladd@...il.com>wrote:
+This isn't necessary: a non-constant time comparison at worst reveals the hash, which doesn't give an attacker
+enough information to break a password anyway if we do our jobs right.
+
+On Tue, Mar 26, 2013 at 11:08 PM, Tony Arcieri <tony.arcieri@...il.com<mailto:tony.arcieri@...il.com>wrote:
+On Tue, Mar 26, 2013 at 7:57 PM, Tony Arcieri <tony.arcieri@...il.com<mailto:tony.arcieri@...il.com>wrote:
+you'd provide a user-supplied one as input, and verify via a guaranteed constant time comparison whether or not it's correct.
+
+Oops, not quite what I meant to say there, but I'm sure you got the idea ;)
+
+To clarify: you would pass in the hash/salt "on file" along with the alleged password, and the function would return whether or not the provided password matches the supplied hash/salt. The arguments are, otherwise, the same as the hashing function.
+
+As an API strawman, if this is our hashing function:
+
+    PHS(out, outlen, in, inlen, salt, saltlen, t_cost, m_cost)
+
+we might consider:
+
+   PHS_VERIFY(hash, hashlen, in, inlen, salt, saltlen, t_cost, m_cost)
+
+(I'm not particularly married to the name "PHS_VERIFY", so please bikeshed away ;)
+
+--
+Tony Arcieri
+
+
+
+--
+"Those who would give up Essential Liberty to purchase a little Temporary Safety deserve neither  Liberty nor Safety."
+-- Benjamin Franklin
+
+
+
+--
+Tony Arcieri
+
+
+

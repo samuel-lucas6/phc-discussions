@@ -1,0 +1,37 @@
+phc-discussions - Multithreading in Argon2
+
+Message-ID: <CALW8-7JpajJ29-67-0pJbJJiSrKMEO1J8S6x5ci-a_2czmz9aw@mail.gmail.com>
+Date: Thu, 1 Oct 2015 12:25:07 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Multithreading in Argon2
+
+Currently Argon2 has the parameter p of the number of internal lanes. For
+given p, Argon2 can handle up to p parallel threads, which are regularly
+synchronized. Currently the number of threads is explicitly set equal to
+the number of lanes, but it is not a strong requirement.
+
+We can imagine that an application may want to choose the number of threads
+in run-time if it feels that the password hashing process initiates too
+many threads in total. Thus we suggest an extension to API (not to the
+specification) that takes distinct inputs for thread number and lane number.
+
+We however advise that during the first password hash generation the number
+of threads be equal to the number of lanes as otherwise this would give the
+cracker an extra advantage. After the hash is stored, the subsequent
+verifications can be done with any number of threads.
+
+It is important to require both numbers to be inputs if they differ. If we
+fixed the number of lanes to some high default value, such as 8, then any
+application that can not support this number of threads will immediately
+give the thread-richer cracker an advantage.
+
+We welcome the comments as well as discussion of other threading issues.
+For example, is there any need for external thread handlers?
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

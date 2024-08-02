@@ -1,0 +1,138 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <20150331145649.GA4143@openwall.com>
+Date: Tue, 31 Mar 2015 17:56:49 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 03:34:44PM +0200, Dmitry Khovratovich wrote:
+On Tue, Mar 31, 2015 at 2:50 PM, Solar Designer <solar@...nwall.comwrote:
+>
+>means that the block latency is not 16 pwxform calls+ 8 Salsa rounds,
+>but far smaller, only the equivalent of 4 pwxform+8 Salsa rounds.
+>
+No.  Where does the number 4 come from?
+
+Let me reformulate. Pwxform operates lanewise and can be fully
+parallelized up to the lane level. What I meant is that you get only
+1-lane latency for the entire sub-block. You do not have to know an
+entire subblock to compute the next one, so the total latency of
+Blockmix is 16 1-lane pwxform.
+
+That's correct.
+
+This value I divided by 4; maybe I was
+incorrect if you implicitly took this into account, and by latency of
+32 sequential pwxform's meant "latency of 32 sequential 1-lane
+pwxform's"
+
+That's what I meant.
+
+(should there be 16, not 32?).
+
+It's 32 because Bill tested yescrypt with two pwxform rounds per
+sub-block.  So 16 sub-blocks per 1 KB, 2 pwxform rounds per sub-block,
+giving us a latency of 32 pwxform rounds.
+
+Those 32 pwxform rounds correspond to 128 gather lane computations
+(128-bit), and 256 simple lane computations (64-bit), with the current
+default settings.  However, those larger numbers are irrelevant when
+we're talking maybe-ASIC attackers' latencies.  On CPUs, the 4x
+difference you noted covers the integer multiply latency.
+
+Well, you may consider the same for Argon2, since the Blake2b round
+also has internal parallelism, and the round latency is only 2
+quarterround latencies.
+
+I was referring to Blake2b round latency, whatever it is.  You say it is
+that of 2 quarterround latencies.  If this benefits typical defenders'
+CPUs (in other words, they manage to take advantage of this parallelism),
+then that's fine.  If not yet, that's moderately problematic.
+
+What I find most problematic is that Argon2 invokes 8 Blake2b rounds in
+parallel, whereas current CPUs probably need at most the parallelism of
+one or two Blake2b rounds.  (Most likely one, with very little benefit
+from a second parallel instance.)  While excessive parallelism may help
+future CPUs, it also helps current and future attackers.
+
+I think we shouldn't introduce more than 2x the parallelism that we can
+use currently.  As an option, we need to have it tunable, like I do with
+pwxform parameters.
+
+A fair comparison between the latencies of the
+two schemes becomes difficult at this level, I feel. Whereas Argon2
+has definitely more parallelism inside, it also synchronizes much more
+often, whereas yescrypt synchronizes the lanes only in Salsa.
+
+While you're correct about the difference in lanes synchronization
+frequency, I see no significant drawback of the lower frequency.
+
+What we can do, for example, is to draw up for each scheme a chain of
+operations that must be sequential. For Argon2, I see a chain of 16
+additions, 16 XORs, and 16 rotations, which depend sequentially on one
+another. Such a chain exists for every 64-bit word of the 1 KB-block.
+For yescrypt's pwxform, I see a chain of 2 multiplications (or S-box
+calls), 2 XORs, 2 additions - for first subblock, 4 mults, 4 XORs, 4
+additions - for the second subblock, etc., up to 32 mults, 32 XORs, 32
+additions for the last subblock + Salsa.
+
+For me these two sets of chains look comparable,
+
+Comparable, yes.  In software.
+
+and almost equal in average length.
+
+I guess you're averaging per sub-block?  I think this metric is
+irrelevant.  Computation of the next block cannot proceed until the
+current block is complete anyway.
+
+Note that rotations are no-ops in ASICs.  It's like if we counted
+pwxform's shifts by 32 bits, which it has to perform in some builds to
+extract the high 32 bits of multiplication result - but for ASIC or FPGA
+attacks we should not count these, either.
+
+I am not sure how many sequential ADDs a single 32x32->64 MUL is
+equivalent to in terms of latency is ASIC, but judging by these
+instructions' latencies on CPUs I'd expect that at least 3, and probably
+many more (like 32).  Using the very conservative estimate of just 3,
+we get 3*32 + 32 + 32 = 160.  (I am counting the ADDs and XORs
+separately because we used the conservative estimate for MUL.
+In practice, MUL will likely dominate the latency to an extent where
+the ADDs and especially the XORs are negligible.)
+
+For Argon2, it's 16 + 16 = 32 in the same arbitrary units of latency as
+above.  OK, that's a mere 5x difference, and not 16x.  I admit this is
+less than I had expected.  But that's for an extremely conservative (I
+think almost unrealistically low) estimate of MUL's latency vs. ADD's
+(when found in a sequence of ADDs and XORs).
+
+Yes, it can be computed lanewise up until the final Salsa20/8, but
+that's a non-issue.  In fact, this flexibility may be somewhat useful on
+register-starved archs.  pwxform() in yescrypt-opt.c actually partly
+takes advantage of this: it has the loops re-ordered to be
+gather{rounds{simple}} rather than rounds{gather{simple}}, for some
+slight speedup on register-starved archs.  yescrypt-opt.c does not take
+this to the BlockMix level, but it could.
+>
+Do you think this has any drawback, and why?
+
+I understand. I do not know yet if it is a drawback since I have not
+found an attack. I must check some ideas, also on your S-box
+generation...
+
+I'd appreciate your analysis of this very much.  Thank you!
+
+>Do I understand yescrypt right?
+>
+I think not.  Perhaps I need to describe it better, including the
+expected latencies.
+
+So do I understand it now?:)
+
+Yes!
+
+It feels good to be on the same page.
+
+Alexander
+

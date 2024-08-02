@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p7yRVAmBx-ZLAKpKFbPhKS0jqi-HPb5TrwzmC9S_A2AOg@mail.gmail.com>
+Date: Thu, 13 Feb 2014 13:02:49 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:31 PM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 13, 2014 at 12:11:43PM -0500, Bill Cox wrote:
+>Awesome.  I'll check out that paper.  I'm currently getting 3 cycle
+>latency for 32x32->32 plus 1 cycle for the add on Ivy Bridge.  It's
+>the other stuff, the OR, ADD, and memory I/O that seems to increase
+>the SSE 4.1 latency.  The multiply is 5 cycles, I think.
+>
+Yes, you'd have something like 7 cycles: 5 cycles for the SIMD multiply,
+1 for ADD, 1 for OR, and the memory write may be done in parallel with
+the next loop iteration's start of computation, as long as the loop is
+unrolled (did you use -funroll-loops?)
+
+Yes, I'm compiling with this option now, though -O3 seems to do it by
+default.  I didn't get any speedup versus -O3.
+
+>I don't know if it's worth it to worry about an attacker's die area,
+>except for RAM if we force him to use cache.
+>
+With very low memory settings, die area occupied by multipliers may be
+comparable to or higher than that occupied by memory.  I think you're
+simply not considering settings this low - but I think we should.
+>
+Also, the number of multipliers available to defender may increase a
+lot, and it'd be nice if we support scaling up in that respect.
+
+I guess you're right.  I'll change my memory parameter to be in KB
+instead of MB.  I'll also move the repetition parameter to the outer
+loop and verify I can work well running out of cache with 4 byte
+blocks.
+
+I've just posted an idea on how you can have both.
+
+Running the scalar unit in parallel with the SIMD unit, and having
+both doing what they are best at (multiply in scalar unit, memory r/w
+and parallel ADD/XOR/SHIFT/AND/OR in SIMD unit) seems like the best
+solution for processors that support it.
+
+How can we add parallel SIMD computation to the scalar processing
+without having trouble on processors with weak SIMD?  Are they an
+important case, and if so, are they already so slow that
+multiplication hardening is not useful?
+
+Bill
+

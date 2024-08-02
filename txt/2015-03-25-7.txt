@@ -1,0 +1,94 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <55127646.3060908@gmail.com>
+Date: Wed, 25 Mar 2015 09:48:06 +0100
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On 03/25/2015 05:49 AM, Solar Designer wrote:
+On Tue, Mar 24, 2015 at 11:50:44PM +0100, Milan Broz wrote:
+>The updated test report (draft) is here
+>>
+>  https://github.com/mbroz/PHCtest/blob/master/output/phc_round2.pdf
+
+Thank you!
+
+I think you should include more info on your two test platforms.  Most
+notably, the specific CPU types and clock rate.
+
+OK, I am trying to avoid these test to be presented as a performance tests
+because with reference implementations it would be unfair.
+
+Anyway, there is already lscpu for both platforms in git
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/lscpu
+
+https://github.com/mbroz/PHCtest/blob/master/output/round2_PPC64/lscpu
+(This is quite a big machine, actually running Fedora for some Red Hat
+distro development I have access to)
+ 
+The charts showing real memory usage and real time vs. the cost
+parameter values might be useful, but it would also be useful to see a
+cross-chart of real memory usage vs. real time (with the lowest time cost
+setting supported by each scheme) and with growing memory cost setting
+(this is how you'd control the real time).
+
+Isn't it what Figure 1 already shows? Or you mean some combination?
+(tcost is minimal for each candidate there, memory cost is increasing and chart
+shows real memory use + real run time).
+
+...
+
+>- I added some test case for my intended use (KDF for LUKS) for few functions.
+
+Lyra2 is surprisingly fast.  That's nice.  Your table does not give
+exact numbers for candidates meeting your requirements, though - maybe
+you can add that (for their lowest supported t_cost)?
+
+For the last KDF test the exact input parameters are in Table 5, times
+are in log directory. For example with the minimal t_cost:
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/m_kdf/lyra2.dat
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/m_kdf/lyra2-sse.dat
+
+As to yescrypt taking 1.3s for 1 GB, I'd say that consuming 1 GB isn't a
+goal per se.  The goal is attack resistance.  Quite possibly yescrypt's
+6 sequential pwxform rounds (each with two S-box lookups and one
+multiply) per sub-block provide more attack resistance in the time
+factor of the area-time product than Lyra2's higher memory filling speed
+does in the area factor (if you measured these two at the same running
+time, so with different memory usage).  Besides, yescrypt tries not to
+bump into the memory bandwidth prematurely, thereby letting you use
+multiple threads to a greater advantage.  If you do not intend to use
+multiple threads and want to maximize the memory filling speed by your
+one thread (even if at expense of possibly reducing the attacker's
+area-time product, via the potentially much lower time factor), you may
+reduce yescrypt's pwxform round count from 6 to 1 as Bill suggested.  In
+yescrypt-simd.c, simply delete 5 of the 6 repetitions of PWXFORM_ROUND
+in the PWXFORM cpp macro.  I got to make this runtime tunable (easy),
+even if just to show that yescrypt is (more) competitive. ;-)
+
+TBH I think yescrypt is very competitive here :)
+
+I did not want to modify default internal configurations (and I think it
+should not be even needed. Give users some knobs and they'll find insecure
+combination and will use it as the default... well, joking :-)
+
+Why I do not use multiple threads is based on disk-encryption my use case:
+
+In general, FDE-enabled disk can be moved between several machines with
+completely different performance and hardware configurations.
+
+On slow machine unlocking should take more time and it would be
+probably acceptable (in some reasonable limits).
+
+But if it cannot be unlocked at all (cannot run parallel threads) it is
+unacceptable for the user (usability fail). Security/usability tradeoff...
+
+The second reason is that it can could run in a very limited environment
+(a bootloader for full system encryption) where threads are not easily manageable.
+
+But it is just my opinion.
+
+Thanks,
+Milan
+

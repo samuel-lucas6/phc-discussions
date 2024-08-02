@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Message-Id: <60D60075-65E4-47A5-9528-891D4BC67B89@gmail.com>
+Date: Wed, 17 Apr 2013 11:04:13 -0400
+From: Matthew Green <matthewdgreen@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+The problem is that people don't know that PBKDF2 is for generating keys and not password hashes. Even Microsoft gets this wrong:http://hashcat.net/forum/thread-1752-post-9981.html#pid9981
+
+I think this is a great example of why PHC is necessary. There's not a lot of guidance out there on which schemes to use, and a lot of it says 'use PBKDF2' with no details. The additional requirement that you employ a MAC or (yuck) an encryption scheme is an invitation for errors.
+
+By the way, this would seem to be an issue for scrypt as well, since it uses PBKDF2 for the final generation.
+No this is not a problem with scrypt because it uses an iteration of 1 with PBKDF2. This is after the hard part is done which takes a few milliseconds. So unless you are storing a several kilobyte hash there is almost no difference in time.
+
+You're absolutely right. I skimmed the spec on my phone and missed the 1. Don't trust me to implement the damned thing ;)
+
+We should discuss whether we want this to be a criteria for PHC. 
+>
+ 
+This is already in a sense is a requirement, but this is impossible to follow perfectly. With all hash functions you can do an early exit to skip a couple steps, but with properly iterated hashes this saves an almost negligible amount of time. Also early exit is not allowed by the defender since this leaks info about the stored hash.
+
+I think we all agree that you can do an early exit and save some work. I think the contention is that the cost savings of an early exit should not be tightly correlated with the iteration count (work factor).
+
+This is difficult to formulate in a meaningful way, since obviously the cost of computing a hash depends on the number of blocks you compute -- and you don't want to outlaw /any/ correlation with the work factor. But I think it will be easy enough to distinguish a good design from a bad one.
+
+Matt
+
+

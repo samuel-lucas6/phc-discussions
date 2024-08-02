@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] hash encryption</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20160323130918.GA6412&#64;bolet.org&gt;
+Date: Wed, 23 Mar 2016 14:09:18 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Wed, Mar 23, 2016 at 09:45:10AM +0100, Krisztián Pintér wrote:
+&gt; what is the rationale to encrypt the hash?
+
+Though I do not know exactly why Alexander adds such a support, I
+know of a rationale for that.
+
+On a system that verifies user passwords for authentication, we need to
+store "something": a data element that necessarily allows for offline
+dictionary attacks, should it be revealed to attackers. We use
+password hashing functions, with all the configurable slowness and
+salts, precisely so that such dictionary attacks are made expensive for
+attackers.
+
+Now, it so happens that some common methods by which attackers can learn
+password hashes are limited in scope. If the attacker steals a complete
+backup of the machine, he gets all the data; but if he uses a SQL
+injection, then he may get a read access to the server's database only.
+Hence the idea of using, in the password hashing process, an additional
+secret key that will not be stored in the database (in practice, it
+would be in a configuration file on the application server). We
+basically want a key K such that:
+
+ -- dictionary attacks are not feasible without key K;
+ -- if K is revealed, the security properties of key-less password
+    hashing are maintained.
+
+Adding a secret key has sometimes been called "peppering" (as a bad pun
+on "salts"). The point of peppering is to try to have better resistance
+to attackers who get a partial read-only view of the server's storage;
+we also want the secret key to be, indeed, a fixed secret key, because
+it will be stored outside of the normal server storage area (the
+database) so it should be small and not change. Peppering has its own
+drawbacks (it entails key management and associated process for
+generation, storage, backup...) but I can understand its appeal. It is a
+trade-off between ease of implementation and maintenance, and extra
+security in a situation that can plausibly happen (that is, until Web
+developers finally learn that SQL prepared statements should always be
+used, dammit).
+
+
+There are basically four ways to do some peppering over an existing
+password hashing function:
+
+ 1. Encrypt the password with key K, then hash the encrypted password.
+ 2. MAC the password with key K, then hash the MAC output.
+ 3. Hash the password, then encrypt the hash output with key K.
+ 4. Hash the password, then MAC the hash output with key K.
+
+What Alexander wishes to implement is method 3. Among all four methods,
+it is the one which is most easily applied to, and removed from, an
+existing system. For the core functionality of verifying passwords,
+they are equivalent, but for maintenance, they somewhat differ:
+
+ -- Method 3 and 4 can be applied to an existing set of key-less
+ password hashes; methods 1 and 2 cannot (if we want to pepperize an
+ existing system with methods 1 or 2, then we must wait for users to log
+ on and apply the encryption or MAC at that moment).
+
+ -- Methods 1, 2 and 3 allow for offline work factor increase. If the
+ password hashing function has such a feature, and you wish to increase
+ the work factor because you bought a faster server, then you can do so
+ in a night batch. With method 4, you have to wait for the individual
+ users to log on, and do the work factor increase gradually.
+
+None of these elements is really crucial, but I understand that
+Alexander would prefer encryption of the hash, since it is the one that
+keeps most options open.
+
+Personally I tend to favour MAC-based constructions, because the MAC is
+a no-brainer: just use HMAC. HMAC requires no IV and thus has no
+catastrophic failure mode (contrary to UMAC or similar systems where IV
+reuse is a capital sin); HMAC is also quite tolerant to key reuse (using
+the same key for encryption and MAC is not recommanded, but in practice
+HMAC will resist such abuse). It is quite hard to get HMAC wrong.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

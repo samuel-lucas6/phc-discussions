@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="14">[&lt;prev]</a> <a href="16">[next&gt;]</a> <a href="14">[&lt;thread-prev]</a> <a href="16">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4n2KO1rC7G-Vc4Q8t5Ob280OL1dPmgRKX3k7=nnKriAw&#64;mail.gmail.com&gt;
+Date: Thu, 17 Apr 2014 15:32:25 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 12:21 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+
+&gt; Bill,
+&gt;
+&gt; How did you calculate the "average memory/second" for Lyra2 and
+&gt; yescrypt.  I don't know about Lyra2's, but yescrypt's looks wrong to me.
+&gt;
+&gt; I think it is 5/8 of peak, since memory usage is growing linearly for
+&gt; the first 3/4th of time, and then stays at peak for 1/4th.
+
+
+You're right.  I skimmed the code, and I saw:
+
+/* 6: for i = 0 to N - 1 do */
+                for (i = 0; i &lt; Nloop; i += 2) {
+...
+
+The comment made me think it would execute N-1 times, but that's just the
+Script comment.  I went back and read your documentation on Nloop in your
+writeup, and it's clear enough.  I just missed it before.
+
+BTW, I think having a partial second loop is an excellent idea.  Your use
+of t_cost in this way wins.  It's even better than just having an outer
+loop like garlic, without increasing memory.  I see Lyra2 does something
+similar.  In both Lyra2 and Yescript, TMTO resistance increases with
+t_cost.  Very nice.
+
+
+&gt; On Thu, Apr 17, 2014 at 07:56:55PM +0400, Solar Designer wrote:
+&gt; &gt; On Thu, Apr 17, 2014 at 11:08:25AM -0400, Bill Cox wrote:
+&gt; &gt; &gt; Lyra2:
+&gt; &gt; &gt; Peak memory/second: 1.63 GiB/s
+&gt; &gt; &gt; Average memory/second: 1.22 GiB/s
+&gt; &gt; &gt; Memory bandwidth: 11.4 GiB/s  (highly bandwidth limited)
+&gt; &gt; &gt;
+&gt; &gt; &gt; Yescript:
+&gt; &gt; &gt; Peak memory/second: 3.03 GiB/s
+&gt; &gt; &gt; Average memory/second: 2.27 GiB/s
+&gt;
+&gt; This would be: 3.03*5/8 = 1.89 GiB/s
+
+
+I agree.
+
+
+&gt; &gt; &gt; Memory bandwidth: 6.06 GiB/s (does it do 2 r/w to DRAM per location,
+&gt; or 3?)
+&gt; &gt;
+&gt; &gt; yescrypt does 4 r/w per location when YESCRYPT_RW is set (and it is set
+&gt;
+&gt; No, that's wrong: it's 2 r/w per iteration.  It would be 4 r/w per
+&gt; location if SMix2 ran for as many iterations for SMix1, but in this mode
+&gt; it does not.  I think correct is:
+&gt;
+&gt; 3.03 * 4/3 * 2 = 8.08 GiB/s
+&gt;
+&gt; 4/3 is ratio of number of iterations to number of locations
+&gt; 2 is number of r/w per iteration
+
+
+You're math looks right here as well.  As you pointed out above, your real
+bandwidth is higher because of the extra time spent on memory allocation,
+and that has the effect of giving Lyra2 a higher bandwidth relative to
+Yescrypt and TwoCats than it really has.  I'd have to do some more invasive
+hacks to get a better estimate.
+
+
+&gt; &gt; in the PHS() API), so this would be 12.12 GiB/s.  It does one random
+&gt; &gt; read and one sequential write per iteration in SMix1, and one random
+&gt; &gt; read+write per iteration in SMix2.  (Resetting, YESCRYPT_RW brings it to
+&gt; &gt; only 2 r/w per location like in normal scrypt, but then it'd have to run
+&gt; &gt; 1.5 times longer to achieve optimal normalized area-time and it'd be
+&gt; &gt; friendly to TMTO, hence that mode isn't the default.)
+&gt; &gt;
+&gt; &gt; &gt; TwoCats:
+&gt; &gt; &gt; Peak memory/second: 4.98 GiB/s
+&gt; &gt; &gt; Average memory/second: 2.49 GiB/s
+&gt; &gt; &gt; Memory bandwidth: 9.97 GiB/s
+&gt; &gt;
+&gt; &gt; I'd interpret these as TwoCats and yescrypt winning over Lyra2 in terms
+&gt; &gt; of average memory/second, which I think is the most important of three
+&gt; &gt; metrics here.  yescrypt loses to TwoCats in terms of this metric by 8.9%,
+&gt; &gt; but it possibly makes up for that by using 21.6% more memory bandwidth
+&gt; &gt; (some would view that as a drawback, but in this test we were
+&gt; specifically
+&gt; &gt; trying to use as much bandwidth from one thread as we could).
+&gt;
+&gt; The 8.9% was based on your "average memory/second" figures.  With
+&gt; yescrypt's corrected, TwoCats' advantage is 24%, which is impressive!
+&gt;
+&gt; I am surprised that Lyra2 and TwoCats seem to win significantly in terms
+&gt; of bandwidth usage.  I doubt it's the cost of one round of pwxform
+&gt; (although to find out we can try making it zero rounds, even).  It could
+&gt; be the cost of r=8.
+&gt;
+&gt; &gt; BTW, chances are that going from r=8 to r=16 (already a tunable, like in
+&gt; &gt; scrypt) would increase yescrypt's bandwidth usage (and average and peak
+&gt; &gt; memory usage per second) some further.  I choose r=8 for PHS() because
+&gt; &gt; it increases reliance on fast small random lookups.  r=32 and higher
+&gt; &gt; might be faster or slower, since we're competing for L1 cache space with
+&gt; &gt; pwxform's S-boxes (8 KiB in these tests).
+&gt;
+&gt; Alexander
+&gt;
+
+I tried r=32, and here are the results:
+
+time ./phs-yescrypt 0 16
+Allocating 2147504128 bytes
+
+2f c7 c0 a0 1b 0c 6b 82
+61 4d 6b c0 02 cb 16 d7
+6c 40 2b 60 2b 9b 23 8c
+d2 32 7c a3 56 b4 ab 25      32 (octets)
+
+
+real    0m0.648s
+user    0m0.540s
+sys     0m0.100s
+
+
+Using the corrected math you provided, I think the correct numbers are:
+
+Lyra2:
+Peak memory/second: 1.52 GiB/s
+Average memory/second: 1.14 GiB/s
+Memory bandwidth: 10.64 GiB/s
+
+Yescrypt: Salsa20/2, 1 PWXFORM round, r=32
+Peak memory/second: 3.09 GiB/s
+Average memory/second: 1.93 GiB/s
+Memory bandwidth: 8.23 GiB/s
+
+TwoCats: multiplies=1
+Peak memory/second: 4.64 GiB/s
+Average memory/second: 2.23 GiB/s
+Memory bandwidth: 9.28 GiB/s
+
+I agree that average memory*time is the most important metric.  TwoCats is
+only ahead by about 15% on that scale.  If I want more compute time
+hardening, I should set multiplies to 2, in which case I'd probably run
+slower.  In any case, my machine changes it's mind on runtimes by 15%
+depending on it's mood it seems, so we're getting down to a level of speed
+improvement that even I can't get excited about.
+
+I'm still sticking to my "alternate win condition" based on peak memory *
+time :-)
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

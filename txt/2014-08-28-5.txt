@@ -1,0 +1,135 @@
+phc-discussions - Re: [PHC] Memory performance and ASIC attacks
+
+Message-ID: <53FF58BC.3040908@larc.usp.br>
+Date: Thu, 28 Aug 2014 13:28:44 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory performance and ASIC attacks
+
+Hi,
+
+On the matter of parallelizability: our code does not allow
+multithreading basically because we did not have time to implement and
+test the "p" parameter discussed in the "extensions" part of the
+documentation. :(
+
+This is about to change, though, since we have been focusing on the
+"extensions" discussed in the algorithm's proposal (mainly on how to
+control the memory bandwidth up/down while adding parallelism). AFAIU,
+the approach adopted in different from those of Yescript and Twocats, as
+the parallelism is on the memory matrix level rather than on the level
+of cells. There may be some (dis)advantages when compared to those two,
+but we will only be able to tell after we finish our tests :)
+
+BR,
+
+Marcos.
+
+
+On 28-Aug-14 13:07, Bill Cox wrote:
+TwoCats and Yescrypt are the most ASIC attack resistant algorithms in
+the competition for hash sizes of 32MiB and up.  Lyra2 is a close
+second, off by about 2X in my tests, only because Lyra2 does not have
+a multi-threading option.
+
+Here's why...
+
+On my machine, doing 16-byte unpredictable memory accesses to external
+DDR3 memory take 7.5X longer per byte.  Any PHC entry with no plan to
+mitigate this 7.5X penalty will run quite a bit slower than Script!
+This alone, IMO, limits candidates suitable for replacing Scrypt to
+Lyra2, TwoCats, and Yescrypt.  A factor of 7.5X is important!
+
+Any PHC entry doing unpredictable memory accesses that maxes out
+external memory bandwidth will have decent ASIC defense.  This can be
+done with large or small block sizes.  For example, Yarn, in my
+theoretical optimized version, maxes out memory bandwidth to external
+RAM when doing 1GiB hashes, and my ASIC attack gains only a 16X
+advantage, because my ASIC attack 16 banks of RAM.  Memory bandwidth
+hardening cannot defend against this any better.
+
+However, my ASIC will still guess memory-bandwidth limited 1 seccond
+Yarn hashes 3.25 times faster than Yescrypt or TwoCats memory limited
+1 second hashes.  This assumes my 1GiB GDDR5 memory banks have the
+same latency as DDR3, but twice the total bandwidth (assuming the same
+bandwidth, we'd get back to a 7.5X difference).  Also, if the ASIC
+uses lower-latency RAM, it gains a lot on Yarn, but almost nothing on
+Yescrypt or TwoCats.
+
+Lyra2 does have adjustable memory block sizes, which enables it to use
+about half of my memory bandwidth with one thread.  It's pretty good
+for ASIC defense!  With a threading "tweak", Lyra2 would be equal to
+both Yescrypt and Twocats at providing the best possible DRAM
+bandwidth-limited ASIC defense.
+
+
+Here's two sets of cache tests.  The first does pseudo random reads,
+writes, and read-then-write to different memory sizes.  The 16KiB
+tests my L1 speed, the 128KiB tests my L2 speed, the 4MiB tests my L3
+speed, and the 1GiB tests my DRAM speed.  The first run is for 16-byte
+memory accesses, and the second is for 4096 byte memory accesses.
+
+cachetest./cachetest16
+Access times for random read then write of 16 byte blocks
+For random writes to 16384 memory: 1.30032ns per block, or 0.0812698ns
+per byte
+For random reads from 16384 memory: 0.953253ns per block, or
+0.0595783ns per byte
+For readom read-then-write from 16384 memory: 1.63673ns per block, or
+0.102296ns per byte
+
+For random writes to 131072 memory: 1.49561ns per block, or
+0.0934755ns per byte
+For random reads from 131072 memory: 1.17821ns per block, or
+0.0736378ns per byte
+For readom read-then-write from 131072 memory: 2.19711ns per block, or
+0.137319ns per byte
+
+For random writes to 4194304 memory: 2.2032ns per block, or 0.1377ns
+per byte
+For random reads from 4194304 memory: 1.50234ns per block, or
+0.0938961ns per byte
+For readom read-then-write from 4194304 memory: 2.93296ns per block,
+or 0.18331ns per byte
+
+For random writes to 1073741824 memory: 9.88037ns per block, or
+0.617523ns per byte
+For random reads from 1073741824 memory: 9.377ns per block, or
+0.586063ns per byte
+For readom read-then-write from 1073741824 memory: 15.6555ns per
+block, or 0.978472ns per byte
+
+
+Here's draw data with using 4096 byte blocks
+
+cachetest./cachetest4096
+Access times for random read then write of 4096 byte blocks
+For random writes to 16384 memory: 262.686ns per block, or 0.0641324ns
+per byte
+For random reads from 16384 memory: 205.491ns per block, or
+0.0501686ns per byte
+For readom read-then-write from 16384 memory: 365.972ns per block, or
+0.0893486ns per byte
+
+For random writes to 131072 memory: 261.884ns per block, or
+0.0639364ns per byte
+For random reads from 131072 memory: 210.799ns per block, or
+0.0514647ns per byte
+For readom read-then-write from 131072 memory: 369.852ns per block, or
+0.0902959ns per byte
+
+For random writes to 4194304 memory: 262.403ns per block, or
+0.0640631ns per byte
+For random reads from 4194304 memory: 217.096ns per block, or
+0.053002ns per byte
+For readom read-then-write from 4194304 memory: 373.642ns per block,
+or 0.0912211ns per byte
+
+For random writes to 1073741824 memory: 476.278ns per block, or
+0.116279ns per byte
+For random reads from 1073741824 memory: 331.367ns per block, or
+0.0809001ns per byte
+For readom read-then-write from 1073741824 memory: 544.697ns per
+block, or 0.132983ns per byte
+
+

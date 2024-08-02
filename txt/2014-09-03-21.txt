@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <54075EBF.5070602@ciphershed.org>
+Date: Wed, 03 Sep 2014 14:32:31 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/03/2014 11:52 AM, Marcos Simplicio wrote:
+Just to be precise: in Lyra2 the blocks are just as huge or small
+as you want them to be, since C (the number of columns per row) is
+a user-defined parameter... In other words, it can be made as 
+cache-bounded as the user wants (be it a bad or a good thing)
+
+Which is awesome.  This is also true in Yescrypt and TwoCats.  I
+forget if there are others that have a cache-delay mitigation, but I
+consider it critical for any potential Scrypt replacement.
+
+Once Lyra2 is multi-threaded, it should easily max out the
+>external memory bandwidth.  My high-end ASIC attack would not
+>benefit from a 1/2 TMTO against a multi-threaded Lyra2, because
+>it will be memory bandwidth limited against Lyra2, doing about
+>32X faster than my Ivy Bridge PC (12GiB/s banwidth for my PC vs
+>16X24GiB/s for my ASIC).
+>
+>I would prefer some better compute-time hardening in Lyra2
+>though, for protection of very small memory hashes that do fit on
+>an ASIC.
+
+Since the latest discussions on the matter, I have been thinking
+more seriously about testing a "multiplication hardened"
+underlying permutation in Lyra2's sponge. There are some
+cryptographic schemes that do use multiplications in their designs,
+so we will probably start there...
+
+Please feel free to add multiplication chains.  I would feel better
+about cache bound hashing ASIC hardness if they were there.  However,
+with the speeds Lyra2 and Yescript run the SIMD units, you already
+have decent ASIC compute time hardness based on cache bandwidth and
+latency.  I would be very surprised to get a 10X speedup.  All three
+of my favorite Scrypt-like algorithms hammer the cache interfaces
+pretty hard.  PufferFish does, too.
+
+On the other hand, some of the Catena-like entries can be sped up over
+1000X in an ASIC attack.  Any attempt at ASIC hardening would be very
+nice there, multiplication chain or otherwise.  However, I'd recommend
+a Lyra2-like reduced Blake2b hash first.  I have to credit the RIG
+guys for getting that part right.  That alone should put them
+performance-wise at the head of the Catena-like pack.
+
+When I get to Lyra2, I'll describe what I think an ASIC attack might
+look like for both cache-bound and large memory hashes.  It will be
+interesting to see if you need multiplication chains, given the SIMD
+optimized hashing you already have.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUB168AAoJEAcQZQdOpZUZc9IP/R5Vw025abM2Cmsk+96jDRzw
+QZT9j/o8Oz48Uz39nYjEVEhOlJavCpJHN6BHzTGtaf8bmUBkCRAiqVANl8zjjbAg
+2sC/uKa153pIM9GpNYY0aQCvo9BXWfZqmqP40RH8l1VTggK3FquFlbN8/7icQC8H
+s/195E2ID+mL795SGsSvCtSR9U8AswtoYOCB5MAV1aH1AALqMoQ6+3Z4P+KRmowC
+0klK052XyXxHoZ6Pg103M/AuwRc37ckLjUxuKMY4FeC+Ql4rm2dYoHPZ3k5afX2i
+OM40jzMQlgd8g81CkvKBGht83rS02O6aZpPxZDvax8AzGMHb9PUqUHGvLQa9r8TQ
+i8ywHKkrkFTtdU/QoFG3D86qLoMUwwqHRTq/eX6pzguVCeokWQs5Bhd+RPBxXT2s
+VvuPiALTpnI705Pf2GUevJYw3O2paM7wGkakpBdLwzioZh9UyXVy0RNpUCBCW2Ju
+eOgoaNzCXTJnGgWB20SHh7wF8SIIVrYeiq946VrOuRJ9ne2a7wqKxUZSlvo1bMzx
+zzJ/dCqHYN+PIJaDBQ35YY6rucAzp5+QP8p5v9jAWQfPsuostlAU5ooCGI3pfWpk
+LH33jZ742mH5WIrSiULYQ3+FRHLGvCRM/km2+UdeGcVkfTorIBnJMeZiojZAAD5k
+rEBf4t4Vgf9+uJ1jU8yM
+=CUw3
+-----END PGP SIGNATURE-----
+

@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5EYwvQZWiXd7EO5AGrGBzpHz+2O-_5xGZDvFcV=Wc=2Q&#64;mail.gmail.com&gt;
+Date: Wed, 26 Feb 2014 09:35:17 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?
+
+On Wed, Feb 26, 2014 at 4:14 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; As you probably realize, hashing of all the input parameters is not the
+&gt; only way to prevent this attack.  A final step may (or may not,
+&gt; depending on how it's chosen) also prevent the attack.  (Arguably, this
+&gt; translates into hashing of the iteration count anyway, via the iteration
+&gt; count indirectly affecting the input to this final crypto hash step.)
+
+This is what I was thinking.  I currently call PBKDF2 at the end, but
+the only parameter I pass in is the hash.  If input parameters cause
+correlations of any sort in the hash just before this step, the final
+hash should eliminate them.  With this, there isn't any reason to hash
+the input parameters, is there?  As you say, we could argue that the
+final hash *is* the hash of the input parameters.  I like this
+solution better than hashing a "tweak" value in at the beginning.
+
+I'm digging a bit more into the design of PBKDF2 and HMAC now.  HMAC
+is cool, and seems like the right way to hash the initial password,
+salt, and data.  PBKDF2, with c == 1 (iteration count), and output
+length == 32 turns into just a call to HMAC, followed by a seemingly
+useless additional call to HMAC with the hash and a 1-byte 0 as input.
+ I am considering calling HMAC directly instead of PBKDF2 in the
+beginning, though the extra HMAC call is no big deal.  Is it worth
+calling PBKDF2 simply to give people peace of mind without having to
+convince them that it's OK to just call HMAC?
+
+I also currently use PBKDF2 for the final hash, but I'm thinking of
+abandoning that and using just the crypto-hash directly.  If a user
+asks for a 64-byte output, provides a 64-byte password and a 64-byte
+salt, and if I used a 64-byte hash like Blake2b throughout, then a
+user is getting a bit of raw deal from PBKDF2.  He is probably
+expecting a full 512 bits worth of security, but PBKDF2 only gives him
+256, even though it takes 512 bit inputs and delivers a 512 bit
+result.  This is because it compresses the hash data down to 256 bits,
+and then uses that state to generate the output for any length.
+
+I can't figure out why a 512 bit result hash is any more secure than a
+256 bit hash for any realistic application, but if the user asks for
+it, I feel bad giving him the output from PBKDF2.  At the same time, I
+don't want to take on the challenge of using a small width hash
+function to securely hash the final wide width result.  It seems too
+easy to mess up.  For example, just calling Blake2s on two 32-bit
+hashes results in a 64-byte hash where changing 1 input bit only
+effects 32 bytes of the output.  A wide hash needs to be better than
+that.  I'm tempted to use a 512 bit hash instead, like Blake2b, and
+simply not support anything wider.
+
+&gt; Would this fall under "the KDF designer messed up" (if such a final step
+&gt; is missing or does not prevent the attack)?
+
+Yes, that's what I meant.  When Steve posted that devastating attack
+on my NoelKDF hash, it scared the heck out of me.  Now there is no way
+I'm going to deliver a KDF that does not call a secure hash function
+one final time on the output.  Even PBKDF2 messed up in this case,
+delivering the XOR of successive rounds without a final HMAC call on
+the result.  It's really scary how hard this stuff is to get right.  A
+final secure hash on the entire output seems like a good measure to
+me.
+
+As a side-effect, having a
+&gt; final step like this also prevents hash upgrades to higher iteration
+&gt; count, which brings us right to:
+
+I don't think it prevents application of "garlic" the way Catena does
+it.  Catena (and my KDF since I copied Caten), applies a final hash
+inside the garlic loop, so it gets called garlic times, but that's no
+biggie.
+
+A concern I have is that in "server relief" mode, Catena (and my KDF,
+again because I copied them), the final application of a secure hash
+function is skipped, and the hash just before this step is returned to
+the caller.  In the way this is meant to be used, that returned hash
+is just as sensitive as the password, since it can be used by an
+attacker instead of the password to login to a server.
+
+Because of this, I was thinking that it is OK if this returned hash
+has weaknesses that an attacker could use to more quickly guess the
+password, but an attackers real goal might be to guess the password
+hoping to use it to log into other sites.  Therefore, I've got work to
+do to strengthen server relief mode :-)
+
+Catena also returns the hash value in server relief mode before the
+final hash is called, but in the master branch, all hashing is done
+with a cryptographically secure hash function, so the previous hash
+should be fine.  In Catena, the only reason for the final hash seems
+to be to enable server-relief mode in a garlic-compatible manner.
+However, in my "waywardgeek" branch of Catena, I introduced a
+"FastHash" option for fast but cryptographically weak memory hashing
+(which is still the right thing to do, IMO).  I guess I've broken his
+server relief mode...
+
+I don't know if it's useful for me to fix the waywardgeek branch,
+since I'm not seeing significant activity in the Catena git
+repository.  If it were to move forward, I'd upgrade the fast hash
+functions to be more SIMD friendly and base it on ARX (addition,
+rotation, XOR), drop the multiplications, and probably write SSE and
+AVX2 versions.  There's probably another factor of 2X or more in speed
+to be gained vs my last benchmarks on my waywardgeek branch.  I'd also
+need to fix this server relief problem I've introduced.  However,
+there's only a few weeks left to go, and the master branch still is
+10X too slow to be competitive, when it's sooo easy to upgrade...
+
+Thanks for the description of these issues.  It makes a lot more sense now.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

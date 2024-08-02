@@ -1,0 +1,95 @@
+phc-discussions - Re: [PHC] Q: int return from PHS()
+
+Message-ID: <CAGiyFdfJJaa4eb7oHwPVkUSeNDy8jZh5R=n+9a+UxMtoavEHsA@mail.gmail.com>
+Date: Tue, 19 Feb 2013 08:04:37 +0100
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Q: int return from PHS()
+
+Like Samuel said, the call does not set any rule for return values,
+however it is expected that implementers return 0 upon success, and
+something else upon error.
+
+
+On Tue, Feb 19, 2013 at 8:00 AM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+What I don't know is which case it is?
+>
+I have one response that says the returned int is a result code, with 0 for
+success.
+>
+I have another response that says the returned int is the size of hash that
+was actually produced.
+>
+What's intended?  Or is it implementation-defined?
+>
+ - Dennis
+>
+-----Original Message-----
+From: Jean-Philippe Aumasson [mailto:jeanphilippe.aumasson@...il.com]
+Sent: Monday, February 18, 2013 22:43
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Q: int return from PHS()
+>
+On Mon, Feb 18, 2013 at 10:26 PM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+>!? (glad I asked)
+>>
+>If PHS( ) returns the length of the data delivered in the output buffer,
+type disharmony is avoided by (1) making the result a size_t or (2) making
+outlen an int.  In case (1), 0 is probably the failure result.  In case (2)
+negative results can signify errors (and 0 is a strange success case?).  I'm
+not clear whether (2) is now considered an archaic device.  I'm agnostic
+about that.  I just want definiteness.
+>>
+>If PHS( ) returns a straightforward result code (with 0 signifying
+success), I would expect that outlen is a request for a specific size of
+result and the function should fail if it can't deliver.
+>>
+>
+As the call states, at least the value 16 (i.e., 16 bytes) should be
+supported. The function may then return an error (a non-zero value) if
+the outlen received is not supported.
+>
+>
+>In the case of failure/error in either case, the content of the output
+buffer should be considered unpredictable and should also not leak anything.
+(If it were up to me, I'd always clear the output buffer at the beginning
+and endeavor to leave it that way except just before a success return.)
+>>
+>
+We don't care about such leaks in a reference implementation (as
+opposed to a production implementation).
+>
+>-----Original Message-----
+>From: Steve Thomas [mailto:steve@...tu.com]
+>Sent: Monday, February 18, 2013 12:40
+>To: discussions@...sword-hashing.net
+>Subject: Re: [PHC] Q: int return from PHS()
+>>
+>>On February 18, 2013 at 1:00 PM Samuel Neves <sneves@....uc.ptwrote:
+>>>
+>>>
+>>On 18-02-2013 18:46, Dennis E. Hamilton wrote:
+>>Reference implementations for submissions are requested to provide an
+API
+>>having signature int PHS( ...)
+>>>
+>>What are the prescribed return values and their significance?
+>>>
+>>- Dennis
+>>>
+>>PS: Sorry if this has been asked. I haven't found the list archive yet.
+>>>
+>>It has not been asked.
+>>>
+>>In typical C fashion, return value should be 0 for success, and
+>>otherwise for any error that may occur during computation. Error codes,
+>>if any, should be up to implementors, since sources of error may wildly
+>>vary between schemes/implementations.
+>>
+>I was under the impression that the return value was the amount of data
+copied to the output buffer.
+>>
+>
+

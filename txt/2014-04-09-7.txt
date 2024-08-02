@@ -1,0 +1,108 @@
+phc-discussions - Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <CALW8-7Ks1sSwkuAqHkYzUE0tOjNb+SoYSV-vc-SZTCUzEGd5nw@mail.gmail.com>
+Date: Wed, 9 Apr 2014 13:32:34 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Hi Christian,
+
+>Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+considered to be independent?
+
+The independency is a not a well-defined notion here. Consider, for
+instance, distinct bytes of K1. Are they independent?
+
+If we think about it for a while, it becomes clear that a single key can be
+splitted into as many keys as its length without any security loss.
+
+>y= H(PWD || salt)
+K1' =   F(y, 1)
+K2' =   F(y, 2)
+
+This method is clearly equivalent to the first one. Indeed, consider H'(x)
+= F(H(x)||1)||F(H(x)||2). Then the second method turns into the first one
+with H = H'.
+
+
+For well-established security notions I would refer to Krawczyk's paper
+http://eprint.iacr.org/2010/264.pdf
+
+Best regards,
+Dmitry
+
+
+
+On Wed, Apr 9, 2014 at 11:48 AM, Christian Forler <
+christian.forler@...-weimar.dewrote:
+
+On 09.04.2014 00:10, Greg Zaverucha wrote:
+Christian, can you clarify/justify your recommendation?
+>
+Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+considered to be independent?
+>
+Personally, I would feel better when using the following key derivation
+algorithm.
+>
+y= H(PWD || salt)
+K1' =   F(y, 1)
+K2' =   F(y, 2)
+>
+where F is a cryptographic hash function. Here you have only two
+additional hash function calls and since (y, 1) != (y,2) one can argue
+that K1' and K2' are pairwise independent. But is hard to argue that K1
+and K2 are pairwise independent.
+>
+>
+Its common  practice to call a KDF with an input parameter for the
+required
+number of output bytes then divide the output into two or more keys.
+For instance, you might derive separate encryption authentication
+keys from a DH secret with one call to the KDF.
+>
+One example standard that does this is in Section 7.3 of:
+http://csrc.nist.gov/publications/nistpubs/800-108/sp800-108.pdf
+>
+>
+Using KDF (modeled as PRF) in Counter or Feedback mode is fine.
+>
+Note that these modes do not work for password based key derivation. The
+PRF model assumes a secret key K which is chosen uniformly at random
+from a key space. A password is not chosen uniformly at random.
+>
+>
+Another example is the scrypt encryption utility
+(http://www.tarsnap.com/scrypt.html) Quoting the FORMAT file:
+"AES256-CTR is computed with a 256-bit AES key key_enc, and
+HMAC-SHA256 is computed with a 256-bit key key_hmac, where
+scrypt(password, salt, N, r, p, 64) == [key_enc][key_hmac]"
+>
+The reference code for all PHC submissions to accept an output
+length.  It should be a requirement that any subset of the output
+bytes be suitable for use as keying material.  Is this not the case?
+>
+Assume that the output of our KDF is larger than the internal
+state of the underlying cryptographic primitive. Where should the
+additional security come from?
+>
+An output transformation does not protect you against an adversary which
+can reconstruct the internal state.
+>
+>
+Best regards,
+Christian
+>
+>
+>
+>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

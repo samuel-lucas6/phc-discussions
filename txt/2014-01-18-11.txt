@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140118141625.GA14807@openwall.com>
+Date: Sat, 18 Jan 2014 18:16:25 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sat, Jan 18, 2014 at 01:32:17PM +0000, Peter Maxwell wrote:
+Ok, what would you consider reasonable "general use" parameters for a busy
+web-service hosted on reasonable hardware that meets your idea of a minimum
+security threshold: how much memory do you intend to use, how much
+computation time/cycles do you suggest?
+
+This is tough, and a reason why we're doing PHC.  But it's tough _not_
+because of taking up memory bandwidth from other uses.
+
+An actual problem we have is making use of enough RAM in scrypt-like
+fashion (in order to at least meet bcrypt's level of GPU resistance) at
+maximum-supported throughput levels that I'd recommend e.g. for default
+settings of a web app.  For example, this could be 16 MB/instance and
+500 req/s/machine (means ~16 GB/s).
+
+There are also implementation difficulties: would need native code
+(can't reach these parameters from PHP code yet), and ideally want to
+limit the number of hashes being computed in parallel and thus of the
+~16 MB allocations to match the CPUs' supported hardware threads count,
+whereas the actual concurrent request count may be higher (some will
+need to wait, as there's no speedup from them all proceeding to password
+hashing anyway).
+
+Another option is making use of a larger "ROM" (multi-gigabyte).  As I
+had mentioned, for busier-than-in-example-above dedicated authentication
+servers, we're currently playing with parameters that give
+7300 req/s/machine on a large(r) machine, using 112 GiB ROM (= 120 GB) +
+1.75 MiB RAM/instance.
+
+I don't know which of these examples is closer to your "busy
+web-service".  Maybe something in-between.
+
+And yes, adoption (especially with non-low memory settings) may be
+difficult for non-technical reasons as well.
+
+These thresholds and difficulties are a reason why I think good PHC
+candidates should be no weaker than bcrypt even at very low memory
+settings (like a few KB).  Some/many uses will be at low settings.
+
+(yes, I'm being cheeky, there is going to be a follow up)
+
+OK.
+
+Alexander
+

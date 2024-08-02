@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Catfish and public key hash</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="33">[&lt;prev]</a> <a href="35">[next&gt;]</a> <a href="30">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAN5JNV1RpKk=b7ypKdXaJqeuLhy2+WT1cS_3QkrOovKc5onYcA&#64;mail.gmail.com&gt;
+Date: Thu, 3 Apr 2014 10:39:55 -0400
+From: Bo Zhu &lt;bo.zhu&#64;...terloo.ca&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Catfish and public key hash
+
+Hi Steve,
+
+Thanks for the recommandation of using RSA-type $x ^ e \mod{N}$.
+Actually, we have considered this option before.
+
+But by using $x ^ e$, you may have a big trouble about collision
+resistance, if you don't handle its input very well.
+You may consider the case where (1) $(x + N) ^ e = x ^ e \mod{N}$, and (2)
+$N$ is not a power of 2, so it might be less than $2^n$, where $n$ is the
+output bit-length of a hash function, e.g. Keccak.
+(It seems Makwa is using RSA-type operations, so hope it doesn't have any
+issues with this.)
+
+However, the discrete-log type $g ^ x \mod{N}$ doesn't have all these
+troubles.
+It is proven to be collision-resistant if factoring $N$ is hard and $x$ is
+simply any positive integer.
+
+
+For more info, you may read Theorem 2 in our specification paper, and/or
+the two following papers.
+J.K.  Gibson, Discrete logarithm hash function that is collision free and
+one way
+<a href="http://senderek.com/SDLH/discrete-logarithm-hash-for-RSA-signatures.ps" rel="nofollow">http://senderek.com/SDLH/discrete-logarithm-hash-for-RSA-signatures.ps</a>
+
+Best regards,
+Bo
+
+
+
+On Thu, Apr 3, 2014 at 5:06 AM, Steve Thomas &lt;steve&#64;...tu.com&gt; wrote:
+
+&gt; &gt; On April 2, 2014 at 6:36 PM mjunior&#64;...c.usp.br wrote:
+&gt; &gt;
+&gt; &gt;  Hi there
+&gt; &gt;
+&gt; &gt;  I would say that if the attacker needs more than 2x the amount of
+&gt; memory used
+&gt; &gt;by the defender to get less than a 2x speed-up, then the attacker is
+&gt; wasting
+&gt; &gt;resources: he/she could simply use two cores to get the same throughput...
+&gt; &gt;Unless the attacker model considers a limitation in number of cores,
+&gt; which does
+&gt; &gt;not seem to be the most common case.
+&gt; &gt;
+&gt;
+&gt; But it's "free" if I have 8 GiB of ram and 4 cores and the settings are
+&gt; such
+&gt; that I need 64 MiB/guess then I have 7.75 GiB doing nothing. Anyway this is
+&gt; a non-issue if they just change it from (x is the output of Keccak):
+&gt;
+&gt; g ** x (mod N)
+&gt; to
+&gt; x ** e (mod N)
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

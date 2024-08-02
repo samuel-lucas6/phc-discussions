@@ -1,0 +1,69 @@
+phc-discussions - [PHC] How to: A super-efficient cryptographic accumulator?
+
+Message-ID: <CADPMZDBq_CsD2ztxBX4J0FZLyf8Stm+Bz=AOPs6Adq7frGmi1g@mail.gmail.com>
+Date: Tue, 13 Mar 2018 03:25:56 -0500
+From: denis bider <denisbider.ietf@...il.com>
+To: discussions@...sword-hashing.net
+Subject: [PHC] How to: A super-efficient cryptographic accumulator?
+
+Hey everyone!
+
+This problem has been bugging me for a while. It’s relevant to crypto
+currency (saving state in a more efficient way than the gargantuan database
+produced by Bitcoin) as well as other purposes like checking for weak
+passwords, which is relevant to this list. For example, the best measure
+for password safety is probably to prevent users from using any of billions
+of known revealed passwords, but the compressed database is 5 GB in size:
+
+https://github.com/berzerk0/Probable-Wordlists/blob/master/Downloads.md
+
+Now. I sort of have this intuition that it’s possible to compress this crap
+into 20 bytes. That's not a typo – 20 bytes, not megabytes or something.
+But I don’t know how.
+
+The basic thinking that supports this intuition is: we're trying to have a
+function we can query for any given input, and we want the output to be
+either 1 or 0. We want to craft this function so it’s small, and accepts
+any given input, and will have zero false negatives, and some small but
+acceptable rate of false positives. For cryptocurrency purposes, perhaps
+the acceptable false positive rate is 10^(-20). For passwords, perhaps up
+to 1/100 is acceptable.
+
+Intuitively, it should be possible to do this because we can do this if we
+had an infinitely fast computer. If we have an infinitely fast computer,
+then we can simply find X such that:
+
+TruncateTo32Bits ( SHA256 ( X | P1 ) ) == 0x00000000
+TruncateTo32Bits ( SHA256 ( X | P2 ) ) == 0x00000000
+TruncateTo32Bits ( SHA256 ( X | anything else ) ) == whatever
+
+If we crank the infinitely fast computer long enough, we should be able to
+find this X, and it should be small in size. The only reason we should not
+be able to find this X is if SHA256 has some structural issue that
+prohibits an X like that from existing. In that case we use a better hash
+function.
+
+To use this, we calculate TruncateTo32Bits ( SHA256 ( X | Pcandidate) ). If
+the result is 0, then we know Pcandidate is “contained” in X with
+probability about 2^32 : 1. If the result is any other number, we know
+Pcandidate is not “contained” in X.
+
+Now, because we have an infinitely fast computer, we can just do the above,
+but for P1 ... P999999999. Ta-daa, we now have a billion passwords stored
+in this serendipitous X, which is probably small and on the order of ... 8
+bytes? 4 bytes to “store” yes/no information about a billion passwords, and
+another 4 for a 2^-32 rate of false positives?
+
+Now, the reason we can’t do that is, the way SHA256 is designed, it
+requires us to have an infinitely fast computer.
+
+But what if we design a different function, in some ways similar to SHA256,
+but which would allow X to be found more efficiently?
+
+If we can’t design this algorithm for a classical computer – what if we
+have a quantum computer?
+
+denis
+
+
+

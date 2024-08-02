@@ -1,0 +1,61 @@
+phc-discussions - Random Hash Functions
+
+Message-ID: <5164BE4E.50104@defuse.ca>
+Date: Tue, 09 Apr 2013 19:20:14 -0600
+From: havoc <havoc@...use.ca>
+To: discussions@...sword-hashing.net
+Subject: Random Hash Functions
+
+Here's a quick idea for PHC, that you're all free to expand on:
+
+Generating the hash:
+
+Input: The password P.
+1. Generate a random salt S.
+2. Generate a random hash algorithm F.
+3. D = H(S, F, P).
+3. Return <D, S, F>.
+
+Checking the hash:
+
+Input: <D, S, Fand test password P'.
+4. Return D == H(S, F, P').
+
+Where H(S, F, P) is some iterated stretching function that involves the
+random hash function F, a well-tested hash function (e.g. SHA3), and
+whatever else you want, in each iteration.
+
+The idea is that every hash would have not only a random salt, but a
+random hash algorithm. By "random hash algorithm", I don't mean simply a
+random hash function which you could easily get by prefixing a random
+salt, I mean really generating random *code*.
+
+This has interesting implications for hardware cracking. The crackers
+will have to either,
+
+1. Create custom hardware for each hash they want to crack, or
+2. Build lots of small processors that can of compute any of the random
+hash algorithms.
+
+Currently, the best way to do it is probably to use an FPGA with method
+(1). To counter this, it should be very time consuming to find (either
+by hand or by automated process) an FPGA implementation of any F, that
+is faster than a well-designed general processor (method (2)).
+
+The random hash algorithm F should be encoded in a simple, standard,
+machine language, and either interpreted by the host system or
+translated into the host system's native instructions (safely!) before
+execution.
+
+Of course, generating a random *secure* cryptographic hash function is
+NOT easy, since it takes years of design and testing to become confident
+in just one. However, except for very valuable hashes, attackers
+probably won't spend a lot of time cryptanalyzing them, so it's OK for
+them to be not-so-secure.
+
+Does anyone know of existing similar work?
+
+Thanks,
+-- 
+Taylor (was: Havoc)
+

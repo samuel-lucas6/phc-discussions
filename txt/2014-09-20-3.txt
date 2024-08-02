@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] Multiply with CUDA
+
+Message-ID: <20140920111412.GC31117@openwall.com>
+Date: Sat, 20 Sep 2014 15:14:12 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Multiply with CUDA
+
+On Fri, Sep 19, 2014 at 07:00:24PM -0500, Steve Thomas wrote:
+I heard some people talking about multiply being slow on GPUs
+
+Yes, as well as other instructions - in terms of latency.
+
+but still a little faster than CPUs.
+
+I guess you mean in terms of throughput?  Per multiprocessor vs. per core?
+
+This is why it's slow on Nvidia cards:
+5.4.1. Arithmetic Instructions
+http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions
+
+Thanks!  This only talks about throughput, not latency, although latency
+is mentioned elsewhere on this page:
+
+"If all input operands are registers, latency is caused by register
+dependencies [...]
+Execution time varies depending on the instruction, but it is typically
+about 22 clock cycles for devices of compute capability 1.x and 2.x and
+about 11 clock cycles for devices of compute capability 3.x"
+
+It is unclear whether multiply instructions possibly have a higher than
+this minimum latency.
+
+If we have to combine multiple smaller multiplies to build a bigger one,
+the total latency may grow.  (Except when it's merely two separate
+instructions for low 32 and high 32 bits of outputs, which I guess may
+execute in parallel.)
+
+Some CPUs have a higher latency on the high part.
+
+Yes.
+
+Intel's Nehalem is 10 vs 3, but most are closer or no difference.
+
+Per GenuineIntel00106A2_Nehalem-EP_InstLatX64.txt, the 10 cycles is only
+for high 64 bits of 128-bit result.  It does not apply for high 32 bits
+of 64-bit result.  In fact, PMULUDQ on Nehalem produces the full 64-bit
+results in 3 cycles (scalar instructions producing 64-bit results are 3
+or 4.8? cycles depending on which instruction you use).
+
+Newer CPUs can do 64bit*64bit=128bit with a throughput of 1 per cycle and a
+latency of 3 cycles (https://gmplib.org/~tege/x86-timing.pdf).
+
+I recall it's at best 4 cycles for the upper 64 bits (RDX), except maybe
+on low-clocked AMD APUs (would need to double-check), per the files at
+http://users.atw.hu/instlatx64/
+
+3 cycles is best for the lower 64 bits of result (RAX).
+
+When comparing
+CPUs and GPUs with hash function speeds GPUs are ~10x faster than optimized SIMD
+CPU code. So we're losing SIMD with multiply so that's a 8x hit. GPUs have a
+similar hit on speed while doing smaller multiplies which is another ~4x
+slowdown.
+
+You lost me here.  In what case are we "losing SIMD with multiply"?  Do
+you mean e.g. when we use specifically the 64x64->128 multiply on CPU?
+
+One of the reasons why I don't use 64x64->128 in yescrypt is that
+64x64->128 is not directly available on 32-bit CPUs and in 32-bit mode
+on 64-bit CPUs.  With 32-bit CPUs/mode in mind, it's 32x32->64 max, and
+we do have SIMD with that.
+
+Last note, interleaving MULX (umul128), ADCX (_addcarryx_u64), and ADOX
+(_addcarryx_u64) with VPMULUDQ (_mm256_mul_epu32) might get better performance
+on CPUs. MULX and VPMULUDQ should be similar in speed since VPMULUDQ can do
+4x(32bit*32bit=64bit) but there's 4x more work to do than doing 64bit*64bit=128.
+Interleaving them should mask some of the latency.
+
+I view potential SIMD/scalar interleaving as implementation detail, as
+long as the hashing scheme provides sufficient/tunable parallelism.
+
+Why do you say that "4x(32bit*32bit=64bit)" is "4x more work" than
+"64bit*64bit=128"?  In terms of die area, I'd expect these to be
+similar, but in terms of latency I'd expect Nx(32x32->64) to take a cycle
+less (like 3 vs. 4 if both are optimized for lowest real time latency,
+which is what we actually see for these in some CPUs).
+
+Alexander
+

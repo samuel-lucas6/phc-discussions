@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140111175232.GA6736@openwall.com>
+Date: Sat, 11 Jan 2014 21:52:32 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 09:01:20PM +0400, Solar Designer wrote:
+So r=32 (4 KB) appears optimal in this test.
+
+r=32 and Salsa20 rounds count reduced to 1:
+
+real    0m5.362s
+user    0m39.046s
+sys     0m2.588s
+
+2*3*10*2^30/10^9/5.362 = ~12 GB/s
+
+I suspect that some of the memory bandwidth might be wasted on reading
+from to-be-written-to memory locations into cache, before the
+corresponding cache lines are finally complete with the newly written
+data and are written out back to memory.  In fact, in the tests above I
+have prefetch instructions on to-be-written locations.  With those
+instructions removed (leaving prefetches only for reads, not for
+writes), the speed is slightly lower, which sort of suggests that such
+unneeded-by-the-algorithm fetches are happening anyway.
+
+Turns out that with the settings above, the prefetches of to-be-written
+locations were no longer beneficial (they were with r=8 and 2+ rounds).
+Without them:
+
+real    0m5.259s
+user    0m38.106s
+sys     0m2.684s
+
+... and changing the Salsa20 outputs order (as I suggested in another
+posting) doesn't make a difference.  That's still with gcc-generated
+code, so the writes are not very tightly packed together and the order
+of them is not always the same (there are several instances of Salsa20
+due to the specialized BlockMix'es and the inlining and unrolling).
+
+For comparison, without prefetches for the desirable reads as well (that
+is, without any prefetches at all):
+
+real    0m5.501s
+user    0m40.167s
+sys     0m2.596s
+
+So these remaining prefetches are helpful.
+
+Curiously, with 2 MB pages and on a bigger machine (and with bigger
+memory allocation), the effect of prefetches is much more noticeable
+(around 20% vs. the mere 5% seen here).
+
+Alexander
+

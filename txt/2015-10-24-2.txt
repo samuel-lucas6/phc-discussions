@@ -1,0 +1,79 @@
+phc-discussions - Re: [PHC] RE: Specification of a modular crypt format (2)
+
+Message-ID: <562C01B8.9090508@openwall.com>
+Date: Sun, 25 Oct 2015 01:10:00 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] RE: Specification of a modular crypt format (2)
+
+On 2015-10-24 18:06, Peter Gutmann wrote:
+Just thought I'd post an update to this, based on the discussion earlier in
+the thread I rewrote the code to avoid gcc's issues, the result ended up
+almost identical to Thomas' decode_decimal() (I didn't look at it when I
+updated my code, it just ended up that way :-):
+
+That would be ideal -- to independently arrive at the optimal code 
+starting from the shared goals. And it would not very surprising IMHO 
+for such a small and isolated task. But your code differs in various 
+ways. Some are an evidence of globally different approaches (you know 
+the length of the field and hence make two passes over the string), 
+others are stylistic (convert char to int before sanity checking it or 
+after?). But the really interesting difference is in comparisons -- ">" 
+vs. ">="...
+
+     for( value = 0, i = 0; i < strLen; i++ )
+         {
+         const int ch = byteToInt( str[ i ] ) - '0';
+>
+         if( ch < 0 || ch 9 )
+             return( CRYPT_ERROR_BADDATA );
+         if( value < 0 || value >= MAX_INTLENGTH / 10 )
+             return( CRYPT_ERROR_BADDATA );
+         value *= 10;                                    // Line 19
+         if( value >= MAX_INTLENGTH - ch )               // Line 20
+             return( CRYPT_ERROR_BADDATA );
+         value += ch;
+         ENSURES( value >= 0 && value < MAX_INTLENGTH );
+         }
+>
+What's scary about this is that without the unnecessary 'value < 0' condition,
+the STACK analyser still reports it as being problematic:
+>
+bug: anti-simplify
+model: |
+   %cmp10 = icmp sge i32 %mul, %sub9, !dbg !37
+   -- false
+stack:
+   - test.c:20:0
+ncore: 1
+core:
+   - test.c:19:0
+     - signed multiplication overflow
+
+Hm, strange, I'll take a closer look at it tomorrow. But what is clear 
+without any tools is that the "if" at line 20 is superfluous. By 
+successfully passing the previous "if" we know that "value >= 
+MAX_INTLENGTH / 10" is false.
+== value < MAX_INTLENGTH / 10         (with integer division)
+== value <= MAX_INTLENGTH / 10 - 1    (with integer division)
+== value <= MAX_INTLENGTH / 10 - 1    (with exact division)
+== value * 10 <= MAX_INTLENGTH  - 10
+== value * 10 < MAX_INTLENGTH  - 9
+== value * 10 < MAX_INTLENGTH  - ch
+
+Depending on how closely STACK follows gcc's reasoning, if they do perform the
+same analysis then gcc would "see" UB there and decide that it could break the
+code.
+
+I don't know how closely STACK follows gcc's reasoning, but gcc does 
+indeed optimize such "if"s away. But it doesn't depend on any UB (and 
+hence STACK is not supposed to report it).
+
+Perhaps this is worth emphasizing. Compilers don't optimize like "Aha, I 
+see UB, lets remove something", it's more like "Aha, I can prove it's 
+false, let's remove it". And proofs sometimes use the assumption that 
+the code doesn't trigger UB, sometimes don't use.
+
+-- 
+Alexander Cherepanov
+

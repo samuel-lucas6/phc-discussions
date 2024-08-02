@@ -1,0 +1,40 @@
+phc-discussions - Tortuga issues
+
+Message-ID: <CAOLP8p5OoUqzdY549uyXHneRfa3tOkkJ+LGaLXyeGzALferh9g@mail.gmail.com>
+Date: Thu, 3 Apr 2014 00:26:11 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Tortuga issues
+
+I wonder if it would make sense to combine threads about different
+hashing schemes somehow...
+
+Tortuga fails on both windows and Linux for 1MiB m_cost, due to
+allocating hashing memory on the stack.  The algorithm relies on a
+sponge construction called "Turtle".  I'm not sure if this is a
+documented sponge construction or a new one, but the mixing looked
+iffy to me (is that scientific enough?), so I generated random data
+with it bash it using:
+
+for i in `seq 400000`; do ./test 256 1 1 $i s; done foo
+
+I added a print statement to test.c to print every 4 bytes of output
+as an unsigned int.  This generated over 23MiB before I killed it,
+which I fed into the dieharder tests.  It failed the first test, the
+birthday test.
+
+What this means is that with t_cost == 1, and m_cost == 1, the output
+hash for different passwords is not very random at all.  It's possible
+the error is in my code to print the data, but I think I got it right.
+ I would recommend that the author generate output hashes for many
+input passwords and verify that they pass some statistical tests for
+randomness, such as the dieharder tests.  There may be some simple bug
+in his code causing this result.
+
+I think I'm going to have to do this test on all 24.  Is someone
+working to create a standard test for each PHS function?  It would be
+simple to call that for each entry and test the resulting hashes for
+basic randomness.
+
+Bill
+

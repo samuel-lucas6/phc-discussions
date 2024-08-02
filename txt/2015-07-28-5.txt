@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] [OT] Improvement to Momentum PoW
+
+Message-ID: <CAOLP8p7jDuWxKhVHjBw=gjxT-q=Sgksb3OVm0v1p-9xXbjNQ=w@mail.gmail.com>
+Date: Tue, 28 Jul 2015 06:13:58 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: "cryptography@...zdowd.com" <cryptography@...zdowd.com>, John Tromp <john.tromp@...il.com>
+Subject: Re: [PHC] [OT] Improvement to Momentum PoW
+
+On Tue, Jul 28, 2015 at 4:36 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+I am not sure what you're calling by "parallel rho", but the parallel
+collision search by van Oorschot-Wiener deals exactly with this problem.
+They call it "golden collision" search in Section 4 of
+http://people.scs.carleton.ca/~paulv/papers/JoC97.pdf .
+>
+The tradeoff in that paper is very favourable to the attacker: when the
+memory is reduced by P^2, the time grows by the factor of P only, so it is
+the sublinear growth. Storing only some small range of Hb(i) gives  a much
+worse, linear tradeoff only.
+>
+Dmitry
+>
+
+This is incorrect.  This is covered in the paper in the section "Run-Time
+Analysis for Finding a Large Number of Collisions" under finding golden
+collisions on page 9.
+
+The hash table algorithm uses O(sqrt(n)) memory, for n points, and runs in
+time O(n) to generate all collisions.  Decreasing it by a factor of T,
+causes it to run T times longer to generate all collisions, so memory*time
+= O(n^1.5), regardless of T.  The paper's algorithm runs with w
+distinguished points, using O(w) memory, and runs in time O(sqrt(n^3/w)).
+Memory*time is O(n^1.5*sqrt(w)).  This is far worse than the hash table,
+for all values of w >1.
+
+For constant memory, both algorithms converge to O(n^2) runtime, no better
+than comparing random points.  This isn't in the paper, but it's clear from
+the algorithm if you imagine storing 1 distinguished point.  You have to
+take O(n) steps to hit it once, and the paper's algorithm requires hitting
+it twice.  Since random points collide with probability 1/n, you only need
+O(n) random comparisons to find a collision.  The same goes for the hash
+table algorithm.
+
+So, distinguished point algorithms fail at every memory size compared to
+using a hash table.
+
+Parallel Pollard Rho is where we share the distinguished points among a
+large number of workers.  This algorithm fails vs a shared hash table for
+the same reasons as above.
+
+Anyway, thanks for taking some time to examine it.  For now, I still think
+this algorithm works better than regular Momentum.
+
+Bill
+
+
+

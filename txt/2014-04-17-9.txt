@@ -1,0 +1,112 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <399355177.2536922.1397752921328.JavaMail.root@larc.usp.br>
+Date: Thu, 17 Apr 2014 13:42:01 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+Bill and Alexander, 
+
+----- Mensagem original -----
+
+De: "Solar Designer" <solar@...nwall.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Quinta-feira, 17 de Abril de 2014 13:21:33
+Assunto: Re: [PHC] Lyra2 initial review
+
+Bill,
+
+How did you calculate the "average memory/second" for Lyra2 and
+yescrypt. I don't know about Lyra2's, but yescrypt's looks wrong to
+me.
+
+Actually an explanation would be really good, because I confess that, except for "memory bandwidth", I'm not sure I understand what those numbers mean or how to computed them... 
+
+I think it is 5/8 of peak, since memory usage is growing linearly for
+the first 3/4th of time, and then stays at peak for 1/4th.
+
+On Thu, Apr 17, 2014 at 07:56:55PM +0400, Solar Designer wrote:
+On Thu, Apr 17, 2014 at 11:08:25AM -0400, Bill Cox wrote:
+Lyra2:
+Peak memory/second: 1.63 GiB/s
+Average memory/second: 1.22 GiB/s
+Memory bandwidth: 11.4 GiB/s (highly bandwidth limited)
+>
+Yescript:
+Peak memory/second: 3.03 GiB/s
+Average memory/second: 2.27 GiB/s
+
+This would be: 3.03*5/8 = 1.89 GiB/s
+
+Memory bandwidth: 6.06 GiB/s (does it do 2 r/w to DRAM per
+location, or 3?)
+>
+yescrypt does 4 r/w per location when YESCRYPT_RW is set (and it is
+set
+
+No, that's wrong: it's 2 r/w per iteration. It would be 4 r/w per
+location if SMix2 ran for as many iterations for SMix1, but in this
+mode
+it does not. I think correct is:
+
+3.03 * 4/3 * 2 = 8.08 GiB/s
+
+4/3 is ratio of number of iterations to number of locations
+2 is number of r/w per iteration
+
+in the PHS() API), so this would be 12.12 GiB/s. It does one random
+read and one sequential write per iteration in SMix1, and one
+random
+read+write per iteration in SMix2. (Resetting, YESCRYPT_RW brings
+it to
+only 2 r/w per location like in normal scrypt, but then it'd have
+to run
+1.5 times longer to achieve optimal normalized area-time and it'd
+be
+friendly to TMTO, hence that mode isn't the default.)
+>
+TwoCats:
+Peak memory/second: 4.98 GiB/s
+Average memory/second: 2.49 GiB/s
+Memory bandwidth: 9.97 GiB/s
+>
+I'd interpret these as TwoCats and yescrypt winning over Lyra2 in
+terms
+of average memory/second, which I think is the most important of
+three
+metrics here. yescrypt loses to TwoCats in terms of this metric by
+8.9%,
+but it possibly makes up for that by using 21.6% more memory
+bandwidth
+(some would view that as a drawback, but in this test we were
+specifically
+trying to use as much bandwidth from one thread as we could).
+
+The 8.9% was based on your "average memory/second" figures. With
+yescrypt's corrected, TwoCats' advantage is 24%, which is impressive!
+
+I am surprised that Lyra2 and TwoCats seem to win significantly in
+terms
+of bandwidth usage. I doubt it's the cost of one round of pwxform
+(although to find out we can try making it zero rounds, even). It
+could
+be the cost of r=8.
+
+It is likely to have a relationship: we have a compile-time parameter "nCols" that has a similar effect to scrypt's "r". It is part of the algorithm's core rather than a "tweak", but it would not fit in the PHS interface... 
+
+BTW, chances are that going from r=8 to r=16 (already a tunable,
+like in
+scrypt) would increase yescrypt's bandwidth usage (and average and
+peak
+memory usage per second) some further. I choose r=8 for PHS()
+because
+it increases reliance on fast small random lookups. r=32 and higher
+might be faster or slower, since we're competing for L1 cache space
+with
+pwxform's S-boxes (8 KiB in these tests).
+
+Alexander
+
+
+

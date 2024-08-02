@@ -1,0 +1,75 @@
+phc-discussions - Computational comparison of 3 schemes...
+
+Message-ID: <CAOLP8p4DnLPX=qRrVjd5Ur9C4tgg=Ga7ABP7TULnaqHkAdXMRw@mail.gmail.com>
+Date: Wed, 22 Jan 2014 18:54:53 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Computational comparison of 3 schemes...
+
+I've compared Catena-3, NoelKDF, and what I think Alexander is doing
+in escrypt.  I wrote two programs.  One pebbles DAGs somewhat
+efficiently, and is meant to provide an upper bound.  The second
+program tests how strongly using password-dependent random reads
+punishes an attacker.
+
+Summary: Catena3 wins my pebbling benchmarks, for timing-resistant
+KDFs.  Noel-KDF wins the non-timing-resistant benchmarks for
+sequential-memory-hard KDFs.  Alexander's power-of-two sliding window
+does respectably in both.  Catena-3 graphs seem quite difficult to
+pebble efficiently with a generic algorithm.  However, it does not
+significantly punish an attacker when doing password-dependent reads.
+This makes it the best timing-attack resistant algorithm, but a poor
+choice as the starting point for a sequential-memory-hard KDF.  This
+should be no surprise, as Catena is designed for timing-attack
+resistance.
+
+There are very interesting trade-offs.  First, all three algorithms
+fail completely in timing-attack-resistant mode for an attacker using
+1/4 of memory.  All three required no significant recalculations, and
+an attacker gets to use 1/4 of memory basically for free.  Catena-3
+only uses 1/4 of the memory, because it reuses the row memory, and
+there are 4 rows.  Both attacker and defender benefit from the 1/4th
+memory.
+
+All three algorithms completely defeat my pebbling algorithm for an
+attack using 1/5th of the memory rather than 1/4th, but Catena-3 did
+it much sooner.  Even 1 pebble less than 1/4 punished my pebbling
+algorithm quite a bit, leading to a 24X recomputation cost for
+pebbling a 2048 node graph (G == 512).
+
+In sequential-memory-hard mode, NoelKDF seems to devastate TMTO
+attacks at the 1/4 memory mode, making it look practical to have the
+final password-dependent loop run only 1% of the total runtime.
+Escrypt did plenty well, and for large numbers of blocks (>
+1,000,000), it does well enough even at 1% coverage, but there may be
+an argument for running longer.  TMTO attacks of < 1/2 seem
+impractical for these sequential-memory-hard algorithms.  However,
+with memory timing data, a NoelKDF attacker can probably use 1/8th or
+possibly less of memory, as it relatively easy to pebble.  Escrypt
+would probably still require closer to 1/4th, while I suspect
+attackers wont even bother trying to save even one memory location
+when attacking Catena-3.
+
+In short, Catena-3 is the natural timing-resistant choice, but it only
+uses 1/4 of the memory of an equivalent sequential-memory-hard KDF.
+However, the sequential memory-hard KDFs can lose most of their memory
+requirements if cache timing is known (they still have to run for a
+long time per guess).
+
+That's all I have for now.  Does anyone know of a good generic
+pebbling algorithm?  Mine works like this:
+
+1 Put all the initial pebbles down over the first N locations if there
+are N pebbles
+2 Add all non-fixed, non-in-use pebbles that have no edges pointing at
+them from beyond the current runner pebble position to the "pebble
+group"
+    2.5 If there are no such pebbles, use a heuristic to add the
+"best" pebble to the group.
+3 When pebbling, take virtual pebbles from the pebble group.  Reduce
+the "num available" pebbles on the group by 1, but alloc a new pebble
+rather than removing any from the group
+4 When num available reaches 0, delete all the pebbles in the group, and goto 2
+
+Bill
+

@@ -1,0 +1,43 @@
+phc-discussions - RE: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E09091853@TK5EX14MBXC287.redmond.corp.microsoft.com>
+Date: Wed, 17 Apr 2013 15:18:30 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+From: Steve Thomas [mailto:steve@...tu.com] 
+Sent: Wednesday, April 17, 2013 9:51 AM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow ...
+The problem is that people don't know that PBKDF2 is for generating
+keys and not password hashes. Even Microsoft gets this wrong:
+http://hashcat.net/forum/thread-1752-post-9981.html#pid9981
+
+RFC 2898 explicitly endorses use of PBKDF2 for password hashing:
+https://tools.ietf.org/html/rfc2898#page-5 :
+It is expected that the password-based key derivation functions may
+find other applications than just the encryption and message
+authentication schemes defined here. [...]
+Another application is password checking, where the output of the key
+derivation function is stored (along with the salt and iteration
+count) for the purposes of subsequent verification of a password.
+
+
+Also, on https://tools.ietf.org/html/rfc2898#page-5 :
+For instance, one might derive a
+set of keys with a single application of a key derivation function,
+rather than derive each key with a separate application of the
+function. The keys in the set would be obtained as substrings of the
+output of the key derivation function.
+
+I'd argue that neglecting to mention that keys derived in this way
+can be selectively created by an attacker sometimes using *less work*
+than the defender's "single application of a key derivation function"
+is a flaw in PBKDF2.
+
+- Marsh
+
+

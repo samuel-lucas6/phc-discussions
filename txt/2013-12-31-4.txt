@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <52C23A7B.8040709@dei.uc.pt>
+Date: Tue, 31 Dec 2013 03:31:07 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+On 31-12-2013 02:46, Solar Designer wrote:
+Will ChaCha8 get below 0.85 cpb per core or 1.70 cpb per thread with 2
+threads/core on SB? This is unclear - would need to test. Alexander 
+
+The speeds reported in [1] are much higher than the ones in eBACS; I
+don't know whether this is due to the measuring mechanism or the
+implementation. They seem to be more in line with your OpenSSL results,
+though: a good AES-CTR implementation should dispatch an AESENC at every
+cycle (by running 8 parallel instances in SB), which will bottleneck on
+Port5, shared competitively by both threads. That is, the effect of
+running a good AES-CTR implementation on two threads should be similar
+to that of running Chacha8.
+
+The best Chacha implementations already pretty much max out the
+available ILP. So AES-NI is likely, I suppose, to win on pre-Haswell
+processors. On the other hand, my experiments put Chacha8 on Haswell at
+0.5-0.6cpb in a single thread. AES-NI also gets a little faster on
+Haswell, but by a small margin [1, slide 20].
+
+[1] http://2013.diac.cr.yp.to/slides/gueron.pdf
+

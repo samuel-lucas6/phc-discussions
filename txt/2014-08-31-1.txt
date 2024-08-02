@@ -1,0 +1,132 @@
+phc-discussions - Re: [PHC] A review per day - RIG
+
+Message-ID: <54029BFC.9030209@ciphershed.org>
+Date: Sat, 30 Aug 2014 23:52:28 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - RIG
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+I've said my piece about RIG. However, I believe we should choose the
+best algorithm as the winner, regardless of our feelings.  Therefore,
+I need explain in detail what technical problems I dislike about RIG.
+
+The RIG hash function makes disastrous use of the XOR function.  I can
+pebble RIG with a few pebbles, meaning it offers zero memory-hard
+security!  It also has several other mistakes, which I cover at the end.
+
+RIG has two memory arrays that have M elements, where M is 2^m_cost.
+I would prefer that they use Catena's name for M, but whatever...
+These arrays are called AlphaSet, and KeySet.
+
+The AlphaSet and KeySet arrays, when XOR-ed together, results in a
+array that never changes!
+
+Here's the relevant code :
+
+    for (i = 0; i < M; i++)
+    {
+        byte Count_Bytes[CNT_LEN_BYTES];
+        LongToBytes((++Count), Count_Bytes);
+
+        address = BitReverse64(i) >(64 - m_cost);
+
+        if (i == 0)
+        {
+            memcpy(Temp, ChainingValue, HASH_LEN_BYTES_OUT);
+        }
+
+        for(j=0; j < longsInHlen; j++)
+        {
+            ((u64*)AlphaSet[i])[j] ^=  ((u64*)Temp)[j];
+        }
+
+        for(j=0; j < longsInKeySet; j++)
+        {
+            ((u64*)KeySet[address])[j] ^= ((u64*)Temp)[j];
+        }
+
+        memcpy(Input, Count_Bytes, CNT_LEN_BYTES); // Count
+        memcpy(Input + CNT_LEN_BYTES, AlphaSet[i],
+HASH_LEN_BYTES_OUT); // ALPHA
+        memcpy(Input + CNT_LEN_BYTES + HASH_LEN_BYTES_OUT,
+KeySet[address], HASH_LEN_BYTES_KS);
+
+        PERFORM_BLAKE_STATE((unsigned char*)Input, LAYER_LENGTH, Temp);
+    }
+
+
+Note how AlphaSet and KeySet are XOR-ed with the same data as each
+other.  The only difference is that the KeySet address is the
+bit-reversal of the AlphaSet address.  This bit-reversal permutation
+never effects the resulting hash, because it is used in both reading
+and writing of the KeySet.  Eliminating the bit-reversal permutation
+will not result in any change in the hash!
+
+I verified this by commenting out the bit-reversal function and simply
+returning the original address.  It gets the same hash result!
+
+Without the need for anything other than a simple sequential memory
+access pattern, this can be computed with only enough memory to hold 2
+hash values or 128 bytes.  There is simply no memory hardness at all.
+
+Here are some more of it's faults:
+
+- - It uses unreliable calculation of 2^n with the floating point math
+in several places using the pow function instead of (1 << n).  They
+randomly uses the ceil function to round up the pow result to an int
+in some places, or hey use a (u64) cast to round it down, based on
+whether or not it worked on a particuarlar machine for that line of
+code.  I do not expect this code to work cross-platform, or even the
+same machine after a compiler upgrade.
+- - Password length, salt length, output length and m_cost are not
+encoded when deriving initial key, resulting in password/salt
+collisions as well as other collisions due to zero padding (for
+example multiply all sizes by 256, and add a 0 to the salt).
+- - There's some magic I can't figure out that defines HASH, but I can't
+find it!  Code should not be that hard to figure out.
+- - Their use of memset to 0 wont work to clear password as they intend.
+- - Row 0 (in Catena terms - they call it "layer 0") is not very
+randomized, since it only compresses data 2-to-1 through a single
+Lyra2 version of a Blake2b round
+- - Row 0 KeySet is all initialized to digits of pi, and since we can
+easily find the XOR of KeySet and AlphaSet no mater how large lambda
+is (t_cost... whatever), we can likely find AlphaSet.  This could
+reveal the derived key.
+- - RIG always starts from garlic = 1, unlike Catena, slowing down
+hashig by 2X.  Couldn't they just call it garlic instead of something
+else?  I already had to learn these terms once!
+- - Two arrays is memory wasteful, when 1 array encodes all the state.
+- - All reversal memory access will have high latency.  There is no
+mechanism for dealing with DRAM latency, and even with the Lyra2 hash,
+it will be too slow for real deployments.
+- - Why is KeySet 8 bytes less?  Why is this hard to figure out?
+- - Rig did not get the read-XOR-write thing right, and simply
+XOR-equaled over memory.  This was a recent topic of discussion in
+this thread.
+
+I'm ready to move on...  I'm looking forward to PufferFish!
+PufferFish is cool, for what it is meant to do.  The guy copies bcrypt
+quite honestly, without making me learn new terms for everything.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUApv4AAoJEAcQZQdOpZUZvhAP+wQggWbP4k0lIq+pjRfKMcAw
+bzrsWU5Cb5/YLvQZqtzACoj+WsFw4ksTqYi/yQqmtL6hQffl2QSep4GAf3njkns/
+rrnQqizds2+xco1jOv34NKer6bv0Ejm3u/7Edsq0qkrrgO2eIrprb3jv88vizlQ9
+a4/57bq/5HEkmh5X6giKPyxGGLTVDhzsKquW+j+r+3PeqpNSihjIqbOCU9J2wWCt
+ramae2DjUS6DqSaXsyt0rgAQDpDriJHGuvgaHEBHhjjH1djFSfLr7xnibyxoCDfB
+Vw8xdrLPk+Phw8DCr9OjO+6KejHbAvFiBEnH3KQ4gjl5IfPEWziNiTwx+AohS8wN
+j21JJQucxcMUXMSMZ7Fs2uRRmNfwTjx9lL+HMU13GKdVDSq5umfuDKG9WV4VKB9H
+EbEsoKF1SgI05eseRjgKjOezi17BLUto+JrWkVeAp0xTh37HX0hK+7oUxaRaFOS/
+ShrIOUp2y1b3iSrlfHirsniRliS/hlNp7h5ag+okNFqXV+qXlvR4vN0/gJy9q7OR
+QiIxYecNwpx14EFlc8ul8R25aTFHdqAMugKJ/3VgnmbeyG/NlgPBBNdhbgONpdH5
+kDsLuKfMUef6oU1aUJa5v3FVabyf5ABTisf2RSGuFecNdvInQJI4T9OJCd3T2or7
+WVr71zGTsxGfEgoL7Jh2
+=Ndm6
+-----END PGP SIGNATURE-----
+

@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] trivial delegation</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2017/03/16/1">[&lt;prev]</a> <a href="../../../2017/03/28/1">[next&gt;]</a> <a href="../../../2017/03/16/1">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20170317020848.GA22962&#64;openwall.com&gt;
+Date: Fri, 17 Mar 2017 03:08:48 +0100
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] trivial delegation
+
+On Thu, Mar 16, 2017 at 08:32:10PM +0100, Solar Designer wrote:
+&gt; In order to minimize the exposure of sensitive information to the
+&gt; server, the requesting system should include a secret in its pre-hash
+&gt; computation.  It can be a global secret (per deployment) or it can be a
+&gt; second per-account salt.  This is fine, but this extra data will then
+&gt; need to be stored somewhere, and the computation will need to precede
+&gt; our hashing scheme's computation each time, even if the delegation is
+&gt; not always used or is dismantled later.  So we can't just say that this
+&gt; e.g. yescrypt standard hash encoding includes all of the inputs to this
+&gt; hash computation (sans the password and optional encryption key) and
+&gt; that the entire algorithm is specified by yescrypt - rather, there would
+&gt; be site-specific pre-hashing algorithms (we could recommend some
+&gt; "standard" for pre-hashing, but technically it'd remain separate).
+&gt; 
+&gt; What I am thinking is that similarly to built-in server relief, we could
+&gt; instead structure the hashing scheme such that it'd include the
+&gt; separable pre-hashing as a standard step that is always done (whether
+&gt; there's delegation or not).  Then delegation-computed hashes will not
+&gt; require extra storage for an extra secret key and/or secret salt.
+&gt; 
+&gt; Specifically, it means that the main and only salt will also serve this
+&gt; purpose, and in a delegation setup will not be revealed to the server.
+&gt; The hashing scheme will then start by combining the password and salt
+&gt; inputs e.g. with HMAC, and then will never use the salt directly again.
+&gt; In a delegation setup, the requester will compute the HMAC on its end,
+&gt; send it and yescrypt parameters (but not the salt) to the server, and
+&gt; receive the hash value, which it will re-combine with the parameters and
+&gt; the salt to form a standard yescrypt hash encoding string for storage or
+&gt; comparison.
+
+Continuing upon my half-baked thoughts above, I see two problems:
+
+1. An attacker with oracle access to a password hashing delegation
+server will be able to use this server's computing power to crack not
+only the corresponding organization's password hashes, but also another
+one's (which uses yescrypt too) if the attacker already has that other
+org's salts (presumably along with the hashes).  This is partially
+mitigated by the delegation server also using yescrypt's optional hash
+encryption feature, but only until the corresponding key(s) are also in
+attacker's possession (and moreover, precomputation can start before).
+
+For this reason, a delegation setup must use an org specific local
+parameter, so that the delegation server would not compute hashes usable
+for (or rather against) another org (that this server wasn't meant to
+service).  A yescrypt ROM could be it, but it's optional and it would be
+shared in a password hashing outsourcing setup (where a delegation
+server would be shared by more than one org).  A small local parameter
+wouldn't have to be shared across orgs in a setup like this, although
+all of the whitelisted ones would still be usable in an attack.
+Nevertheless, they'd limit the orgs which may be attacked and they'd
+provide accountability and perhaps per-org rate limiting (an org is not
+supposed to compute more than 1 million hashes/day? so don't let them
+nor their attackers do it).
+
+The small local parameter provides different security than an encryption
+key does in that even if this parameter is available to an attacker, the
+attacker still can't force the delegation server to hash passwords for
+that org yet disguise their activity against another org's credentials
+and rate-limiting.  That's because the parameter is an inherent part of
+the hash computation, rather than something that can be removed and
+re-added (like encryption is when keys are known).
+
+So yescrypt will have to accept an extra (or not really, see below)
+parameter, and the systems using this delegation service will need to
+store this parameter somewhere at least if they don't always or no
+longer use delegation - so we're back to the original non-elegance we
+had with password hashing schemes lacking builtin support for what I
+call trivial delegation here.  I guess we should just accept this.
+
+Implementation-wise, this extra local parameter supporting delegation
+could simply be yescrypt's salt.  The per-account salts would already
+have been applied by the requesters, leaving yescrypt's salt input
+available for such reuse.  It's non-elegant not to have actual
+per-account salts encoded where they normally are in yescrypt hash
+encoding strings, instead having to store them separately (well, or
+mangle the strings, but then they no longer correspond to usual yescrypt
+hash encodings semantically even if they do syntactically).  Yet on its
+own that's probably not enough of a reason to introduce any special
+support for delegation.
+
+2. Some delegation users would inevitably mix things up, e.g. swap the
+password and salt inputs to HMAC, resulting in hashes that look like
+yescrypt but are not computable by full yescrypt with any pre-hashing.
+That's worse than simply having the pre-hashing for delegation separate
+from the entire yescrypt computation, in which case it can always be
+done before computing yescrypt even when delegation is no longer in use.
+
+This second problem may also apply to server relief if it's used when
+setting new passwords.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

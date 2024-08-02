@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] Schvrch is broken
+
+Message-ID: <54181820.5010408@ciphershed.org>
+Date: Tue, 16 Sep 2014 06:59:44 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Schvrch is broken
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/15/2014 11:29 PM, Rade Vuckovac wrote:
+case 1 carry = b xor c xor d
+
+case 2 carry = b xor c xor ~d
+
+case 3 carry = b xor ~c xor d
+
+case 4 carry = b xor ~c xor ~d
+
+case 5 carry = ~b xor c xor d
+
+case 6 carry = ~b xor c xor ~d
+
+case 7 carry = ~b xor ~c xor d
+
+case 8 carry = ~b xor ~c xor ~d
+
+a’ = a xor (can be any of the cases above*) carry
+
+
+The value of carry is equal in cases 1, 4, 6, and 7.  The value of
+carry is also equal in case 2, 3, 5, and 8.
+
+There are only 2 outcomes here, not 8.  These are basic XOR identities:
+
+a xor b == ~a xor ~b
+~a xor b == a xor ~b == ~(a xor b)
+~a = a xor 1
+
+I like to add a few more so that I can convert any Boolean equation to
+Read Muller form by hand easily.  I'll use + for xor, because xor is
+addition, and it makes it easier to see:
+
+a(b + c) = ab + bc (distributive)
+a*a = a (power)
+a + a = 0 (like terms cancel)
+a*!a = 0
+a or b = !(!a!b) = !a!b + 1 (convert OR to AND)
+
+So, for example, when I try to simplify Wolfram's Rule 30, I do it
+this way:
+
+a2 = a1 + (b1 or c1) = a1 + !b1!c1 + 1
+a3 = a2 + !b2!c2 + 1
+   = (a1 + !b1!c1 + 1) + !(b1 + !c1!d1 + 1)!(c1 + !d1!e1 + 1) + 1
+   = a1 + !b1!c1 + (b1 + !c1!d1)(c1 + !d1!e1)
+   = a1 + !b1!c1 + b1c1 + b1!d1!e1 + !c1!d1!e1
+       b1c1 = (!b1 + 1)(!c1 + 1) = !b1!c1 + !b1 + !c1 + 1
+   = a1 + !b1 + !c1 + b1!d1!e1 + !c1!d1!e1 + 1
+   = a1 + !b1 + !c1 + !d1!e1(b1 + !c1) + 1
+   = a1 + !b1 + !c1 + (!d1!e1 + 1)(b1 + !c1) + b1 + !c1 + 1
+   = a1 + (!d1!e1 + 1)(b1 + !c1)
+   = a1 + (d1 or e1)(b1 + !c1)
+
+I probably made a mistake in there...
+
+Anyway, in silicon, if I did not make a mistake, this is 2 XOR gates,
+and OR gate, and an AND gate.  I think I can get this running about
+50% faster than the straight forward computation.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGBgdAAoJEAcQZQdOpZUZRuMP/19YVpQqZAkzn2PF7PGfy1Lv
+f78fkSKD4803c08hIL9eoE6VbQdNxfr970yFtvc1uR/wwMFaP4tiFj/yaGJXfMgM
+Eb/wol0Nrdk7yrOgfLTf2JJJ65TtL/hOaHw2FKZT5mZUyvwdu5Bqk8UetFcRcbJx
+wwNN6dJznHbEZJs+5HWJB7GePEXNN6F9ZhpA6YtZFmyPfyruzxCoSnezyWLIF7Oe
+Wy03eWsMrM9yNg5wAzfYCqsSKreQOPO9HXJZwC6PNLTBG79RS1Izz/LKE0ksJ7WK
+cwcjYBD0q14TNAzQzk+MD4hgcohVVg+1x8bJuQOz77bnUQlSJx54H7AkrcZlYIaO
+gdI3b7ZGYE8aEc2HGHyQWSkUEF+bqGQPBeCyl6dUxPH16N5ILaJu9RVtpXLc4R4v
+ERSWMd3ZehXLuAZiMhcw2Ww6sTkbzap46THWVMkrVlvoy/5SttP3/tuqCONMHyzx
+5DlQY8SnQFqOhrDtw1dUC2XcYqDrI029HsR9f2TOs+q/ibBOVKWbgtQ0epxvKhwq
++qjDlFyzfNXn74bvh5kRosn5mc/NZX2AVgU0m2gK2avry4V5t9d4DDcuJMgGK/Ln
+/kKlv0Jt0aP+0zLDYiYs9262KW6RoAx2+kdl9GGFypDWzrBhoknsEcLQo6MxEg4p
+TCDxfNCMaAPufQhStftd
+=CnFd
+-----END PGP SIGNATURE-----
+

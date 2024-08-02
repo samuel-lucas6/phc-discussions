@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="26">[&lt;prev]</a> <a href="28">[next&gt;]</a> <a href="22">[&lt;thread-prev]</a> <a href="29">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7JbdHzrnWNJYsS7iFrcwobtpPSX4ieUuk0Av8HEy0TDw&#64;mail.gmail.com&gt;
+Date: Thu, 9 Jan 2014 10:58:09 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+On Thu, Jan 9, 2014 at 4:14 AM, Christian Forler &lt;
+christian.forler&#64;...-weimar.de&gt; wrote:
+
+&gt; On 09.01.2014 01:43, Bill Cox wrote:
+&gt; &gt; Sorry about being noisy.  I'm just looking for every opportunity to push
+&gt; &gt; my primary point about the design of memory-hard KDFs: they should be
+&gt; &gt; fast, fill lots of memory, and any CPU cycles wasted on computing a
+&gt; &gt; crypto-strength hash per memory location is a waste of time.
+&gt;
+&gt; "All of our methods for doing this involve finding some function F()
+&gt; which approximates a random function and which requires roughly 2^t
+&gt; work to compute." -- <a href="https://www.schneier.com/paper-low-entropy.html" rel="nofollow">https://www.schneier.com/paper-low-entropy.html</a>
+&gt;
+&gt; It is quite hard so show such a behavior for a algorithm F() which is
+&gt; not based on a cryptographic primitive. Moreover, the random function
+&gt; approx. property is crucial since a cryptographic key is assumed to be
+&gt; random.
+&gt;
+
+Thanks for the link.  That's actually a paper I read a while back.  I think
+it is important to be able to show that significant entropy is not lost
+while filling memory with hash data.  However, the data written to memory
+does not need to be as indistinguishable from true random data as the final
+derived key.
+
+There is a simple way to achieve derived keys that are indistinguishable
+from true random data in systems where the data written to memory is easily
+distinguished from true random data.  Simply use a trusted cryptographic
+hash on the pasword in the beginning to create an intermediate derived key.
+ If the password is used to create data we write to memory, then do another
+iteration of the trusted hash to create the data used in filling memory so
+that it is not correlated in any way with the intermediate key.  Once
+memory hashing is complete, simply XOR it's result onto the derived key and
+then compute the trusted hash of this to create the final derived key.  No
+matter how non-random the computed memory based hash is, it cannot hurt the
+apparent randomness of the derived key.  Also, no significant entropy is
+lost.
+
+SFAIK, there's no reason memory needs to appear truly random.  For example,
+if Alexander were to use Salsa20/20 instead of Salsa20/8 in escrypt, but
+instead of writing out only the resulting hash he wrote out every
+intermediate computed value (there are very many values computed in
+Salsa20/20), he could easily fill memory as rapidly as he liked.  Entropy
+is collected in the end by pseudo-randomly hashing all of memory together,
+so there's no reason memory needs to appear random.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

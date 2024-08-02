@@ -1,0 +1,128 @@
+phc-discussions - Re: [PHC] Best use of ROM in password hashing
+
+Message-ID: <20140421090734.GB25527@openwall.com>
+Date: Mon, 21 Apr 2014 13:07:34 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Sun, Apr 20, 2014 at 11:22:59AM -0400, Bill Cox wrote:
+Using large ROMs for authentication servers is brilliant.  It is pretty
+hard to steal a TiB or more without being noticed, and if an attacker does
+not have a copy of the ROM, he's stopped cold.
+
+This is only one of the aspects of the original ROM idea.  Besides
+stealing the ROM, which may happen, there's the issue of otherwise
+suitable attack nodes possibly not having enough of fast enough storage
+locally to them to use their own copies of the ROM and the issue of
+distributing the ROM to attack nodes, or the issue of having attack
+nodes access a remote ROM.
+
+yescrypt's use of RAM+ROM at once is meant in part to increase cost of
+accessing a higher latency remote ROM, by tying up RAM (or some of
+whatever local read-write storage the attack nodes have) for almost each
+pending request to the remote ROM.  (I say "almost" because the first
+ROM lookup per hash computation happens before there's much RAM usage,
+unless ROM lookups in SMix1 are disabled by setting the mask that way.)
+
+ROM-in-RAM (such as the 112 GiB I was testing with) can be viewed as an
+anti-botnet feature.  It's not that large that it won't be stolen, but
+it can be large enough to buy a few years of botnet resistance.  It's
+practical to keep authentication servers' current ROM-in-RAM (for newly
+set/changed passwords) 16+ times higher than a typical botnet node's RAM
+size - e.g., it can be 128 GiB in server vs. 16 GiB or less in typical
+botnet nodes now.  (I don't know what their actual RAM sizes are now.
+I guess typical is actually below 16 GiB at this time, although newly
+added computers probably do have 16 or 32 GiB of RAM now.)
+
+ROM-on-SSD can be similar, or its size can be expanded much further in
+attempt to also make it hard to steal.  Jeremy uses 16 TB, which might
+currently work in terms of detection of attempts to steal it over the
+network, if bandwidth usage monitoring is in place.  Stealing a copy of
+a ROM physically is another matter.
+
+How should ROM data best be combined with password hashing?  This is
+probably something Alexander is a couple of years ahead of me on, but I'm
+having some fun thinking about this after doing some more EARWORM
+benchmarks.
+
+I'm not sure how far ahead I am, but yes I did think of this before, and
+yescrypt's ROM support is based on some of that thinking.
+
+The problem with large ROMs is that an attacker can split them into many
+small ROMs.  If the data routing problem this creates is cheap enough in
+time and cost, this can be a win for an attacker.
+
+Sure.
+
+Because of this, I
+prefer bandwidth runtime hardening with RAM, where we fill the RAM and read
+from it pseudo-randomly, based on the password.
+
+While I also prefer simultaneous use of a RAM and a ROM, I don't see how
+it's closely related to possible splitting of the ROM by attackers.
+
+My reasons to also use a RAM:
+
+1. Have scrypt-like lower bound on area-time.  Don't depend solely on
+ROM bandwidth for it (which is not clearly translated to die area).
+
+2. Have area-time cost increase along with ROM access latency, via tying
+up more RAM instances.  This discourages remote/networked ROMs.
+
+Were you possibly referring to an instance of #2, where an attack node
+wouldn't have its own copy of the full ROM and would have to incur
+latency of accessing another node's portion of the ROM?
+
+Still, the benefits of a large ROM are undeniable.  What if we wrapped a
+memory-hard PHS with something like:
+
+1) Start reading random location on N TiB hard-disk based on PRK =
+H(passwordLen || password || saltLen || salt)?
+2) In parallel, do some bandwidth limited memory-hard hashing to produce
+PRK2 = MemoryHash(PRK)
+3) return H(PRK2 || ROM[PRK % ROMLEN])
+
+This still requires that an attacker have the ROM, and allows us to use
+cheap hard-disks for storage of the ROM data.  Perhaps an attacker could
+buy a big SSD and squash the access time, and share the SSD among many
+guessing cores, but who cares?  The algorithm is still memory bandwidth
+hardened, which seems stronger than ROM bandwidth hardening.
+
+Moreover, it can also be computation time hardened, tying up the RAM
+even if it's higher bandwidth RAM than the defender had used.  Moving
+from defender's HDDs to attacker's SSDs is still a win for the attacker,
+because they'd be able to speed things up by providing more computation
+resources, RAM size, and RAM bandwidth accordingly.  While staying with
+HDDs, they would not be able to put those extra resources to use.
+
+How would that compare against a PHS that intermixes hashing ROM data and
+RAM data?
+
+yescrypt lets you set the mask such that the ROM access is one-shot, and
+that one access happens early on (or you can have it happen half way
+through computation, with a different mask setting).  However, further
+computation in yescrypt depends on the looked up value, so it stalls
+until the ROM access is complete.  Compared to your algorithm above,
+this means that the defender's latency per hash computation may be up to
+twice higher, and the defender will need more concurrent instances to
+compensate for the stalls.  In terms of throughput, which is what
+matters most, it'd be the same as yours.
+
+I think it's better to include multiple ROM lookups per hash computation
+if at all possible.  This discourages attack nodes that have only a
+portion of the ROM available to them locally.  The defender's cost is in
+that the defender will need to use SSDs or RAM, rather than HDDs.  As to
+stalls of defenders' hash computations, I think they're acceptable,
+since the typical target for throughput on this sort of authentication
+servers is high enough that the latency is low in terms of user
+perception even with latency of multiple ROM-on-SSD lookups included.
+(The number of lookups should be adjusted such that the target
+throughput is achieved.  In yescrypt, it's controlled via the mask.)
+The latency is somewhat unfortunate in terms of request queue size
+growth on other servers, but even with full overlap of ROM lookups and
+computation inside each hash computation the latency would be at best
+twice lower, so there's not that much room for improvement here.
+
+Alexander
+

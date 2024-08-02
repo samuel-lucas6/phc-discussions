@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <CANdZDc4TFFdYNhz_oLOBrGxEosneoSZmWaVxSw46FiHMRr7s3g@mail.gmail.com>
+Date: Tue, 7 Jul 2015 20:39:02 +0000
+From: "Zooko Wilcox-O'Hearn" <zookog@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+[following-up to my own post]
+
+On Tue, Jul 7, 2015 at 8:27 PM, Zooko Wilcox-O'Hearn <zookog@...il.comwrote:
+>
+How much of a time budget do we have for verification? There are three answers:
+>
+For a full-node (i.e. a verifier but not a miner) that keeps up to
+date with the blockchain they need only to perform one verification
+every block (10 minutes on average), so the added cost of even a few
+tens of seconds per verification isn't too important for them.
+>
+For a miner, added latency means a higher chance that the block you
+just mined will get beaten in a race by another miner (this is called
+a "stale block"), so the cost of a few seconds is probably okay but
+10's of seconds is probably not.
+>
+For a node that doesn't keep up-to-date with the blockchain but wants
+to catch up, for example a "light client" on your cell phone that
+wakes up and wants to verify thousands of new-to-it blocks, then this
+is killer. An extra few seconds of CPU time per verification means
+that your phone heats up and runs out of battery faster. So maybe we
+should just say we don't support that use case. :-/
+
+Actually now that I think about it, we should be clear about something
+here: our motivation as designers is to make things as nice as
+possible for full-nodes (i.e. payment processors/wallets) and for
+light-clients (i.e. wallets). It is *not* to make things as nice as
+possible for miners. The only reason that the stale rate appears in
+the list of three things below is not because it means wasted effort
+on the part of the miners, but because dealing with more stale blocks
+means more wasted bandwidth and churn in the broadcast and consensus
+networks. Make sense? That one is a systemic cost to the whole
+network, but not a terribly expensive cost. The other two are
+questions about whether this thing would be acceptably performant to
+specific users.
+
+Regards,
+
+Zooko
+

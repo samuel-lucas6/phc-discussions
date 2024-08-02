@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] hash encryption</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2016/03/24/11">[&lt;prev]</a> <a href="../../../2016/05/18/1">[next&gt;]</a> <a href="../../../2016/03/24/11">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20160402012719.GA25533&#64;openwall.com&gt;
+Date: Sat, 2 Apr 2016 04:27:19 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 10:46:07PM +0300, Solar Designer wrote:
+&gt; I am considering side-stepping the issue: instead of arbitrary {key,
+&gt; keylen}, accept only an exactly 32-byte key.  If an application wants to
+&gt; use a human-friendly string, it will need to derive the key first, such
+&gt; as with another invocation of yescrypt, which is what would have been
+&gt; recommended anyway.  This should work great for network services
+&gt; implemented as persistent processes,
+
+This is what I implemented now, including a revision of yescrypt
+(accepting the optional encryption key; otherwise compatible with what
+we had before) and a persistent network service using it.
+
+Also, I fixed the number of rounds at 7, for simplicity and since it's
+not known how good or not the source material for the key was.  At this
+setting, the performance overhead is around 0.2% at 2 MB (which is
+nearly the smallest m_cost relevant for such use), and less than that at
+higher m_cost.
+
+I've attached the revised encryption code.
+
+There's also a new API call:
+
+/**
+ * yescrypt_reencrypt(hash, from_key, to_key):
+ * Re-encrypt a yescrypt hash from one key to another.  Either key may be NULL
+ * to indicate unencrypted hash.  The encoded hash string is modified in-place.
+ *
+ * Return the hash pointer on success; or NULL on error (in which case the hash
+ * string is left unmodified).
+ *
+ * MT-safe as long as hash is local to the thread.
+ */
+extern uint8_t * yescrypt_reencrypt(uint8_t * __hash,
+    const yescrypt_binary_t * __from_key,
+    const yescrypt_binary_t * __to_key);
+
+As discussed, uint8_t will need to change to "unsigned char", or for
+hash encodings, which use 7-bit chars only, possibly to "char" for ease
+of use along with &lt;string.h&gt; functions (which generally want "char" and
+result in warnings on "unsigned char").
+
+&gt; but maybe not so great for typical
+&gt; web apps in PHP, where it might hamper adoption of this feature (will
+&gt; need either persistent storage of the derived key or repeated key
+&gt; derivation in each new process).  So I am still undecided.
+
+There's another option: provide a fast KDF specifically for such use
+(perhaps just HMAC with a personalization string), and clearly document
+that its input key must be high-entropy.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/1">sim-encrypt.c</a><strong>" of type "</strong>text/x-c<strong>" (1220 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

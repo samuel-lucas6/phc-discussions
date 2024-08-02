@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt 0.3.1</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140305162123.GA15330&#64;openwall.com&gt;
+Date: Wed, 5 Mar 2014 20:21:23 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt 0.3.1
+
+On Wed, Mar 05, 2014 at 01:54:59AM -0500, Bill Cox wrote:
+&gt; It looks good to me.  Assuming I recall the N and r parameters
+&gt; properly (r == 8 means N is in 1KB units, right?),
+
+Right.
+
+&gt; then this is quite
+&gt; a bit faster than the default scrypt install on Arch Linux, Core
+&gt; i7-3770:
+&gt; 
+&gt; Scrypt: 0.5 GiB in 1.8 seconds
+&gt; Escript: 1 GiB in 1.4 seconds
+
+This sounds about right to me.  (I assume you used escrypt in scrypt
+compat mode here.)
+
+&gt; This is single threaded, and includes memory allocation overhead.  I
+&gt; tried p &gt; 1, but it didn't reduce the runtime for some reason.
+
+Don't forget that in scrypt p&gt;1 increases the total memory allocation
+accordingly.  So e.g. with p=2, you process 2 GiB.  For example, on
+i7-4770K with 4x DDR3-1600 (2 channels):
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m1.524s
+user    0m1.308s
+sys     0m0.200s
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 8) = 9a 6c 46 65 c4 cc b5 8b 60 53 dd fd 6d 48 bb 3a 71 ba 8f ae b7 dc 35 99 a6 b6 10 fc e3 52 d6 3f df 50 53 bd cd 19 a4 cc 05 85 f7 e5 a5 ae 6e 68 41 a3 47 1a be 86 86 28 2e 07 b2 49 2b 3e f8 6b
+
+real    0m2.359s
+user    0m14.081s
+sys     0m2.292s
+
+This is 1 GiB in 1.5 seconds, or 8 GiB in 2.4 seconds.  Both including
+memory allocation overhead.
+
+Of course, due to the way classic scrypt's thread-level parallelism
+works, the same "8 GiB" result may also be computed sequentially using
+just 1 GiB of memory.  With OMPFLAGS_MAYBE in Makefile commented out:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 8) = 9a 6c 46 65 c4 cc b5 8b 60 53 dd fd 6d 48 bb 3a 71 ba 8f ae b7 dc 35 99 a6 b6 10 fc e3 52 d6 3f df 50 53 bd cd 19 a4 cc 05 85 f7 e5 a5 ae 6e 68 41 a3 47 1a be 86 86 28 2e 07 b2 49 2b 3e f8 6b
+
+real    0m10.683s
+user    0m10.453s
+sys     0m0.204s
+
+&gt; I think keeping compatibility with scrypt is a great idea for escript.
+&gt;  Regardless of the PHC, escrypt is a faster and improved scrypt, and
+&gt; as such should see plenty of use.
+
+I think I'll also release a cut-down version of the escrypt tree, with
+scrypt functionality only (but better performance and more flexible API
+than upstream scrypt's).  In fact, I already had escrypt-lite with just
+this functionality, but so far it only exists in JtR -jumbo tree (for
+cracking of scrypt hashes), and it's a bit out of date as compared to
+scrypt-relevant changes made in escrypt since then.  So I'll need to
+bring it up to date and release it separately.
+
+And yes, I also intend to keep scrypt compat in escrypt (or whatever
+it'll be called), at least for now.
+
+As to dealing with complexity, I think we can have one-design-fits-most
+(due to tunable sizing), and also have cut-down implementations
+supporting only a subset of tunable settings (or/and narrower ranges).
+For example, an implementation of escrypt intended for Unix crypt(3)
+wouldn't support the ROM, yet hashes computed by it will also be among
+those computable by the full (large and complex) escrypt.
+
+&gt; If you're interested in something
+&gt; completely different than scrypt, you're still invited to work on
+&gt; tigerkdf :-p  It's already mostly your and Christian Forler's ideas
+&gt; anyway.
+
+Thank you for the invitation!  I'd be happy to contribute to TigerKDF
+more, and to do so more directly, but the PHC submission deadline is too
+soon and I still have a lot of work to do on escrypt.  So I am not sure.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

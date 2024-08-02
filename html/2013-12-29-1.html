@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Initial hashing function. Feedback welcome</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/12/26/2">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7UyvSwcys-s=bNEGjDR3H--avtsAW3_tKYWy4-hG1vRA&#64;mail.gmail.com&gt;
+Date: Sun, 29 Dec 2013 17:29:02 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Initial hashing function. Feedback welcome
+
+I have written an initial hacked-up version of a program that for now I'm
+simply calling "keystretch".  Here's some ways it compares to scrypt:
+
+- On my Core i7 linux box, it's over 8X faster for a given memory size,
+single-threaded, no SSE
+- Memory is hashed as it's filled, rather than filling, then hashing.
+- 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+intermediate derived key.
+- The derived key does not depend on the number of threads
+- All threads hash randomly from all of memory at the same time, so you
+can't run p smaller runs in series, where p is scrypt's parallelization
+parameter
+
+Credit for hashing all of memory with each thread goes to Alexander.  It's
+a good idea, IMO:
+
+<a href="http://www.openwall.com/lists/crypt-dev/2013/11/20/1">http://www.openwall.com/lists/crypt-dev/2013/11/20/1</a>
+
+Performing the typical 2048 SHA-256 rounds on the password at the start,
+and then clearing the password, insures that we have security at least as
+good as OpenSLL can provide today for our ssh private keys.  Any additional
+security is in positive territory.
+
+Having the hash result not depend on the number of threads, and also
+filling memory as we hash, allows me to have a stop pattern that I look for
+when decrypting.  Along with salt, I can store the final hash value, which
+also looks random.  When decrypting, I fill memory until this stop value is
+seen.  This allows better deniability for the encrypted file, as both the
+hash and stop value appear to be random.  This is important for TrueCrypt.
+
+A weakness of the hashing function vs scrypt is that it is a simple
+non-cryptographic hash, rather than script's Salsa20/8.  This is the
+primary reason it runs faster.  If we do not need a strong cryptographic
+hash, there is significant opportunity for improving performance.
+
+Is there any reason such a simple hash function should not be used?  I am
+particularly interested in feedback on this point.
+
+Here's the hashing code.  MAX_THREADS is currently 16.  The first page of
+memory has already been filled with PBKDF2_SHA-256 using the salt as the
+salt and password.  Thread keys have been initialized with PBKDF2_SHA-256
+using the intermediate derived key and the salt.  I've removed thread
+synchronization for this post, which still needs work.  Are there any bugs?
+ Feedback welcome:
+
+typedef struct threadContextStruct *ThreadContext;
+
+struct threadContextStruct {
+    uint64 *mem;
+    uint64 *threadKeys;
+    volatile uint32 *nextPageNumPtr; // This pointer points to the same
+value in each thread
+    uint32 pageLength;
+    uint32 numPages;
+    uint32 keyLength;
+};
+
+// Fill toPage, hashing with the key and fromPage as we go.
+static void fillPage(ThreadContext c, uint64 *key, uint32 fromPageNum,
+uint32 toPageNum) {
+    uint32 pageLength = c-&gt;pageLength;
+    uint64 *fromPage = c-&gt;mem + fromPageNum*pageLength;
+    uint64 *toPage = c-&gt;mem + toPageNum*pageLength;
+    uint32 pageMask = pageLength - 1;
+    uint64 keyData, pageData, lastPageData = 1;
+    uint32 i;
+    uint64 *k = key;
+    uint64 *kEnd = key + c-&gt;keyLength;
+    uint64 *t = toPage;
+    for(i = 0; i &lt; pageLength; i++) {
+        keyData = *k;
+        *t++ = keyData;
+        pageData = fromPage[keyData &amp; pageMask];
+        *k++ += (pageData*keyData) ^ lastPageData;
+        if(k == kEnd) {
+            k = key;
+        }
+        lastPageData = pageData;
+    }
+}
+
+// This is the thread's main function.  It hash pages randomly into the
+derived key.
+static void *hashMem(void *threadContextPtr) {
+    ThreadContext c = (ThreadContext)threadContextPtr;
+    uint32 fromPageNum = 0, toPageNum;
+    uint32 numPages = c-&gt;numPages;
+    uint32 hash;
+    uint64 *key;
+    while(true) {
+        toPageNum = (*(c-&gt;nextPageNumPtr))++;
+        if(toPageNum &gt;= numPages) {
+            pthread_exit(NULL);
+        }
+        key = c-&gt;threadKeys + (toPageNum &amp; THREAD_MASK)*c-&gt;keyLength;
+        hash = (uint32)(key[0]);
+        if(toPageNum &gt; MAX_THREADS) {
+            fromPageNum = hash % (toPageNum - MAX_THREADS); // Could
+eliminate mod operation
+        }
+        fillPage(c, key, fromPageNum, toPageNum);
+    }
+}
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+phc-discussions - Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+Message-ID: <1894559692.632125.1389452951062.open-xchange@email.1and1.com>
+Date: Sat, 11 Jan 2014 09:09:11 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+I wanted to get benchmarks to compare a hashing algorithm optimized for a
+scripting language vs another algorithm that did not consider this. Since I'm
+familiar with Catena I decided to implement Catena-3-SHA512 in PHP.
+
+Current scripting memory (not so) high vs current Catena:
+2 MiB: 544 ms vs 2030 ms (3.73x)
+1 MiB: 249 ms vs 1040 ms (4.17x)
+512 KiB: 124 ms vs 514 ms (4.13x)
+256 KiB: 60.5 ms vs 240 ms (3.96x)
+128 KiB: 30.0 ms vs 118 ms (3.94x)
+Basically scripting memory (not so) high can use 4x more ram than Catena and run
+in about the same time.
+
+Optimized scripting memory (not so) high vs optimized Catena:
+2 MiB: 431 ms vs 995 ms (2.31x)
+1 MiB: 195 ms vs 499 ms (2.56x)
+512 KiB: 97.0 ms vs 249 ms (2.57x)
+256 KiB: 48.5 ms vs 121 ms (2.49x)
+128 KiB: 24.0 ms vs 59.7 ms (2.48x)
+
+Catena takes about 2.5 times longer for the same amount of memory, but Catena is
+much better at defending against attackers that use less memory. Pretty sure
+it's O(N^2) vs O(N).
+
+Test machine: Core2 Quad (Q9300 2.5GHz), PHP 5.3.4 (64 bit), Windows 7
+
+
+*** Optimizations ***
+
+Scripting memory (not so) high:
+        $ja = unpack('V', $x);
+vs
+        $ja = unpack('V', substr($x, -4));
+The optimized version's look ups are aligned to 384 bytes with a $blocksize of
+384 bytes vs byte aligned with a $blocksize of 431 bytes. Note both require four
+SHA512 blocks.
+
+Catena:
+    for ($c = $garlic; $c <= $garlic; $c++)
+vs
+    for ($c = 1; $c <= $garlic; $c++)
+2x increase in speed by not calculating the smaller sizes. Note that you could
+have "minGarlic" and "maxGarlic". To save on calculations and still be
+upgradeable.
+
+
+*** Code ***
+
+Scripting memory (not so) high:
+function smhkdf($in, $salt, $m_cost)
+{
+    $k = 4;
+    $blocksize = 128 * $k - 16 - 1 - 64;
+
+    if ($m_cost * 64 < $blocksize)
+        $m_cost = ceil($blocksize / 64);
+
+    $v = '';
+    $x = hash('sha512', $in, TRUE) . $salt;
+    $count = $m_cost;
+    do {
+        $v .= $x = hash('sha512', $x, TRUE);
+    } while (--$count);
+
+    $mod = ($m_cost * 64) - $blocksize + 1;
+    $count = $m_cost;
+    do {
+        $ja = unpack('V', substr($x, -4));
+# XXX: optionally align $j to 64-bit boundary
+        $x = hash('sha512', $x . substr($v, ($ja[1] & 0x7fffffff) % $mod,
+$blocksize), TRUE);
+    } while (--$count);
+
+# XXX: use $outlen
+# XXX: use $t_cost (as parallelism?)
+    $x = substr($x, -32);
+
+    return $x;
+}
+
+function smhkdfOptimized($in, $salt, $m_cost)
+{
+    $k = 4; // Can't change, this was unrolled
+    $blocks = 2 * $k - 2;
+    $m_cost = ceil($m_cost / $blocks);
+
+    $v = array();
+    $x = hash('sha512', $in, TRUE) . $salt;
+    $count = $m_cost;
+    do {
+        // $blocks == 6
+        $x0 = hash('sha512', $x,  TRUE);
+        $x1 = hash('sha512', $x0, TRUE);
+        $x2 = hash('sha512', $x1, TRUE);
+        $x3 = hash('sha512', $x2, TRUE);
+        $x4 = hash('sha512', $x3, TRUE);
+        $x  = hash('sha512', $x4, TRUE);
+        $v[] = $x0 . $x1 . $x2 . $x3 . $x4 . $x;
+    } while (--$count);
+    $count = $blocks * $m_cost;
+    do {
+        $ja = unpack('V', $x);
+        $x = hash('sha512', $x . $v[($ja[1] & 0x7fffffff) % $m_cost], TRUE);
+    } while (--$count);
+
+# XXX: use $outlen
+# XXX: use $t_cost (as parallelism?)
+    $x = substr($x, -32);
+
+    return $x;
+}
+
+Catena-3-SHA512:
+define('H_LEN',  64);
+define('LAMBDA',  3);
+define('REGULAR', 0);
+define('CLIENT',  1);
+define('PASSWORD_HASHING_MODE', 0);
+define('KEY_DERIVATION_MODE',   1);
+
+function LBRH($x, $garlic)
+{
+    $c = 1 << $garlic;
+    $r = array();
+
+    $header = chr($garlic) . "\0\0\0\0";
+    $r[] = hash('sha512', $header . "\0\0\0\0" . $x, true);
+
+    // Top row
+    for ($i = 1; $i < $c; $i++)
+    {
+        $r[] = hash('sha512', $header . pack('V', $i) . $r[$i - 1], true);
+    }
+
+    // Mid rows
+    $pShift = 24 - $garlic;
+    for ($k = 0; $k < LAMBDA; $k++)
+    {
+        $r[0] = hash('sha512', $header . "\0\0\0\0" . $r[0] . $r[$c - 1], true);
+
+        // Replace $r[reverse($i, $garlic)] with new value
+        $previousR = 0;
+        for ($i = 1; $i < $c; $i++)
+        {
+            // $p = reverse($i, $garlic);
+            $p = (($i & 0x0000ff) << 16) | (($i & 0xff0000) >16) | ($i &
+0x00ff00);
+            $p = (($p & 0x0f0f0f) <<  4) | (($p & 0xf0f0f0) > 4);
+            $p = (($p & 0x333333) <<  2) | (($p & 0xcccccc) > 2);
+            $p = (($p & 0x555555) <<  1) | (($p & 0xaaaaaa) > 1);
+            $p = $p >$pShift;
+            $r[$p] = hash('sha512', $header . pack('V', $i) . $r[$previousR] .
+$r[$p], true);
+            $previousR = $p;
+        }
+        $k++;
+        if ($k >= LAMBDA)
+        {
+            break;
+        }
+
+        // This is now sequential because (reverse(reverse($i, $garlic),
+$garlic) == $i)
+        $r[0] = hash('sha512', $header . "\0\0\0\0" . $r[0] . $r[$c - 1], true);
+        for ($i = 1; $i < $c; $i++)
+        {
+            $r[$i] = hash('sha512', $header . pack('V', $i) . $r[$i - 1] .
+$r[$i], true);
+        }
+    }
+
+    // reverse($c - 1, $garlic) == $c - 1
+    return $r[$c - 1];
+}
+
+function catenaOptimized($pwd, $salt, $data, $garlic, $client = REGULAR,
+$tweak_id = PASSWORD_HASHING_MODE, $hashlen = H_LEN)
+{
+    if ($hashlen H_LEN || $garlic 24)
+    {
+        return false;
+    }
+
+    // Compute H(AD)
+    $x = hash('sha512', $data, true);
+
+    // Compute the initial value to hash
+    $x = hash('sha512', "\xff" . chr($tweak_id) . chr(LAMBDA) . chr($hashlen) .
+chr(strlen($salt)) . $x . $pwd . $salt, true);
+    for ($i = $hashlen; $i < H_LEN; $i++)
+    {
+        $x[$i] = 0;
+    }
+
+    for ($c = $garlic; $c <= $garlic; $c++)
+    {
+        $x = LBRH($x, $c);
+        if ($c == $garlic && $client == CLIENT)
+        {
+            return $x;
+        }
+
+        $x = hash('sha512', chr($c) . "\0\0\0\0" . pack('V', (LAMBDA + 1) << $c)
+. $x, true);
+        for ($i = $hashlen; $i < H_LEN; $i++)
+        {
+            $x[$i] = 0;
+        }
+    }
+    return substr($x, 0, $hashlen);
+}
+
+function catena($pwd, $salt, $data, $garlic, $client = REGULAR, $tweak_id =
+PASSWORD_HASHING_MODE, $hashlen = H_LEN)
+{
+    if ($hashlen H_LEN || $garlic 24)
+    {
+        return false;
+    }
+
+    // Compute H(AD)
+    $x = hash('sha512', $data, true);
+
+    // Compute the initial value to hash
+    $x = hash('sha512', "\xff" . chr($tweak_id) . chr(LAMBDA) . chr($hashlen) .
+chr(strlen($salt)) . $x . $pwd . $salt, true);
+    for ($i = $hashlen; $i < H_LEN; $i++)
+    {
+        $x[$i] = 0;
+    }
+
+    for ($c = 1; $c <= $garlic; $c++)
+    {
+        $x = LBRH($x, $c);
+        if ($c == $garlic && $client == CLIENT)
+        {
+            return $x;
+        }
+
+        $x = hash('sha512', chr($c) . "\0\0\0\0" . pack('V', (LAMBDA + 1) << $c)
+. $x, true);
+        for ($i = $hashlen; $i < H_LEN; $i++)
+        {
+            $x[$i] = 0;
+        }
+    }
+    return substr($x, 0, $hashlen);
+}
+
+* Note I may have messed something up. Please check for errors.
+
+

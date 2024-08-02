@@ -1,0 +1,101 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <245912471.572053.1389357107597.open-xchange@email.1and1.com>
+Date: Fri, 10 Jan 2014 06:31:47 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+On January 10, 2014 at 6:02 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Fri, Jan 10, 2014 at 05:36:04AM -0600, Steve Thomas wrote:
+On January 10, 2014 at 4:21 AM Steve Thomas <steve@...tu.comwrote:
+>
+If you use 1/2 the memory it will cost 1.5x for each loop. So for $t_cost
+= 1
+it will take 7.5x more computations. Which is comparable to $k = 4.
+>
+Oh right I just remembered a better attack that cost 2*ram^(1/2) and takes
+2x
+operations. So for 1MB it needs 16KB and with $t_cost = 1 it's 10x. Well
+maybe I should stop considering the hashing of mem free. Oh well oops it's
+2.41x more operations.
+Normal: 16384 + 8192 * 5 + 1
+Cheating: (16384 - 128) * (5+1) - 128 + 8192 * 5 + 1
+>
+So max is 191/64 times (2.98x) more work with 2*ram^(1/2).
+>
+Can you describe that attack? Does it involve many parallel cores, and
+how many?
+
+:( it's takes 3.55x longer ($t_cost = 0) and 3.98x longer ($t_cost = 1) in PHP
+with 2*size^(1/2).
+
+pwhash_cheat_1mb($pw, $salt, $t_cost)
+and
+pwhash($pw, $salt, 16384, $t_cost)
+should give the same results.
+
+function pwhash_cheat_1mb($pw, $salt, $t_cost)
+{
+    $h = hash('sha512', $salt . $pw, true);
+    $mem = array($h);
+    for ($i = 0; $i < 127; $i++)
+    {
+        for ($j = 0; $j < 128; $j += 8)
+        {
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+            $h = hash('sha512', $h, true);
+        }
+        $mem[] = $h;
+    }
+
+    // Hash "mem" $t_cost+4 times
+    $ctx = hash_init('sha512');
+    $memTmp = array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+    for ($i = -4; $i < $t_cost; $i++)
+    {
+        for ($j = 127; $j >= 0; $j--)
+        {
+            $h0 = $h = $mem[$j];
+            $h1 = $h = hash('sha512', $h, true);
+            $h2 = $h = hash('sha512', $h, true);
+            $h3 = $h = hash('sha512', $h, true);
+            $h4 = $h = hash('sha512', $h, true);
+            $h5 = $h = hash('sha512', $h, true);
+            $h6 = $h = hash('sha512', $h, true);
+            $h7 = $h = hash('sha512', $h, true);
+            $memTmp[15] = $h7 . $h6 . $h5 . $h4 . $h3 . $h2 . $h1 . $h0;
+            $pos = 14;
+            for ($k = 8; $k < 128; $k += 8)
+            {
+                $h0 = $h = hash('sha512', $h, true);
+                $h1 = $h = hash('sha512', $h, true);
+                $h2 = $h = hash('sha512', $h, true);
+                $h3 = $h = hash('sha512', $h, true);
+                $h4 = $h = hash('sha512', $h, true);
+                $h5 = $h = hash('sha512', $h, true);
+                $h6 = $h = hash('sha512', $h, true);
+                $h7 = $h = hash('sha512', $h, true);
+                $memTmp[$pos--] = $h7 . $h6 . $h5 . $h4 . $h3 . $h2 . $h1 . $h0;
+            }
+            hash_update($ctx, $memTmp[ 0]); hash_update($ctx, $memTmp[ 1]);
+hash_update($ctx, $memTmp[ 2]); hash_update($ctx, $memTmp[ 3]);
+            hash_update($ctx, $memTmp[ 4]); hash_update($ctx, $memTmp[ 5]);
+hash_update($ctx, $memTmp[ 6]); hash_update($ctx, $memTmp[ 7]);
+            hash_update($ctx, $memTmp[ 8]); hash_update($ctx, $memTmp[ 9]);
+hash_update($ctx, $memTmp[10]); hash_update($ctx, $memTmp[11]);
+            hash_update($ctx, $memTmp[12]); hash_update($ctx, $memTmp[13]);
+hash_update($ctx, $memTmp[14]); hash_update($ctx, $memTmp[15]);
+        }
+    }
+    return hash_final($ctx);
+}
+
+

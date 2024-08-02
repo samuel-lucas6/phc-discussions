@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <20140921122340.GA8198@openwall.com>
+Date: Sun, 21 Sep 2014 16:23:40 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On Sun, Sep 21, 2014 at 06:39:52AM +0000, Brandon Enright wrote:
+Instead of having 4 (or N) fixed branch paths each with a fixed number
+of instructions for each path, I suggest the following logic would
+defeat the selective NOPing ability by making the worst case too bad:
+
+while (coinflip()) {
+   do_some_work();
+
+   while (coinflip()) {
+      do_some_more_work() {
+
+       [...]
+          [...]
+
+Using a structure like this ends up being even simpler than N different
+fixed branches and the worst case needed to keep threads in sync is
+unbounded.  Even if an implementer were to cap each while (coinflip())
+loop to 20 iterations (for example) 20 * 20 * [...] is far, far more
+costly than the average case actually taken by the code.
+
+I will explore this area of branching more and if OmegaCrypt makes it
+to the next round I will replace the current 4 branches with something
+more robust like above.
+
+Of course, I'd love to hear any thoughts / analysis on this idea.
+
+This sounds like an extension of "Deep enough tree (not just an if/else
+in a loop) to make eager execution inefficient" as listed on this slide:
+
+http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00068.html
+
+changing the nested if's to nested variable iteration count loops.  I am
+not sure which is the simpler way to slow down GPUs.  6 levels of nested
+if's with same/similar instruction count code paths for each of the 64
+possibilities would be pretty effective, but perhaps with loops you can
+achieve a similar effect with fewer than 6 and maybe avoiding similarity
+between the pieces of code matters less then (since you also have the
+different iteration counts), perhaps at a cost of making side-channel
+and total running time leaks worse.
+
+As the slide also says, "Beware of side-channel leaks - a sufficient
+reason not to use data-dependent branching", and here's why:
+
+Secret-dependent memory lookups are bad enough already.  We need a very
+good reason to step into the less tested and not so well understood
+territory, especially in terms of side-channel leaks.  Does adding
+secret-dependent branching enable a substantially better defense than we
+can achieve with secret-dependent memory lookups alone?  This is unclear.
+If we accept some side-channel risk, I'd prefer to focus on improving
+secret-dependent memory lookups - and indeed, this is what I was working
+on for yescrypt.
+
+That said, some diversity in PHC candidates is welcome, so thank you for
+exploring this area further.
+
+BTW, in case we want to credit anyone for introducing secret-dependent
+branching for password hashing or key derivation, I don't know if Adobe
+or Alec Muffett with SunMD5 was first to do it.  I heard of Adobe's use
+of secret-dependent branching many years later than of SunMD5's.
+
+Alexander
+

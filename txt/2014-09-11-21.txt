@@ -1,0 +1,69 @@
+phc-discussions - Re: Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Message-ID: <luspgn$d2f$1@ger.gmane.org>
+Date: Thu, 11 Sep 2014 11:26:28 -0700
+From: Alex Elsayed <eternaleye@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Alex Elsayed wrote:
+
+Mm, with the parallel PAKE we've latched P as a necessary part of the
+protocol, so _here_ your original idea of passing H(P) to the token, which
+it uses to encrypt its (internal) value, would not weaken the scheme in
+the case of a malicious token.
+
+Given token T holding secret X, user U holding password P, and server S:
+
+U -T: H(P)
+T -U: Y = E(k=X, H(P))
+T -S: R_t = PAKE(X)
+U -S: R_u = PAKE(Y)
+T -U: R_t
+U: K = R_t ^ R_u
+
+After I posted the correction to this yesterday, I realized that there's an 
+even more optimal approach combining this with my original scheme. It 
+satisfies all of the properties you brought up, _and_ the property I'd like 
+that the server doesn't even need to know that a token is in use at all 
+(permitting a user to add a token to any account they want to) - without 
+requiring any local storage on the user's machine.
+
+Let E( K, M ) be an encryption function with key K and message M
+Let H( M ) be a hash of a message M
+Let sizeof( H( A ) ) == sizeof( K in E( K, B ) ) for all A and B
+
+Given:
+    Token T holding secret X
+    User U holding password P and pin N
+    Server S
+
+1.) U and T establish a channel C by executing a PAKE over N
+2.) U sends H(P) to T over C
+3.) T computes Y = E( H(P), X ) and sends it to U over C
+4.) U computes Z = E( Y, P )
+5.) U and S execute a PAKE over Z
+
+I believe this is secure for arbitrary E, H, and augmented PAKE.
+
+Step 1 ensures that without knowing N, the token is useless - it also 
+protects against someone eavesdropping the bus the token is on.
+
+In addition, it provides for the option of the "token" being no such thing, 
+and instead being some kind of server itself, or the token protocol being 
+relayed by a system daemon of some sort.
+
+Step 2 and 3 ensure that without knowing P, the token must be queried for 
+each attempt
+
+Step 4 latches P (as opposed to H(P)) as necessary for the protocol, 
+limiting the damage that a malicious token can do
+
+Because Z depends on X, which should be strong randomness, the server can't 
+attempt dictionary attacks against the verifier it holds.
+
+Finally, the number of round-trips over the network is exactly the same as a 
+single execution of the PAKE, and a user who knows P can cache Y in order to 
+save on queries to the token.
+
+

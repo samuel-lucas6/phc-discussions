@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <5513B138.3090401@gmail.com>
+Date: Thu, 26 Mar 2015 08:11:52 +0100
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On 03/25/2015 11:40 PM, Bill Cox wrote:
+...
+In the specific case of LUKS, I think we can expect the authors
+(including you) to do a good job picking default parameters for the
+password hashing algorithm.  This is not a simple task, and we can
+expect users generally to mess up on this step, which is why we
+should give them an API with only one knob: runtime.  However, for
+critical applications such ask LUKS, I think you guys can choose the
+parameters to match the machine.
+
+LUKS was designed by Clemens to benchmark PBKDF2 on the machine where
+it is formatted (in 2004) and to optimize iteration count to take ~1second
+(default) there. I definitely want to do similar thing with the new kdf.
+
+Is it actually the case that there are LUKS encrypted hard drives
+that are decrypted without multi-threading capabilities?  If this is
+the case, can't we choose to disable multi-threading when compiling
+for that platoform, while taking advantage of the improved protection
+multi-threading provides on most platforms?  I do not like the idea
+of substantially weakening password security for the majority of use
+cases based on a rare corner case.
+
+This is exactly why I posted benchmarks here for discussions (and not
+blindly go to publish it somewhere and forget later :), I can be
+wrong in some conclusions and the non-thread requirement is really
+questionable.
+
+(And I do not care for other applications running in memory. Unlocking
+a disk is not an operation which is running often)
+
+I would ask another way - there is already some clone of LUKS support
+in Grub2 bootloader (but take is just an example).
+
+Are the algorithms easily portable without major changes to such environment
+including parallel attributes (no problem if it is run sequentially there)?
+
+It is not major user case (most of Linux distributions uses non-encrypted
+inittramdisk and unlock system device from fully running OS environment.
+But I do not want to close this way for the future.
+
+Or more generic question: what about embedded world?
+
+PHC seems to be mainly about online services, where you have some big
+Intel server hosting behind it but I would like to not forget about embedded
+systems.
+
+If not embedded, even low-cost Raspberry PI2 have 4 cores
+(and Neon engine capable accelerate e.g. AES).
+(Actually I should run tests there as well perhaps :-)
+
+And yes, people are often using FDE on these platforms.
+
+Moreover Android: it uses dmcrypt but do not utilize LUKS but has similar
+key storage which uses PBKDF2 replaced by scrypt (since 4.4) AFAIK.
+
+Thanks,
+Milan
+

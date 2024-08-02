@@ -1,0 +1,55 @@
+phc-discussions - Interleaved attack on cache-timeing-resistant KDFs
+
+Message-ID: <CAOLP8p6qDfMhpjy2FAhfSSTnUnAeZ2iUP1NfBiRTCJUMoQ_eLA@mail.gmail.com>
+Date: Tue, 11 Feb 2014 17:13:20 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Interleaved attack on cache-timeing-resistant KDFs
+
+It turns out that what matters most for a cache-timing-attack immune
+KDF (like Catena) is memory bandwidth.  Everything else can be
+accelerated by an attack in an FPGA.  There is no significant gain in
+defense for running out of expensive on-chip cache, and there is no
+significant gain for having a difficult to compute hash function (like
+my multiplication compute-time hardened hash function).  It is far
+more important to hammer the memory bandwidth, so a fast hash
+function, and running hash functions in parallel are the important
+things, as these increase memory bandwidth.
+
+Consider the case of a KDF that has a slow but cryptographically
+secure hashing function in its inner loop, which generally runs in
+cache rather than out of external DRAM.  The thinking is that
+read/writes of small 64-byte hashes randomly is inefficient for
+external cheap DRAM, but quite efficient for cache.  Instead of having
+several MiB of expensive on-chip cache for every guessing core, an
+attacker simply interleaves the memory for many guesses in parallel.
+For example, if the KDF does 64 bytes of memory read/write at a time
+to 10MiB of on-chip cache, then an attacker can instead interleave
+memory for 256 guesses in parallel into 16KiB blocks of memory and
+store them in cheap external DRAM.  There would be 16KiB read from
+external DRAM every time the KDF would normally read a 64-byte hash
+from cache, so we stream memory in/out efficiently at near max speed.
+
+Even a small slow FPGA can compute the 256 hashes in parallel easily
+in the time it takes to load 16KiB of memory, so the memory bandwidth
+becomes the main bottleneck.  Any time spent hashing data rather than
+hammering the memory interface is time an attacker can simply subtract
+from his password cracking time.  The hashing cores wouldn't even have
+to wait for all 16KiB of memory to load, because the first core could
+start it's hashing after the first 64 bytes are loaded.  This is a job
+for an FPGA, and a custom ASIC isn't even particularly helpful.  An
+Altera Stratix V FPGA can sustain 40GiB/s data rates to external DRAM
+over 4 DDR3 lanes.  If a KDF read/writes 10MiB 6 times, that's 60MiB
+of memory transfer.  That FPGA could do about 680 guesses per second
+with just 4GiB of external DRAM.  If instead, that KDF did 1 GiB of
+hashing, for 6GiB/sec of memory bandwidth, the FPGA could only do 6 to
+7 guesses per second.
+
+This means cache-timing-attach immune KDFs need as simple a hash
+function as possible, and maybe they should do some hashing in
+parallel, with SIMD and/or multiple threads to get their memory
+bandwidth higher.  This is the best way to defend against brute-force
+guessing attacks.
+
+Bill
+

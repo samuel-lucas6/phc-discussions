@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <560C89C1.7040305@openwall.com>
+Date: Thu, 01 Oct 2015 04:17:53 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-09-29 15:55, Thomas Pornin wrote:
+On Tue, Sep 29, 2015 at 03:05:59AM +0300, Alexander Cherepanov wrote:
+>AIUI the decoder tries to be strict. Then perhaps it's worth to
+>check that 'str' doesn't start with ' ' or '-' here and try to catch
+>overflows.
+>
+Strictly speaking, the decoder tries to be strict when strictness is
+cheap.  If we want a strict decoder of numerical values, strtoul()
+ won't be enough;
+
+I've thought about something cheap, like this (untested):
+
+#define DECIMAL(x)   do { \
+		char *dec_ep; \
+		if (str[0] < '0' || str[0] '9' ||
+		    str[0] == '0' && str[1] >= '0' && str[1] <= '9') { \
+			return 0; \
+		} \
+		errno = 0; \
+		(x) = strtoul(str, &dec_ep, 10); \
+		if ((x) == ULONG_MAX && errno) { \
+			return 0; \
+		} \
+		str = (const char *)dec_ep; \
+	} while (0)
+
+(The check "dec_ep == str" is no longer needed because we made sure that 
+the string starts with a valid number presentation but could be put back 
+just to be on the safe side. The check "(x) == ULONG_MAX" is probably 
+unnecessary but e.g. POSIX says that "The value of errno should only be 
+examined when it is indicated to be valid by a function's return value.")
+
+But it turned out the description of strtoul contains the following 
+tidbit: "In other than the "C" locale, additional locale-specific 
+subject sequence forms may be accepted." So, yes, strtoul() won't be enough.
+
+we would need something like this:
+>
+[skip]
+>
+I am not sure this is worth the effort. It is not very complex to do
+(less than 40 lines of C code).
+
+Yes, I am not sure too.
+
+>>	if (pp->m < 1 || (pp->m >30) 3) {
+>>
+>Why not just compare with a constant here?
+>
+This is to avoid a spurious warning. If I write this:
+>
+	if (pp->m < 1 || pp->m 0xFFFFFFFF)
+>
+then the compiler, on a 32-bit machine, will complain that the
+comparison result is "always true". I don't want spurious warnings: they
+train developers to ignore warnings.
+
+Ah, this is an interesting problem and you have a nice trick here. But 
+the need to use tricks in reference implementation is unfortunate. I 
+think at least a comment is warranted.
+
+OTOH this points to another question: why did use unsigned long type at 
+all? AFAICT Argon2 uses uint32_t for its parameters and PHC API uses 
+unsigned int. And this is another argument against a use of strtoul.
+
+-- 
+-- 
+Alexander Cherepanov
+

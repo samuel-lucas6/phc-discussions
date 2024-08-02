@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20151011062945.GA11179@openwall.com>
+Date: Sun, 11 Oct 2015 09:29:45 +0300
+From: Solar Designer <solar@...nwall.com>
+To: Massimo Del Zotto <massimodz8@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+Massimo,
+
+As a trivial change to your existing code, you could try moving the
+barrier.  You have:
+
+				barrier(CLK_LOCAL_MEM_FENCE);
+			}
+			xo = (ulong)(xo >32) * (uint)xo;
+			xo += gather[0 + 0];
+			xo ^= gather[2 + 0]; // do this uint for slightly improved perf?
+			xi = (ulong)(xi >32) * (uint)xi;
+			xi += gather[0 + 1];
+			xi ^= gather[2 + 1];
+
+but you could have:
+
+			xo = (ulong)(xo >32) * (uint)xo;
+			xi = (ulong)(xi >32) * (uint)xi;
+			barrier(CLK_LOCAL_MEM_FENCE);
+			xo += gather[0 + 0];
+			xo ^= gather[2 + 0]; // do this uint for slightly improved perf?
+			xi += gather[0 + 1];
+			xi ^= gather[2 + 1];
+
+Maybe the compiler does this for you anyway, or maybe not.
+
+The way I designed pwxform, the multiplications and gather loads are
+supposed to work in parallel.
+
+Alexander
+

@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Gambit review
+
+Message-ID: <CAOLP8p7jNdytgRwsCuxyqY9JztxbFEr-UFL1AuHSa10ASE5Ckw@mail.gmail.com>
+Date: Fri, 4 Apr 2014 17:41:02 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Gambit review
+
+On Fri, Apr 4, 2014 at 4:58 PM, Krisztián Pintér <pinterkr@...il.comwrote:
+Bill Cox (at Friday, April 4, 2014, 10:37:43 PM):
+>If you
+>like, I could add your memory pattern to my pebbling algorithm to see
+>how it does.
+>
+that would certainly be very useful, as it might discover some
+weakness. alas, it can not provide a proof for real life sizes. i
+tried to come up with proof, but i'm no math person.
+
+I'll do the quick approximation, where I modify your algorithm to
+overwrite rather than XOR.  I believe the XOR is probably stronger,
+and that overwrite will be similar to Catena.  I can at least see if
+the algorithm I wrote finds any simple way to pebble the modified
+graph.  I could also test out pebbling with the XORs, assuming that no
+reverse pebling is allowed.  The real strength against a reversible
+operation aware pebbling algorithm would be somewhere in-between.
+
+>  I am still trying to figure out what the impact is of
+>XORing over memory rather than overwriting it.
+>
+that one i can answer. if you overwrite, the slot becomes unused for a
+while. i mean, once it has been read, and until it gets a new value,
+it just sits there unused. at any point in time, a certain fraction of
+the memory (and a quite huge fraction) is in this idle state. if you
+cleverly reuse memory slots, you can run the algorithm with smaller
+memory footprint. i prevent this by never discarding any value.
+
+Makes some sense, so long as an attacker can't rewind operations.  The
+hidden state of the sponge seems to do the trick.
+
+>I still think there is maybe a 100X to 1000X potential cache access
+>speedup in an ASIC for predictable addressing,
+>
+predictable addressing is something i'm not willing to give up. it is
+in my view an absolute necessity. i'd rather present a weaker
+algorithm than one that can be cracked wide open using side channel
+attacks.
+
+I wish there were someone who felt strongly about non-predictable
+addressing who also feels strongly about hashing a lot of memory fast.
+ if you used a small output from the sponge to generate a
+non-cryptographic KiB or so, you'd bust out of cache and into a GiB of
+memory in under a second, without suffering too much from cache
+misses.
+
+Unfortunately, the same people who are most concerned about
+predictable addressing seem to also be the ones most concerned about
+writing only cryptographically pseuodo-random data to memory.  Even
+Script didn't do that (because it dropped down to only 8 rounds).  Oh,
+well...
+
+>Now that I've seen a couple entries that use the new AESENC
+>
+as soon az keccak-ni arrives in 2019 processors, you will be a fan of
+gambit instead.
+
+I don't doubt it - at least for the SHA3 part.  I worry more about GPU
+and ASIC attacks than side-channel attacks, so I still prefer the
+Bcrypt style for in-cache hashing.  However, I have come around to
+appreciating the SHA3 sponge you used in your code.  I very likely
+will use it when it's implemented in hardware.
+
+One thing no one will every say about me: that I was reluctant to
+adopt new ideas when others show them to me.  Sponges are cool.
+
+Bill
+

@@ -1,0 +1,92 @@
+phc-discussions - Re: [PHC] attacking and hardening escrypt
+
+Message-ID: <20140312035953.GA19155@openwall.com>
+Date: Wed, 12 Mar 2014 07:59:53 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] attacking and hardening escrypt
+
+On Mon, Mar 10, 2014 at 01:24:08AM -0700, Larry Bugbee wrote:
+On Mar 10, 2014, at 12:29 AM, Solar Designer <solar@...nwall.comwrote:
+Also, I've been seriously considering using 32-bit lanes.  (This has
+some pros and cons.  Among the pros is better compatibility with Salsa20,
+where it'd let us ignore SIMD shuffling of 32-bit words.  escrypt
+currently has some extra complexity because of this shuffling, yet
+having its new sub-block mixing work on 64-bit lanes.)  I think that
+with careful design and with use of the variable S-boxes, 32-bit lanes
+would be OK in terms of issues described above, but they'd provide a
+smaller safety margin.  (Luckily, we're not talking cryptographic
+security here, but just attacks that would allow for computation of the
+hash with somewhat less resources than intended.)
+
+A na?ve question perhaps, but would 64-bit lanes incur an [unnecessary?] performance penalty for defender's implementations on 32-bit processors like ARM?
+
+N-bit lane width is not the same thing as friendliness to N-bit CPUs,
+although it may be related.  With 64-bit lanes, it is easier to make
+efficient use of 64-bit CPUs without SIMD (or when SIMD is not enabled
+in a given build).  On a single-issue 32-bit CPU this could mean 2x more
+parallelism than is necessary to fully use it, thereby making the hashes
+weaker (since the attacker will make use of the parallelism cheaply and
+without a corresponding increase in memory needs), but as long as we're
+using the multi-cycle latency multiply instructions even those CPUs may
+actually benefit from the parallelism.
+
+Chances are that a CPU with a 32x32->64 multiply will also have ADDs
+with carry-in and carry-out, so 64-bit addition is simply 2x more
+instructions.  Yes, there's a data dependency preventing parallel
+addition of low and high 32 bits, but any of these may execute in
+parallel with some other nearby instruction (if the CPU has multi-issue
+at all).  For example, if one 64-bit addition is followed by another
+(computing a+b+c, where all 3 of these are 64-bit), the first 64-bit
+addition's ADD-with-carry-in (ADC on x86) may execute in parallel with
+the second 64-bit addition's ADD-with-carry-out (ADD on x86) since a+b's
+low 32 bits are ready by then.
+
+...or could/should this be an adjustable parameter the site manager/sysadmin could set?
+
+The number of lanes should be tunable, yes.  The lane width I think is
+fine to fix at either 32 or 64 bits.
+
+For truly weak CPUs (and this does not include modern ARM), the use of
+integer multiplication is much more of an issue.  So maybe a cheaper
+sub-block transformation should be defined for those.  Yet it may use
+64-bit lanes too.  If desired, we can even reduce the parallelism within
+64-bit lanes (in the multiply-less version of the sub-block
+transformation) by intermixing low and high 32 bits within those lanes
+in ways that are not parallelizable (unlike e.g. a sequence of 64-bit
+ADDs is, to refer to the example above).  (And we'd expect that this
+version of the sub-block transformation would typically only be enabled
+when only one lane is in use.)
+
+On 32-bit ARM, the current escrypt will use the UMLAL (scalar) or VMLAL
+(vector) instruction:
+
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/BABIJGJB.html
+
+"The UMLAL instruction interprets the values from Rn and Rm as unsigned
+integers. It multiplies these integers, adds the 64-bit result to the
+64-bit unsigned integer contained in RdHi and RdLo, and writes the
+result back to RdHi and RdLo."
+
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491c/BABDEAGJ.html
+
+Vector multiply accumulate long: vmlal -Vr[i] := Va[i] + Vb[i] * Vc[i]
+
+uint64x2_t vmlal_u32(uint64x2_t a, uint32x2_t b, uint32x2_t c); // VMLAL.U32 q0,d0,d0
+
+This is actually better than x86(-64), where the addition has to be a
+separate instruction.  The only integer SIMD multiply-add on x86(-64) is
+32x32->32 + 32, available starting with SSE4.1, whereas x86(-64) has
+lower latency 32x32->64 multiply across currently relevant CPUs, and it
+is available starting with SSE2, so we use that - but it lacks fused ADD.
+
+So 32-bit ARM is more 64-bit'ish than x86-64 in this respect, and the
+current escrypt sub-block transformation actually favors ARM (slightly).
+Maybe future x86 will gain 64-bit output integer multiply-add too.
+
+We need to produce and benchmark implementations for ARM (both scalar
+and vector), though.  So far, I only checked the instruction sets and
+some published instruction timings.
+
+Alexander
+

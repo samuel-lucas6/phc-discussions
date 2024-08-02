@@ -1,0 +1,86 @@
+phc-discussions - Re: [PHC] A review per day, starting with Yarn
+
+Message-ID: <53FE1481.2060904@ciphershed.org>
+Date: Wed, 27 Aug 2014 13:25:21 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day, starting with Yarn
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 08/27/2014 01:13 AM, Raullen Chai wrote:
+Thanks for bringing up this, Bill. I definitely vote for the idea
+of "one-review-per-day". Maybe after the first round of the review,
+we could focus on fewer candidates and do another round of 
+"one-review-per-week" and so on.
+
+Yearn has aroused my interest too.
+
+I agree that m_step should be reasonably small to maximize the
+memory access rate, or t_cost should be reasonably large, e.g.,
+t_cost  (2^m_cost) * (m_step), to ensure that every entry of
+memory can be accessed at least once. In addition, I feel like the
+memory should be involved in blake2b_process too; otherwise, the
+attacker can focus on, e.g., exhaustive search, the state before
+blake2b_process if it is significantly smaller than memory.
+
+The default 6-way parallelism enables us to write SIMD code for recent
+Intel processors that generate a 16-byte (128 bit AES result per
+clock, which is 54.4GB/s for my 3.4GHz CPU.  A single thread on my CPU
+maxes out at 12GiB/s when writing to memory.  The ratio (ignoring GB
+to GiB conversion), is 4.5.  His choice of 72 does not seem random.
+It results in 72 AES operations for every 16 bytes read.  That's a
+factor of 4.5!
+
+However, if he came up with 72 using this math, then he made mistakes.
+ Reading and writing 16 bytes from a random location in my DDR3 DRAM I
+think takes around 12ns, which is a max of about 2.5GiB/s.
+
+So long as parallelism is 2 or more, I think it's OK to derive the
+final key from the parallelism*16 bytes of state.  For parallelism ==
+1, he uses state[0] as both the key and data for the aesinc
+instructions, which worries me, but with 2 or more way parallelism,
+this problem goes away.  Users should realize that the bit-width of
+protection is the minimum of Blake2b's 512 bits and 128 bits *
+parallelism.  That gets hidden from the user with the expand operation
+at the end.
+
+Besides, I think "par" is an interesting parameter in this
+algorithm that is tricky to choose because of the rotate_state
+function below which transforms "state[0 .. N]" to "state[1 .. par
+- 1] || state[0] || state[par .. N]". Basically we should avoid to
+choose all small values of par.
+
+static void rotate_state(uint8_t (*state)[16], size_t par) { 
+uint8_t tmp[16]; memcpy(tmp, state[0], 16); memmove(state[0],
+state[1], 16 * (par - 1)); memcpy(state[par - 1], tmp, 16); }
+
+
+-Raullen Chai
+
+I agree par needs to be large, though 2 seems large to me :-)
+Personally, to avoid losing entropy vs Blake2b, I'd prefer to use a
+minimum par value of 4.  The default of 6 is fine.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/hR+AAoJEAcQZQdOpZUZpFwQAJvFze32099StGK4hBmKhlSZ
+tIUok5RlF39myFr2cOXHo+lUTSySA3kTsxa0W+jmapc/YjpG9VIXZ18hVemC2Aod
+RvTiYDv4z7gR9Uynuo8irWv8/CVqlaZ3cx52B+ff8PIZUpAi0FKv0kxCgfE30soj
+ABZLg79LhWv33bp2txPiJvgo7DOHtl6OYDxuYgs5oLwhAUgDX92wxRouRF9+EPRj
+PQczalQEmFkEjWtFXCJghuHsialEZjhA9KnCHpJJUOF9yBLPPQVf6V0YFuEzWg0R
+uAL5XaM9PCzxv0CYuS6ZJRk9jG76CSnq53GE8NAtAkxngjixipobdkYMifnAnoxz
+mi0QdkgiyJ0EEQDq9q3Yd9CIM6I9tq1sYzs6HU7rmiiCLhpIezG/flz3S7OMBd09
+/KcJcQ08A0i8kbzVNHrhxtAMBQPCxio/VCh/eJ5bsgWcrKbhoMpWVEW5GXuxcnmF
+LWROSk/qa+cppTWYAEdByg1uZDZfdoWSNfWJwZLdBxkkCveG5L8P5mZNUKO7E9D3
+axIzmIrmRQITPJL9HzdOHbHAnRgT7JE2LMjVQGwszq37P7RUAxqEjHyUU7+y/nXm
+oBAC7+eSFeFWgyXcTJkFtwDaRmNyKbwurL0821b6aZ5TeCfGDKxU4t7R0uwY2RyH
+z0tkas7NAy/W4Immoi1Y
+=eGiJ
+-----END PGP SIGNATURE-----
+

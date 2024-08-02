@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150914204301.GA505@bolet.org>
+Date: Mon, 14 Sep 2015 22:43:01 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Mon, Sep 14, 2015 at 05:05:11PM +0100, Hugo Landau wrote:
+The need for key-value extensibility for password hashing functions
+is, presumably, nil
+
+Actually I am not doing it for extensibility, but for readability.
+If you have three parameters (say, the p, m and t or Argon2) then
+you can have something like:
+
+    $argon2i$42$5$5000$...
+
+but then you have to remember, as a human reader, in which order the
+p, m and t appear in the string. In my proposal you get:
+
+    $argon2i$m=42,p=5,t=5000$...
+
+which is clearer (for humans). Since the order is fixed, this should not
+be more complex to parse (instead of checking "does it start with '$'",
+code checks for "does it start with ',p='", which is still a single
+strncmp() call for a C-based parser).
+
+Accepting named parameters in arbitrary order, and/or ignoring
+unrecognized parameters, would indeed make parsing more complex, but I
+personally don't want that. I want the whole encoding to be fully
+deterministic so that test vectors work well. This also implies that
+the parsing can remain relatively easy.
+
+I'll try to write the parsing code in a few days, so that we may have a
+baseline for the complexity of implementations.
+
+
+I also think parameter values can be limited to non-negative integers at
+this time, unless you are aware of any password hashing schemes which
+would be incompatible with this.
+
+In Makwa, at least, it is preferable to have a binary identifier for the
+used modulus (in the current spec, it is a hash of the modulus,
+truncated to 8 bytes). This parameter does not map to a non-negative
+integer (well, you _could_ make it an integer, since every sequence of
+bits can be interpreted as an integer, but you see what I mean).
+
+Another case would be PBKDF2, which is configurable with an iteration
+count, an output length, and an underlying PRF (usually HMAC with a
+given hash function). The hash function name could be made part of the
+function identifier (i.e. you have 'pbkdf2-sha1', not 'pbkdf2' with a
+'sha1' parameter), but, conceptually, you could make the hash function
+one of the parameters (as a symbolic string).
+
+
+I'm not convinced by this rationale. Firstly, I'm not aware of any
+base64 functionality provided by programming language standard libraries
+which does line wrapping, etc.
+
+.NET's System.Convert.ToBase64String() includes newlines by default
+(which might be OS-dependent, even). However, there are four versions
+of that call, two of which accepting an extra parameter of value
+Base64FormattingOptions.None to avoid inserting line breaks every 76
+characters (yes, 76, not 64).
+
+"openssl base64" (command-line tool, for shell scripts) also includes
+line breaks (and requires them upon decoding...).
+
+None of this is an irremediable point. "True" Base64 is not harder to
+implement than the "crypt" variant. I'll give it a go (I already did in
+both C and Java, neither of which having innate abilities at Base64).
+
+
+(I note that the B64 implementations already in place for bcrypt and the
+SHA-2-based crypts works only in the encoding direction, which is the
+easier of the two. For salt _decoding_, we need a decoder, which is
+relatively harder to implement.)
+
+
+Developers in this circumstance (or, preferably, people developing
+password hashing libraries)
+
+Yes, much preferably, please.
+
+
+	--Thomas Pornin
+

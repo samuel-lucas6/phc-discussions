@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <52DD48F6.5090402@uni-weimar.de>
+Date: Mon, 20 Jan 2014 17:04:06 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On 20.01.2014 14:38, Bill Cox wrote:
+[...]
+Thanks for the link!  I don't know why I had not seen it before.  I
+just ran catena-blake2b-opt-test on my development machine, and I got
+this:
+
+runtime: 0.296 seconds
+garlic: 18
+lambda: 3
+memory: 64*2^18 = 16MB
+memory access: 5 reads, 4 writes: 9*16MB = 144MB
+bandwidth: 487 MB/s
+
+I could have some of these numbers wrong... blake2 runs a bit faster
+than SHA512, so I only benchmarked blake2b.
+
+
+For comparison, the default build of scrypt on the same machine
+(running 64-bit arch linux) fills 500MB in 1.8 seconds, doing 1 read
+and 1 write.  If fills 5X more memory in the same time, though it's
+memory bandwidth is only 16% higher.
+
+OK. Lets check if we want to compute both algorithms without without L3
+cache misses. Let Assume that we have 2 MB of L3 cache, and that the
+absence of cache mises improve the runtime by the factor of 10. Then we have
+
+Runtime scrypt : 2^8/10 * 0.3 seconds = 7.68 seconds, and
+Runtime Catena:  ((2^3)^3)/10 * 0.3 seconds = 15.36 seconds.
+
+Observation: On low memory devices, scrypt runs faster then Catena.
+
+
+
+>>The Catena paper blew me away and I stole some of their ideas
+>>wholesale. However, it seems like an academic solution at this stage.
+>>It has nothing to support modern memory architectures, no useful
+>>parallelism, and no high performance hashing. Of course, all of that
+>>can be added, but until I see a real-world solution, it remains
+>>theoretical work in my mind.
+>>
+>Catena uses Blake2b which has parallelism in it. SHA512 was added
+>because there was a PHP implementation that used SHA512. SHA512 is
+>built into PHP and will be faster than Blake2b written in PHP.
+
+The implicit parallelism in Blake2b and other hashing algorithms is a
+bad thing for memory-hard KDFs, IMO.  Any parallelism that our CPUs
+can't take advantage of is an advantage to the attacker. 
+
+Blake2b was designed to use the parallelism that is internally available
+in common CPUs. Almost all "modern" CPUs support SIMD instructions.
+
+"Most modern processors are superscalar, that is, able to run several
+instructions per cycle through pipelining, out-of-order execution, and
+other related techniques. BLAKE2 has a natural instruction parallelism
+of 4 instructions within the G function; processors that are able to
+handle more instruction-level parallelism can do so in BLAKE2bp, by
+interleaving independent compression function calls.
+...
+Limits in both semiconductor manufacturing processes, as well as
+instruction-level parallelism have driven CPU manufacturers towards yet
+another kind of coarse-grained parallelism, where multiple independent
+CPUs are placed inside the same die, and enable the programmer to get
+thread-level parallelism. While sequential BLAKE2 does not take
+advantage of this..." -- https://blake2.net/blake2_lncs.pdf
+
+
+- Even blake2b is too slow for this competition, though I seem to
+remain in the minority in feeling this way.  What's wrong with r[i] =
+r[i-1]*(prevRow[reverse(i)] | 1) + 12345?
+
+Why do you think that your almost-linear equation is a good hash function?
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

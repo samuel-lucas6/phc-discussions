@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+Message-ID: <20140405231034.GA18911@openwall.com>
+Date: Sun, 6 Apr 2014 03:10:34 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+On Sat, Apr 05, 2014 at 12:58:48PM -0400, Bill Cox wrote:
+One thing we can prove is that a PHS that attempts to be a secure
+memory-hard algorithm is "strongly secure" in the sense that we've
+hashed all the inputs to meet that definition, and have preserved
+entropy all the way to the output.  Both yescript and TwoCats pass
+this test, as well as several others, I think.  All you have to show
+is your code works something like:
+
+PRK = H(all inputs, including lengths)
+X = whateverHashAlgorithm(PRK)
+output H(PRK || X)
+
+I would call anything like this a "strongly secure PHS".  I'm not
+really thinking about the non-memory-hard PHS's which seem to take
+radically different approaches.  Some of the memory-hard PHS's look
+more like:
+
+PRK = H(all inputs, including lengths)
+X = whateverHashAlgorithm(PRK)
+output H(X)
+
+For example, I think Scrypt, Catena, and Gambit look more like this.
+
+scrypt includes the password in the final H(), but it doesn't include
+the salt in there.  So if anything goes wrong in scrypt's
+whateverHashAlgorithm(), it might lose salt entropy, but not password
+entropy (except to the extent H() loses entropy).
+
+yescrypt includes the entire PRK in the final H(), but the initial
+calculation of PRK includes {password, salt} yet doesn't include {N, r,
+p, t, flags}.  I think this is a good choice, but if this community
+feels the parameters also need to be included in the entropy bypass to
+final H hash (why?), I am willing to add that in the tweaks period.
+
+I'd have to double check to be sure.  These schemes require more proof
+that entropy is not lost, but since they use familiar cryptographic
+primitives for all hashing, they seem pretty safe to me.  The ones
+that don't use any cryptographic primitives at all are the scary ones
+to me.  Using the dieharder tests, we're already showing that some of
+those are not very well put together, at least in their submitted
+form.
+
+Thank you for these tests you're running.
+
+Once you're done with the basic tests, I think we should also attack the
+"strongly secure" hashes in a weakened form: removing PRK from the final
+H().  My intent is that yescrypt should pass randomness tests in that
+weakened form as well (if it doesn't, I'll tweak it until it does, but I
+expect that it does already).  This is similar e.g. to attacking
+reduced-round versions of ciphers and fast hashes, or attacking their
+individual components (a closer analogy perhaps).
+
+Taking this a step further, we can test X instead of H(PRK || X).
+
+If a "strongly secure" hash weakened as above fails randomness tests,
+this likely indicates that its whateverHashAlgorithm()'s cost may be
+fully or partially avoided by the attacker in a subset of cases.  Then
+we could analyze whether this has practical impact (which will depend on
+the size of this subset and how quickly an attacker is able to trigger
+the bypass and with what overhead on inputs that don't trigger the
+bypass), or/and count it as a reason against that scheme (until it's
+tweaked to avoid this problem).
+
+Alexander
+

@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104202142.GA4592@openwall.com>
+Date: Sun, 5 Jan 2014 00:21:42 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 04, 2014 at 11:31:49AM -0500, Bill Cox wrote:
+On Sat, Jan 4, 2014 at 1:31 AM, Solar Designer <solar@...nwall.comwrote:
+This appears to select the random page index based on the first
+uint64_t of a page:
+>
+        // Select a random from page
+        fromPage = mem + PAGE_LENGTH*(*prevPage % i);
+>
+and you appear to be computing uint64_t's of a page sequentially, in
+increasing order.  Thus, the next random page index becomes known
+almost as soon as you've started processing a page.  This may be
+intentional (e.g., EARWORM deliberately allows for one-ahead prefetch,
+but it targets memory bandwidth and doesn't try to be sequential
+memory-hard), but probably it is not (it provides extra parallelism and
+allows for much higher latency memory to be used efficiently, which
+you're not making use of - at least not yet - so it benefits attackers).
+scrypt uses the last (not the first) element of a block to determine the
+random index.
+
+I had the same thought when I wrote that, but then I realized that I can
+compute the last index just as quickly as the first, since they do not
+depend on each other.  Unless I take your advice and reduce parallelism by
+some tunable parameter, there's no way to force the page to be computed
+before the next address is known.
+
+Of course, you should make either both fixes or neither.
+
+I'm not convinced that reducing this sort of parallelism is desirable, but
+if it is, it should be tunable as you suggest.  An ASIC based attacker is
+going to be memory bandwidth limited almost regardless of our attempts to
+limit parallelism, IMO.  They probably have a bigger serial execution speed
+benefit in a custom ASIC than they have memory bandwidth benefit.
+
+Yet by having the parallelism, you're giving them greater flexibility.
+
+scrypt deliberately tried not to exhaust the memory bandwidth - just get
+reasonably close to it (so that much cheaper memory can't be used -
+e.g., defeating use of disks instead of RAM).  Then cost to attacker is
+then in the die area consumed by the memory times the running time, and
+the latter can't be significantly improved due to the sequential nature
+of scrypt.
+
+EARWORM reasonably deviates from it, because its memory may be shared
+between multiple instances and thus can't be relied upon as the area
+factor in area*time.  (The per-instance area is then consumed by memory
+access ports and such.)  Thus, for EARWORM it is more important to get
+very close to exhausting the memory bandwidth, or even to bump into it.
+
+Now, you also have incentive to get closer to exhausting the memory
+bandwidth, because you want to maximize the amount of memory you can
+fill in a limited time.
+
+However, by giving attackers extra parallelism (more than you make use
+of), you're letting them reduce the time factor in area*time, maybe by
+some orders of magnitude (at 16 KB "page" size, the attacker will do up
+to 2048 computations in parallel, whereas on a CPU you only do a few).
+
+Your argument is that they'd have to provide more memory bandwidth for
+that.  This is sound reasoning.  Yet you become unnecessarily similar to
+EARWORM in depending on memory bandwidth _instead_ of on a combination
+of die area consumed by memory _and_ bandwidth.
+
+I think
+we're more likely to hurt ourselves more than an attacker with limits on
+parallel execution.  For example, I know of no recent Android phones or
+Windows laptops that don't have some graphics acceleration ability.
+ Attackers can use GPUs, but so can most users.  GRAM is often faster than
+the CPU's main memory.  We could likely get closer to the attacker's speed
+using our own GPUs by default.  With the multi-threading layout I'm
+currently using, we could run threads on the GPU to max out GDRAM
+simultaneously with running SIMD instructions on the CPU to max out DRAM
+bandwidth.  GDDR5 has amazing bandwidth, so well tuned implementations
+should use this in the future.  If I max out both my GDDR5 and DDR3 memory
+busses, good luck to any attacker trying to beat my speed without paying as
+much as me for RAM.
+
+I agree that having a way to tune settings for much greater instruction
+level parallelism could be beneficial.  It's just that having lots of
+parallelism available all the time makes your KDF not sequential
+memory-hard anymore; it makes it only memory bandwidth bound.
+
+Alexander
+

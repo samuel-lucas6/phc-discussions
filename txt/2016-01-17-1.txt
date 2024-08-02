@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Re: Attack on Argon2i?
+
+Message-ID: <569AFB08.3050206@stanford.edu>
+Date: Sat, 16 Jan 2016 18:23:04 -0800
+From: Henry Corrigan-Gibbs <henrycg@...nford.edu>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Attack on Argon2i?
+
+Hi Krisztián,
+
+I am one of the authors of the Balloon Hashing paper. Thanks for taking 
+a look at it!
+
+You raise a good point here:
+
+On 1/12/16 9:44 AM, Krisztián Pintér wrote:
+
+so i'm long since against pseudorandom but fix access patterns. first,
+i don't see the benefit of a pseudorandom but fixed over a simple and
+fixed. it is still fixed. second, i see the risk that anything chosen
+randomly might be suboptimal. especially if it depends on a value
+(like salt) out of control. i don't like their approach for the same
+reason.
+>
+analogy: s-boxes. it is known, that random s-boxes are suboptimal in
+comparison to carefully crafted ones. this is the expected thing,
+since why would a random object be optimal? it only happens if the
+vast majority of possible objects are optimal, which at least needs a
+proof.
+
+I completely agree that it does not make sense to use a pseudo-random 
+memory access pattern unless there is a good reason for doing so.
+
+In our case, the security of the construction relies on the fact that 
+the data-dependency graph of the computation (i.e., the access pattern) 
+is an "expander graph."
+
+There is a famous theorem, cited as Theorem 6 in our paper, that says 
+that a random graph of a certain type is almost always an expander. So, 
+if you choose a graph of this type at random, the probability that it is 
+_not_ an expander is very very small -- something like 2^{-80} (and you 
+can make this probability as small as you like).
+
+In contrast, it is quite difficult to construct expander graphs 
+deterministically: the constructions are less efficient and are harder 
+to implement.
+
+We are not wedded to using pseudo-random access patterns at all -- it 
+would even be possible to instantiate the Balloon functions with 
+deterministically constructed expanders. The pseudo-random construction 
+is just much simpler to implement.
+
+Henry
+
+
+

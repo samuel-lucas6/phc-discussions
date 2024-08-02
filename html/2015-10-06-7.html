@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] yescrypt on GPU</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="../../../2015/10/05/1">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALWCaoaDE=1gW3L_gxVKomYS4mZJ9+chT84Vf2zYREPmeqm9Dw&#64;mail.gmail.com&gt;
+Date: Tue, 6 Oct 2015 11:04:24 +0200
+From: Massimo Del Zotto &lt;massimodz8&#64;...il.com&gt;
+To: Solar Designer &lt;solar&#64;...nwall.com&gt;
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+Hello Alexander, hello all.
+
+For the purpose of the discussion, let's call 'X' (from pwxform) a 'chunk'
+of {PWXSimple|S_SIMD} consecutive ulongs.
+I assume someone isn't proficient to OpenCL nomenclature so:
+- Work Item (WI): element of a SIMD unit. Very often referred as 'thread'
+(even though it really isn't).
+
+The rationale is very simple: I have 64 WIs and I have to load (2+2)*4
+ulongs ({PWXRounds|S_ROUNDS}=6 consecutive times).
+Therefore, loading in two steps as I do gives me 8 ulongs from s0 across
+the different chunks, then s1.
+As the chunks are independently processed, the fact they are scattered
+isn't very relevant in this context. I have those 64 work items and 64
+bytes to load so there's no much choice in how much memory a WI can load:
+they just map right.
+
+As a side note, I was surprised to see unaligned loads as I understand they
+have (had?) considerable performance implications on some CPUs... when
+they're legal operations in the first place.
+
+I might try loading ushorts and I have tried loading uints but the OpenCL
+compiler emitted something... not very pretty. Loading uints was
+considerably slower to me - what should I load instead? Those operations
+get dispatched anyway.
+
+I considered doing vload or even async load (meh)... but why would I do
+that? Those tests are better performed by people with hardware to test such
+as the cryptocurrency mining superstars. Sometimes my users send me perf
+data but I'm not all that eager to test under arbitrary non-controllable
+conditions.
+
+There is indeed quite some repetition/waste. That's why AMD put a scalar
+unit in their compute cluster. It was very typical for graphics, we used to
+trash ALU power with no regret. There was a previous formulation where I
+had all WIs loop with the same data but apparently the AMD compiler
+couldn't figure it out. SALUBusy is around 2%, VALU Busy is up to 80% (I
+speculate mostly filled with garbage). I expected something like 10%. We
+gotta love those guys, they cannot even SALU the Salsa operations years
+after GCN launch!
+
+On coalescing: that's a good question. AMD claims GCN to have no coalescing
+but they also claim the best access pattern is to have "stride 1 [bytes]"
+across WIs so they probably mean they don't have 'coalescing' in a "VLIW
+sense" as they likely required much more complicated machinery to figure
+out. The memory usage I got out of the profiler looks odd to me even though
+it seems to agree memory usage is sort of ok-ish. In case someone wants to
+take a look, I might push everything to CSV.
+I think it turned out a to be an interesting case.
+
+
+Massimo
+
+2015-10-05 21:18 GMT+02:00 Solar Designer &lt;solar&#64;...nwall.com&gt;:
+
+&gt; On Thu, May 07, 2015 at 09:02:41PM +0300, Solar Designer wrote:
+&gt; &gt; On Sat, May 02, 2015 at 05:34:27AM +0300, Solar Designer wrote:
+&gt; &gt; &gt; The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+&gt; &gt; &gt; implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+&gt; &gt; &gt; (with tiny bits of inline PTX assembly, even - for things such as the
+&gt; &gt; &gt; pwxform MULs):
+&gt; &gt; &gt;
+&gt; &gt; &gt; <a href="https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741" rel="nofollow">https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741</a>
+&gt; &gt; &gt;
+&gt; &gt; &gt; The code is still very dirty.  I expect it won't build or work for most
+&gt; &gt; &gt; people as-is, yet.  However, it looks reasonably well optimized, and
+&gt; &gt; &gt; specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+&gt; &gt; &gt; are precomputed and hard-coded, etc.)
+&gt; &gt;
+&gt; &gt; Further in that thread, djm34 mentions getting 1.5 kh/s on GTX 980.  The
+&gt; &gt; best speed another person reported so far is 980 h/s on GTX 750 Ti.
+&gt; &gt;
+&gt; &gt; &gt; For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+&gt;
+&gt; There's a new BSTY miner for GPUs:
+&gt;
+&gt; <a href="https://github.com/MaxDZ8/M8M/releases/tag/929" rel="nofollow">https://github.com/MaxDZ8/M8M/releases/tag/929</a>
+&gt;
+&gt; <a href="https://github.com/MaxDZ8/M8M/commit/a500d4af0c96ee64344dd37797a176bf4cc2d370" rel="nofollow">https://github.com/MaxDZ8/M8M/commit/a500d4af0c96ee64344dd37797a176bf4cc2d370</a>
+&gt;
+&gt; The author reports 372 h/s on "Radeon 7750 1 GiB GDDR5 core/mem 850/1200."
+&gt;
+&gt; The code looks moderately weird to me - there's an optimization(?) in
+&gt; M8M/kernels/yescrypt_difficultSmixes.cl: Block_pwxform() that I don't
+&gt; understand the rationale for: the 16-byte S-box lookups from global
+&gt; memory are split across 16 work-items, loading into local memory and
+&gt; followed with a local memory fence, before the values are finally used
+&gt; as pairs of ulong's.  I would sort of understand if these were uint's
+&gt; (fits the SIMT model and the local memory port width on GCN, so might
+&gt; help maximize global memory bandwidth usage, assuming these get
+&gt; coalesced for up to 16 bytes anyway), but why individual bytes?  And
+&gt; does the code that follows do 16x duplicate work then (this may be fine
+&gt; since we have that bottleneck anyway)?
+&gt;
+&gt; Massimo, did I possibly confuse you into doing that with the indices
+&gt; being byte-granular right after applying the mask?  The byte-granular
+&gt; offsets don't imply byte-granular loads - you can compute the address at
+&gt; byte granularity, yet perform wider loads, like my C code does.
+&gt;
+&gt; Alexander
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

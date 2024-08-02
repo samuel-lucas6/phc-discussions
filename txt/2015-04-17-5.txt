@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] winner selection
+
+Message-ID: <55306BD4.6080603@dei.uc.pt>
+Date: Fri, 17 Apr 2015 03:11:32 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] winner selection
+
+On 04/14/2015 01:32 PM, Thomas Pornin wrote:
+If we are talking about Makwa here, then I would like to make the
+(possibly bold) claim that Makwa, without considering delegation, is an
+acceptable replacement of bcrypt. More precisely, it has been reported
+that using GPU is not worth it when trying to brute-force a bcrypt
+hash; general-purpose CPU with a few kilobytes of RAM are a better
+bargain for that job. My claim is that the same holds for Makwa.
+
+I think this might be too bold of an assertion. The main obstacles in implementing modular arithmetic in a GPU are the
+smaller multipliers and the small amount of fast memory per thread. The latter has considerably improved since I worked
+on GPU arithmetic, and since we only need squaring for Makwa, is simpler than generic exponentiation.
+
+The smaller multipliers are of course a handicap versus general-purpose GPUs. Current GPUs are able to perform a
+double-precision FMA at each cycle; this translates to something like 2-3 theoretical TFLOPS, which can get fairly
+competitive with CPUs. This recent paper [1], which I admittedly cannot understand, claims big advantages versus a CPU;
+a second paper [2] claims 7210 2048-bit modular exponentiations per second on an NVIDIA GTX 580, which may translate
+roughly to 14+ million modular multiplications per second. I would expect that Makwa's squaring, without the need for
+square-and-multiply or windowed exponentiation, can be made somewhat faster. [3] uses floating-point arithmetic instead
+and claims speedups (110 million modular multiplications/s), but they don't go above 1024-bit modular arithmetic, making
+performance hard to compare accurately.
+
+So I would reluctantly suggest that Makwa, while certainly not blazingly fast in GPUs---not like MD5 or SHA-{1,2}---is
+not directly comparable to bcrypt. Additionally, a stronger integer multiplier would make a big difference here, and
+this seems like a more plausible inclusion in future GPUs than some mechanism that improves bcrypt performance
+significantly.
+
+[1] http://bncss.org/index.php/bncss/article/view/61/63
+[2] http://www.worldscientific.com/doi/abs/10.1142/S0129626413400094
+[3] http://link.springer.com/chapter/10.1007%2F978-3-319-13257-0_12
+
+

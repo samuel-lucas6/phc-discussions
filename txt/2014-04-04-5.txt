@@ -1,0 +1,78 @@
+phc-discussions - Gambit review
+
+Message-ID: <CAOLP8p4kBxQVxcq7nkLtBzxKozJpm=+pWEO30X5aAGTXCjJ+Yg@mail.gmail.com>
+Date: Fri, 4 Apr 2014 06:55:41 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Gambit review
+
+Gambit is a memory hard hash function that is cache-timing resistant.
+I don't think the author proved a lower bound on memory useage that an
+attacker requires, but I can provide one here:
+
+If t_cost ==  m_cost*5, then Gambit achieves at least the same
+computation penalty as Catena-3 for attackers trying to use 0.5% or
+less of memory, so O(G^4/S^3).  There.  That was easy :-)
+
+It's a trivial comparison because for every 1% of the last row (5th
+row) I pebble, I force an attacker with only 0.5% pebble coverage of
+memory to recompute half of the prior row.  This is just like the
+Catena proof.  I use something similar for TwoCats.  The reason I
+needed 5 rows rather than 4 was the first row is all 0's and don't add
+anything.  So, it's memory hard, and there is a reasonable lower bound
+on forced recomputations.  Good deal.
+
+Gambit shares Catena's limitations, fixes one, and adds a few new ones.
+
+For limitations it shares:
+
+- It's only good for hashing in on-chip cache, due to small reads that
+will cause cache misses to dominate for defenders, but not attackers,
+when running in external DRAM.  So, think 20MiB or less.  Nothing big
+like Script uses.
+
+- Predictable reads offer little defense against GPU attacks, even
+though the reads are small, and the small memory means you can't just
+blow into main shared memory big-time as defense.
+
+- ASIC resistance is very poor, because predictable access pattern
+reads can be accelerated in an ASIC to the order of 1 PiB/s
+(peta-byte/s).  That's many orders of magnitude better.  Also, he hash
+function offers very weak runtime hardening, and can also be speed up
+a few orders of magnitude.  Combined, I expect at least a 1,000,000X
+speedup on an ASIC.  It is worse for Gambit than Catena due to the
+unfortunate choice of SHA3, which takes far longer to compute in
+software than in hardware.
+
+- Slow memory hashing function means it wont run anywhere near Scrypt
+speed, lowering time*memory security proportionally.
+
+Gambit does have one advantage over Catena.  If memory is leaked, the
+hashed data written to memory cannot be distinguished from random.  In
+contrast, Catana blocks are hashed in a predictable pattern that can
+be recomputed by an attacker directly from the leaked memory to verify
+Catena origin.  This is useful partly to help identify the oldest
+blocks, which will speed up aborting incorrect guesses.
+
+On the down side, I would prefer to see more "strongly secure" PHS's.
+I did not see any obvious attacks, but since very few inputs are added
+to the hash state, other inputs might be able to be manipulated to
+implement some form of banana attack.  To fix this, all the author has
+to do is absorb the rest the inputs.
+
+Overall, its a nice little Catena inspired PHS.  The sponge
+construction does simplify the code.  However, I don't see much
+differentiation from Catena, other than using a sponge, and
+unfortunately the choice of SHA3 exaserbates what I feel is Catena's
+greatest weakness (FPGA and ASIC attacks).  This PHS will get chewed
+to pieces in an ASIC attack, and I think I could do an FPGA design
+runs maybe 100X faster.  Predictable memory reads on an FPGA using
+block RAMs should run at somewhere from many GiB/s to a few TiB/s.
+The sponge should prove fast and tiny in an FPGA as well.
+
+I did not find any errors, and I do believe it is secure.  It is
+simple enough and similar enough to Catena to verify security with a
+single read through the code.
+
+Bill
+

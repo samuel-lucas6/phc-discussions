@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="../../../2015/09/05/6">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150906084631.GB31208&#64;openwall.com&gt;
+Date: Sun, 6 Sep 2015 11:46:31 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Sat, Sep 05, 2015 at 01:59:37PM -0700, Bill Cox wrote:
+&gt; I agree.  Yescrypt is a "recommended" solution, so for this 4MiB hash size,
+&gt; I think I should see if I can get the speed where it needs to be for me to
+&gt; argue easily for it's use.  As I recall, there were several possible tweaks
+&gt; to get it running essentially on par with TwoCat's speed, which
+&gt; unfortunately I need to make a simple argument.
+&gt; 
+&gt; Is Yescrypt essentially finished?
+
+For the purpose of benchmarking, almost.  For other purposes, not yet -
+but it will be really soon.
+
+&gt; What would you recommend I try to get a
+&gt; a single-thread hash of 4MiB under 1ms?
+
+I never had that as a goal (like I said, 1ms vs. 2ms just does not
+matter; it's throughput that matters), but here are yescrypt benchmarks
+on i7-4770K at 4 MiB for different PWXrounds:
+
+PWXrounds = 6 (default):
+Benchmarking 1 thread ...
+477 c/s real, 477 c/s virtual (511 hashes in 1.07 seconds)
+Benchmarking 8 threads ...
+1533 c/s real, 191 c/s virtual (1533 hashes in 1.00 seconds)
+
+PWXrounds = 2:
+Benchmarking 1 thread ...
+983 c/s real, 993 c/s virtual (1023 hashes in 1.04 seconds)
+Benchmarking 8 threads ...
+1705 c/s real, 214 c/s virtual (3069 hashes in 1.80 seconds)
+
+PWXrounds = 1:
+Benchmarking 1 thread ...
+1346 c/s real, 1355 c/s virtual (2047 hashes in 1.52 seconds)
+Benchmarking 8 threads ...
+1764 c/s real, 231 c/s virtual (2047 hashes in 1.16 seconds)
+
+So you can get to 1.02ms at 2 rounds, and to 0.74ms at 1 round, when
+computing just 1 hash at a time on that CPU.
+
+Also, as you can see the throughput figures don't differ as much,
+increasing by only 15% as you go from 6 rounds to 1 round.  This is why
+I prefer 6.
+
+The above is without use of AVX2.  With AVX2 and 512-bit (rather than
+128-bit) pwxform S-box lookups (but still 8 KiB S-boxes):
+
+PWXrounds = 6:
+Benchmarking 1 thread ...
+500 c/s real, 505 c/s virtual (511 hashes in 1.02 seconds)
+Benchmarking 8 threads ...
+1663 c/s real, 216 c/s virtual (3577 hashes in 2.15 seconds)
+
+PWXrounds = 2:
+Benchmarking 1 thread ...
+1071 c/s real, 1077 c/s virtual (2047 hashes in 1.91 seconds)
+Benchmarking 8 threads ...
+1749 c/s real, 230 c/s virtual (2047 hashes in 1.17 seconds)
+
+PWXrounds = 1:
+Benchmarking 1 thread ...
+1421 c/s real, 1421 c/s virtual (2047 hashes in 1.44 seconds)
+Benchmarking 8 threads ...
+1764 c/s real, 236 c/s virtual (2047 hashes in 1.16 seconds)
+
+As you can see, we get under 1ms at 2 rounds then, and the difference in
+throughput between 6 rounds and 1 round becomes even smaller (only 6%).
+
+It can also be seen that AVX2 doesn't make a big difference, not even
+when we've tuned the S-box lookups width.  (It makes more of a
+difference for throughput at 2 MiB, though: 3400 vs. 4100.)  This is a
+reason why I am primarily considering AVX2 and the wider S-box lookups
+along with targeting L2 (rather than L1) cache with the S-boxes.  Here
+are the results for 64 KiB S-boxes (up from 8 KiB above):
+
+PWXrounds = 6:
+Benchmarking 1 thread ...
+331 c/s real, 331 c/s virtual (511 hashes in 1.54 seconds)
+Benchmarking 8 threads ...
+1502 c/s real, 192 c/s virtual (1533 hashes in 1.02 seconds)
+
+PWXrounds = 2:
+Benchmarking 1 thread ...
+695 c/s real, 695 c/s virtual (1023 hashes in 1.47 seconds)
+Benchmarking 8 threads ...
+1677 c/s real, 214 c/s virtual (3069 hashes in 1.83 seconds)
+
+PWXrounds = 1:
+Benchmarking 1 thread ...
+938 c/s real, 947 c/s virtual (1023 hashes in 1.09 seconds)
+Benchmarking 8 threads ...
+1743 c/s real, 224 c/s virtual (3069 hashes in 1.76 seconds)
+
+As you can see, it's almost the same throughput, and it is still
+possible to get to around 1ms at 1 round, although the latency for 6
+rounds is now up from 2ms to 3ms (but we really shouldn't care).
+
+Out of these benchmarks, I like 64 KiB, 6 rounds best: 1502 c/s, whereas
+the highest was 1764 c/s, so only 17.4% higher.  And who cares about the
+0.7ms vs. 3ms latency for the case when only 1 core is in use?  Even if
+there's a low latency budget for a given deployment, it's latency
+measured under high load (thus, with multiple cores in use) that will
+determine whether a given set of parameters meets the budget or not.
+
+128 KiB S-boxes:
+
+PWXrounds = 6:
+Benchmarking 1 thread ...
+288 c/s real, 288 c/s virtual (511 hashes in 1.77 seconds)
+Benchmarking 8 threads ...
+1299 c/s real, 166 c/s virtual (1533 hashes in 1.18 seconds)
+
+256 KiB S-boxes:
+
+PWXrounds = 6:
+Benchmarking 1 thread ...
+200 c/s real, 200 c/s virtual (255 hashes in 1.27 seconds)
+Benchmarking 8 threads ...
+1043 c/s real, 132 c/s virtual (1785 hashes in 1.71 seconds)
+
+1299 is 86.5% of 1502 that we had at 64 KiB.
+1043 is 80.3% of 1299, and 69.4% of 1502.
+
+128 KiB means fully using the 256 KiB L2 caches when running 2 instances
+per core, like we do here.  256 KiB means we're exceeding the L2 caches.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

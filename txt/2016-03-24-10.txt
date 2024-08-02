@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324194607.GA12698@openwall.com>
+Date: Thu, 24 Mar 2016 22:46:07 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 10:05:15AM -0700, Andy Lutomirski wrote:
+As a totally different option, you could hash the key and then plug
+the key's hash into the round function hash.
+
+Yes, with some caveats:
+
+1. The hash of the key would need to be personalized, so that if a key
+is reused e.g. as a website password elsewhere, its SHA-256 hash can't
+be used (without cracking it first) to decrypt yescrypt hashes.
+
+2. This pre-hashing should be done for all keys or for keylen >= 32.
+Not doing it for length 32 would allow for trivial construction of pairs
+of different yet equivalent keys.
+
+I am considering side-stepping the issue: instead of arbitrary {key,
+keylen}, accept only an exactly 32-byte key.  If an application wants to
+use a human-friendly string, it will need to derive the key first, such
+as with another invocation of yescrypt, which is what would have been
+recommended anyway.  This should work great for network services
+implemented as persistent processes, but maybe not so great for typical
+web apps in PHP, where it might hamper adoption of this feature (will
+need either persistent storage of the derived key or repeated key
+derivation in each new process).  So I am still undecided.
+
+Alexander
+

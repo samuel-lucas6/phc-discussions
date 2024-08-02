@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+Message-ID: <20140124023117.GA14422@openwall.com>
+Date: Fri, 24 Jan 2014 06:31:17 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+On Thu, Jan 23, 2014 at 09:07:43PM -0500, Bill Cox wrote:
+If there is a machine generated true random secret of even 128 bits,
+the attacker might as well pack it up and go home.  Any password
+protected by that is secure against guessing in off-line attacks.  The
+attacker would be better off repeatedly querying the server.  Keeping
+the salt secret is just like giving up on salt and using it instead
+like a Blakerypt style "session key", which is random bits meant to be
+secret.  I think salt has an important function on it's own, and we
+should reserve a separate place for a password dependent secret known
+only to the server.  For example, salt can be transmitted to clients
+for server relief, but session keys (probably a bad name) should not
+be sent anywhere.
+
+Yes, these should be separate.
+
+And yes, until the secret has leaked, it defeats cache timing attacks.
+(The usual per-hash salts do, too, if they're as large and as random and
+unpredictable.)
+
+If there were two changes I could make to an enhanced PHC function
+prototype, it would be adding a session key, and a flag saying it's OK
+to clear the password before filling memory.
+
+No need: the PHC function prototype isn't meant to include all
+parameters that a PHC candidate password hashing scheme may have.
+It may have a native API with more parameters.  escrypt will.
+
+Is there a better word
+for describing secret password-dependent keys than session keys?
+
+I think you're focusing on Blakerypt too much when asking this question.
+Why multiple password-dependent keys?  For just a secret, I call it
+"local parameter":
+
+http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00070.html
+
+which is a term that has been used (a little bit) since 1995 (or earlier):
+
+http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00019.html
+
+An alternative to that is encrypting the hashes with a key, so that it
+can be changed.  (This also eliminates the need for local parameter IDs
+when merging password hash databases, because the hashes can then be
+simply re-encrypted to a common key when the merging is being performed.)
+I think it should be called simply "encryption key", for what it is (or
+"secret key"? but that carries less meaning).
+
+Encrypting the hashes has no effect on cache timings, though, so we'd be
+relying only on per-hash salts for that, then - or would need a local
+parameter as well.  (I don't like having both an encryption key and a
+local parameter at once because of the added complexity and confusion.)
+
+Alexander
+

@@ -1,0 +1,127 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAOLP8p6wa1-jYY+pxwTNUgC=QktdbxTmkYfdX+W8he_oLZ=_6g@mail.gmail.com>
+Date: Sun, 9 Mar 2014 07:48:55 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Sat, Mar 8, 2014 at 11:14 PM, Solar Designer <solar@...nwall.comwrote:
+On Sat, Mar 08, 2014 at 10:59:58PM -0500, Bill Cox wrote:
+>However, while this flaw is certainly not a critical weakness, and
+>obviously Escript in compatibility mode needs to continue using PBKDF2
+>as-is, for non-compatible mode, or entirely new password hashing
+>systems, should we live with such flaws or try to eliminate them?
+>
+We should try to eliminate them.
+>
+Regarding your idea re: all PHC submissions doing it in the same way,
+I'm not so sure.  In each case, the choice might be affected by other
+crypto primitives and constructions that a given PHC submission would
+use anyway, so that its total complexity is less.  For escrypt, this is
+a reason for its non-compat modes to reuse PBKDF2 anyway, just working
+around its shortcomings.
+>
+Alexander
+
+I agree that they wont all be the same.  Still, hacking our own will
+invite FUD-mongers... let me demonstrate :-}
+
+Assume an attacker knows you XOR the password length on the output of
+PBKDF2, and doesn't know your password, but for some reason has the
+ability to append an arbitrary number of 0's to it before it's hashed
+by PBKDF2, and he can see the resulting hash of PBKDF2 after you XOR
+in the password length.  By seeing the result hash for two logins with
+one extra 0's appended for one of them, he just XORs the two hashes
+together and can see if the LSB of the password length is 0 or 1,
+because if it was a 1, then the 2nd bit will be a 1 in the XOR of the
+hashes.  With a few such hashes, he can find the exact password
+length.
+
+That's a dumb attack, but do you want people worrying about it?  You
+might be better off just using PBKDF2 with it's known input collision
+problem.  It is hard to create FUD over an algorithm that has years of
+use behind it.
+
+I think a few of the other PHC entries will also have to defend
+against FUD as a result of to hacking around PBKDF2.  Catena has a
+good KDF at the start, better than PBKDF2, IMO, but if I want to be a
+PITA and create FUD about Catena, I think I can be pretty effective
+:-}
+
+Here's the code (slightly compacted by me):
+
+  uint8_t t[5] = {0xFF, tweak_id, lambda, hashlen, saltlen};
+  __Hash1((uint8_t *) data, datalen, x);
+  __Hash4(t, 5, x, H_LEN, (uint8_t *) pwd,  pwdlen, salt, saltlen, x);
+  memset(x+hashlen, 0, H_LEN-hashlen);
+
+Oh help, the sky is falling!  This KDF will end the world!  Well,
+maybe not, but here's some FUD I could spread.
+
+First, I can't figure out what 0xFF and tweak_id are for.  They aren't
+used in any way other than in the "tweak" structure t.  If I wanted, I
+might hack Blake2 (Catena has it's own copy) to provide a back-door
+when the input starts with 0xFF, <my 8-bit secret>, 3, 64, 16.  OK,
+that's pretty dumb, but what else if the 0xFF for?  Maybe it's clear
+to the PHC judges, but it's not to me.
+
+He does two hashes.  In the first, he hashes the data.  This is to
+compress the data to a small size, since it can be any 32-bit length,
+so I understand why he makes this call.  Unfortunately, this call
+could leak sensitive timing information if the lower level hash
+function runs in time proportional to the data size.  If a user passes
+a server's master key as "data", he's going to get a huge boost in
+security.  An attacker with the password database wont be able to do
+anything without the master key, so the master key might be a higher
+value target than the password.  If this call runs in time
+proportional to the data length, how do we know an attacker can't
+detect it?  This is a weakness, as far as I can tell.
+
+In the second hash, he hashes the password directly, without padding,
+leading to a potential leaking of the password length to an attacker.
+We could easily add padding, but then we'd also have to hash in the
+password length, or we'd wind up with input collisions just like HMAC
+and systems that rely on it including PBKDF2 and Scrypt.  Adding the
+password length to t along with padding the password would fix that.
+
+His call to __Hash4 seems well thought out to me.  If he had not
+hashed the salt size, then I could easily generate collisions, because
+__Hash4 very likely just concatenates the input and hashes it.  With
+salt and password being adjacent, I could just move bytes back and
+forth between the password and salt, and get the same resulting hash.
+Catena didn't make this mistake, but they also didn't hash the
+password length, but did hash the salt length - the minimum required
+amount to avoid this mistake.
+
+I don't know why he's not concerned about leaking timing information,
+but I also can't figure out why the author of HMAC (which does padding
+to hide timing information) would later be an author of HKDF, which
+does no padding.  Have security guys done a group-think session and
+decided that padding was a bad idea?  Is running in constant time no
+longer important?  If so, why are they not concerned about an attacker
+who monitors the power rails, which easily can show what routines are
+executing, and for how long?
+
+In 1989, I debugged CPUs in a group at HP that built the Spectrum CPU,
+and that thing had an embedded feature that allowed monitoring of the
+on-chip power rails and gave us plots of voltage vs time.  It had to
+be a repeating waveform to work, but in 2014, Intel might have one
+that can give you power rail waveforms in one go.  Even if they have
+old-school tech, I can still take that snapshot if I can get a user to
+somehow call the KDF repeatedly.  I know with a scope probe on a power
+rail, I could have told you exactly what part of the code was
+executing during boot.
+
+Finally, there's no provision for clearing the password or data.  I
+would be pretty mad if my password just sat around in memory for 5
+seconds while I hashed many GiB of memory.  In the Blake2 code, I see
+they are paranoid about securely clearing buffers as soon as possible,
+using their "secure_zero_memory" function, which I copied.  Even
+zeroing memory is apparently hard.
+
+Anyway, I think this stuff is hard enough that I don't want to roll my
+own  I'd much rather collaborate with the other PHC guys.
+
+Bill
+

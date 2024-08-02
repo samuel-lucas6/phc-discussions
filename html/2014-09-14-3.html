@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Makwa is broken given p and q</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="../../../2014/09/11/20">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;1309823478.202008.1410689563754.open-xchange&#64;oxuslxltgw06.lxa.perfora.net&gt;
+Date: Sun, 14 Sep 2014 05:12:43 -0500 (CDT)
+From: Steve Thomas &lt;steve&#64;...tu.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+Sorry for taking so long I got scared by the long message *ashamed*. Anyway I
+wrote down my thoughts on improving Makwa and arguing points. So I thought I
+should read and reply to this first.
+
+
+&gt; On September 11, 2014 at 6:51 AM Thomas Pornin &lt;pornin&#64;...et.org&gt; wrote:
+&gt;
+&gt; On Thu, Sep 11, 2014 at 02:21:01AM -0500, Steve Thomas wrote:
+&gt; &gt; I was picking an absurd number to prove a point that apparently was
+&gt; &gt; known. I guess the escrow should have tipped me off that we don't see
+&gt; &gt; eye to eye on what we think is secure.
+&gt;
+&gt; It IS secure -- I am just going to the end of the logic.
+&gt;
+&gt; The CFP called for a desirable feature (among others): "For example, one
+&gt; may design a scheme that is slow to evaluate except on a server given
+&gt; some server-specific shortcut."
+&gt;
+&gt; It so happens that if such a "shortcut" exists, then it can be
+&gt; leveraged, by definition, into a much faster attack. The whole core
+&gt; assumption of PHC and password-hashing functions is that dictionary
+&gt; attacks work, which is why we cannot just use a simple MD5 and be done
+&gt; with it. I am then following that idea to its unavoidable conclusion: if
+&gt; a "shortcut" exists, then it is almost equivalent to a free password
+&gt; recovery for whoever can use it. So I am calling it "escrow" because
+&gt; that's what it is.
+&gt;
+
+I'm confused I thought escrow and fast path were different. Also I don't believe
+that fast path is an escrow. In your paper, page 12, you have a table that says
+that escrow is not possible with pre-hashing and/or post hashing. Either you
+need to fix that or escrow and fast path are different. Also I remember from
+your Passwordcon14 talk that you purposely had the password in plaintext before
+squaring for escrow. So that you can get access to the original password.
+
+
+&gt; If you think of the shortcut (or "fast path") as a kind of escrow, then
+&gt; the correct terminology is that of asymmetric encryption. A password
+&gt; hashing function with a possible shortcut really is deterministic
+&gt; asymmetric encryption:
+&gt;
+&gt; - If you don't know the private key, you can still encrypt the
+&gt; password. To _verify_ a password, you also encrypt it, and check that
+&gt; you get the same value -- that's the point of the encryption being
+&gt; deterministic.
+&gt;
+
+Yeah, I've done this with a Teensy doing AES-CBC-CTS encrypt to prevent a leaked
+database from being able to be cracked. I called it "JustEncrypt".
+
+
+&gt; - If you do know the private key, then you can decrypt, which is all the
+&gt; escrow or shortcut that you may need.
+&gt;
+
+Now that's an escrow... shortcut? Oh decrypt then compare password or oh. Did
+you mean something like:
+"If you do know the private key you can use a short cut and escrow the password
+since you can decrypt."
+
+
+&gt; &gt; I stand corrected, not broken, but my opinion is this is bad.
+&gt;
+&gt; There IS one bad thing: as explained above, if you don't want to hear
+&gt; about any escrow or shortcut, and be sure that nobody can ever access
+&gt; the p and q factors, then you must "forget" them just after having
+&gt; generated them and multiplied them together to compute the modulus. This
+&gt; is easy enough to do (the generation tools provided with the reference
+&gt; implementations of Makwa do just that), but there is no way to do it
+&gt; _convincingly_.
+&gt;
+&gt; By this I mean that though I can generate a modulus, I have no method to
+&gt; convince _you_ that I did not keep the p and q factors around. This is a
+&gt; problem for which cryptography has not yet found a reasonable solution
+&gt; (there is a published construction, but it results in a very large
+&gt; modulus). If such a method was known, I would have applied it, and it
+&gt; would have resulted in a modulus that could be hardcoded and used
+&gt; everywhere in the whole world.
+&gt;
+&gt; Therefore, I turned to the next best thing, which is custom modulus
+&gt; generation. That is, if you want a modulus such that you are sure that
+&gt; the p and q factors have not been saved anywhere, then just generate it
+&gt; yourself. It will be your own modulus. It can be used for hashing all
+&gt; the passwords of people who trust YOU.
+&gt;
+
+That's the problem if you tell people it's secure and that you can have a high
+cost to attackers while having a low cost to you. People will keep p and q to do
+fast path. Basically you can't say "you can keep p and q" to users and tell
+critics "well just clear p and q and your issues go away [along with some
+features]".
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

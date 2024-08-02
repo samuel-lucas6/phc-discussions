@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+Message-ID: <CALCETrW+v6kpjvN_-wB2UkdzxaiMBdjnr8guMXxrVoh-qi5=7Q@mail.gmail.com>
+Date: Sat, 11 Jan 2014 20:47:07 -0800
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 3:45 PM, Bill Cox <waywardgeek@...il.comwrote:
+On Sat, Jan 11, 2014 at 5:41 PM, Andy Lutomirski <luto@...capital.netwrote:
+>On Sat, Jan 11, 2014 at 1:42 PM, Bill Cox >Imagine that all the lines of code you've written in C for escrypt,
+>>other than for memory access, will cost an attacker maybe $0.02 per
+>>core, and that Salsa20/20 will run in maybe 2 clocks instead of 1 for
+>>Salsa20/1.  This is roughly the case, within maybe 2X in cost and
+>>clock cycles.  It's pointless trying to make an ASIC attacker's
+>>arithmetic cost significant in either time or money, so we have to
+>>focus on memory size and bandwidth.  For defense against ASIC attacks,
+>>your Salsa20/1 benchmark is the best.  50GB/s!  Nice!
+>>
+>Is this entirely true?  That is, I always thought that the fancy ALUs
+>on modern CPUs were big and expensive, and that they accounted for
+>non-negligible fractions of the cost.  If so, that would mean that a
+>good password hash should try to max them out.  There's also cache
+>size and bandwidth, and I assume that sticking really fast cache on an
+>ASIC is just as expensive as the really fast cache that already exists
+>on CPU dies.
+>
+Yes, it's really true.  Intel CPUs have an unbelievable amount of
+logic on them, but I've always felt half or more of it is for
+backwards compatibility.  Check out this NVIDIA ARM based ASIC die
+picture:
+>
+http://www.bdti.com/InsideDSP/2011/10/20/NvidiaQualcomm
+>
+If you can find the ALUs, your eyes are better than mine!  The die is
+80-90% RAM (minus pad ring), and that's doing a lot of processing.
+Can you find the multipliers?  They should be visible, but I didn't
+see them.
+>
+>(I could be wrong here.  I've fiddled with high-end Virtex parts, but
+>I have no real concept of what ASIC logic costs.)
+>
+You are right that cache on an ASIC is just as expensive (or more)
+than on a CPU.  Hammering cache in a KDF is an excellent defense
+against ASIC attacks.  However, you can't count on having a very low
+cost*time multiplier when an ASIC does the whole attack on-chip
+(nothing close to the 4-5X per ASIC vs Alexander's 50GB/s benchmark).
+It can split that cache into 100 banks and the bandwidth can go
+through the roof.  Think Terabytes per second.  In that case, your
+best defense is that sequential inner loop, but like I said,
+Salsa20/20 is likely only 2-ish clock cycles (maybe 1 or 4?), so
+making the inner loop complex doesn't buy you much.  You'd still have
+trouble finding that ALU vs the cache it's sitting next to.
+
+To be clear, I was thinking about the possibility of hammering cache
+and main memory at the same time.  Imagine some matrix multiplies or
+other cache-heavy operations needed to select the next memory index to
+access.  If you could get 30 or 40 GB/sec and, say, 100GB/sec to L2,
+you'd probably be doing even better.  (No clue whether this is
+possible -- I'm not at all sure whether modern CPUs can sustain that
+much bandwidth anywhere.  Something that depends on low-latency access
+to a block of cache might be a better bet.)
+
+--Andy
+

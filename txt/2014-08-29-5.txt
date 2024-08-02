@@ -1,0 +1,145 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <5400D0AF.1010707@ciphershed.org>
+Date: Fri, 29 Aug 2014 15:12:47 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - TwoCats
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/28/2014 09:27 PM, Solar Designer wrote:
+On Thu, Aug 28, 2014 at 07:38:42PM -0400, Bill Cox wrote:
+>One thing I screwed up was how to use t_cost.
+
+You can probably fix that during the tweaks period, if TwoCats
+becomes a PHC finalist.
+
+I just changed my local version of TwoCats to iterate the last
+unpredictable slice hashing 2^t_cost times.  It did not increase the
+complexity of the reference version, and it simplified the SIMD
+optimized version.  Running out of L1 cache, hashing 16KiB and
+repeating the last 4KiB 2^20 times on one thread, 4 lanes, with 4KiB
+block size, but a 16 byte sub-block size takes 0.895s.
+
+twocatstime twocats -m 4 -t20 -P1 -l4 -b4096 -B16 -M0
+hash:blake2s memCost:4 timeCost:20 multiplies:0 lanes:4 parallelism:1
+algorithm:twocats-extended password:password salt:salt blockSize:4096
+subBlockSize:16
+
+79 58 86 5c a1 e3 b4 ed
+3a 08 74 0f 0f 6d 5c 09
+35 00 3f b9 4b 02 4b 69
+b7 d7 7a c8 62 38 65 69      32 (octets)
+
+
+real	0m0.888s
+user	0m0.887s
+sys	0m0.002s
+
+I also just tested it on your Haswell machine.  Thanks for access!
+
+twocatstime twocats -m 5 -t20 -l8 -b1024 -B32 -M0 -P8
+hash:blake2s memCost:5 timeCost:20 multiplies:0 lanes:8 parallelism:8
+algorithm:twocats-extended password:password salt:salt blockSize:1024
+subBlockSize:32
+
+c8 39 15 ac f8 22 3b 9b
+e9 af 65 98 b8 86 d3 11
+93 70 ce 2f 10 f1 d9 03
+db 4c b6 b1 21 94 2a 22      32 (octets)
+
+
+real	0m0.579s
+user	0m4.416s
+sys	0m0.000s
+
+This is a total of 356GiB/s hashed.  Not too bad :-)  If TwoCats
+survives to the next round I'll ask if I can submit the update.
+
+>That's all I have for now!  Please feel free to dump on TwoCats!
+>It's my turn :-)
+
+OK, you asked for it.  I don't recall all of my complaints about
+TwoCats anymore, but I think its small random lookups, which are
+meant to be bcrypt-like, might not actually provide as much GPU
+resistance as bcrypt's did.  I think TwoCats makes them 256-bit
+only, meaning that on pre-AVX2 CPUs they might not be frequent
+enough, and you might not be making enough of them per byte
+read/written to the large arena.
+
+This was a dumb oversight on my part that was easy to fix.  I simply
+need to allow subBlock size to be any multiple of the number of
+lanes*4, rather than forcing it to a multiple of 64.  For Sandy Bridge
+and Ivy Bridge, there is no reason I can't allow sub-block sizes of 16
+bytes, and for older mmx processors with only 64-bit SIMD registers,
+allowing block sizes of 8 bytes makes sense.  For architectures with
+no SIMD unit at all, there is no reason I can't allow 4 byte sub-blocks.
+
+This was a 1-line change in my local version of TwoCats in
+twocats-common.c, in the verifyParameters function.  All I had to do
+was insure subBlockSize was at least lanes*4, rather than 64.  The
+benchmarks above make use of this fixed sub-block size.
+
+Have you actually checked TwoCats vs. defense-optimized bcrypt
+running on the same CPU when exhausting the machine's capacity
+(e.g., 8 independent concurrent hash computations on your i7-3770),
+in terms of frequency of those small random lookups?
+
+I haven't benchmarked bcrypt yet.  I don't know enough about the code
+to know if I'm running the latest SSE optimized version, etc.
+However, from the first run above, I'm doing 2.8B 16-byte random reads
+per second on Ivy Bridge.
+
+And then you need to factor in how soon their results are needed
+(the available parallelism, compare it against bcrypt's four S-box
+lookups) and the total size of your equivalent of bcrypt S-boxes
+(if 4x larger, then you probably have 4x more room for parallelism
+while staying the same as bcrypt in terms of GPU resistance).
+
+I just looked at bcrypt again (your OpenWall version).  If I'm reading
+this accurately, it does 64 pseudo-random reads of 4 bytes each in
+each call to BF_ENCRYPT.  I don't see any writes to the S-boxes during
+the compute intensive phase.  Is that right?  I think a round should
+be doable in a clock cycle without any memory accesses using an async
+SRAM, or possibly even synthesizing the S-boxes to gates.
+
+How fast does bcrypt do random reads?
+
+As I had mentioned, the results of such testing were one of my
+reasons to keep yescrypt's default pwxform rounds count no lower
+than 6, or alternatively I'd need to reduce instruction-level
+parallelism.  I think you did not include such criteria when
+deciding on the amount of work to do along with the main arena
+reads/writes in TwoCats.  You simply wanted to maximize your memory
+bandwidth usage, well and the number of sequential MULs, which is
+related, but not exactly it.
+
+I did simply maximize bandwidth.  I did not worry about keeping the
+SIMD unit's pipeline full.  The penalty for CPUs without a SIMD unit
+would be too high, IMO.
+
+SinnyCat, which is always single-threaded, hashes 1GiB in 0.23s, using
+no SIMD instructions at all (-m64 -mtune=generic).  TwoCats should run
+well on low-end CPUs.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUANCrAAoJEAcQZQdOpZUZ5dYP/iNwCl7uF7mPXXhp/WtAqsiW
+6M9j8+qlDlK2Tgu2PVrh4iPsl205lS9cEMx9MyKMFC+QkCj4s+99UbTj+PhdzCSb
+Gqnd/s6+hq4/bolQTZ2f1+4T5k8z6fjcoLIY4Xv2S2DgddF+86Ek6qv+z3Unahe+
++XCTvz3s5WK1M1hmPamDG4j0PfzGjmh7TFfIENauWZmNWBAbibc/zY1L0exgK4vu
+ieB7jI4khVx76M725NjTtALpvu5JUYpmF2Hzs2prPiDAScIt4Lp1HdP7+eC52QGE
+51UdeE/vhbGluxucZ+pH7vu7CyyOwvGsHoXvrnGYNvaoaUZWF65Dh0zgQ6f3uPQm
+jAh8YJxMbESdozmqPUM4kbKAw2HwaTvzTJPiSFiAy2euiNKR30MXEaAoLVPDOorc
+oYdAK+PSB0UEesd3PA56DDqt0tJ6kCjHG7lQxI3VTIJVvlIs9599oZxB+7gdKCZQ
+vxCmOiDDEw1OYozKYdxyjdNVWAN6lk12vBXevT3sgULTes68laLssEU8bwOtoJGC
+ynpUyqZ8EIimyR2nhv5vdSSMw2tCEkO5ei6Biipm/kSwdxAFnKfUnOCLevEYD/lN
+qOyHEcA7Rhw7r4kusrPuJyi3VMZq/3F2jTcYMZyx+568z8jRp5i4wK8MKvOL7VVz
+Cj0kdMHN7kiKdO8nUV/i
+=FS/y
+-----END PGP SIGNATURE-----
+

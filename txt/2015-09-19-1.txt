@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150919170251.GA3705@bolet.org>
+Date: Sat, 19 Sep 2015 19:02:51 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+Hello,
+
+here is some example C code that implements encoding and decoding of
+hash strings for Argon2i.
+
+According to the remarks made here, I followed rules that differ from my
+earlier draft in the following respects:
+
+ -- The decoder does not validate input strings; it may accept strings
+ that do not comply with the specification (e.g. "p=01" instead of
+ "p=1").
+
+ -- I am using "normal" Base64 (not the crypt variant), although I do
+ not include the '=' padding signs.
+
+ -- I added two optional parameters "keyid" and "data", that correspond
+ to an identifier for the key (if any), and associated data. Both are
+ binary (encoded in Base64); the key ID is up to 8 bytes, while the
+ associated data is up to 32 bytes. When they are empty, they are omitted
+ (i.e. there is no difference in encoding between "no associated data"
+ and "associated data has length 0").
+
+ -- I set the parameter order to "m, t, p, keyid, data".
+
+The code includes some generic Base64 encoder/decoder (about 150 lines),
+then code specific to Argon2i (about 200 lines), and some test vectors.
+The Base64 code is constant-time with regards to the data contents (no
+data-dependent table lookups or branches); this is probably useless in
+most situations, but easy enough to achieve.
+
+
+This sample code is meant to give some discussion basis about
+implementation complexity. Feel free to reuse under "public domain"
+rules (i.e. do everything you want except blame me).
+
+
+	--Thomas Pornin
+
+View attachment "phc-mcf-parse.c" of type "text/x-csrc" (13298 bytes)
+

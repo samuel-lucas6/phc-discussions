@@ -1,0 +1,111 @@
+phc-discussions - Re: [PHC] Upgrade HKDF to HKDF2?
+
+Message-ID: <531DBCB1.1060507@bindshell.nl>
+Date: Mon, 10 Mar 2014 06:22:57 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Upgrade HKDF to HKDF2?
+
+On 3/10/2014 4:36 AM, Bill Cox wrote:
+On Mon, Mar 10, 2014 at 5:38 AM,  <Stefan.Lucks@...-weimar.dewrote:
+>On Sun, 9 Mar 2014, Bill Cox wrote:
+>>for(i = 0; i < passwordLength; i += 256) {
+>>   for(j = 0; j < 256; j++) {
+>>       buf[i] = password[(i + j) % passwordLength];
+>>   }
+>>   Hash_Update(hashCtx, buf, 256);
+>>}
+>Welcome password collisions!
+>>
+>Consider, e.g., passwords such as "abcd", "abcdabcd", "abcdabcdabcd" ...
+That's why PBKDF2 hash has collisions for this reason, but I'm
+prepending all lengths with an extra Update call before adding padded
+data.  This should eliminate the collision problem, shouldn't it?
+
+
+No, this isn't why PBKDF2 has collisions. The issues with this code are
+much more severe than PBKDF2's collisions.
+
+First, I think you meant to do buf[i+j] in your code, not buf[i].
+Otherwise your code basically just becomes buf[i] =
+password[passwordLength - 1], as you are continuously overwriting the
+same buffer position with each character of password until the end of
+the string. Observe the output of your code with some debug statements
+added in:
+
+  int main()
+  {
+      int i, j, k;
+      unsigned char buf[256] = { 0 };
+      unsigned char *password = "abcd";
+      unsigned int passwordLength = strlen (password);
+
+      for (i = 0; i < passwordLength; i += 256)
+      {
+          for (j = 0; j < 256; j++)
+          {
+              printf ("writing 0x%02x to buf[%d]\n",
+                  password[(i + j) % passwordLength], i);
+
+              buf[i] = password[(i + j) % passwordLength];
+          }
+
+          printf ("\nunsigned char buf[] = {\n");
+
+          for (j = 0; j < 256; j+=16)
+          {
+              printf ("  ");
+
+              for (k = 0; k < 16; k++)
+                  printf ("0x%02x, ", buf[j+k]);
+
+              printf ("\n");
+          }
+
+          printf ("};\n\nHash_Update(hashCtx, buf, 256);\n\n");
+      }
+  }
+
+
+This code would have some egregious collisions, as you're essentially
+hashing just a single character and any password ending in the same
+character would collide. But now, even if we do make the necessary
+correction, we still run into a very very bad problem:
+
+
+  int main()
+  {
+      int i, j;
+      unsigned char buf1[256] = { 0 };
+      unsigned char buf2[256] = { 0 };
+      unsigned char buf3[256] = { 0 };
+      unsigned char *password1 = "abcd";
+      unsigned char *password2 = "abcdabcd";
+      unsigned char *password3 = "abcdabcdabcd";
+      unsigned int passwordLength1 = strlen (password1);
+      unsigned int passwordLength2 = strlen (password2);
+      unsigned int passwordLength3 = strlen (password3);
+
+      for (i = 0; i < passwordLength1; i += 256)
+          for (j = 0; j < 256; j++)
+              buf1[i+j] = password1[(i+j)%passwordLength1];
+
+      for(i = 0; i < passwordLength2; i += 256)
+          for(j = 0; j < 256; j++)
+              buf2[i+j] = password2[(i+j)%passwordLength2];
+
+      for(i = 0; i < passwordLength3; i += 256)
+          for(j = 0; j < 256; j++)
+              buf3[i+j] = password3[(i+j)%passwordLength3];
+
+      if (0 == strncmp (buf1, buf2, 256) && 0 == strncmp (buf2, buf3, 256))
+          puts ("we have a srsly big problem.");
+  }
+
+
+This is the point Stefan is making, and you can see how this is very bad.
+
+Anyway, I don't think this problem really worth solving, especially when
+the prototype specifies `const void *in, size_t inlen'. I don't see a
+real need for any sort of constant time buffer copies.
+

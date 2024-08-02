@@ -1,0 +1,103 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7KZgaiLiFQta8Qg9KavHsXxjHq+n=SDTKsUx7=K1pKhVQ@mail.gmail.com>
+Date: Sun, 24 Aug 2014 12:25:31 +0400
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Hi Alexander,
+
+I do not quite agree with you here.
+
+
+On Sat, Aug 23, 2014 at 11:16 PM, Solar Designer <solar@...nwall.comwrote:
+
+>
+>
+(I think per Colin's definition of sequential memory-hard function it
+is OK if "reducing the memory does not increase the cost", as long as
+the product of space and time does not decrease by more than a constant
+factor.  You appear to be using a stricter definition/requirement here.
+We might need a different name for tradeoff-resistant functions like
+that, or always mention that property separately.)
+>
+
+
+The definition you mention is about asymptotics. Of course, in practice a
+constant factor does make sense, for instance if it is 1000 or so.
+Even if it is not that big, any cost reduction is beneficial for the
+adversary. Furthermore, the product of time and space is quite rough a
+metric. It is relevant
+when your chip consists of homogeneous cores, and the cost is proportional
+to the total number of calls to such cores. Whereas this model seems
+correct for exhaustive key search or Bitcoin mining, its applicability to
+functions that use Gbytes of RAM is doubtful, to say the least.
+
+Coupling this with the concept that the a good hashing scheme should
+motivate the adversary to crack it on the same hardware and the same
+parameters where it is running, we get that a memory-hard function should
+prohibit as much as possible any cost reduction for the adversary, by
+constant factor or not.
+
+
+
+>
+I think PHC is quite different from usual cryptographic competitions in
+that providing excessive (which probably means any at all) safety
+margins e.g. against tradeoff attacks actually makes PHC candidates less
+secure, not merely less attractive in other (non-security) ways (as it
+would be the case with ciphers and regular crypto hashes).  To ensure
+e.g. yescrypt isn't broken in the sense you mention, I'd need to provide
+some safety margin in my recommended value for t, or to define yescrypt
+such that t=0 would correspond to a higher running time (e.g., to what
+is now requested with t=1 or higher).  However, I think doing so would
+be counter-productive for actual goals of PHC, because there's a
+security tradeoff here, not just a security vs. something else tradeoff.
+The value of t that is optimal for security should be barely adequate to
+withstand tradeoff attacks, with no safety margin.
+
+
+I am not sure that I understand correctly your notion of "security" in
+general, which for some reason may contradict the tradeoff resilience.
+The only such measurement of security that comes to my mind is the cost
+difference between running the hash scheme on server hardware and on
+adversary's hardware without any tradeoffs. If you double the number of
+iterations and halve the memory (to keep the same running time), this gap
+may indeed increase (maybe by 10% or so, if we talk about Gbytes of RAM).
+However, if your scheme is not tradeoff-resilient, an adversary will
+certainly use the most beneficial tradeoff. If he can reduce his costs
+threefold because of tradeoffs, then doubling the number of iterations
+actually makes his life worse, both in relative and absolute terms.
+
+
+  As a result, I'm
+afraid we should go the other way around: from smaller t to higher if we
+have to as shown by attacks, and we should not be too surprised to find
+such attacks, nor should we throw babies out with the water merely
+because the initial proposed settings didn't have a safety margin and
+proved somewhat too weak against some attacks.  They shouldn't have had
+that safety margin, or the scheme would have been suboptimal
+security-wise in another way!
+
+
+As shown by crypto competitions, it is quite easy to tweak your design
+against every new attack. If all such designs remain in competition, then
+instead of evolution-like selection of the best and simplest design, we get
+a zoo of over-complicated entries. Cryptanalysts not only have their eyes
+blurred because of looking at the same candidates, but also their attention
+is spread over many more targets than needed.
+
+Also, given our limited insight into the hardware and cryptanalysis
+development over the next years, having no security margin does not make
+sense to me at all.
+
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

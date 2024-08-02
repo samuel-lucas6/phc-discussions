@@ -1,0 +1,39 @@
+phc-discussions - Simple Argon2 ASIC analysis for 4MiB hashes
+
+
+Message-ID: <CAOLP8p6tWhn9EO1c0dOJ7GO+4MWkqugiXS4oVGWGEXYkb_nDHw@mail.gmail.com>
+Date: Wed, 4 Nov 2015 08:24:09 -0800
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Simple Argon2 ASIC analysis for 4MiB hashes
+
+Some good news: The multiplication chains in Argon2 heavily dominate the
+runtime for the attacker.
+Result: An ASIC attacker with 1ns multipliers runs about 27X faster per
+core, each core using 4MiB of on-chip RAM, compared to a Haswell CPU.
+Comparison: The best PHC algorithm for ASIC defense limits the attacker to
+about 5.4X speedup.
+
+The 8-way parallelism makes the on-chip SRAM design simpler and faster, as
+well as the fact that we really only need one low-latency read port.  A
+single high latency write port is fine.  This is a dramatic simplification
+of Intel's L3 cache architecture, which has a latency of 36 cycles in
+Haswell.  It is even simpler than the L2 cache, which has 12 cycle
+latency.  Instead of a single 4MiB cache, the 8-way parallelism let's an
+attacker build 8 512KiB caches, which I think would easily run as fast as
+Intel's L2 cache, or about 12 cycle latency.  With these assumptions, the
+multiplication chains in BlaMka heavily dominate runtime.
+The time to hash a block is ~= 12 cycles RAM latency + multiplication chain
+time = 12/3.5GHz + 32 mults = 35.4ns.  The time for the ASIC to hash 4MiB
+is 0.15ms, compared to the current Argon2 code at about 4ms.  This leads to
+about a 27X speedup for the attacker.
+
+While TwoCats does the same number of sequential multiplies when hashing
+4MiB, it runs in 0.7ms.  Assuming the attacker has only multiplication
+chain delay, he will run 5.4X faster when attacking Argon2 than when
+attacking TwoCats.
+
+Bill
+
+
+

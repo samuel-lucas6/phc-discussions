@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20131231021423.GA18766@openwall.com>
+Date: Tue, 31 Dec 2013 06:14:23 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Tue, Dec 31, 2013 at 05:42:41AM +0400, Solar Designer wrote:
+On Sun, Dec 29, 2013 at 05:29:02PM -0500, Bill Cox wrote:
+- Memory is hashed as it's filled, rather than filling, then hashing.
+
+This sounds similar to my changes to SMix first loop:
+
+http://www.openwall.com/lists/crypt-dev/2013/11/25/3
+
+but extended to the second loop as well, replacing both of them with one
+combined loop.
+[...]
+Another drawback is the very low probability that the last few V
+elements written will ever be accessed.
+
+You're using modulo division by the current array size.  This
+corresponds to loop1_mod in the posting above, which accesses 50% of
+array elements and, in the given test run, has worst element hit count
+at 21 (indeed, this exact number will vary slightly between test runs
+with different inputs).  You may compare this to loop1_pow2, which I
+ended up choosing.  loop1_pow2 implements a smaller sliding window (the
+size of which is the largest power of 2 that fits in current array size)
+instead of the modulo division.  As you can see, this improves the hit
+rate to over 56% and reduces the worst element hit count to 10 (that is,
+roughly by a factor of two), which suggests a closer to uniform
+distribution of indices (although they become more predictable in a
+certain way: they fall within the smaller window).  As a bonus, this is
+also friendlier to typical/trivial cache replacement policies (where
+more recently written data is more likely to be in cache, unless you
+deliberately and explicitly use non-temporal stores).
+
+For loop1_mod, the highest hit count is likely on one of the first few
+elements.  Across many runs, it will be on the very first element.
+An attacker (especially with an ASIC) can take advantage of this
+non-uniformity, whereas our typical defensive implementations suffer
+from it.  This is the opposite from what a trivial cache replacement
+policy would support; of x86 CPUs, I think only Ivy Bridge and better
+might manage to do well:
+
+http://blog.stuffedcow.net/2013/01/ivb-cache-replacement/
+
+Alexander
+

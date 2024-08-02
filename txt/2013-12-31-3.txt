@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <20131231024642.GA18893@openwall.com>
+Date: Tue, 31 Dec 2013 06:46:42 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+On Wed, Dec 25, 2013 at 07:10:57PM -0800, Tony Arcieri wrote:
+On Wed, Dec 25, 2013 at 11:27 AM, Samuel Neves <sneves@....uc.ptwrote:
+
+hydra7 (Intel Sandy Bridge) seems to have AES-NI implementations, which
+ are still slower than Chacha8:
+http://bench.cr.yp.to/results-stream.html#amd64-hydra7
+
+Nice, thanks for the pointer! It's quite interesting to see ChaCha8 is
+indeed faster than AES-128 on these architectures.
+
+Curious indeed, but this might not hold when two threads per core are
+run (with HT).
+
+I am getting better speeds for AES-NI on Sandy Bridge when sufficient
+parallelism is present.  For example, OpenSSL's builtin benchmark gives
+55 GB/s for ECB mode on 2x E5-2670 (32 threads on 16 cores), at a clock
+rate no higher than 3.0 GHz (max turbo with all cores in use).
+
+[solar@...er ~]$ openssl speed -multi 32 -evp aes-128-ecb
+[...]
+evp           14680673.33k 36977213.57k 51997107.88k 54451153.58k 55059131.05k
+
+3*10^9*16/(55059131*1024) = 0.85 cycles/byte per core
+3*10^9*32/(55059131*1024) = 1.70 cycles/byte per thread
+
+If I run only one thread per core (rather than two), it will be
+somewhere inbetween (much like the SUPERCOP results referenced above).
+
+Will ChaCha8 get below 0.85 cpb per core or 1.70 cpb per thread with
+2 threads/core on SB?  This is unclear - would need to test.
+
+Alexander
+

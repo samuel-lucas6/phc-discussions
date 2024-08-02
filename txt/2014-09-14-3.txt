@@ -1,0 +1,100 @@
+phc-discussions - Re: [PHC] Makwa is broken given p and q
+
+Message-ID: <1309823478.202008.1410689563754.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Sun, 14 Sep 2014 05:12:43 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+Sorry for taking so long I got scared by the long message *ashamed*. Anyway I
+wrote down my thoughts on improving Makwa and arguing points. So I thought I
+should read and reply to this first.
+
+
+On September 11, 2014 at 6:51 AM Thomas Pornin <pornin@...et.orgwrote:
+>
+On Thu, Sep 11, 2014 at 02:21:01AM -0500, Steve Thomas wrote:
+I was picking an absurd number to prove a point that apparently was
+known. I guess the escrow should have tipped me off that we don't see
+eye to eye on what we think is secure.
+>
+It IS secure -- I am just going to the end of the logic.
+>
+The CFP called for a desirable feature (among others): "For example, one
+may design a scheme that is slow to evaluate except on a server given
+some server-specific shortcut."
+>
+It so happens that if such a "shortcut" exists, then it can be
+leveraged, by definition, into a much faster attack. The whole core
+assumption of PHC and password-hashing functions is that dictionary
+attacks work, which is why we cannot just use a simple MD5 and be done
+with it. I am then following that idea to its unavoidable conclusion: if
+a "shortcut" exists, then it is almost equivalent to a free password
+recovery for whoever can use it. So I am calling it "escrow" because
+that's what it is.
+>
+
+I'm confused I thought escrow and fast path were different. Also I don't believe
+that fast path is an escrow. In your paper, page 12, you have a table that says
+that escrow is not possible with pre-hashing and/or post hashing. Either you
+need to fix that or escrow and fast path are different. Also I remember from
+your Passwordcon14 talk that you purposely had the password in plaintext before
+squaring for escrow. So that you can get access to the original password.
+
+
+If you think of the shortcut (or "fast path") as a kind of escrow, then
+the correct terminology is that of asymmetric encryption. A password
+hashing function with a possible shortcut really is deterministic
+asymmetric encryption:
+>
+- If you don't know the private key, you can still encrypt the
+password. To _verify_ a password, you also encrypt it, and check that
+you get the same value -- that's the point of the encryption being
+deterministic.
+>
+
+Yeah, I've done this with a Teensy doing AES-CBC-CTS encrypt to prevent a leaked
+database from being able to be cracked. I called it "JustEncrypt".
+
+
+- If you do know the private key, then you can decrypt, which is all the
+escrow or shortcut that you may need.
+>
+
+Now that's an escrow... shortcut? Oh decrypt then compare password or oh. Did
+you mean something like:
+"If you do know the private key you can use a short cut and escrow the password
+since you can decrypt."
+
+
+I stand corrected, not broken, but my opinion is this is bad.
+>
+There IS one bad thing: as explained above, if you don't want to hear
+about any escrow or shortcut, and be sure that nobody can ever access
+the p and q factors, then you must "forget" them just after having
+generated them and multiplied them together to compute the modulus. This
+is easy enough to do (the generation tools provided with the reference
+implementations of Makwa do just that), but there is no way to do it
+_convincingly_.
+>
+By this I mean that though I can generate a modulus, I have no method to
+convince _you_ that I did not keep the p and q factors around. This is a
+problem for which cryptography has not yet found a reasonable solution
+(there is a published construction, but it results in a very large
+modulus). If such a method was known, I would have applied it, and it
+would have resulted in a modulus that could be hardcoded and used
+everywhere in the whole world.
+>
+Therefore, I turned to the next best thing, which is custom modulus
+generation. That is, if you want a modulus such that you are sure that
+the p and q factors have not been saved anywhere, then just generate it
+yourself. It will be your own modulus. It can be used for hashing all
+the passwords of people who trust YOU.
+>
+
+That's the problem if you tell people it's secure and that you can have a high
+cost to attackers while having a low cost to you. People will keep p and q to do
+fast path. Basically you can't say "you can keep p and q" to users and tell
+critics "well just clear p and q and your issues go away [along with some
+features]".
+

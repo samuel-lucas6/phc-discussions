@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140104052724.GA2689&#64;openwall.com&gt;
+Date: Sat, 4 Jan 2014 09:27:24 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Fri, Jan 03, 2014 at 03:12:40PM -0500, Bill Cox wrote:
+&gt; I gave it a name this time.  It's based on the experience so far from
+&gt; keystretch, but is simpler, and even faster.  It doesn't use a "key" to
+&gt; hash pages, but instead treats the previously generated "page" as the key
+&gt; for generating the next one by hashing it with a random previous page.  On
+&gt; my Corei7 server, it runs about 15% slower than memmove (which is faster
+&gt; than memcpy because 1/2 the memory is allocated).  2GB of hashing takes
+&gt; 0.35 seconds.  Both are multi-threaded 2-way, which is the fastest case on
+&gt; both machines.
+
+This is very nice speed.  Somehow I get a worse speed when testing on
+FX-8120 (stock clocks) with 2x DDR3-1600 memory sticks, running Linux:
+
+$ ./run_noelkdf 
+324C977EDEF4972925261D6B996C904E1EF297BC0EFF4286887D187CA16326EE
+
+real    0m1.148s
+user    0m0.912s
+sys     0m1.180s
+
+I kept NUM_THREADS at 2.  Does your 0.35 seconds possibly not include
+the memory allocation overhead?  How do you measure it?  Would it be
+e.g. 0.912/2 = ~0.46 seconds (of real time presumably for the hashing
+portion only) from the test above?  If so, that is not a very reliable
+way to measure it, I'd say.
+
+4 threads:
+
+$ ./run_noelkdf 
+4D6C717AB933FBE65BE4A61F8CECC4BA2FCE4151752CD372F8B23923B8C98C73
+
+real    0m0.801s
+user    0m1.024s
+sys     0m1.616s
+
+8 threads:
+
+$ ./run_noelkdf 
+83D88DFC80995C63A9807583A3D56DBD88CE79757E382A56149C9E1BE07BD716
+
+real    0m0.666s
+user    0m1.620s
+sys     0m2.416s
+
+To put it in perspective, here are some benchmark results for our
+current escrypt tree on the same machine.  Most of these are for a
+XOP-enabled build, except where stated otherwise.
+
+First, in scrypt backwards compatibility mode, we get the scrypt test
+vectors for up to 1 GB (most time is spent on the 1 GB, indeed):
+
+$ time ./tests 
+scrypt("", "", 16, 1, 1) = 77 d6 57 62 38 65 7b 20 3b 19 ca 42 c1 8a 04 97 f1 6b 48 44 e3 07 4a e8 df df fa 3f ed e2 14 42 fc d0 06 9d ed 09 48 f8 32 6a 75 3a 0f c8 1f 17 e8 d3 e0 fb 2e 0d 36 28 cf 35 e2 0c 38 d1 89 06
+scrypt("password", "NaCl", 1024, 8, 16) = fd ba be 1c 9d 34 72 00 78 56 e7 19 0d 01 e9 fe 7c 6a d7 cb c8 23 78 30 e7 73 76 63 4b 37 31 62 2e af 30 d9 2e 22 a3 88 6f f1 09 27 9d 98 30 da c7 27 af b9 4a 83 ee 6d 83 60 cb df a2 cc 06 40
+scrypt("pleaseletmein", "SodiumChloride", 16384, 8, 1) = 70 23 bd cb 3a fd 73 48 46 1c 06 cd 81 fd 38 eb fd a8 fb ba 90 4f 8e 3e a9 b5 43 f6 54 5d a1 f2 d5 43 29 55 61 3f 0f cf 62 d4 97 05 24 2a 9a f9 e6 1e 85 dc 0d 65 1e 40 df cf 01 7b 45 57 58 87
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m2.451s
+user    0m1.872s
+sys     0m0.572s
+
+This is 1.9 seconds user, 2.5 seconds total running time.  1 thread
+(even though one of the test vectors has p &gt; 1, I did not bother
+enabling threads for this test, which focuses on the 1 GB anyway).
+
+The scrypt paper gives 3.8 seconds for 1 GB on Core 2 Duo (running only
+one thread too).  It does not mention whether the memory allocation
+overhead is included or not.  We appear to have a ~2x improvement since
+then, due to faster CPU and memory, and code optimizations (including
+use of XOP on this CPU).
+
+Not that in a way scrypt's 1 GB corresponds to NOELKDF's 2 GB, because
+scrypt runs for 2*N time.  In terms of cost to attacker, NOELKDF's 2 GB
+is _presumably_ better than scrypt's 1 GB.
+
+Now let's try escrypt in one of its native modes, with random lookups
+added to SMix's first loop and writes added to SMix's second loop.  The
+running time increases slightly:
+
+real    0m2.581s
+user    0m2.080s
+sys     0m0.492s
+
+I think this is a very acceptable cost for the added TMTO resistance,
+when that is desired.
+
+With the random lookups in first loop, this is a more direct comparison
+to NOELKDF (which also does those).
+
+Now let's expand to 2 GB to make sure we're no weaker than NOELKDF.  (In
+fact, we should be 2x+ stronger than NOELKDF in that mode, because the
+iteration count is 2*N, just like in scrypt, and additionally the second
+loop's distribution of random accesses is uniform, unlike NOELKDF's, and
+there are random writes.)
+
+real    0m5.155s
+user    0m4.120s
+sys     0m1.024s
+
+OK, 5 seconds (or 4 seconds without the memory allocation overhead) is
+quite a lot, but that was for one thread, whereas NOELKDF's performance
+is for 2 threads (and more threads don't help NOELKDF, as Bill says).
+
+Let's try multiple threads.  Note that this disables the random writes
+in SMix second loop (so is more similar to NOELKDF in that respect).
+
+2 threads:
+
+real    0m2.841s
+user    0m4.488s
+sys     0m1.160s
+
+4 threads:
+
+real    0m1.700s
+user    0m4.968s
+sys     0m1.400s
+
+8 threads:
+
+real    0m1.112s
+user    0m5.608s
+sys     0m2.144s
+
+With this, we got to ~3x the running time of the 0.35s claimed for
+NOELKDF, but this is for 2x+ area-time cost to attacker and including
+memory allocation overhead time.  It is at 4x the thread count, but if
+NOELKDF doesn't benefit from more than 2 threads, then this is a fair
+per CPU chip speed comparison (relevant e.g. for use on one's own
+computer for generating a filesystem encryption key).
+
+We're also at less than 2x higher running time compared to 0.666s, which
+was best for NOELKDF on this machine (8 threads, too).  So escrypt wins
+for security per time. ;-)  But I guess that optimizations for NOELKDF
+are possible (including some without breaking compatibility with the way
+it's currently defined).
+
+[ Note that AMD's FX-8120 is for performance comparisons similar to Intel's
+quad-core CPUs with HT.  AMD's "modules", which this CPU has 4 of, provide
+similar amount of resources per hardware thread as Intel's "cores" do. ]
+
+Salsa20 rounds reduced from 8 to 4:
+
+real    0m0.926s
+user    0m3.988s
+sys     0m2.272s
+
+Salsa20 rounds reduced to 2:
+
+real    0m0.854s
+user    0m3.136s
+sys     0m2.536s
+
+This is some significant speedup (less than 2x, though) in terms of user
+time, but less of a speedup in terms of total running time (with the
+overhead included).
+
+Let's try to compute the hash 10 times per program invocation, to move
+the memory allocation overhead out of the loop (is only done once here):
+
+real    0m6.159s
+user    0m45.363s
+sys     0m2.584s
+
+Now it's down to ~0.6s per hash, which is better than 0.35s claimed for
+NOELKDF, given escrypt's 2x iteration count (and thus cost to attacker).
+
+Let's revert to 1 GB allocation, to have same iteration count as NOELKDF
+(but up to 2x lower area-time):
+
+real    0m3.041s
+user    0m22.309s
+sys     0m1.316s
+
+0.3s per hash now.
+
+Salsa20 round count reverted to the default of 8:
+
+real    0m3.985s
+user    0m30.038s
+sys     0m1.040s
+
+0.4s per hash, which is only slightly worse than NOELKDF's 0.35s at same
+iteration count.
+
+An SSE2 only build (no XOP):
+
+real    0m4.976s
+user    0m38.098s
+sys     0m0.944s
+
+0.5s per hash now.
+
+-nosse build, without threads (not implemented in that version of the
+code yet) and without many possible optimizations (ditto):
+
+real    0m45.829s
+user    0m45.239s
+sys     0m0.568s
+
+Now it's 4.5s per hash.  Ouch.  It is comparable to NOELKDF in that the
+code doesn't use SIMD (unfortunately, it also doesn't use threads yet,
+unlike NOELKDF).
+
+Summary: NOELKDF may be a lot faster than escrypt on SIMD-less builds,
+but might be almost same speed when benchmarked against SIMD-enabled
+builds.  The question is then how SIMD'able NOELKDF is, and how fast
+those builds will run.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

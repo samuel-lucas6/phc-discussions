@@ -1,0 +1,105 @@
+phc-discussions - Bandwidth hardened PoW with rapid verification (now GPUHog)
+
+
+Message-ID: <CAOLP8p6JwqE169z3DZO1Qn3=wam9masXBj9FtjrKvVBu0v_VRg@mail.gmail.com>
+Date: Fri, 4 Sep 2015 23:50:28 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Bandwidth hardened PoW with rapid verification (now GPUHog)
+
+I see that my previous emails never stated this algorithm clearly, so I
+just wanted to restate it here.  Also, I've concluded that the defender is
+better off using a GPU to do the mining, since it has high bandwidth and
+low cost, improving ASIC defense considerably.  Thus the change from CPUHog
+go GPUHog.
+
+Problem:
+
+The crypto-currency LiteCoin became popular after BitCoin switched to ASIC
+mining.  LiteCoin democratised mining, enabling anyone with a graphics card
+to participate, while BitCoin mining has become more and more centralized.
+
+The "Proof of Work" used in LiteCoin is a memory-hard hashing algorithm
+(Scrypt) which is more difficult to speed up using custom ASICs.
+Unfortunately, it also makes verifying the block chain much more compute
+intensive. Because of this, LiteCoin  uses only 128 KiB of memory, trading
+off block-chain verification speed against ASIC resistance. This memory
+size is small enough that ASICs are already being used to take over
+LiteCoin mining.  Like BitCoin, LiteCoin mining is becoming centralized.
+
+So, the idea here is to bring back the fun days, when GPU mining ruled.
+The ideal PoW would be a fast memory-hard hashing algorithm which can
+somehow be verified more rapidly than by simply rerunning the entire
+hashing algorithm.
+
+GPUHog Algorithm:
+
+First, fill a large memory  on a GPU with say 1 GiB, with many "large
+blocks", which might be 1 MiB each.  Generate the data in each large block
+using a fast memory hard hashing function. TwoCats is the fastest I know
+of, and would be the best choice, IMO.  Large blocks are generated in
+counter mode so that each large block can be generated independently of
+each other, from their index.  This memory hashing needs to be done in a
+GPU friendly manner to defend well against ASICs (meaning no small random
+memory access - this is already an option in TwoCats).
+
+Once memory has been initialized with this large ROM:
+
+- Start with the hash of a new "crypto-currency block" which we want to
+"solve".  Call this hash M.
+- Iterate many times, choosing a new nonce N each time, trying to solve the
+block:
+- Pick two pseudo-random "small blocks", of say 1KiB each, using a hash
+function H, such as SHA-256.
+- Address a1 = H(N || M) mod l, and a2 = H(a1) mod l, where l is the number
+of small blocks in memory.
+- Compute a fast hash of these 2 blocks, possibly again with TwoCats.  If
+this is < difficulty, then the block is solved.
+
+Low memory verification can be done using only 2 MiB, by generating the two
+large blocks containing the two small blocks.  This is basically 2 1MiB
+TwoCats hashes.  It can be done in a small fraction of a millisecond on a
+desktop computer.  This should be OK if done every 10-ish minutes by a
+cell-phone.
+
+For mining systems that have all the large block data in GPU memory, they
+only do the simple hash of 2 KiB per attempt to solve the block.
+
+Comparison to LiteCoin's use of 128KiB Scrypt hashes:
+
+- ASIC attack on LiteCoin can put 32 hashing cores on an ASIC with 4MiB of
+RAM, each running about 16X faster for a total of 512X speedup per ASIC,
+assuming the ASIC is made in the same process as the defenders CPU.
+- ASIC attack on GPUHog uses external DRAM for the 1 GiB hash data.  The
+ASIC speedup will be equal to its improvement in memory bandwidth.
+However, GPUs already have cost efficient memory bandwidth.  The ASIC might
+be lucky to get a 2X cost improvement.
+
+In short, LiteCoin is totally PWN-able by ASIC mining because of it's low
+memory size.  With GPUHog, the advantage of an ASIC should be reduced from
+something like 512X to something like 2X.
+
+In short, we can increase memory from 128 KiB to 1 GiB, while reducing the
+hashing time for full block-chain verification from a 128 KiB slow hash to
+an 8 KiB fast hash.  ASIC defense is increase something like 256X.
+
+The ASIC defense of GPUHog should be far higher than Momentum as well.
+Momentum is heavily RAM latency limited on GPUs, while an ASIC attack can
+mount a parallel radix sort attack, eliminating the latency problem.  The
+best GPU algorithms for Momentum still seem 100X-ish worse in speed than a
+custom ASIC could do.
+
+GPUHash seems like the best choice I've run across for a LiteCoin successor.
+
+BTW, this is not a memory-hard PoW.  It uses a memory-hard hashing
+primitive, but can be attacked using a distributed ROM attack.  For each
+hash computation, a small block would have to be transmitted from one node
+in the network to another, causing a memory bandwidth bottleneck.  Thus,
+GPUHog is "bandwidth hard", not "memory hard"
+
+Did I finally describe this well this time?  :)
+
+Bill
+
+
+

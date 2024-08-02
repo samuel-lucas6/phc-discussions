@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] further limitation: not writing secret to memory
+
+Message-ID: <780455370.26951.1379527105070.open-xchange@email.1and1.com>
+Date: Wed, 18 Sep 2013 12:58:25 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] further limitation: not writing secret to memory
+
+On September 18, 2013 at 12:07 PM Krisztián Pintér <pinterkr@...il.comwrote:
+
+
+
+maybe not thoroughly interesting, but i was worrying about large memory use,
+in the light of the priciple of "clean memory of secret data". large memory
+hugely increases the chance of being written to a the swap file. after this,
+cleaning secret becomes virtually impossible.
+
+the worst case would be if the attacker accesses the first piece of data
+written to the memory, and brute-force searches for a password that produces
+that particular data. effectively skipping the entire memory hardness.
+
+maybe it is enough to simply xor the values with a random constant? the random
+value will not likely be swapped, being used frequently.  would it create any
+vulnerabilities? like if i have access to m0+r, m1+r, m2+r, m3+r, knowing the
+way how mi values are generated, i can infer r?
+
+This would not work as you can simply xor two values together to remove r. (m0 +
+r) + (m1 + r) = m0 + m1
+
+another straightforward solution would be encrypting the data, for example
+with salsa12, using a random key. the problem with this approach is that it
+adds some more processing on the defender side, but not on the attacker side.
+i wonder if there is a theoretical possibility to use some randomization, but
+in a way that can not be skipped.
+
+I really don't see the point in all of this. Since if the attacker is on the
+authentication box then they can access the passwords as users login. Bypassing
+the need to even crack passwords. You could use page locked memory. I'm pretty
+sure page locked memory (or what ever it is called) never gets written to swap.
+
+

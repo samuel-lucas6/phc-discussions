@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] Re: EARWORM review
+
+Message-ID: <CAJm83bAYFbXe_8+d+bY0=MPfxM_PM+A6j9fJO0hDeWz=damXAg@mail.gmail.com>
+Date: Fri, 4 Apr 2014 18:03:24 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: EARWORM review
+
+Solar observed that to split the arena into W=4 sections,
+and divide it across multiple machines, each of which needs
+only the first section and one other.
+
+Grammar fail. That should read "Solar observed that it was possible
+split the arena into W=4 sections and divide it across multiple
+machines, each of which needs only the first section and one other."
+
+On 4/4/14, Daniel Franke <dfoxfranke@...il.comwrote:
+On 4/4/14, Bill Cox <waywardgeek@...il.comwrote:
+>In this case, each ASIC would split up it's portion of the ROM into
+>4096 1MiB "chunk areas" in external DRAM.  It would also store up to
+>4GiB/64 = 64Mi password scratchpads, each representing a password
+>guess in progress.  As it loads it's 4096 chunk areas sequentially,
+>over and over, it computes all the workunit updates with as much
+>parallelism as the ASIC can support, maybe 100-ish or even 1000-ish
+>AESENC cores, pipelined maybe 6 deep.  That would be 600-ish to
+>6000-ish AESENC executed in parallel per ASIC, or around 150K to 1.5M
+>in total, applying AES-128 hashing to all of it's 512-bit scratchpads
+>that are waiting on that specific chunk area to be applied.
+>
+This attack seems to be exploiting the grid-aligned structure of
+EARWORM's arena, in which chunks begin at discrete 1MiB boundaries.
+There was another thread here in which Solar observed that to split
+the arena into W=4 sections, and divide it across multiple machines,
+each of which needs only the first section and one other.  I suggested
+then that you could prevent this by collapsing the arena's three
+dimensions into one and making possible for chunks to begin at any
+point along that dimension.
+>
+So instead of
+>
+for l from 0 to L-1
+    for w from 0 to W-1
+        scratchpad[w] = AESRound(arena[index][l][w], scratchpad[w])
+index = scratchpad[0] mod 2**m_cost
+>
+we'd have
+>
+for l from 0 to L-1
+    for w from 0 to W-1
+        scratchpad[w] = AESRound(arena[index++], scratchpad[w])
+index = scratchpad[0] mod (2**mcost * L * W)
+>
+and add one extra chunk to the arena (for a size of (2**m_cost + 1) *
+L * W blocks) so that this doesn't overflow.
+>
+I didn't make this change because I didn't view Solar's attack as a
+threat within my model. This one, however, is a horse of a different
+color. It seems that the same change would make your attack much more
+expensive, because if you can't partition the ROM into discrete chunk
+areas, then the routing complexity increases enormously. Do I have that
+correct?
+>
+>One reasonable defense against this attack would be to do memory-hard
+>writes as well as reads, to maybe a few MiB per password hash.  This
+>would cause my evil machine to need maybe 1000X more memory than I
+>described, memory bandwidth would likely become the bottleneck, and
+>the hypercube communication network might get overloaded.
+>
+This would be a much more substantial change. The resulting design
+would look more like yescrypt than like the current version of
+EARWORM. I'm not going to go there, and I wouldn't expect the panel to
+let me get away with it if I tried.
+>
+

@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <532FA8CF.5020101@bindshell.nl>
+Date: Sun, 23 Mar 2014 20:38:55 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Hi beloumi,
+
+On 3/23/2014 1:35 PM, beloumi wrote:
+Am 23.03.2014 15:59, schrieb Jeremi Gosney:
+>I've pushed code to a public repository for the candidate I will be
+>submitting, pufferfish. This repository will be frantically updated over
+>the coming week as I prepare my submission, but I wanted to get some
+>initial feedback before the cutoff.
+>>
+>https://github.com/epixoip/pufferfish
+I am glad that someone has chosen Bcrypt as a basic for a submission.
+This submission mightbenefit of the proven reliability of a long
+existingalgorithm.
+
+Thank you for your comments!
+
+
+What bothers me a bit at first sight is the Base64 encoding. Instead of
+Bcrypts particular Base64 encoding I would prefere the standard Base64
+encoding of MIME. This would be an easement for implementations in
+crypto libraries.
+
+I would like to hear more opinions on this. I prefer itoa64 encoding as
+I think the output looks cleaner. But this is purely an asthetic
+preference, there is no technical justification for this as far as I'm
+concerned.
+
+
+Just two unreflective ideas for Pufferfish:
+1. Wouldn't it be easier to support variable output length by variable
+(length of) ctext in Pufferfishs encryption step instead of an extra
+hash? I can not see any security improvement for the hash.
+
+Sure. Bcrypt uses the output of the encryption step directly, so we
+could just as easily do that as well. But on the other hand, there's no
+reason not to hash the output, either. Just my preference :)
+
+
+2. Instead of replacing the s-box entries, wouldn't it be easy to expand
+them to a memory-hard vector and use them piece by piece in the last
+encryption step (that means: using a different s-box for each of the 64
+encryptions or - more experimental - for each blowfish round)?
+Please excuse that I write a comment although I have not fully reflect
+the algorithm...
+
+Depending on the m_cost, doing so could break the memory hardness. Since
+only one s-box would be needed at a time, the attacker could hold each
+s-box in global memory and swap them into local memory when they are
+needed. Using each s-box simultaneously prevents this from occuring.
+
+
+Jeremi
+
+

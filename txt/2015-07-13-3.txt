@@ -1,0 +1,139 @@
+phc-discussions - Re: [PHC] Thoughts about Argon2 PoW system
+
+Message-ID: <CAOLP8p6hqNUzBm5FaSbLTJ8=qBHfPE1BPX98=cZK035sWBmfiA@mail.gmail.com>
+Date: Mon, 13 Jul 2015 12:50:25 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Thoughts about Argon2 PoW system
+
+If the full Blake2bp were able to run fast enough to fill memory bandwidth
+for a typical miner, this should work out well.  However, Blake2bp runs
+slowly for small output hashes like we see when building Merkel hash
+trees.  The speed-parity for Blake2b vs Blakd2bp is somewhere from 1KiB to
+2KiB of input data on my desktop machine here.  We're better off sticking
+with regular Blake2b in this case.
+
+I wonder if it might make sense to optimize a memory-hard hashing function
+like Argon2d to run well on GPUs.  GPUs typically have higher
+bandwidth/dollar to memory, and enough compute power to keep that bandwidth
+filled even with full strength cryptographic hashes.  If that could be made
+to work well, it might have excellent ASIC attack resistance, and still
+have Merkel-tree fast verification, while being memory-hard.
+
+I've been looking in more depth into Momentum.  It is very challenging to
+come up with a workable Momentum PoW implementation that does not suffer
+from significant speed penalties that would not be present in an FPGA or
+ASIC attack.  The current GPU implementations seem to suffer a substantial
+row-change delay penalty for most memory writes, which dominate the
+runtime.  This would go away with an ASIC implementation with small on-chip
+caches for radix-sorting.  I suspect we could beat the GPUs with an FPGA
+implementation using the block-rams for the radix sort caches.  The point
+of radix-sort caches is to enable large block-writes to external memory.
+The GPU implementations randomly set 1 bit in 256MiB of shared memory until
+about 1 bit in 16 is set.  I feel there is still plenty of work to be done
+in this area.  So far, none of the existing PoW solutions with fast
+verification seem to achieve a level of ASIC resistance that would deter
+ASIC mining, IMO.  The theory is there, but in practice, details like
+hashing speed and cache-miss penalties dominate.
+
+Bill
+
+On Mon, Jul 13, 2015 at 11:04 AM, Dmitry Khovratovich <
+khovratovich@...il.comwrote:
+
+Hi Bill,
+>
+thank you for reviewing our scheme.
+>
+Before looking deeply into you suggested modification, just one idea. Did
+you consider parallel hashing for building the Merkle tree? Since you
+already employ, say, 4 cores for multi-threaded Argon2d, how about using
+them for Blake2bp? The designers report about 6x-speedup compared to the
+single-core version https://blake2.net/blake2_20130129.pdf , so this
+should be about 0.5 cycles per byte, even faster than Argon2d.
+>
+Best regards,
+Dmitry
+>
+On Tue, Jul 7, 2015 at 1:34 AM, Bill Cox <waywardgeek@...il.comwrote:
+>
+>First, kudos to the Argon team.  SFAIK, their algorithm actually works,
+>and is the only published memory-hard PoW that actually does.  However, I
+>don't think it's ready for use, yet.
+>>
+>In short, their algorithm is to build a Merkel hash tree for all of the
+>memory filled with their memory-hard hashing algorithm.  It is generic, and
+>can be applied to any of the memory-hard algorithms.  They essentially do
+>this poof of work algorithm <http://eprint.iacr.org/2007/433.pdf>, but
+>with the leaves replaced with the memory contents after the memory-hard
+>hashing algorithm runs.
+>>
+>The biggest problem I see is that they have to hash all the data, with a
+>full cryptographically strong hash function.  Any data not fully hashed is
+>not cryptographically tied to the Merkel hash root, and could be forged.
+>The full Blake2b is fast, but this additional post-memory-hashing Merkel
+>tree building step will dominate the runtime on any CPU.  Worse, an ASIC
+>attacker will get something like a 10X to 30X performance boost in this
+>step, with lower power consumption.  This is disastrous, because the main
+>point of memory-hard PoW systems is to reduce the advantage gained by using
+>custom ASICs.
+>>
+>I do not see any solution on x86 processors other than to use the built-in
+>crypto instructions
+><http://www.intel.com/content/dam/www/public/us/en/documents/white-papers/haswell-cryptographic-performance-paper.pdf>
+>to reduce the difference in performance relative to ASICs.  What would the
+>best primitive be to use in this case?
+>>
+>The SHA256 instructions seems pretty slow, at 2.67 cycles per byte.  I
+>suspect an ASIC will run much faster.  AES-GCM-encrypt is reasonably fast
+>at 1.26 bytes per cycle, with a resulting 128-bit authentication tag.
+>However, that's still too slow.  PHC finalists Argon2, Lyra2, and Yescrypt
+>all max out my 25GiB/s memory bandwidth when running enough threads.  I
+>wont be able to do that using any of Intel's crypto primitives and full
+>cryptographic hashing.
+>>
+>One improvement to the Argon2 PoW algorithm would be to have a
+>memory-hard main loop like:
+>>
+>    mem[0] = H(digest, nounce)
+>    for i = 0 to memSize-1 {
+>        randAddress = mem[i-1] % i;
+>        mem[i] = H2(mem[i-1], mem[randAddress]);
+>    }
+>>
+>This is very similar to the current Argon2d loop, but the block hashing
+>is replaced with H2, which could be SHA256(a, b), for example.  After
+>filling memory, the final hash value  written is the Merkel hash root.  Use
+>it to compute a random path of length L from the root to mem[0].  So long
+>as L is secure number of hops, like (128?), then then hashes used to "open"
+>mem[0] should constitute a secure proof that the memory-hard hashing
+>algorithm has been run.
+>>
+>In comparison to the Argon2 current PoW system, this performs half the
+>number of full hashes, since the Merkel tree is embedded in the data used
+>to fill memory, rather than computed as a post-process.  This should enable
+>it to have a 4x higher memory*time defense if memory bandwidth bound.  The
+>proof would be about the same length (num-bits of security times hash
+>length).  However, it is no longer generic like the current Argon2 PoW
+>algorithm.  Also, Argon2's algorithm is more familiar to people who know
+>about the Merkel hash tree PoW algorithm.
+>>
+>Even with a 2X speedup and Intel crypto-intstructions, the algorithm is
+>not close to filling my CPU's I/O bandwidth.  A GPU might do better, but an
+>ASIC can do it faster and at far lower power.  I think these memory-hard
+>PoW algorithms with fast verification are not quite ready for prime-time.
+>Can anyone see a solution to the speed problem?  If ASICs will be a lot
+>faster and lower power, then there's no point using the algorithm, IMO.
+>>
+>Bill
+>>
+>
+>
+>
+--
+Best regards,
+Dmitry Khovratovich
+>
+
+
+

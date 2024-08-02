@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Fwd: memory-hard password hashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20170419182755.GB10820&#64;openwall.com&gt;
+Date: Wed, 19 Apr 2017 20:27:55 +0200
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: Erik Aronesty &lt;erik&#64;....com&gt;
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Fwd: memory-hard password hashing
+
+On Wed, Apr 19, 2017 at 12:07:12PM -0400, Erik Aronesty wrote:
+&gt; There is a focus on memory-hard algorithms in password hashing, since that
+&gt; renders them ASIC/GPU resistant.
+
+It's not that simple.  (Maybe you over-simplified on purpose.)  There's
+a need to distinguish sequential memory-hard (as formally introduced
+with scrypt) and parallelizable/amortizable memory-hard.  And there are
+specific parameters to be "ASIC/GPU resistant" to varying extent.  BTW,
+the scrypt paper doesn't even mention GPUs.
+
+&gt; However, it is /possible/ for an ASIC to be tightly coupled with DRAM in
+&gt; ways that can exceed PC memory performance.
+
+Yes.
+
+You might misunderstand "memory-hard" as meaning "memory-bound", but
+those are distinct properties.  (Or maybe you're over-simplifying.)
+
+Memory-hardness is passing onto the attacker the cost of memory itself
+(die area occupied by memory), not the cost of providing a certain
+memory bandwidth.  So you need to distinguish: sequential memory-hard,
+parallelizable/amortizable memory-hard, and memory-bound.  There may
+also be combinations of these.
+
+To address the potential for reduction in the "time" factor in
+memory*time in an ASIC with higher memory bandwidth, sequential
+memory-hard schemes do quite some computation.  The extra bandwidth
+isn't really beneficial to an attacker unless there's sufficient memory
+(aka sufficient die area occupied by memory) to accommodate a larger
+number of instances, and/or there's a corresponding increase in
+computation speed within each one instance.  This is why some PHC
+schemes introduced compute latency hardening through integer
+multiplication and/or small S-box lookups (taking on the order of ~1ns
+on a CPU and presumably similar in an ASIC).
+
+&gt; Instead, is there an algorithm that is "very GPU friendly"?
+
+Yes.  As it happens, scrypt at low N and r=1, much like it's "misused"
+in Litecoin, is very GPU friendly.  Litecoin uses p=1, but if you want
+to occupy the entire GPU by one hash computation, you can set p to a
+high value (thousands).  Of course, ASICs do better yet.
+
+For asymmetric PoW, as it happens Equihash (at least as used in Zcash)
+is very GPU friendly.  ASICs are likely to do better yet (although it'd
+take more R&amp;D effort than Litecoin scrypt ASICs did):
+
+<a href="http://www.openwall.com/articles/Zcash-Equihash-Analysis">http://www.openwall.com/articles/Zcash-Equihash-Analysis</a>
+
+These two are very different: scrypt is sequential-memory hard, which we
+mostly undo with low N and high p, while Equihash is parallelizable
+memory-hard and likely memory-bound as it is.
+
+&gt; GPU's are cheap, common and highly optimized for certain operations in ways
+&gt; that make the construction of ASICs that beat them at what they are best at
+&gt; very unlikely.   They are, essentially, "floating point matrix operation
+&gt; ASICs".
+
+Sort of, but "very unlikely" is an exaggeration.  GPUs are not that
+specialized, and cost efficiency improvement is generally possible (the
+questions are: at what budget and by how much).
+
+That said, I do feel that running on a GPU and not making use of its
+computing power (which scrypt and Equihash use little of) is a waste.
+So if I were to target a GPU in a sequential-memory hard scheme, I'd
+probably include some compute latency hardening through multiplication
+e.g. by using yescrypt with unusually tiny pwxform S-boxes (like 256
+bytes per instance) or effectively without them at all (a modification,
+or size so tiny it's not requiring a local memory lookup but merely a
+conditional move from one of a couple of registers).
+
+&gt; Yes, this means that servers using such a mechanism may want to have GPUs
+&gt; installed to reduce hashing times and allow a larger number of operations
+&gt; to increase hashing security.   But I think this is a reasonable request
+&gt; for many applications.
+
+Yes, but when you consider the overhead of less standard hardware
+acquisition and systems administration, and the extra bugs and security
+vulnerabilities of GPUs/drivers (forcibly giving up on local security in
+those systems), and compare that against deploying HSM-alikes (similar
+overhead), the latter may end up winning.  They would not provide the
+heavy hashing, but instead they'd hold secrets (e.g. a hash encryption
+key).  You would still be able to do some heavy processing on the host
+(in case an HSM secret leaks).
+
+&gt; If it takes 10 milliseconds to compute a single hash with highly parallel
+&gt; FLOPs on a modern GPU, that affords a massive amount of security for a hash
+
+Yes.
+
+&gt; - ASIC resistant in ways that memory-hard algorithms cannot be.
+
+That's questionable.
+
+Then there's also that "ROM-port-hardness" aspect I introduced in 2012.
+With it in the mix, even ASICs would need to provide the, say, 112 GiB
+of memory - and efficiently sharing it across a large number of ASICs
+(to amortize its cost to an attacker) isn't that easy nor cheap.
+
+&gt; Is there an algorithm that already lends itself to this kind of application?
+
+Like I said, yes.  But I currently don't recommend that.
+
+BTW, 10ms is a lot for a deployment that is large-scale enough it would
+even consider customizing the hardware.  It's not typical.  But if you
+can afford that, it means you can do ~128 MiB (ye)scrypt on CPUs in a
+typical dual-socket server.  That's unusually high as it is.  And you
+can add to that e.g. a 112 GiB ROM, still staying only with standard
+server hardware (CPUs+RAM).  Then why also bother with GPUs?
+
+Alexander
+
+P.S. Why the "Fwd" in the Subject?  Are you adding to some old thread?
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

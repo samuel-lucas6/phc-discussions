@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20131231042357.GA19163&#64;openwall.com&gt;
+Date: Tue, 31 Dec 2013 08:23:57 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+Bill,
+
+On Tue, Dec 31, 2013 at 05:42:41AM +0400, Solar Designer wrote:
+&gt; On Sun, Dec 29, 2013 at 05:29:02PM -0500, Bill Cox wrote:
+&gt; &gt; - All threads hash randomly from all of memory at the same time, so you
+&gt; &gt; can't run p smaller runs in series, where p is scrypt's parallelization
+&gt; &gt; parameter
+[...]
+
+&gt; <a href="http://www.openwall.com/lists/crypt-dev/2013/12/19/1">http://www.openwall.com/lists/crypt-dev/2013/12/19/1</a>
+&gt; 
+&gt; I like this too. ;-)
+&gt; 
+&gt; Looking at your code, you're resolving the higher area-time vs. number
+&gt; of thread synchronizations tradeoff differently than I did, though.
+&gt; I suggested having just one extra synchronization point (between the
+&gt; equivalent of SMix's two loops), whereas in your case the
+&gt; synchronization is continuous and the number of times a thread will have
+&gt; to wait for other threads' data to become available is not pre-specified.
+
+Here's an even worse problem:
+
+Your threads write "pages" of data, but do those pages correspond to a
+whole number of physical pages on a given system?  This requires
+page-aligned accesses and your "page" size being a multiple of the
+underlying hardware page size.  You could say that, yes, you'd use
+exactly 4 KiB pages on x86, and it would be sort of fine (although
+arguably going for a smaller size like 1 KiB provides some security
+advantage, if you could afford that).
+
+However, modern x86 CPUs (and modern CPUs implementing other archs as
+well) support larger page sizes as well, and e.g. the Linux kernel
+supports transparent huge pages.  This means that once your allocation
+grows large enough, you no longer know the underlying physical page
+size!  On x86, the pages can become 2 MiB or even 1 GiB (depending on
+how the system is configured).
+
+Moreover, huge pages are a must to avoid cache thrashing by page tables
+when doing random lookups over large allocations.  When testing with a
+112 GiB "ROM", I am seeing an almost 4x performance difference between
+4 KiB and 2 MiB pages (1900 c/s vs. 7300 c/s for password hashing, with
+certain otherwise constant settings, by 32 concurrent threads on the 2x
+E5-2670, 8x DDR3-1600 machine I had mentioned).  Even if your primary
+target is currently a smaller machine and no pre-initialized "ROM", huge
+pages are still highly desirable - e.g., I am seeing a ~20% speedup with
+the same page size change on a Bulldozer with a 5 GiB allocation (filled
+in only a few seconds, and with no "ROM").
+
+If your "pages" do not correspond to a whole number of physical pages,
+you'll run into false sharing between your threads when they happen to
+write into the same page.  This can truly kill performance, and this
+effect and its worst case extent won't be easily predictable.  Slowdowns
+by many orders of magnitude are possible.
+
+<a href="http://en.wikipedia.org/wiki/False_sharing" rel="nofollow">http://en.wikipedia.org/wiki/False_sharing</a>
+
+Now, you could align to 2 MiB (on x86) and make this your "page" size,
+but what if the system is configured for 1 GiB transparent huge pages?
+Document this as unsupported?
+
+I mostly avoid this problem, as long as N is large enough, by having
+each thread fill its sub-region sequentially, and by having the reads
+made only from the sliding window (thus, by the time a thread starts
+writing near the end of its region, the next thread is most likely no
+longer reading near the beginning of its region because its window has
+likely already moved to start almost half way through its region).
+That's in SMix first loop.
+
+In SMix second loop, all threads only read (they do not write), which
+also avoids false sharing.
+
+An improvement, to deal with the risk of badly de-sync'ed threads, could
+be to allocate each thread's region separately, with at least a physical
+page gap inbetween them.  However, this is an implementation detail -
+can be implemented or not, without affecting how the password hashing
+scheme is defined.
+
+In your case, if you don't want to give up on the idea of having just
+one loop with frequent thread synchronization, you may have your threads
+write each to its own sub-region (rather than interleaved, as I think
+they do now), and calculate the page indices to read from differently
+(from two sub-indices, which you'd derive from the current hash
+separately and then combine into the index).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

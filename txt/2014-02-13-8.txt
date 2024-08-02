@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213154727.GA6161@openwall.com>
+Date: Thu, 13 Feb 2014 19:47:28 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 09:44:13AM -0500, Bill Cox wrote:
+On Wed, Feb 12, 2014 at 11:16 AM, Solar Designer <solar@...nwall.comwrote:
+BTW, you might not need the "| 3" when you do 32x32->64.  Your rationale
+for the "| 3" was to preserve entropy, but 32x32->64 is lossless (in
+fact, it's reversible, which might allow for attacks - you might need
+something else instead of the "| 3", perhaps after the multiply, to make
+it one-way).
+>
+Alexander
+
+In the version of this I tested, I make "value" (horrible name...)
+64-bit, so the cast to 32-bit is not reversible, so there's no problem
+there.  However, without the "| 3", I see that most of the LSBs after
+1B iterations of the hash loop are 0.
+
+Oh, I think you need to be passing "value" (or whatever other small
+state you have) through a crypto hash once in a while.  Letting a
+billion iterations of non-crypto hashing accumulate is unjustified risk.
+There's little reduction in speed if you invoke a crypto hash before
+and/or after every block processed (IIRC, you call it a "page").
+
+In fact, once we add low-level parallelism we also need something very
+much like a crypto hash to be applied at least once or twice per block
+anyway, for data mixing between the parallel lanes - and we can just go
+ahead and use a crypto hash there (as long as the block is large enough
+for this to be affordable).  (I am experimenting with this for a
+revision of escrypt.)
+
+Alexander
+

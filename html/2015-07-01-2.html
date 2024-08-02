@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] Password hashing as a self-overwriting Turing machine</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;DM2PR03MB559902B33652C271748D3CCA7A80&#64;DM2PR03MB559.namprd03.prod.outlook.com&gt;
+Date: Wed, 1 Jul 2015 17:29:49 +0000
+From: Marsh Ray &lt;maray&#64;...rosoft.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+&gt; It resists side-channel attacks based on memory access timing: all
+&gt; memory indices are controlled by pseudo-random data generated from
+&gt; the salt, while operations and their order are controlled by
+&gt; pseudo-random data generated from the salt *and* password.
+
+By definition, the salt is not secret. In some use cases, e.g., document encryption, it is even shipped along with the ciphertext.
+
+So assuming I know the salt, and I am able to observe via a timing side channel the first few memory accesses from hashing the correct password, then I am able to reject an incorrect guess at the password without having pay most of the cost that should be imposed by the work factor, no?
+
+- Marsh
+
+From: denis bider [mailto:pwhashing&#64;...isbider.com]
+Sent: Wednesday, July 1, 2015 9:14 AM
+To: discussions&#64;...sword-hashing.net
+Subject: [PHC] Password hashing as a self-overwriting Turing machine
+
+Dear password hashing gentlemen - and potentially ladies?
+
+I'm over a year late to the party. However, I have in the past two months designed an algorithm which may deserve a nod in its direction, due to insight I haven't noticed being used as directly elsewhere.
+
+My premise is that, while a password hashing algorithm must be written *carefully*, this does not mean it has to be *complex*. The way I see it, the principal goals of anti-brute force password hashing are as follows:
+
+- Entropy preservation. (Obvious.)
+
+- Irreducibility. The algorithm cannot be reduced to a simpler version that executes faster in the general case, for a large proportion of inputs. Nevertheless - and this is important in this case: optimizations that require knowing the password are irrelevant, because the attacker has achieved their goal if they know it.
+
+- Non-trivializability on easily obtainable alternate hardware. If an algorithm is to normally run on a 64-bit server, then it should perform most cost-effectively in that environment, not on an AMD GPU. A good password hashing algorithm is platform specific, and chosen for a particular usage case and platform. A different algorithm should be used if the main usage case is e.g. a 32-bit client.
+
+Finally, there are other goals an algorithm ought to meet. Resistance to side channel attacks and garbage collection attacks are among them.
+
+What I believe to be worthwhile in my design is that, in order to achieve these goals, it does not use a complex algorithm with a fixed order of instructions. Instead, we first use a trusted algorithm, SHA-512, to generate random data dependent on the salt and password; and then we interpret and execute that data as a self-overwriting Turing machine composed of entropy-preserving operations. The Turing machine is allowed to run for a fixed number of operations, but its memory access pattern is random (dependent on the salt), and its order of operations is random (dependent on the salt and password). The result is a cryptographic digest of the state of the Turing machine, after the specified number of operations.
+
+If this design has been done well, then I believe it to be irreducible. This is for similar reasons as that the halting problem cannot be solved in the general case, in a way more efficient than actually running the algorithm.
+
+The resulting design looks very simple. It comprises 115 lines of code found in the "BusyBeaver" function, starting on line 290 in BusyBeaver.cpp, found in the following archive (23 kB):
+
+<a href="http://www.denisbider.com/BusyBeaver-20150630.zip" rel="nofollow">http://www.denisbider.com/BusyBeaver-20150630.zip</a>
+
+My implementation attempts to be specific to the x64 platform. It uses SHA-512 to generate pseudo-random data, which favors the 64-bit CPU. The Turing machine uses operations that a 64-bit processor does well. It uses an amount of memory that fits CPU cache sizes, but doesn't fit into local memory of a GPU compute unit. I've hired a colleague for the purpose of testing this; we have not been able to come up with a faster AMD GPU implementation than what runs on a comparable x64 CPU.
+
+The algorithm resists side-channel attacks based on execution timing. The number of operations is constant, and so is the amount of time to process them. It resists side-channel attacks based on memory access timing: all memory indices are controlled by pseudo-random data generated from the salt, while operations and their order are controlled by pseudo-random data generated from the salt *and* password. A wrapper provides resistance to garbage collection: the salt and password are hashed at start, so that the plaintext can be erased before proceeding with the rest of the algorithm.
+
+I understand that a majority of you have an academic background, and will expect this kind of work to be presented as a paper. Unfortunately, I do not have this experience. It would be challenging for me to write a paper that would live up to the standards of your community. The way I am presenting this work is the best way I can. However, I don't believe that this implies that this approach is without value.
+
+My background is 20 years of experience in C++ development and applied crypto usage. I am a co-founder and developer-in-chief at Bitvise, a small company specializing in SSH software for Windows. Our current plan is to use the above algorithm for password hashing in the next version of Bitvise SSH Server.
+
+If someone finds it worthwhile to research this design further, in a more formal manner, please be welcome. I present it because I think it is an interesting design. This is not to say that other designs you have considered might not have more features. However, I think the simplicity of this approach is valuable.
+
+Best regards,
+
+denis bider
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

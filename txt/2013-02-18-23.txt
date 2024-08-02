@@ -1,0 +1,79 @@
+phc-discussions - Re: [PHC] Q: Reference t_cost and m_cost parameters
+
+Message-ID: <20130218214819.GA20645@openwall.com>
+Date: Tue, 19 Feb 2013 01:48:19 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Q: Reference t_cost and m_cost parameters
+
+On Mon, Feb 18, 2013 at 11:23:16AM -0800, Dennis E. Hamilton wrote:
+For the candidate reference-implementation API, the t_cost and m_cost
+parameters are apparently unitless values related to time cost and space
+(memory cost).
+
+Is there some standard definition for these, so that one can substitute
+implementations but not need to know the implementation to know the
+consequences?  
+
+Or is it presumed that a candidate specify how these are interpreted
+
+I think it's the latter.
+
+I expect PHC submissions to differ in their abilities a lot, including
+what ranges of cost settings they work for, and with what granularity.
+In some cases, the two cost settings might not be entirely independent -
+e.g., in scrypt both N*r and p contribute to its running time.
+
+I actually tried bringing 3 different underlying password hashing
+schemes to the same cost scale, in terms of CPU time, in phpass.  I did
+so by adopting bcrypt's costs as the input values, and translating them
+to cost settings resulting in comparable CPU time usage on current CPUs
+and with current code for BSDI's extended DES-based hashes and for
+phpass' own "portable" hashes.  This works fine, but I think in PHC
+context it should be left for a higher level, if we like.
+
+If we try to insist that e.g. t_cost is expressed in microseconds on a
+specific CPU when using a specific compiler/version and m_cost e.g. in
+kilobytes, this means that PHS() will be a wrapper function doing the
+necessary translation (and returning an error code for value
+combinations that its underlying code can't get sufficiently close to?)
+I'm not sure whether we want that.
+
+and once a particular function is "standardized" as *the* PHS, the
+interpretation of the parameters will be fixed?
+
+I guess the PHS() interface might end up being for PHC use only, not for
+actual use of the winning password hashing scheme(s).  (Chances are
+that there will be more than one as I do not expect that a single one
+will meet all of our wishes at once.  Maybe two.)  I think each password
+hashing scheme, besides the PHC-mandatory PHS() interface, will also
+provide its own APIs and indicate which one (or several) are recommended
+for use.
+
+By fixed I mean that the salt and the cost parameters would be either stored
+or otherwise preserved between creation of a hash and recomputation of the
+hash for authentication of a password.  
+
+Oh, that's a different aspect from what you wrote in the previous few
+paragraphs.  Yes, it is expected that the parameter values, except for
+secrets, will be stored along with the hashes or with the encrypted
+data (if the scheme is used as a KDF).  This is beyond scope of PHC,
+although we may discuss it in here.
+
+I expect that once we get closer to the end of first year, we'll need to
+have crypt(3) encoding syntax defined for the finalists, although this
+is not mandated by PHC terms.  This implies storage of non-secret
+parameters along with the hashes (inside those strings).
+
+I am thinking of the case where the authentication may be done by different
+systems than the one that originally derived the hash, as when using
+password-based encryption of documents in an interchange situation or in a
+long-lived personal archive, longer-lived than the computer used to create
+the password hash originally.  In this case it may be necessary to
+communicate the salt and the cost parameters along with the derived hash
+value.
+
+Of course.  This is how it's being done already.
+
+Alexander
+

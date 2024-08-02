@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-ID: <CAOLP8p7iBPQZ-7iCTcbKDpoZ06zwyNZ1ic+TPJHrBvhEQrw1vQ@mail.gmail.com>
+Date: Thu, 16 Jul 2015 14:40:25 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+On Thu, Jul 16, 2015 at 11:59 AM, Dmitry Khovratovich <
+khovratovich@...il.comwrote:
+
+>
+>
+Disconnected ASICs would lose quite badly, since the CPU miner is
+reading 8 KiB per hash at 20 GiB/s, while a disconnected ASIC must compute
+2 4-MiB Yescrypt hashes in series.  We chose these computations to be 1 ms
+(by adjusting t_cost) for the CPU defender.  There is no way the ASIC can
+do this more than 10X faster, so each hash will require (1ms + 1ms)/10 =
+0.2ms.  This is only 5,000 hashes per second.  In comparison, the CPU
+defender fills 20GiB of memory bandwidth reading 8KiB of memory per hash.
+This is over 2.6 million hashes per second.  The CPU defender is over 500X
+faster than the 4MiB ASIC.
+>
+A more interesting ASIC attack is when we have 8192 ASICs with 4MiB
+networked together.  In this case, each ASIC holds 4 MiB of the ROM data,
+for a total of 32 GiB.  To compute Yescrypt(4KiB_block(i1),
+4KiB_block(i2)), ASIC_i2 must transmit 4KiB_block(i1) to ASIC_i1.  This is
+only 4KiB transmitted, compared to the CPU/DRAM case where the CPU reads
+8KiB.  However, to be comparable in speed to the CPU case, the ASICs need a
+routing network capable of 8192*10GiB/s ==8192*10GiB/s out.  The total
+bandwidth of this random-routing network is over 80 TiB/s.  The challenge
+is to design the router so that it does not dominate the cost.
+>
+No, why having separate ASIC for each i1? Instead let each ASIC select its
+nonce, calculate i1,i2 and run two yescrypts afterwards. Then there almost
+no communication between them, so 8192 guys can do even more per second,
+2^25 as I calculated
+>
+>
+Hi Dmitry.  Is your point that this algorithm is not memory-hard because
+you can speed it up with parallel processing without increasing memory
+usage?  If so, I agree.
+
+I also agree that 8192 advanced custom ASICs with 4 MiB of on-chip memory
+could do 2^25 hashes per second in total.  At the same time, a single CPU
+with 32 GiB of vanilla DRAM should do 2^22 hahes per second.  The 8192
+ASICs together are 8X faster than a single CPU, and the total memory was
+not increased at all.  This algorithm is clearly not memory-hard.  If total
+bits of memory correlated closely with cost, then the ASIC solution would
+win.
+
+Do you agree that the 8192 parallel ASICs with 4 MiB of on-chip RAM each
+would be more expensive than a mid-range desktop PC with 32 GiB of DRAM?
+Both systems have the same total RAM, but my desktop PC is $700 in quantity
+1, meaning each ASIC (including it's portion of the board, power supply,
+etc) is < $1.  In reality it must be cheaper, since the competition would
+be CPU-farms, with maybe half the cost of a desktop PC.  It seems obvious
+to me that the desktop PC solution will be far cheaper, and lower power,
+than an 8192-ASIC system.  However, I think we have disagreed before over
+what real ASICs cost.
+
+Thanks for looking at it.  I do appreciate it.
+Bill
+
+
+

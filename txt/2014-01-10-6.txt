@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <20140110100308.GA29500@openwall.com>
+Date: Fri, 10 Jan 2014 14:03:08 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Anthony Ferrara <ircmaxell@...il.com>
+Subject: Re: [PHC] scripting memory (not so) high
+
+On Fri, Jan 10, 2014 at 02:37:49AM -0600, Steve Thomas wrote:
+On January 9, 2014 at 10:32 PM Solar Designer <solar@...nwall.comwrote:
+>
+Disclaimer: there may be bugs in the smhkdf code (e.g., some off-by-ones
+[...]
+Found two:
+Line 13: $m_cost = floor(($blocksize + 63) / 64);
+Line 22: $mod = ($m_cost * 64) - $blocksize + 1;
+
+Thanks!  (I haven't checked yet.)
+
+BTW I was just working on a scripting language hash.
+[...]
+    for ($i = 0; $i < $m_cost; $i++)
+    {
+        $h = hash('sha512', $h, true);
+        $mem = $h . $mem;
+    }
+
+Wouldn't appending to $mem be faster than prepending?
+
+    // Hash mem $t_cost+4 times
+    $ctx = hash_init('sha512');
+    for ($i = 0; $i < $t_cost + 4; $i++)
+    {
+        hash_update($ctx, $mem);
+    }
+    return hash_final($ctx);
+
+This is not sequential memory-hard!  This allows for TMTO that benefits
+attackers with ASICs by more than a constant factor.  Specifically, on
+each of the $t_cost + 4 iterations, the attacker may recompute and use
+the whole $mem one block at a time, without storing them.  This only
+doubles the effort of that loop (and eliminates the first loop), and it
+reduces the memory needs from $m_cost to a small constant.
+
+Alexander
+

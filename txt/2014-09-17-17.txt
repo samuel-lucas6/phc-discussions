@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <670571192.470970.1410977256690.open-xchange@oxuslxltgw10.lxa.perfora.net>
+Date: Wed, 17 Sep 2014 13:07:36 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On September 17, 2014 at 12:12 PM Bill Cox <waywardgeek@...hershed.orgwrote:
+>
+On 09/17/2014 12:36 PM, Steve Thomas wrote:
+>
+P.S. Schvrch is not in this category. As it is not an actual
+branch. In x86 SIMD you do a compare then xor (compare sets it to
+all 1s or all 0s). With GPUs, they would set a conditional variable
+(compare) then conditionally run bitwise invert (one instruction).
+Note that a branch in x86 takes two instructions compare and
+conditional jump. Both SIMD and GPUs use two instructions with
+neither being a jump.
+>
+>
+The current implementation is not in this category, but clearly the
+author intended it to be. He describes branching as cyclomatic
+complexity in the attached paper. I suspect we'll see something more
+like the others in the next revision.
+>
+
+I don't think a change like that would be considered a tweak, but I guess we'll
+see what actually changes.
+
+
+I think having very many cases might provide good defense. I just
+auto-generated over 13,000 hashing functions that do an
+AND/OR/ADD/SUB-XOR-ROTATE. The problem I see is that each looks very
+similar. I choose two "mixing" operators which are permutations and
+reversible, and a non-linear operation.
+>
+However, a GPU could attack my 13,000 functions is a simple manner.
+They could write a single function that computes which operator is
+used in each place, and then execute the small case statements when
+they are used. I think this could dramatically reduce the 13,000X
+factor I was hoping for.
+>
+There are only maybe 30 different instructions that need to be
+executed, at least if the shift distance is computed rather than
+embedded in the op-code. I don't see what would stop a GPU from
+taking maybe a 100X speed hit to "interpret" 13,000 different small
+functions in parallel.
+>
+Still, if we could put the hurt on GPUs by 10-100X, that's worthwhile.
+>
+
+The most you'll need to do is like 128 functions (slowdown of 1/50.5164, it can
+only get 26.69% slower) and with 3,161 functions (slowdown of 1/63.3664, it can
+only get 1.000% slower]). This is because threads are run in a block (8, 16, 32,
+64 threads depending on the GPU) if each thread is doing something different
+then the max slowdown is 8, 16, 32, 64 depending on the GPU. There might be
+different thread block sizes and in the future it might increase, but 13,000 is
+excessive. There won't be much of a slow do between 128 and 1024 (1.2287x) or
+1024 and 13,000 (1.0286x). Also you might want to do a prime number of functions
+so you can't just mask, but this might slowdown the defender more than the
+attacker because most defenders won't implement integer divide with floating
+points.
+
+You can use this formula x = f * (1 - (1 - 1 / f) ^ 64) where f is number of
+functions and x is the average cost factor increase for 64 threads/block.
+
+P.S. When I say block I mean thread wrap or whatever.
+

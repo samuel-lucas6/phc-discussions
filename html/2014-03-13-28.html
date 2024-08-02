@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="27">[&lt;prev]</a> <a href="29">[next&gt;]</a> <a href="27">[&lt;thread-prev]</a> <a href="29">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7wYTKer3i2Y-pWmNbVAGd2kPdihU7jxemHUgFYi_PN-Q&#64;mail.gmail.com&gt;
+Date: Thu, 13 Mar 2014 17:19:57 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Thu, Mar 13, 2014 at 4:27 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; scrypt was designed not to bump into the memory bandwidth, at least
+&gt; not when running only one thread.  At 8 rounds of Salsa20, it stays
+&gt; below saturating memory bandwidth on typical PC hardware (albeit for
+&gt; reasons other than what you give: it tries to have its "time" factor
+&gt; based on computation effort rather than on bandwidth).  OK, you said
+&gt; "scrypt-like", and yes some scrypt-like PHC candidates will deliberately
+&gt; use more memory bandwidth than scrypt does.
+
+I suspect I'm the leading contender for bandwidth hogging per thread :-)
+
+However, that is easily tuned.  One thread on my machine takes up
+about 9GiB/s, on a machine with about 25 GiB/s max.  Two threads take
+12.1 GiB/s, and are fighting each other over bandwidth at that point,
+or they would run faster.  However, with multiplications set to max,
+single thread bandwidth drops to 4.5 GiB/s, and with the repetitions
+parameter, you can switch the load from external memory hashing to
+internal cache hashing smoothly.
+
+However, I do get a kick out of bringing my PC to it's knees with only
+two threads :-p
+
+&gt;&gt; (Or, said more succintly: if you want to engage in a sports contest, and
+&gt;&gt; you are 5' tall, then don't choose basketball.)
+&gt;
+&gt; Makes sense, but I think it primarily means that we shouldn't compete
+&gt; with attackers solely in terms of memory bandwidth per se.  The reason
+&gt; why TwoCats and escrypt use more memory bandwidth (than scrypt) is that
+&gt; they want to use more RAM within the allotted time (and discourage
+&gt; TMTO).  More RAM means more ASIC die area.  (For EARWORM, this is
+&gt; different.  Being ROM-only, it actually competes solely in terms of
+&gt; memory bandwidth, which is a drawback.)
+&gt;
+&gt; Alexander
+
+I do think (since we discussed it on this forum recently) that a
+decent defense is to try and hit the internal cache bandwidth.  Maxing
+out L1 cache bandwidth sounds like a great way to compute-time harden
+a PHS.  If an algorithm at the same time uses a significant portion of
+L2/L3, like 10 MiB or more (as Catena originally suggested), you can
+tie up some expensive real estate for some significant time.
+
+I know there are legitimate cases for running as low in memory as
+Bcrypt does, but I would avoid it whenever possible.  Cache RAM is
+expensive by the MiB, but it turns out to be a whole lot cheaper on an
+ASIC by the KiB :-)
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p7kx4K2pfAKhZWHoz5ggm_6KXW6NY9+i0Hy14JTQw-Y6Q@mail.gmail.com>
+Date: Wed, 26 Feb 2014 16:29:17 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Wed, Feb 26, 2014 at 4:18 PM, Bill Cox <waywardgeek@...il.comwrote:
+I've succeeded!
+>
+It took some crazy optimization for Haswell, but I now get 0 to 8
+scalar multiplies per inner loop of memory hashing - 32 bytes worth
+(just 3 AVX2 instructions in the body of a for loop), without slowing
+down the memory hashing unless I set the number of multiplications too
+high.  For running out of L1 cache, Haswell is so fast, it didn't have
+time for even 1 multiplication in the loop, and an if-statement around
+the multiplication loop slowed it down too much.  So, wrote a wrapper
+function around the block hash algorithm with a switch statement on
+the number of multiplies, and I passed a constant to hashBlocks in
+each case.  The compiler was smart enough to in-line the multiplies
+the correct number of times, with 9 different versions of the
+subroutine.  Now 0 multiplies runs as fast as before I integrated the
+multiplication loop into hashBlocks.
+>
+Bill
+
+Here's runtime data for the hand optimized AVX2 code vs my unoptimized
+reference code on Haswell, when running out of L1 cache.  The
+optimized code is 32X faster!  Haswell has very high bandwidth to L1
+cache.  This run did 668 GiB/s of reads from L1 cache:
+
+tigerkdftime ./tigerkdf -B4096 -t8 -m128 -b4096 -r$((1024*1024)) -M0
+garlic:0 memorySize(KB):128 multiplies:0 repetitions:1048576
+numThreads:8 blockSize:4096 subBlockSize:4096
+Password:password Salt:salt
+
+bb 0a c5 44 8b 80 9c cf
+72 87 60 a3 63 ea b4 f2
+67 87 93 39 c9 67 dd ef
+71 62 de fb 47 74 53 b7      32 (octets)
+
+
+real    0m0.383s
+user    0m3.040s
+sys     0m0.000s
+
+This is the reference version.  It does 20GiB/s to L1 cache.  AVX2 for
+L1 hashing rocks:
+
+tigerkdftime ./tigerkdf-ref -B4096 -t8 -m128 -b4096 -r$((1024*1024)) -M0
+garlic:0 memorySize(KB):128 multiplies:0 repetitions:1048576
+numThreads:8 blockSize:4096 subBlockSize:4096
+Password:password Salt:salt
+
+bb 0a c5 44 8b 80 9c cf
+72 87 60 a3 63 ea b4 f2
+67 87 93 39 c9 67 dd ef
+71 62 de fb 47 74 53 b7      32 (octets)
+
+
+real    0m12.403s
+user    0m12.389s
+sys     0m0.000s
+

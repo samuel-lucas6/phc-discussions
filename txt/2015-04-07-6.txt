@@ -1,0 +1,123 @@
+phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Message-ID: <5523E8CF.5050708@larc.usp.br>
+Date: Tue, 07 Apr 2015 11:25:19 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi, Alexander.
+
+I'm trying to keep it short this time :)
+
+On 06-Apr-15 21:12, Solar Designer wrote:
+Hi Marcos,
+>
+On Mon, Apr 06, 2015 at 01:09:36PM -0300, Marcos Simplicio wrote:
+>
+>On 03-Apr-15 08:12, Solar Designer wrote:
+>>There's a difference, though: I guess yescrypt's pwxform S-box lookups
+>>are much more frequent than Lyra2's equivalent (is there one?)
+>>
+>No, there is no table look-up or anything of the sort in any Blake
+>variant I'm aware of.
+>
+Of course not in Blake2, but does Lyra2 itself perform anything like it?
+>
+
+The most similar feature I can see in Lyra2 is on the line of Gregory
+Maxwell's point on "making more use of the total available hardware",
+referring to caches: right after we write on a given row, in the next
+iteration we pseudorandomly read from its columns (taking advantage of
+the fact that it should still be in cache, so attackers are motivated to
+do have a similar-sized cache line). This is similar to having a LUT of
+the size of a row.
+
+>
+>There is, however, another situation that involves only small amounts of
+>memory and, thus, in which attackers can benefit from faster memory
+>technology: recomputations during a TMTO attack. After all, whether the
+>scheme/pass is deterministic or password dependent, recomputations
+>become password-independent as long as the attacker stores the sequence
+>of rows required after seeing them in original computation; those rows
+>can, thus, be prefetched and stored in cache-like memory. As a result,
+>while the original computation of a block V_i (discarded) from a set of
+>blocks \phi{V_i} took, say, 20\sigma (where \sigma accounts both for
+>memory- and processing-related costs), a hardware acceleration of 10x
+>combined with a 10x faster memory could bring the cost of recomputations
+>to approximately 1 if \sigma is 50% memory and 50% processing;
+>parallelism and pipelining, if possible, may allow recomputations to
+>occur even faster. The lesson here is that, even though at first sight
+>the time*memory cost would appear to the around 20, in practice it might
+>be much lower than that. That is why computing the actual time*memory
+>cost is tricky, especially without experiments to verify them, and why I
+>believe TMTO resistance should involve a reasonable security margin
+>(something that Argon and Lyra2, for example, try to achieve with their
+>minimum settings).
+>
+Basically, you're saying that TMTO reduces not only the memory
+component, but also a time component - specifically, memory latency - so
+the theoretical memory*time calculations that assume same time per round
+of a primitive, etc. do not reflect the reality.  OK, this is finally a
+well-reasoned argument in favor of a TMTO security margin.  (It's also
+an argument in favor of compute time hardening, which makes having a
+TMTO security margin less important.)
+
+Actually, since we are talking about "security margins", I believe it is
+an argument in favor of both approaches: they clearly have value in
+combination, so if an attacker can somehow explore one but not the
+other, then we are still safe.
+
+>
+>>>- For 1 thread ("p1") with different passes through memory: say,
+>>>yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+>>>while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+>>>MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+>>>= 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+>>>difference, the reason is probably related to bandwidth usage, because
+>>>Lyra2 purposely uses more bandwidth in this scenario: namely, it
+makes 2
+>>>writes per call of the underlying hash instead of 1, and 4 reads (2
+from
+>>>cache and 2 from memory) instead of 2. I'm not sure if that is good or
+>>>bad, but improvements on memory bandwidth are usually slower than on
+>>>computation power, so I would rather say it is good in terms of attack
+>>>resistance, as it limits an attacker's parallelism ability.
+>>>
+>>This makes sense, but you also need to factor in yescrypt's S-box
+lookups.
+>>
+>I agree this factor is likely to play a role. However, Bill reported a
+>long time ago speed-ups of ~20% if Lyra2 reduced its number of memory
+>writes when no parallelism is employed. We preferred not do so in the
+>1-threaded version, however, because we _wanted_ attackers to run into
+>memory bounds as soon as possible (again, because users and attackers
+>are likely to have access to the same memory technology).
+>
+I didn't mean that yescrypt's S-box lookups slow it down a lot - I think
+they slow it down just a bit.  This is a measurable slowdown, though.
+(I designed and re-designed pwxform until the performance impact of
+S-box lookups was low, while their frequency was bcrypt-like.)
+>
+I primarily meant that they add to defense too, so same speed of Lyra2
+and yescrypt on a given benchmark may actually mean that yescrypt wins
+in terms of the compute hardening against various platforms.
+
+That is possible, but I prefer to discuss such issues after performing
+actual experiments (not exactly to "defend Lyra2" or any other scheme,
+but rather to understand their limits: the topic is very interesting for
+further research :) ).
+
+>BTW, we have not yet used the suggestion by Samuel Neves regarding NORX
+>tricks ("We used this trick (replacing + with ^, * with &) in NORX (pg.
+>23 of https://norx.io/data/norx.pdf); it does noticeably
+>improve latency."). We will try and see what happens.
+>
+I think Samuel was referring to the operation re-ordering trick I had
+mentioned, not to "replacing + with ^, * with &".  Replacing * with &
+would obviously remove the multiply latency hardening.
+>
+
+Yes, I understood that: I was just quoting his exact phrase to remind
+the context. I meant that we will try a similar trick with ADDs and MULs.
+

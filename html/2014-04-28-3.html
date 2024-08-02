@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] on timing attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="../../../2014/04/29/1">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="../../../2014/04/29/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p6XbPO1UDmJeKGejegou3oC6WBdDnJJn7Gcco4+a0euuQ&#64;mail.gmail.com&gt;
+Date: Mon, 28 Apr 2014 12:11:27 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] on timing attacks
+
+IMO, if there are to be multiple memory-hard winners, this is the issue
+that should separate them.  If we can't agree which form is best (which
+seems to be the case), maybe the judges will have trouble too.  In that
+case, they can probably still agree on winners in each class.
+
+Krisztián Pintér and Thomas Pornin both make good points.  While doing no
+password dependent addressing at all seems like a good thing, it does come
+with two significant costs.  First, a cache-timing resistant algorithms
+have difficulty having strong TMTO resistance until about the 1/4 memory
+usage mark compared to the computation graph size.  To insure the defender
+benefits from this as much as the attacker, the cache-timing resistant
+entries generally recommend that memory be written about 4 times or more.
+ There are some tricks to avoid one of the writes, so this penalty seems to
+be about a 3-4X reduction in possible peak memory usage, and 2X to 3X in
+terms of average memory usage.  When attacking these cache-timing resistant
+algorithms offline, an attacker will gain somewhere from about 2X to 4X in
+guesses per dollar.
+
+Second, predictable memory access can be sped up dramatically in custom
+hardware, including both FPGA and ASIC implementations.  GPUs may be able
+to speed up predictable memory access as well.  Any cache-timing resistant
+algorithm runtime hardened primarily by memory bandwidth will not succeed
+very well on the runtime portion of the runtime*memory cost.  I would want
+to see some other compute time hardening in any cache-timing resistant
+algorithm.  Hopefully this can be considered a "tweak".
+
+Combined, offline attackers get a free-ish memory reduction of something &gt;
+2X, and he can run that memory full-bore as fast as it's I/O will allow,
+mostly eliminating memory latency delays, so he wont have to use that
+memory for very long per guess.  That's a reduction on both the time and
+memory axis of the time*memory cost.  I am not a fan of that.
+
+On the other hand, Krisztián Pintér is right that timing leaks all sorts of
+information, not just information useful for cracking his password faster.
+ If an attacker has a scope probe on the power rails, most entries the
+competition will leak the password length.  They mostly call memcpy, and
+there's a real risk that an attacker with power rail waveforms can detect
+exactly how many cycles memcpy takes.  Both PBKDF2 implementations as well
+as HKDF call memcpy on the password, so there's no help there.
+
+Even with coarse-grain information such as cache-timing, an attacker may
+gain crucial knowledge.  For example, a drone operator might wait for
+confirmation that a targeted individual has just attempted to log into a
+web account, indicating he is probably at his desk by his computer, before
+launching a missile at him.  Even knowing a person has not logged in for a
+while can be critical information.  For example, did the missile we
+launched last week kill him?  The meta-data gained through a timing leak
+can be more sensitive than the password.
+
+Which PHS architecture is preferable seems to be strongly a matter of
+opinion, and there are good solid entries with all three architectures.
+
+Personally, I prefer the hybrid first, because it has nearly the off-line
+defensive strength of a fully unpredictable addressing schemes, while still
+hampering off-line cache-timing attacks on the password.  It's not an
+obvious choice, and I only came to this decision after thinking about it
+for a couple of weeks, and playing with Catena and some other algorithms.
+ The hybrid system is more complex, which can be death for a crypto-system.
+ The simplicity and security of Bcrypt and similar unpredictable algorithms
+will remain most attractive to some.  Better defense against timing attacks
+seems to draw others to cache-timing resistant algorithms.
+
+This seems almost to be a religious war.  Of course, I'm right and everyone
+else is wrong :-)
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

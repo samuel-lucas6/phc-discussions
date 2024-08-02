@@ -1,0 +1,31 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150419005726.GA4483@openwall.com>
+Date: Sun, 19 Apr 2015 03:57:26 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+On Sun, Apr 19, 2015 at 03:49:34AM +0300, Solar Designer wrote:
+BTW, I don't see where the computation penalty of 1135 for 1/4 in the
+paper came from.  The program gave me 1254.56 even before I patched the
+higher-precision value in place of 1.33.  Maybe there's precision loss
+elsewhere in the program.  Maybe it should use double instead of float.
+(A quick "#define float double" right after the #include's resulted in
+compile errors, and I'm lazy.)  The 1135 vs. 1255 (or 1262) difference
+does not really matter for this discussion, but it means there may be
+worse precision loss for some other results.
+
+... rebuilt with -O3 instead of -O2, got 1290.28 there.  Added
+-ffast-math on top of that, got 1244.30.  This program is definitely
+having precision loss issues.
+
+Oh, not necessarily.  This may explain it:
+
+	mtr.seed(time(0));
+
+The results actually vary a little bit between invocations.  I still
+can't get anything below 1200, though.
+
+Alexander
+

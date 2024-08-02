@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Security of these two hash functions?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="../../../2014/02/22/1">[next&gt;]</a> <a href="../../../2014/02/22/4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5F_w=4Z-V2Dn7gdby8AS-QkX4nDhHUjg-ZQ-j9TWhXCw&#64;mail.gmail.com&gt;
+Date: Fri, 21 Feb 2014 17:32:41 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Security of these two hash functions?
+
+TigerKDF, as I'm calling the successor to NoelKDF, uses two hash
+functions.  The first is a multiplication intensive compute-hardened
+loop that is hard to speed up even in custom hardware.  It hashes 256
+bits of state in a long permutation, with applications of Blake2s
+after every "block", which is typically 4000 iterations long:
+
+// Do low memory-bandwidth multiplication hashing.
+static void multHash(uint32_t hash[8], uint32_t numblocks, uint32_t repetitions,
+        uint32_t *multHashes, uint32_t multipliesPerBlock, uint32_t
+parallelism) {
+    uint32_t state[8];
+    hashWithSalt(state, hash, parallelism);
+    for(uint32_t i = 0; i &lt; numblocks*2; i++) {
+        for(uint32_t j = 0; j &lt; multipliesPerBlock * repetitions; j++) {
+            // This is reversible, and will not lose entropy
+            state[j&amp;7] = (state[j&amp;7]*(state[(j+1)&amp;7] | 1)) ^
+(state[(j+2)&amp;7] &gt;&gt; 1);
+        }
+        // Apply a crypt-strength hash to the state and broadcast the result
+        hashStateWithSalt(state, i);
+        memcpy(multHashes + 8*i, state, 32);
+    }
+}
+
+May main question for this hash function is whether an attacker might
+be able to avoid doing every serial multiplication, and thus speed it
+up.  With a multiply, XOR, and right shift, I think the answer is no.
+
+There's no danger of entropy loss between Blake2s hashes, since it's a
+permutation.  It does not even have to be a very good hash function,
+so long as there are no short-cuts for computing it.  However, I did
+some basic testing on it, and it seems to generate reasonable results.
+ Other than states where all 8 values start as either 0 or 1, I have
+not found any states that result in a short loop, where the states
+repeat every after a short number of iterations.  I have checked many
+thousands of initial random starting points for loops less than 4
+million long, and hundreds of random starting points for loops less
+than 2^28 long.  I have not found a loop yet.  If it does get stuck in
+a short loop, the blake2s hash will kick it out the next block, so all
+I need is for such short loops to be somewhat rare, like &lt; 1% they
+should be longer than the iterations per block.
+
+The second hash function simply fills memory as rapidly as possible:
+
+static inline void hashBlocks(uint32_t state[8], uint32_t *mem,
+uint32_t blocklen, uint32_t subBlocklen,
+        uint64_t fromAddr, uint64_t toAddr) {
+    uint64_t prevAddr = toAddr - blocklen;
+    uint32_t numSubBlocks = blocklen/subBlocklen;
+    uint32_t mask = numSubBlocks - 1;
+    uint32_t *f = mem + fromAddr;
+    uint32_t *t = mem + toAddr;
+    for(uint32_t i = 0; i &lt; numSubBlocks; i++) {
+        uint32_t *p = mem + prevAddr + subBlocklen*(*f &amp; mask);
+        for(uint32_t j = 0; j &lt; subBlocklen/8; j++) {
+            for(uint32_t k = 0; k &lt; 8; k++) {
+                state[k] = (state[k] + *p++) ^ *f++;
+                state[k] = (state[k] &gt;&gt; 24) | (state[k] &lt;&lt; 8);
+                *t++ = state[k];
+            }
+        }
+    }
+}
+
+Each iteration, the state is added to a pseudo-random 256-bit
+sub-block somewhere in the "prev" memory block, XOR-ed with the next
+256-bits in the "from" block, and rotated-right by 8.  Between block
+hashes, it's passed through Blake2s, just like in the multiplication
+hash.
+
+When I take out the Blake2 hashing, and the data written to memory
+passes the dieharder tests, and also results in the expected number of
+32-bit collisions in the last states written to memory between many
+runs.  With the Blake2s hash thrown in, I think it should be fine.
+Attackers may be able to detect that the data written to memory was
+generated by TigerKDF, but they still have to generate all that data
+to compute the hash.
+
+Can anyone see any weaknesses?
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

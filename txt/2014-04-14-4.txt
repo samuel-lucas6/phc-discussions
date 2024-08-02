@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Do we need a common password hashing API?
+
+Message-ID: <20140414072041.GA26744@openwall.com>
+Date: Mon, 14 Apr 2014 11:20:41 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Do we need a common password hashing API?
+
+Hi Alec,
+
+It's very nice to see you in here!
+
+On Sun, Apr 13, 2014 at 04:53:45PM +0100, Alec Muffett wrote:
+Some of this was the original intention behind the Solaris Pluggable Crypt
+Framework. [statement of interest: I am a co-author]
+
+tl;dr: make it ASCII and let the DLL sort out the details.
+http://dropsafe.crypticide.com/article/1389
+
+Where's the huge warning that Sun/Oracle has patented this stuff, making
+it unsuitable for the PHC community? ;-(  While there's prior art for most
+or all of it (including my crypt_gensalt() on Owl), I think we should
+stay away from the dynamic linking because of the patent, until it expires.
+
+http://dropsafe.crypticide.com/aboutalecm
+
+"Patents
+
+Method and apparatus for implementing a pluggable password obscuring mechanism -
+Inventors: Darren J. Moffat, Casper H. Dik, Alec Muffett."
+
+http://www.google.com/patents/US20050005173
+
+Bill, here's a description of my crypt_gensalt(), etc., introduced into
+Owl slightly earlier than Solaris' use of the same function name (year
+2000 vs. slightly later):
+
+http://www.openwall.com/crypt/openwall-crypt.3.pdf
+
+Besides the different function prototype and several other differences,
+the major difference is in that my crypt_gensalt() accepts prefix
+(requesting a particular hashing scheme) and iteration count as an
+arguments, whereas Solaris' crypt_gensalt() reads the equivalents of
+these (and possibly more) from a system-wide configuration file.  In
+practice, the iteration count for my crypt_gensalt() is passed via
+pam_tcb's command line found in system configuration files anyway, but
+other uses are possible as well.
+
+So these differ in the kind of flexibility they provide.  In my case,
+it's no dependence of this interface on system-wide configuration.
+In Solaris' case, it's no dependence on there being just these two
+parameters, so it's easier (or rather more consistent) to add m_cost and
+any hashing scheme specific parameters.  These can be added via a
+configuration file with my crypt_gensalt() too, but it becomes
+inconsistent (t_cost is passed to the function, but m_cost, etc. is
+somehow read by the function from files).
+
+Maybe yet another interface is desirable, where crypt_gensalt() would
+accept an arbitrary set of parameters for the hashing scheme, and if
+those are not provided then read them from a configuration file.
+
+As to the name=value encoding in salt strings (which I dislike), I think
+it's orthogonal in this context.  Whether the encoding is verbose and
+human-readable (such as the name=value stuff) or compact and
+machine-focused (such as what I intend to use for yescrypt), there's a
+need for an interface to produce those strings from the individual
+parameter values.  e.g. yescrypt_gensalt() does that, and it accepts a
+yescrypt-specific set of parameters.  This is fine for any particular
+hashing scheme, but for a more generic crypt_gensalt() function the set
+of possible parameters would need to vary by the requested hashing scheme.
+
+Alexander
+

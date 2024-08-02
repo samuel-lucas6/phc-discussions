@@ -1,0 +1,45 @@
+phc-discussions - Best use of ROM in password hashing
+
+Message-ID: <CAOLP8p7fRf_Z_dC2ccXjzrqu6D8mwPM3j9QPMEWM7PFOQNXzPQ@mail.gmail.com>
+Date: Sun, 20 Apr 2014 11:22:59 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Best use of ROM in password hashing
+
+Using large ROMs for authentication servers is brilliant.  It is pretty
+hard to steal a TiB or more without being noticed, and if an attacker does
+not have a copy of the ROM, he's stopped cold.
+
+How should ROM data best be combined with password hashing?  This is
+probably something Alexander is a couple of years ahead of me on, but I'm
+having some fun thinking about this after doing some more EARWORM
+benchmarks.
+
+The problem with large ROMs is that an attacker can split them into many
+small ROMs.  If the data routing problem this creates is cheap enough in
+time and cost, this can be a win for an attacker.  Because of this, I
+prefer bandwidth runtime hardening with RAM, where we fill the RAM and read
+from it pseudo-randomly, based on the password.
+
+Still, the benefits of a large ROM are undeniable.  What if we wrapped a
+memory-hard PHS with something like:
+
+1) Start reading random location on N TiB hard-disk based on PRK =
+H(passwordLen || password || saltLen || salt)?
+2) In parallel, do some bandwidth limited memory-hard hashing to produce
+PRK2 = MemoryHash(PRK)
+3) return H(PRK2 || ROM[PRK % ROMLEN])
+
+This still requires that an attacker have the ROM, and allows us to use
+cheap hard-disks for storage of the ROM data.  Perhaps an attacker could
+buy a big SSD and squash the access time, and share the SSD among many
+guessing cores, but who cares?  The algorithm is still memory bandwidth
+hardened, which seems stronger than ROM bandwidth hardening.
+
+How would that compare against a PHS that intermixes hashing ROM data and
+RAM data?
+
+Bill
+
+
+

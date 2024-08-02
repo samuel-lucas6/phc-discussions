@@ -1,0 +1,27 @@
+phc-discussions - Added "lanes" and 3 hash functions as inputs
+
+Message-ID: <CAOLP8p4L1U7OKM5J_Swt6-JyAeGeSQtG8r-=xe=9FA0Fh75xWA@mail.gmail.com>
+Date: Tue, 18 Mar 2014 19:46:29 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Added "lanes" and 3 hash functions as inputs
+
+I'm still making last-minute upgrades.  I added a "lanes" parameter to
+the "extended" interface which normally is set to the number of 32-bit
+ints in the hash function in use.  For SHA256 and Blake2s, it is 8,
+and for SHA512 and Blake2b, it's16.  This was meant to match the SIMD
+units on high-end CPUs, but it works against low-end CPUs.  Instead of
+calculating 8 or 16 lanes in parallel, a low-end CPU can now do just
+one, if it has no SIMD unit.
+
+The architecture had a pluggable hash function architecture before,
+but Blake2s was the only option.  I've added three more: Blake2s,
+SHA256, and SHA512.  Naturally it took some work to make it really
+easy to add new ones.
+
+I still feel like a pluggable large memory block hash function would
+be a good thing, but if mine's the only one to do such a thing,
+there's not really much point.
+
+Bill
+

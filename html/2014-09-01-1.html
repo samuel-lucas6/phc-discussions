@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Response to recent comments on Rig</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/08/31/17">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/08/31/17">[&lt;thread-prev]</a> <a href="../../../2014/09/02/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;54045416.9070305&#64;ciphershed.org&gt;
+Date: Mon, 01 Sep 2014 07:10:14 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Response to recent comments on Rig
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/31/2014 05:30 PM, Somitra Sanadhya wrote:
+&gt; 4. Another comment by Mr Cox is: "the memory swapping algorithm
+&gt; that the Catena guys invented fairly recently is there..."
+&gt; 
+&gt; We would like to know which memory swapping algorithm is being
+&gt; referred to in the above statement ? Catena takes two inputs,
+&gt; hashes the concatenation of these two, and writes the result in
+&gt; some location in the array. On the other hand, Rig does two
+&gt; different memory overwrite operations. In the first one, we use
+&gt; sequential XOR of the chaining variable with the value of the same
+&gt; variable from the previous round at the same location. In the 
+&gt; second one, we XOR the chaining variable with the input variable
+&gt; indexed by the bit-reversal permutation from the previous round.
+
+I was wrong here, because I had not noticed your bug yet.  Your
+suggested fix will not work.  To get it to work, you will need to do
+what I though you were doing, and use Catena's trick to use one array
+for KeySet instead of two.
+
+Your suggested fix is to replace:
+
+    k[br(j)] = k[br(j)] XOR truncate(ChainingValue)
+
+with
+
+    k[j] = k[br(j)] XOR truncate(ChainingValue)
+
+This will overwrite the value in position j.  Later, for all values of
+j where br(j) &gt; j, when you read from k[j] to compute k[br(j)], you
+will read the value from the current row, when you meant to read the
+value from the previous row.
+
+Catena's trick is to realize that once you read from k[br(j)], you no
+longer need to remember the value stored in k[br(j)].  Instead of
+writing to k[j], write to k[br(j)], just like your submission does,
+which is why I thought you were using this trick.
+
+On the next row, instead of reading from k[br(j)], you need to read
+from k[j], because the data is already stored in bit-reversal order.
+You will also need to write to k[j], since that is the location no
+longer needed.  You will need different code for the even vs odd row
+updates, but it saves you from having to have two k arrays.
+
+I recommend you use this trick and simply acknowledge it the code
+and/or paper.
+
+I think you have an error in your security proof.
+
+Look at the proof starting on page 16.  In the first line "E1", you
+convert the probability that a value is stored from Pr(value at Pj is
+stored) to i/m.  You simply assume that the probability of the value
+being stored is proportional to the ration of values stored divided by
+the total values, independent of any property of Pr.
+
+If Pr were the identity permutation, an attacker simply needs one
+memory location, and he can compute the entire row sequentially, with
+no recomputations at all.  Clearly there needs to be some mathematical
+property of Pr that we can depend on to avoid this.  A pebbling proof
+like Catena's is needed here.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBFQTAAoJEAcQZQdOpZUZRmIQAKZYIOMvATsHn42V+XGv3fNa
+9KJ9YvMnVtMZY8JMVhaRoFKoHWlWHL3fhOvh1AOOZampWTCKy6DsIqXmjdX6oWqT
+jQLTLbxN6knczRKp8TN5sUO/HCuja71utjOd/wS7qyFLgl9z7gOdWgemmosH5Uyz
+U8O+7SSfsGWKGZQxQwvkfe4fpqy0Kjyct3IjhhY4Os2tOrSqPmPPYNNEL+46gr8E
+bzGcB4KVNVz9jXv2qBdqg0nsoBZWsDonYIa+L6H4nsFSm+EaZNWKy5ocFKbH3y5I
+KLTona7FKsOFFXDlmvoAq2OetoTa6ciXKXls1o9HF0DrwBQ2EYhz9tVKdlqjL2iW
+U6qDgnQP1oWIXECb1CO9DhIyL4Hlpd2hCP3UJH/a7lK+3w/MXP+xuBViPtI/qyrW
+GqnRo/KazwqRvf0dm72+ztD1E9wsSqQYPfnGIWgTXoPrCqOHJuRftUxd55pVKvrt
+RDVA2vcUHpBNcZflQf0WvzRWjRJSzfovx3wHQg/YHFWmJuCMyoP/7amc5HCgvw2G
+2QBUHMf2ei/aNVzTQFTwvE1Tv8LQCbWNvR5XRkIPQihJL+40RJDkl1/uo6ZLOwof
+7oLQA7LQeept1YbQj66oXE5t+lljoMFouI4LskM2Y1lWkmGpyvGK6yuBwlXQswhH
+UmMTKHsdgvJZBj8hN1Mg
+=SXWf
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

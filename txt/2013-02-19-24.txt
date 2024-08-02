@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Coding of the in[inlen] array for PHS( )
+
+Message-id: <36E82368-2033-4AC0-AF88-E6DB67EB4B84@mac.com>
+Date: Tue, 19 Feb 2013 00:07:40 -0800
+From: Larry Bugbee <bugbee@....com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Coding of the in[inlen] array for PHS( )
+
+Hi Dennis,
+
+First let me say I agree with the proposed numeric representations, we only deal with bytes, and all encoding transformations happen external to PHS() such that only agnostic bytes are fed to the algorithm.
+
+...to which I would add a requirement the input bytes be in network byte order (big endian) as it is arguably the more neutral byte order (little endian can have several variants).  ...and the exact format of the stored hashes be likewise specified so implementations on other-endian CPUs can safely use the file/DB.  ...and like RFCs and the NIST docs, perhaps we not speak of bytes but octets?
+
+My preference for a specification of a byte order is motivated in part by previous problems when building big endian implementations of algorithms that were specified in terms of 32-bit little endian word operations.  In one case, an encryption algorithm, I got my code to work against the published test vectors, but it failed in the real world.  After a lot of frustration (debugging) the cause turned out to be the vector bytes were *already* in little endian byte order, but unspecified as such.  To make a long story short, I had to fight endianness issues all the way thru the algorithm without the benefit of reliable test vectors or another big endian implementation as a reference.  (Sorry, this was years ago and I do not remember which algorithm.  If it comes to me I'll share.)
+
+That said, internal algorithm details are the province of the designer, but I believe all interface details should be unambigiously specified if we want interchangeability.  
+
+Larry
+
+
+----------------------------------------------------------------------------------
+On Feb 18, 2013, at 6:36 PM, "Dennis E. Hamilton" <dennis.hamilton@....orgwrote:
+
+@Larry,
+
+That makes perfect sense to me but I don't understand the addendum about
+network byte order.
+
+What does network byte order mean in the context of a C Language array in
+storage?  Is that the same as ordering in[0], in[1], ..., in[inlen-1] and,
+with regard to accepting serial input from a byte stream, the array is
+filled with the first arrival at in[0], the second at in[1], etc.?
+
+I assume this is the mapping that is also sensible with regard to how digest
+algorithms are specified in terms of storage blocks.  (If there is a
+big-/little-endian assumption on framing these into multi-byte logical
+words, that is for the interior of the implementation to deal with, in my
+understanding.)
+
+Is there something that I am missing in what you are saying?
+
+- Dennis
+
+-----Original Message-----
+From: Larry Bugbee [mailto:bugbee@....com] 
+Sent: Monday, February 18, 2013 15:57
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Coding of the in[inlen] array for PHS( )
+
+On Feb 18, 2013, at 3:00 PM, Solar Designer <solar@...nwall.comwrote:
+>In PHS(), we deal with bytes.
+
++1
+
+...and said bytes/byte strings/byte arrays should be specified to be in
+network byte order.
+
+
+
+

@@ -1,0 +1,139 @@
+phc-discussions - Re: [PHC] Weakness in keystretch hashing, and a solution (I think)
+
+Message-ID: <CAOLP8p7wKOog5+Edvq5vBKTMKJPxb_y_U3AT+kUJOZPFRn8ZDQ@mail.gmail.com>
+Date: Sat, 4 Jan 2014 05:45:36 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Weakness in keystretch hashing, and a solution (I think)
+
+On Sat, Jan 4, 2014 at 3:09 AM, Solar Designer <solar@...nwall.comwrote:
+
+How did you arrive at log2(numPages)?  Is this assuming that the
+>
+attacker keeps a certain number of full pages (perhaps some function of
+numPages) and thus only recomputes the missing random pages until
+finally hitting a present one?  If so, why don't you count those pages
+towards attacker's memory usage?
+
+
+Here I assumed an attacker only keeps the 64-byte key data, and no RAM data
+at all.  To generate the next page of data, I randomly pick a previous
+page, which on average is 1/2 the way back through memory.  Since that page
+is not available, I have to generate it, again jumping on average half way
+back.  This converges to an average of log2(N), where I'm generating the
+Nth page.
+
+
+The simplest fix I see is to increase the state used to compute pages to
+the page length or more (scrypt uses 2X).
+>
+Where do you see scrypt using 2x?  The size of "X" in scrypt is the same
+as its block size.
+
+
+The code I read had an X and Y, each being 1 KB, so the majority of the
+state in scrypt's RNG seems to be 2KB.  It's block size is 1KB.  Wouldn't I
+have to store both X and Y to reproduce the output from a specific point?
+
+
+Some thoughts: later pages are accessed less than early pages, but why
+do I
+care?  If the attacker has to keep later pages in RAM, we've won.
+>
+This makes sense, but the attacker may have multiple types of RAM (e.g.
+local to the cores vs. far away).  For later pages that are less likely
+to ever be read, they may be sent to the far-away memory, thereby
+leaving more of the very limited area close to the cores for use for
+portions that are more likely to be randomly read from.  This works well
+if the address to physical memory location mapping is static (e.g.
+hard-wired in the circuit).
+>
+That said, you're right that requiring some relatively unlikely to be
+read memory is better than not requiring it at all.  It's just that the
+advantage from continuing to fill memory after time/2 is less than 2x,
+and it is unclear where in the 1x to 2x range it is.  To make matters
+worse, this issue arises within the first time/2 iterations as well, as
+with your current approach accesses are non-uniform even within the
+first half of the allocation and running time.  Thus, it is not clear
+whether the total cost is even in the 1x to 2x range, or possibly below
+1x of scrypt's.  We avoid this in escrypt by ensuring uniform access
+after time/2 (this gives us the 1x scrypt baseline), as well as closer
+to uniform access before time/2 (this probably gives us nearly 1.33x
+scrypt, but with no guarantee).
+>
+
+There is a significant advantage in generating pages that depend on a
+random previous page in terms of how much memory an attacker can eliminate
+without incurring a huge runtime.
+
+The attack I have been thinking about is when the attacker wants to use
+N/2, if N is the number of memory locations.  Let's say he has decided to
+keep every other page and recompute the rest when needed.  When generating
+page N, he has a 50-50 chance of having to generate a missing page, which
+will certainly have the previous page available to do that, but again a
+50-50 chance of the previous page being available.  He has a 50% chance of
+having to generate 1 page, a 25% chance for 2, and so on, which converges
+to 1 missing page on average that he has to generate.  He reduces memory by
+2X, but has to double his average bandwidth to generate the missing pages.
+ So, he's got a time-area trade off, but no time*area benefit.
+
+So, what if he selects pages cleverly?  Can he do better?    For example,
+keep the first half, and none of the second, since these are accessed more.
+ In that case, he has to generate no pages for 25% of the second half pages
+generated.  but he wont have the previous page of that page when he does,
+so the penalty is having to generate both.  So he has to generate on
+average .5 pages of 1st level miss, and I think .25 pages of second level
+misses and so on, again converting to on average one extra page, so he's
+again stuck with the same time*area.
+
+This is better than the case we see with scrypt, where an attacker can read
+one page from RAM and X  and Y, and then generate data on-chip without
+bothering with RAM until he has the data he wants.  There is a time/area
+trade-off still, but because he's got the memory on chip, he's got a huge
+bandwidth advantage.  The time to read a random page of memory, given a
+typical 12-20 ns tCAS latency, is enough to generate a ton of data, with
+parallel execution of Salsa2/8.  If he can generate 8 pages in the time it
+takes to read one from RAM, he can get a nice reduction in area*time with
+this attack.  However, it's limited by the bandwidth and latency difference
+between external RAM and on-chip RAM.
+
+In contrast, because we depend on the previous page and a random page, I
+don't see how an attacker wins at all on area*time.  However, I haven't
+proven it to myself conclusively yet.
+
+ In other words, assuming same memory latency and cost (and other costs,
+such as routing and access ports), your approach has 2x higher area*time
+than scrypt, and escrypt's is exactly 4/3 of scrypt.  (For same running
+time.)  However, with the unknowns considered (which may be affecting
+the time factor via latency and the area factor via other aspects),
+things become unclear, and escrypt's approach provides better assurance
+(while possibly only 2/3 of NOELKDF's attack cost in many real-world
+scenarios, I admit).
+>
+Building upon scrypt, I wanted to stay strictly no worse than it rather
+than merely likely no worse in many real-world scenarios.
+>
+Alexander
+>
+
+I suspect you're still thinking that the 2 loops in scrypt require twice
+the memory bandwidth as noelkdf.  I don't think that's true.  I see one
+write and one read per memory location in both systems, assuming my
+previous page is in cache and doesn't count towards memory bandwidth, and
+that the same is true for X and Y in scrypt.  An attacker certainly would
+put my prevPage and scrypt's XY in on-chip memory, basically eliminating
+the bandwidth issue for that memory.
+
+You are likely to succeed with escript.  I think trying to make a better
+scrypt rather than a whole new system will be an attractive to a lot of
+people.  Just the fact that you're doing that gives me enough confidence
+that this contest will find a decent solution that I hardly feel any need
+to participate, other than to have fun.  I was thinking of forking
+TrueCrypt to add scrypt, but I'd lean towards an escript enable version
+now.  You don't have to prove your security with escript, at least in
+compatibility mode.  I do with noelkdf or any other new system.  There's
+incredible value in time-tested algorithms in security.  They're just not
+as much fun :-)  Also, it's fun to do better.
+
+
+

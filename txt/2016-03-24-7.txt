@@ -1,0 +1,30 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324124741.GA10424@openwall.com>
+Date: Thu, 24 Mar 2016 15:47:41 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 03:29:34PM +0300, Solar Designer wrote:
+encoding the full length or full round+keylen as a 64-bit number.
+
+... which has another drawback, besides code complexity: we'd be
+exceeding one SHA-256 block with a likely typical key size of 32 bytes.
+A maximum of 55 bytes fits in one SHA-256 block (if it's the only one,
+so needs padding).  Currently, we have:
+
+16+1+32 = 49
+
+If encoding round+keylen as 64 bits:
+
+16+8+32 = 56
+
+This is one byte too much, resulting in a 2x slowdown.
+
+So maybe we shouldn't encode the full keylen for that reason.  Maybe
+encode round+keylen as 32-bit, or use the approach I had suggested (with
+round number hashed in last).
+
+Alexander
+

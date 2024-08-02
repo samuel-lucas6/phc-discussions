@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Security concern for Catena
+
+Message-ID: <CAOLP8p7-kfwTrhuxDXWogcZwF0hzOfUMd_4EkDYfFL=dLt+jmg@mail.gmail.com>
+Date: Mon, 6 Jan 2014 17:28:03 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Security concern for Catena
+
+On Mon, Jan 6, 2014 at 10:15 AM, Christian Forler I hope not, because I
+just switched NoelKDF to use something very
+>
+ similar to Catena 2 to eliminate timing attacks.  If Catena 2 has a
+weakness, I would appreciate hearing about it.
+>
+Catena-\lambda, and especially Catena-2, is *NOT*
+sequential-memory-hard. So you do always benefit from multiple cores.
+For c cores you can theoretically speed up the performance to a factor
+of O(c^(1/\lambda+1)). So, for c=1,000,000  you can speedup the
+computation of Catena-2 by a factor of 100.
+>
+I'm mot sure if this is either acceptable or not. What do you think?
+>
+
+By "speeding up", I assume you mean for an attacker who wants to use less
+memory than there are nodes in the graph.  Otherwise, since every hash has
+to be computed sequentially, more cores wont help.  Because of the ability
+to pre-compute data many cycles in advance due to the fixed memory read
+pattern, you can get about the same speed with Catena-1 using 1% of the
+memory and 100 cores as with using full memory and 1 core.  For Catena-2,
+an attacker with 1% of the memory needs 10,000 cores to get the same speed.
+ I don't know if Catena-3 offers enough security benefit to warrant the
+extra delay in the algorithm vs Catena-2, so I'll put in a vote for
+Catena-3 rather than Catena-4.  This is perfectly acceptable behavior, IMO.
+
+Your proof is really helping me think about my NoelKDF, which now has
+Catena-inspired password-independent memory access patterns.  When it
+depended on the password, it was easy to show that it was sequential hard,
+and in fact better off than scrypt in terms of the benefit an attacker can
+gain with more cores and less memory.  This ability to get cores working
+ahead of when their data will be needed makes it much harder to think about.
+
+The simplified loop for NoelKDF for m memory locations looks like:
+
+v(0) = H(x)
+for(i = 0; i < m-1; i++)
+    j = H(i) % (i+1)
+    v(i+1) = H( v(i), v(j) )
+output v(m-1)
+
+This creates a random-ish DAG where like Catena, every node points to the
+prior node , and there's an edge pointing to another random-ish node.
+
+The weak hash function potentially introduces vulnerabilities, but let's
+assume H is solid for this analysis.  In NoelKDF, partition memory into 4
+equal size sequential groups g1...g4.  In this case over 1/4th of the edges
+from group g4 point to g3.  If the memory size is M, then g4 has M/4 nodes
+and 1/4th of them point to g3, so M/16 edges exist between g3 and g4.  The
+edges between the other adjacent groups will be at least this high.
+
+This subgraph forms a Catena-3 graph with M/16 nodes in each row!  Well,
+almost.  The edges are random rather than bit-reversal ordered.  Does this
+matter?  Therefore, I can say NoelKDF has at least as strong resistance to
+TMTO as Catena-3 when using 8X as much memory?  An attacker trying to use
+less than 1/8th the memory will get hammered with extra computational
+effort, just like Catena-3.
+
+This still doesn't take into account 3/4ths of the edges, though.  It's
+nice to start with a good lower bound.
+
+Bill
+
+
+

@@ -1,0 +1,111 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <892601121.51049219.1429985500238.JavaMail.root@larc.usp.br>
+Date: Sat, 25 Apr 2015 15:11:40 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+----- Mensagem original -----
+
+De: "Solar Designer" <solar@...nwall.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Quinta-feira, 23 de Abril de 2015 3:39:37
+Assunto: Re: [PHC] "Attack on the iterative compression function"
+
+On Sun, Apr 19, 2015 at 03:03:33AM -0300, Marcos Antonio Simplicio
+Junior wrote:
+----- Mensagem original -----
+De: "Solar Designer" <solar@...nwall.com>
+On Sat, Apr 18, 2015 at 10:55:54PM -0300, Marcos Antonio
+Simplicio
+Junior wrote:
+After the initialization, though, the row is always read in the
+same order, so no further latency penalties apply as the
+recomputation depth grows.
+>
+Why does this mean no further latency penalties? The
+recomputation
+algorithm is unlikely to encounter the same missing row again
+before the
+row has to be thrown out of the algorithm's temporary storage.
+And the
+row's columns are still needed in reverse order of computation,
+so the
+first-computed column, which has to be stored, is the last-needed
+one.
+Am I missing something?
+>
+I'm not sure we are talking about the same thing, so I decided to
+draw what I was trying to say (see attached image):
+>
+1) If we initialize a row and later read/update it in the same
+order, then the recomputation of *that row* after several updates
+takes only C, since the updates can be pipelined
+>
+2) If we initialize a row in one order and all subsequent
+read/updates are done in the reverse order, then the recomputation
+of *that row* after several updates takes 2C, since the updates
+can be pipelined among themselves, but not before the row is fully
+initialized. (note: this is what we are doing with Lyra2)
+>
+3) If we initialize a row in one order, and each subsequent
+read/update is done in the same but the columns are themselves
+reversed, then there is no easy pipelining (unless, of course, if
+some extra columns besides the first one are kept in memory to
+accelerate computations)
+
+And of course I meant approach (3), where every BlockMix would write
+the
+block in reverse order from reading. (This might be easier
+implemented
+by reading in reverse order and writing in sequential order, since
+we're
+already starting with the last sub-block in (ye)scrypt now. Also,
+keeping the writes in sequential order allows to keep Integerify()
+defined in the same way as it is in scrypt, using the last sub-block.
+OTOH, sequential reads could be friendlier to the hardware
+prefetcher.)
+
+The only issue here would be that you would need an extra buffer, because the memory position from which you read is not the same on which you write (?) 
+
+Why do you use approach (2) in Lyra2?
+
+Because (1) it appears to be enough for preventing most of the latency reduction (see Sec. 5.1.2.5, "Storing only intermediate sponge states", of Lyra2's documentation, and also the discussion to your next comment) and (2) it avoids extra complexity/overhead on the legitimate machine (not need to reverse anything or use an extra buffer) that might not appear for FPGA-based attacks (as the reversal would just be a matter of rewiring). As a side note, if one does implement reversal as a separate, second operation shown our illustration, the memory bandwidth might be larger in architectures with write-through caches: the write operation would go down the memory hierarchy the first time we write, and also the second. 
+
+Also, why do you call this attack "pipelining"? While extra
+computation
+parallelism may allow for more efficient use of compute cores,
+including
+by unrolling them and keeping their resulting pipeline stages busy at
+more times, this does not appear to be essential, nor specific to
+this
+one attack. The attack appears to be primarily about parallel
+computation and latency reduction rather than specifically about an
+extra opportunity for pipelining (which might be e.g. a 2x
+performance
+improvement over an iterative implementation of the primitive, which
+would then not have been unrolled not to waste the area). This is a
+reason why scrypt's paper wording about pipelining (and only it) as
+rationale for the sub-block shuffling continues to puzzle me. Am I
+still missing something? Or is this in fact just weird wording,
+focusing on a relatively minor aspect rather than on the major one?
+
+I'm not sure if Colin Percival was thinking the same thing as we, but since I started drawing the attack scenario with pipelining for masking latencies, I expanded the illustrations to include how this could be done for scenarios 1 and 2, assuming (for the sake of giving a concrete example) a 1/3 memory usage and that we need a row after it has been updated twice since initialization. The figures are in the attached pdf file. In summary, to keep the discussion short (and, hopefully, the pictures give a general picture): 
+
+- Strategy (1) allows pipelining both initializations and updates during recomputations, so the latency can be masked quite well in iterative compression functions (slides 2-4) 
+
+- Strategy (2) allows pipelining only the updates, so memory reductions ignoring all dependencies between rows except for the dependence on the previous one should allow up to 2x of the latency to be masked on average, but no useful gain in the worst case (slides 5-7) 
+
+- However, considering dependencies of other rows and also the fact that they are updated along Lyra2's execution, the average scenario should approach the worst case, as the perceived latency would correspond to the maximum latency of all recomputation pipelines involved, and also involve extra latencies not shown in the simplified scenario (slide 8). The higher the memory reduction, the more latency due to initializations; the longer the pipeline (i.e., the more the row is read/updated), the larger the number of dependencies. Hence, even if we ignore hardware limitations (e.g., bandwidth), relying on pipelining for masking the latency of recomputations does not scale very well 
+
+- Strategy (3) does not allow any pipelining, as the updates also need to be sequential, but in Lyra2 they would basically complement the TMTO resistance provided by the measures mentioned in the above point. It may be useful, though, in other schemes (I cannot say whether or not it is the case for yescrypt without further analysis, though) 
+
+I hope this helps! 
+
+Marcos. 
+
+
+
+Download attachment "ComputeLatency.pdf" of type "application/pdf" (105647 bytes)
+

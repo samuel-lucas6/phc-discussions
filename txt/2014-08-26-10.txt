@@ -1,0 +1,126 @@
+phc-discussions - Re: [PHC] Argon is highly parallelizable...
+
+Message-ID: <53FD1097.20204@ciphershed.org>
+Date: Tue, 26 Aug 2014 18:56:23 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon is highly parallelizable...
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/26/2014 05:38 PM, Solar Designer wrote:
+On Tue, Aug 26, 2014 at 02:18:29PM -0400, Bill Cox wrote:
+>I had not realized that the Argon authors claimed that t_cost ==
+>3 is the minimum safe number of rounds for 1GiB, and for 10MiB,
+>it was 236. Running the benchmarks again with these numbers:
+>
+>10MiB case:
+>
+>Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 10
+>-tcost 234 -pwdlen 64 -saltlen 16 -threads 5 Memory allocated: 1
+>MBytes, 5 threads Argon:  346.15 cpb 338.04 Mcycles 0.3923
+>seconds
+>
+>real	0m0.106s user	0m0.347s sys	0m0.047s
+
+You said "for 10MiB, it was 236", but then benchmarked 1 MiB and
+234?
+
+Both were my dumb mistakes, which I continue to deliver rapid-fire!
+The Argon paper says t_cost should be 236 for 10KiB, (not 234 for
+10MiB).  Why I set -logmcost to 10 I can't even guess, because that
+was a 1MiB hash!  For 16MiB, they say to use t_cost = 3, so here's
+what I should have posted:
+
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 14 -tcost 3
+- -pwdlen 64 -saltlen 16 -threads 3
+Memory allocated: 16 MBytes, 3 threads
+Argon:  8.56 cpb 133.83 Mcycles 0.0963 seconds
+
+real	0m0.043s
+user	0m0.094s
+sys	0m0.004s
+
+It is still not in the 100's to 1000's of authentications per second,
+though.
+
+This sort of TMTO safety margin surely makes Argon look relatively 
+useless for user authentication either way.  We should be talking 
+hundreds or thousands of authentication attempts per second at
+this memory usage per hash.
+
+BTW, why 5 threads?  Was it the fastest choice in your testing?
+
+I picked the fastest number of threads.  In this last run, it was 3.
+
+>1GiB case:
+>
+>Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 20
+>-tcost 3 -pwdlen 64 -saltlen 16 -threads 8 Memory allocated: 1024
+>MBytes, 8 threads Argon:  13.25 cpb 13250.55 Mcycles 18.4738
+>seconds
+>
+>real	0m4.097s user	0m18.329s sys	0m0.146s
+
+This isn't nearly as bad, but is ~16x slower than yescrypt t=0, 
+including memory allocation overhead (and more than that if we
+don't count the overhead).  With modified phc-test to test just 1
+GiB, via the slow interface with memory (de)allocation overhead on
+each try:
+
+solar@...l:~/yescrypt/t$ time ./phc-test >/dev/null m_cost=17
+(1048576 KiB), t_cost=0 4 c/s real, 0 c/s virtual (258 hashes in
+63.78 seconds)
+
+real    1m3.778s user    5m38.425s sys     1m24.073s
+
+Core i7-4770K, 8 threads.
+
+Nice.  Is this fine speed.  Can I get more with reduced rounds?
+
+Without YESCRYPT_PARALLEL_SMIX, so with scrypt style parallelism,
+it's almost the same speed:
+
+solar@...l:~/yescrypt/t$ time ./phc-test >/dev/null m_cost=14
+(131072 KiB), t_cost=0 3 c/s real, 0 c/s virtual (258 hashes in
+64.58 seconds)
+
+real    1m4.579s user    5m44.078s sys     1m24.225s
+
+This is actually 1 GiB too, as 128 MiB times 8 threads with their 
+separate regions (scrypt style).  This uses more memory bandwidth,
+and is more TMTO resilient within each of the 128 MiB regions (if
+this notion even makes sense), but allow for the obvious free 8x
+TMTO for each instance via sequential rather than 8x parallel
+computation.
+
+Either way, it's approx. 4 yescrypt/second vs. one Argon per 4
+seconds, so 16x faster, at 1 GiB including (de)allocation overhead.
+I assume that i7-4770K is about as fast as Bill's i7-3770.  I am
+not using AVX2 in these tests.
+
+Alexander
+
+It should be close.  This run was with 8 Salsa rounds?  Can I please
+have a 2-round option?  :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/RCUAAoJEAcQZQdOpZUZtLwQAIqRQKvpgSiuzaEX2cgajYh+
+23niQcVu2xcHfaVip8NQ8IBRouYD5CObzdMSMeLV6lp/CcqG7I4/qBqrujR8fcBM
+DxLJWhgGg93da8ya++Z9/RU5P4dJ31F3ZTnISVa0e/jyUvyx6xZOZ4fVOUvW96Df
+i7xBrI1Oy8v/X0NsSToHxF9E99m0FWrgJFS6zJD5UPdOgY1ElGLLFc3kfg0WIj61
+ct8HJfPiZidRDg23xVj6hD4OJs+mJOcM8qGJO4mWNG9NN9CLo9Yy9sA4/tJrf2vI
+Cv8pOiA26kW2ra+P7JeEO785DHA63TjjKwnulP2vIsgleu1XO61a09+XVdNuYBbH
+OAJ1oEwOerGhPNSCX84leV4lVVJxSOhK2RgFAKAXDRKEGa/7EwPoW7TKeX1XS3yP
+fN8+H82X8DSYrV2/Bj+4a7RCwbiqPX1YcsAAIn8JXIRgNhRbK5mw7LwBBs3kvxgJ
+otiG4sPFAUXGvYcOZRpFyFhssxtA9eR0Tx8AKTeLR8qSBeQ9Rp4CbjkMDmVulJAF
+muy1lM0QnjIQRfEFYmZ2vArc9HvqN8TarR1yqoVYuvpfuJP6jGofxsnEpbi6F6KL
+3p8YAM45TkIPG0kA0BsR0eK4jKP5ooFTYzrqm0mkMeNV/RTptmJhjeiJBweSq0AX
+Q1M5l60BbqZBExRCD/8i
+=91Lk
+-----END PGP SIGNATURE-----
+

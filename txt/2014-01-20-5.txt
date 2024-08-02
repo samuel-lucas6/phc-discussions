@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-id: <8FEA452F-9248-49AC-A7B6-FDEB5FECD7F9@mac.com>
+Date: Sun, 19 Jan 2014 20:51:46 -0800
+From: Larry Bugbee <bugbee@....com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+
+On Jan 19, 2014, at 6:13 PM, Peter Maxwell <peter@...icient.co.ukwrote:
+
+On 19 January 2014 21:21, Poul-Henning Kamp <phk@....freebsd.dkwrote:
+In message <3E7F59A0-A69C-45EF-9D39-68622DA14C7D@....com>, Larry Bugbee writes:
+
+>Will the submissions be designed so client-side assistance will be
+>practical?
+
+Is client-side assistance without a secure tunnel ever practical ?
+
+Answering a different question first: in one sense, it's at least as good as a cleartext password over an insecure channel.  In an insecure channel, both a password and pwd_hash( password) are valid security tokens to access the service in question - so it is security equivalent for the target service.  The main difference is that an attacker may attempt to use the cleartext password against other services whereas pwd_hash( password ) is almost guaranteed not to work on other services.  So there is a small advantage.  This is of course ignoring all the other possible attack vectors on an insecure channel that we now know the NSA/GCHQ can bring to bear.
+
+agreed
+
+If the practicality question is asking whether it provides protection against an insecure channel then, no, it doesn't.  However, no authentication mechanism is going to be secure if the channel isn't secure as the attacker can always just hijack an authenticated session.
+
+By 'practical' I was thinking of the client passing an interim value of reasonable size, perhaps a hundred bytes or so.  If we are talking about many MBs to address the space part of the equation, it doesn't make sense for a client doing perhaps 7/8 of the work to pass an interim value to the server MBs in size.  A more "practical" approach would be for the algorithm to perhaps call for the client to expand memory to some large size but reduce it to a few hundred bytes for transmission, and if the algorithm calls for it, the server could also expand it to some high memory mode to complete the final 1/8 of the workload.   ...but such an approach would only be possible if the algorithm had some convenient points where the relevant data got periodically reduced to a more "manageable" size.  
+
+------
+
+On another project I hashed a pswd using a salt value AND a second "salt" value being the userid (in lower case to remove ambiguity).  Now, an adversary somehow learning the salt cannot get started building a new table without building one for each of the userids.  Not perfect, but better than just a salt.
+
+Now, you can extend that theme to two salts.  One is retained and used by the server in the traditional way.  A second salt could be used by a client when client-assitance is desired, or by the server if 100% server side.  And both sides could use the lower-case userid as appropriate.  (I don't like calling it a "salt".)  This is not at all equivalent to what you all are doing to thwart ASICs with large memory, but it could help in situations where there is a less than fully trusted tunnel, or perhaps in cases where there is no tunnel at all.  
+
+In the end, not all targets are worth a maximum effort, so I submit we should choose 2 or 3 PHCs based on differing levels of potential loss.
+
+
+
+
+
+
+

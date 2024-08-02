@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] (not) protecting password length from side-channels (Re:
+ [PHC] Argon2 modulo division)
+
+Message-ID: <CAOLP8p4q_bB=9OVrDBFbC09eWz9UKEwZP1=54da2OmKSWj6HLA@mail.gmail.com>
+Date: Thu, 23 Apr 2015 16:38:16 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] (not) protecting password length from side-channels (Re:
+ [PHC] Argon2 modulo division)
+
+On Thu, Apr 23, 2015 at 3:57 PM, Ben Harris <ben@...rr.iswrote:
+
+On 24/04/2015 1:38 am, "Bill Cox" <waywardgeek@...il.comwrote:
+>
+On Wed, Apr 22, 2015 at 5:47 PM, Solar Designer <solar@...nwall.com>
+wrote:
+>>
+>On Wed, Apr 22, 2015 at 09:13:21AM -0700, Bill Cox wrote:
+>It turns out that there was not a single entry in the competition
+that is
+>power rail analysis resistant
+>>
+>... with respect to password length.
+>>
+>I'm with Thomas on this.  It is futile for PHC candidates to fully
+>protect the password length.
+>
+Isn't the best solution to just hash the password at the source so it is
+the same length (it is also incompressible which prevents against another
+class of attacks)?
+>
+I prefer this solution.  If you compute H(salt || domain || password) when
+talking to a remote URL, and send an ASCII hash digest instead of a
+password, you gain a lot of protection, regardless of what hashing
+algorithm the remote server uses.  If you do the hashing in hardware, you
+gain even more protection.  I would love to see hardware backed password
+managers that do this.
+
+As for being incompressible, I don't thiink this defeats all compression
+related attacks.  If I'm transmitting the password over a channel where an
+attacker can inject data and also measure the compression, he can still
+tell if his injected data matches a portion of the incompressible
+password.  The only solution for this I can think of is to stop the lower
+level code from trying to compress security related data.  This is doable,
+but would be difficult in existing SSL/TLS implementations.  One way would
+be  to embed commands to the SSL layer along with application data, so you
+can surround passwords with commands to disable compression.
+
+Do any of the second round candidates seem like their power usage side
+channel is significant enough for attacks like this
+http://www.tau.ac.il/~tromer/acoustic/
+>
+I don't think an audio analysis would have enough resolution, but I could
+be wrong.  If a slow microcontroller were doing the hashing, then maybe.
+
+Bill
+
+
+

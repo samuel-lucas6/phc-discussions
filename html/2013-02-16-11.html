@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Different cost settings and optional input</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20130216232558.GA2457&#64;openwall.com&gt;
+Date: Sun, 17 Feb 2013 03:25:58 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: Marsh Ray &lt;maray&#64;...rosoft.com&gt;
+Cc: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;,
+	Milen Rangelov &lt;gat3way&#64;...il.com&gt;
+Subject: Re: [PHC] Different cost settings and optional input
+
+On Sat, Feb 16, 2013 at 10:29:37PM +0000, Marsh Ray wrote:
+&gt; I've heard of people using password hashing schemes that attempt to add encrypted elements or other secrecy for the resulting hash values. One popular formulation is to keep the salt secret and treat it as a per-hash key. This is usually done by folks coming from a SQL database background who are looking at defending against pure SQLi attacks.
+
+We're trying to carefully refer to this second salt as a local parameter,
+so that no one is tempted to make it the only salt.  It is not a
+replacement for per-user salts.  I think it makes sense for some PHC
+submissions to support both a per-user salt and an optional local
+parameter as two separate inputs.
+
+&gt; Some schemes allow the defender to increase the work factor by adding more iterations. Of course, if he fails to destroy the old hashes before the attacker obtains them, he's only increased the work for himself.
+
+Right.  However, if a hashing scheme does not allow for work factor
+increase without knowledge of the password, then such increases are
+achieved by stacking multiple instances of a password hashing scheme (or
+of 2+ different ones even), which is not any better as it relates to the
+need to wipe old (lower work factor) hashes.  So there's no additional
+harm in providing this feature in a password hashing scheme; it's just
+cleaner than the stacking.
+
+&gt; I have also heard of people (I think in a discussion on Hacker News) building trapdoors into their hash functions such that the knowledge of a secret key (say, kept in an HSM) could be used to reduce the work factor for the defender.
+
+I think this is up to them, not a PHC topic.
+
+As it relates to PHC submissions, I think it'd be OK to see some where
+trapdoors (fully documented ones, indeed!) are used to allow for
+increase of the memory cost (without knowledge of the password, indeed).
+(Wipe a trapdoor key(*) to force both the defender and the attacker to use
+a higher memory cost algorithm to compute the hashes.)  Maybe someone
+manages to design and implement this in an elegant and compact way.  If
+so, we might evaluate this as something positive.  I am skeptical, though.
+
+(*) Could be per-hash, and the wiping could be e.g. of just 1 bit of
+"key" stored with each hash, which would e.g. double the memory cost by
+introducing this much uncertainty over which half of a bigger array the
+memory accesses for the unknown correct password should fall into.
+
+&gt; I don't think any features which could be added with simple encryption or keeping multiple hashes around should be considered part of the PHC itself. I don't see these features have general utility, unless it proves truly popular enough to benefit from standardization.
+
+We may have a chicken-egg problem here.  If there's an elegant and
+compact PHC submission that possesses some of these optional extra
+features, _then_ maybe they'd become reasonable to use and popular.
+
+That said, I agree that many/most PHC submissions may be simple ones,
+without the extras, and we're likely to favor them for the simplicity.
+
+&gt; &gt; 2. There may be time-memory trade-offs.  If someone clever comes up with
+&gt; &gt; a password hashing scheme where an existing hash may be transformed to a
+&gt; &gt; higher CPU cost but lower memory cost, or vice versa, without knowledge of
+&gt; &gt; the password - this may be fine, as long as this property is known and
+&gt; &gt; considered in the evaluation.  A password hashing scheme should not be
+&gt; &gt; automatically disqualified, nor necessarily discouraged, just for possessing
+&gt; &gt; this property.  In some cases, this property may be useful.
+[...]
+
+&gt; We will likely see submissions with these features and should probably have a plan in advance as to whether or not they will be considered beneficial. Unfortunately, if we award any points for such flexibility then probably the serious entrants will feel compelled to add them.
+
+Are we going to be awarding points at all?  Is this how we'll be
+determining the winner(s)?  Maybe, or maybe not.
+
+If we do use a points system, I'd expect us to also be taking away
+points for excessive complexity.  So if the "serious entrants" add the
+questionable optional features for extra points, they should also know
+that they may lose points on the resulting excessive complexity.
+However, if they manage to support some optional extras _without_ a
+complexity increase, they may legitimately be considered superior.
+
+I do expect us to judge based primarily on the required functionality
+and security aspects, with the extras treated as relatively unimportant.
+
+&gt; &gt; As to TMTOs in general, there are some pros and cons to having and not
+&gt; &gt; having them in a password hashing scheme.  (In fact, "not having" only
+&gt; &gt; means that the TMTOs are such that they're not lucrative for almost any
+&gt; &gt; attacker.  Not that they literally don't exist.)  I expect that some of the
+&gt; &gt; submissions of sequential memory-hard schemes will (deliberately?) allow
+&gt; &gt; for TMTOs, some will (deliberately?) defeat TMTOs, and some will have a
+&gt; &gt; Boolean parameter controlling that.  All of these are welcome.
+&gt; 
+&gt; It's really interesting stuff. Still, I'm inclined to discourage giving the developer lots of knobs to turn.
+
+I agree that having too many knobs will result in more misuses, but
+FYI I found scrypt with its three knobs not flexible enough - I want
+more knobs (specific ones) for some specific uses - well, or I'd have to
+hard-code some changes, without supporting scrypt proper.
+
+The solution may be in providing multiple interfaces (wrapper
+functions?) to the password hashing scheme - and recommending that
+people use the one with the lowest number of knobs that they need (we'll
+provide sane defaults for the rest of the knobs then).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

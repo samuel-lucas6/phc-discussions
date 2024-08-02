@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] On type aliasing and similar issues
+
+Message-ID: <55249460.9070909@openwall.com>
+Date: Wed, 08 Apr 2015 05:37:20 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On 2015-04-07 15:49, Thomas Pornin wrote:
+>A solution here is to use a union type containing all of the integer
+>and SIMD types.  The called function may cast the pointer to a pointer
+>to such union type, then access the fields of its desired type.  The
+>compiler will then know that they might alias those other listed
+>types.
+>
+In fact, even with a union, the aliasing rules (as per the C standard)
+forbid such trans-type access.
+
+I'm not sure what exactly is proposed by Solar above. Probably the 
+forbidden step is dereferencing casted pointer, not accessing the 
+union's member. But your example below seems to be allowed by the C 
+standards.
+
+If you have this:
+>
+     union {
+         uint32_t x[2];
+         uint64_t y;
+     } *v;
+>
+     (...)
+     v->x[0] = 17;
+     v->y = 42;
+     printf("%u\n", (unsigned)v->x[0]);
+>
+then the compiler may still "legally" print out '17', i.e. considering
+that the access to 'y' did not impact the values that can be accessed
+through 'x', because of the distinct types (there again, there are
+special rules for 'char' and 'unsigned char'). While the union guarantees
+identity of storage ((void *)&v->x == (void *)&v->y), it still does not
+allow seemless transtyping.
+
+AFACT this is implementation-defined in C89 (3.3.2.3) and fully defined 
+in C99 and C11 (6.5.2.3p3).
+
+-- 
+Alexander Cherepanov
+

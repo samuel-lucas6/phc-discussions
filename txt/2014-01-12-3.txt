@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140112091453.GA8926@openwall.com>
+Date: Sun, 12 Jan 2014 13:14:53 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Bill, all -
+
+On Sat, Jan 11, 2014 at 11:23:17PM +0400, Solar Designer wrote:
+On Sat, Jan 11, 2014 at 10:50:53PM +0400, Solar Designer wrote:
+Back to 2 rounds of Salsa20:
+[...]
+real    0m1.305s
+user    0m40.109s
+sys     0m1.242s
+
+49.37 GB/s
+
+That was on 2x E5-2670 with AVX.  As an experiment, I've added OpenMP
+support to -nosse and built it with "icc -mmic".  First, I tested that
+it produces the same results on Xeon Phi 5110P at 32 threads - it does.
+Then I increased p to 240, so that I can run 240 threads as this device
+needs for optimal performance.  I also tuned r.  Turns out that r=8 is
+optimal for this device (r=32 is much slower).
+
+Xeon Phi 5110P, using 2 GB, r=8 p=240, 240 threads, Salsa20/2, abusing
+scalar units for computation (no SIMD code implemented yet), no
+prefetches, 10 hash computations:
+
+real    0m 5.00s
+user    17m 54.14s
+sys     0m 18.27s
+
+2*3*10*2^30/10^9/5.00 = 12.88 GB/s
+
+Ditto with Salsa20/8:
+
+real    0m 9.86s
+user    37m 23.30s
+sys     0m 20.83s
+
+2*3*10*2^30/10^9/9.86 = 6.53 GB/s
+
+These are some poor speeds. :-(
+
+I guess it'd be better with SIMD (not trivial: need to bring 4x+ more
+parallelism down to instruction level to use 512-bit SIMD, maybe with
+p=960 or higher) and with prefetches, but I'm not sure by how much.
+
+Xeon Phi 5110P has theoretical peak memory bandwidth of 320 GB/s, so
+we're _very_ far from reaching it with this mostly unoptimized code.
+
+If anyone wants to play with this more, let me know - I'd be happy to
+provide remote access to this machine.
+
+Alexander
+

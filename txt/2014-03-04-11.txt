@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <3dc78162fa88aad22aca97f38e61725d.squirrel@www.bolet.org>
+Date: Tue, 4 Mar 2014 18:24:00 -0000
+From: pornin@...et.org
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+There seems to be no FPU emulation trick like we had on x86 machines,
+but I could be wrong about that.
+
+In fact there is such a trick, but modern OS don't do it.
+
+It is a matter of "calling convention". In the old one (called "ATPCS"),
+computations on FP types are supposed to use FP registers and opcodes, and
+it is up to the OS, when the hardware does not actually have an FPU, to
+trap on the unsupported opcodes and emulate the FPU (just like the "FPU
+emulation trick" on x86). This works, but it means that FP computations on
+FPU-less systems incur the overhead of emulation AND the overhead of
+trapping on FPU opcodes, the latter being quite expensive in itself. Since
+in the embedded world, ARM-with-FPU are a rarity, this was felt to be
+quite suboptimal.
+
+A new calling convention was needed anyway, to enable proper support for
+Thumb and Thumb-2, to prepare the path for 64-bit ARM, and to fix some
+alignment issues. So a new convention dubbed "AAPCS" was defined, and in
+that new convention, all FP operations are emulated explicitly; no FP
+opcode or register appears in the binary produced by the compiler. The
+compiler uses library-provided functions and inline code which do all the
+computations on the integer registers. On all the ARM without FPU, this
+gives a very substantial performance boost to FP computations (like twice
+faster). However, this means that the few ARM who have a FPU will not
+benefit from that hardware FPU when running such code.
+
+A side-effect is that modern OS which follow the AAPCS don't actually
+bother maintaining a trap-based FPU emulator (although they technically
+could), since it is not mandated by AAPCS.
+
+The underlying market force at work here is that general-purpose computers
+(including smartphones and servers) have, usually, little need for 64-bit
+IEEE 754 floating-point types -- at least, very little or no
+_performance-critical_ need. What user machines need, for 3D rendering and
+audio/video processing, is to be able to do a lot of single-precision
+floating-point computations (single-precision values have a 24-bit
+mantissa, not 53-bit, and they fit on 32 bits). Which is why newer ARM
+processors have a NEON engine, which implements a SIMD instruction set
+that can compute four single-precision multiplies in parallel, but is
+completely incapable of doing any double-precision operation. NEON and VFP
+(the FPU for ARM) are supposed to share their registers (similarly to MMX
+vs i387 in the x86 world), but there are ARM CPU with NEON but without
+VFP.
+
+In a similar vein, OpenGL ES, aka "OpenGL for embedded systems", is mostly
+a subset of OpenGL with all double-precision functions removed; with
+OpenGL ES you use 'float', not 'double'.
+
+It shall also be noted that a number of such implementations of 32-bit FP
+operations are known not to be IEEE-754 compliant, meaning that you can
+encounter occasional rounding issues. An incorrect least significant bit
+rarely matters for 3D rendering or video decoding, but it can be deadly
+for a cryptographic algorithm where exact reproducibility of computations
+is necessary. Using the FPU or a NEON-like engine for cryptography with
+floating-point types is thus rather risky. Personally, I'd recommend
+against it.
+
+
+        --Thomas Pornin
+
+
+

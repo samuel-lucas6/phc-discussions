@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Compute time hardness
+
+Message-ID: <20150401173431.GA14812@openwall.com>
+Date: Wed, 1 Apr 2015 20:34:31 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+On Wed, Apr 01, 2015 at 03:48:40PM +0000, Gregory Maxwell wrote:
+Was I was curious about was mostly if there were any large separations
+among the leaders of the high memory fill-rate/bandwidth algorithms;
+e.g. is one doing a much better job of making use of processor
+resources than another which is otherwise close to in terms of
+bandwidth. If there is a large separation it may not matter how its
+counted.
+
+Of course, yescrypt is supposed to win this game, with "a large
+separation". ;-)  With the current default settings, it does 6
+sequential rounds of MUL + ADD + XOR per 64 bytes processed.  Per my
+previous message, that's equivalent to something like 7.5 32-bit ADD +
+1 64-bit ADD + XOR, or let's say 9 32-bit ADDs, for each of those
+rounds.  That's a total of ~54 sequential 32-bit ADDs per 64 bytes
+processed.  (And in case MUL is somehow faster, there are also S-box
+lookups occurring in parallel with each MUL + ADD, but in sequence with
+the rest of processing.  So there's not much room for speedup here.)
+
+What are the comparable numbers for Lyra2, POMELO, and Catena?  I guess
+for Lyra2 and Catena it's 8 ADDs + 8 XORs per 128 bytes, right?
+
+(Rationale being that among algorithms which are relatively closely
+matched in their ability to use memory-area and bandwidth one may
+prefer the algorithm that requires more computation (however you
+measure it) per unit wall-clock as a hedge against the economics of
+attacking the memory area/bandwidth changing in the future.)
+
+Sure.
+
+Besides the latencies considered above, I think yescrypt also wins in
+terms of its use of concurrent execution units and pipeline stages.
+With current default settings, it can have 8 concurrent MULs and 8
+concurrent 128-bit S-box lookups in flight at a time, per thread.
+
+In fact, there's a tradeoff here: the latency hardening may be improved
+some further at the expense of reduced parallelism.  On current and
+especially older CPUs, this may be an improvement, but on future CPUs a
+drawback.  So the current default settings are somewhere in the middle.
+
+Alexander
+

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - multiplies (Re: [PHC] escrypt memory access speed)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="../../../2014/01/13/1">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140120121822.GA24867&#64;openwall.com&gt;
+Date: Mon, 20 Jan 2014 16:18:22 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: multiplies (Re: [PHC] escrypt memory access speed)
+
+On Sun, Jan 12, 2014 at 11:58:24AM -0500, Bill Cox wrote:
+&gt; On Sun, Jan 12, 2014 at 11:43 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt; And yes, I was already thinking of throwing in some multiplies.  We can
+&gt; &gt; easily do several of them one after another while waiting for data to
+&gt; &gt; arrive.  If each is 3 cycles latency not only on our CPU, but also on
+&gt; &gt; custom ASIC, then we can achieve a delay of roughly the same number of
+&gt; &gt; cycles for the attacker that we normally incur because of our memory
+&gt; &gt; latency.  The attacker's memory might have lower latency, but with the
+&gt; &gt; multiplies the attacker will be forced to slow down and match our speed.
+&gt; 
+&gt; I like that idea.  Maybe make the number of serial multiplies in the
+&gt; hashing loop a parameter?  It would be simple to auto-detect a good
+&gt; setting for such a parameter.
+
+Maybe, but for good efficiency this needs to be compile-time, or we'd
+need several code versions or JIT.  I'd rather avoid JIT.
+
+&gt; BTW, I'm sure you know this, but for a
+&gt; 32x32 multiply -&gt; 32 bit result to be reversible, one of the
+&gt; parameters needs to be odd.  I'm only using reversible operations in
+&gt; the theory that it helps avoid leaking away entropy.
+
+This isn't exactly reversible even with one of the factors being odd,
+but yes, there is this aspect.  I've been considering the following
+three options (or a mix of them):
+
+1. Use a suitable constant factor, e.g. like it is done during Mersenne
+twister initialization (in fact, I'd even reuse their 32-bit constant,
+if I use this approach, use 32-bit multiplies, and need only one constant).
+Drawback: this probably makes the corresponding specialized ASIC circuit
+roughly twice simpler than a generic two variable inputs multiplier
+would be.  Correct?
+
+2. Keep the variable factors as they are, coming from memory or directly
+from other computations.  Yes, when a factor happens to be even, it's
+like a left shift for the other factor, shifting out some of its most
+significant bits.  However, left shifts are present in many crypto
+primitives.  As long as there's enough other processing on the same
+inputs, with all of their bits in use, this might or might not be fine.
+
+3. Forcibly set the least significant bit, like you chose to do.
+Drawbacks: extra operation for defender (but none for ASIC attacker),
+doesn't use the original value of the replaced bit.  Is your effective
+memory size 31/32 of what's allocated?  Or are you using the same values
+without the OR as well?  If you are, then possibly you could use
+approach #2 above instead.
+
+&gt; Is that all I
+&gt; have to do?  It seems that if I can show that toggling any input bit
+&gt; in the inputs to the hash function toggles ~half of the output bits
+&gt; regardless of the other values, then when these things are cascaded,
+&gt; toggling any input but should toggle ~half of all memory.  Is this the
+&gt; right approach for proving the value of a hash function?
+
+Disclaimer: I am not an expert at this.
+
+This is a good and relevant test, yes.  Another test is to see whether
+the number of different hash values is as expected for uniform
+distribution given a certain number of hashes computed (for different
+non-random yet unique inputs - e.g., sequential numbers).  For example,
+for 32-bit hash values and 100M hashes computed, you should get around
+98844829.5 different hash values.  If you consistently (or on average)
+get significantly fewer (across many different 100M samples, for
+different sets of inputs), then your hash is significantly worse than
+perfect.  If you usually get significantly more, this would suggest that
+your hash preserves properties of the input (seeds) distribution, which
+is also bad.
+
+And yes, I agree that for our use having a nearly perfect hash function
+is not critical.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

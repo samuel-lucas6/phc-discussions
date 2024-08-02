@@ -1,0 +1,54 @@
+phc-discussions - Some remarks on Lanarea
+
+Message-ID: <87ha6bq0ok.fsf@wolfjaw.dfranke.us>
+Date: Wed, 02 Apr 2014 10:13:31 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Some remarks on Lanarea
+
+Lanarea doesn't seem to use very much memory. Its memory requirement is
+the size of its matrix, which is m_cost * 16 bytes, plus some small
+constant. The reference implementation allocates an additional m_cost *
+(16 + sizeof (uint8_t*)) bytes plus some heap-management overhead, but
+this can be avoided through better optimization. m_cost * sizeof
+(uint8_t*) and the heap overhead can be saved by allocating the matrix
+as one contiguous block of memory rather than as an array of pointers to
+individually-allocated rows. The 16*m_cost bytes allocated for 'chain'
+can be saved by modifying blake2 to traverse its input in the order
+determined by diagonal_ur(), and then passing the matrix to it directly.
+
+Running Lanerea's reference implementation with m_cost = 100 and t_cost
+= 1 takes roughly one second on my desktop. One second is a lot.  It's
+far too much for authentication servers. It's reasonable for some key
+derivation applications, but on the same order of magnitude as the
+cutoff for reasonableness. Yet at this setting, its memory utilization
+is only a little over 1600 bytes. In contrast, scrypt can use on the
+order of a gigabyte when it's run for this long.
+
+Part of the problem is that Lanarea's running time increases
+quadratically with its memory cost. The loop beginning at line 7
+iterates 16*m_cost times, and at the end of each iteration on line 33,
+hashes 16*m_cost bytes of data. A corollary to this observation is that
+as m_cost grows large, Lanarea's running time is asymptotically
+dominated by the cost of hashing, which is the most GPU-friendly part of
+the algorithm. The irregular order in which the hash traverses the
+matrix won't hurt GPUs much, if at all, because the order is static and
+therefore amenable to prefetching.
+
+I don't think the conditional branching in lines 13 thru 26 is going to
+be effective at defeating GPUs, as is claimed by the security analysis,
+because the branches don't have to actually be implemented as
+branches. Instead, just perform *all* of the operations (they only
+require a couple of CPU cycles each), and then use CMOVs or bit
+arithmetic to select the one you want. This might be a good idea even
+for CPU implementations, because mispredicted branches are expensive for
+CPUs too.
+
+Once this branch-elimination technique is implemented, most of the inner
+loop in lines 8 thru 27 can be implemented by 128-bit-wide SIMD
+instructions. This isn't necessarily a bad thing, because CPUs have
+those available too. The only line which looks like it would require
+sixteen 8-bit instructions rather than one 128-bit SIMD instruction is
+line 11, because the row index 'r' in the matrix lookup is dependent on
+z.
+

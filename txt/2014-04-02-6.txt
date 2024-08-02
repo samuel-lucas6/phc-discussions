@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] A little nit which bothers me...
+
+Message-ID: <20140402062227.7d167176@lambda>
+Date: Wed, 2 Apr 2014 06:22:27 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: discussions@...sword-hashing.net
+Cc: phk@....freebsd.dk, bmenrigh@...ndonenright.net
+Subject: Re: [PHC] A little nit which bothers me...
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Wed, 02 Apr 2014 05:39:15 +0000
+Poul-Henning Kamp <phk@....freebsd.dkwrote:
+
+When the static value goes into the HASH before the entropy,
+it can be integrated into the initialization of the hash function,
+both in hardware and software, trading space for time.
+
+[...]
+And yes, I realize it's all my own fault for not publishing an article
+about my thinking back then, but as far as I am concerned this is a
+firm rule now:
+
+	Feed data into hash functions in order of decreasing entropy.
+
+
+I was about to respond to your point saying it can be broadened to just
+about any work besides just a feeding a hash function and that what you
+really want is a little data or work or both to be able to be reused
+from instance-to-instance.  I independently realized this for my
+proposal.
+
+But your comment got me thinking about my own design (ocrypt) which has
+data-dependant branching and even scrypt which has data-dependant
+memory accesses.  This data dependence can be great for eliminating the
+reuse of work or making memory accesses look random but the side-channel
+attack against either of those is worse that I thought.
+
+If it is possible for an attacker to "build a profile" of either
+data-dependent branching or memory access behavior then they can
+abandon any search that doesn't match the profile.
+
+So suppose you're hashing an input, say "password" with scrypt and you
+build a profile of did (1) or didn't (0) do something or access some
+memory in some way that results in a profile like
+0111001101011111010....
+
+Even if the whole profile is millions of "bits" long, if an attacker is
+guessing "123456" and the profile starts out 110011101101... they can
+abandon the search for 123456 immediately because it doesn't match the
+profile.
+
+My designs suffers from this.  scrypt (I think) suffers from this too.
+
+For an offline attack where all an attacker has is the hashes, this
+issue doesn't matter.  But for an "online" attack where the attacker is
+able to build profiles whenever a defender performs some hashing, the
+attacker can use this knowledge to prune guesses early.
+
+I mentioned the "fingerprinting" ability of ocrypt in my paper but I
+didn't realize that it could be used to avoid performing lots of work
+until now.
+
+I'm slightly comforted though that the only culprit isn't just
+data-dependant branching.  Data-dependant memory accesses have the same
+issue.
+
+Brandon
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlM7rLAACgkQqaGPzAsl94JvnwCfeqrgvqQGixektGIrKyRdHbPR
+rnIAnj6hPCG7oHaOhDhMLuHAwv8TU/wS
+=pMWQ
+-----END PGP SIGNATURE-----
+

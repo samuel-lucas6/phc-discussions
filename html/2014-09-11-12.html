@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Makwa is broken given p and q</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="11">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140911115107.GA27235&#64;bolet.org&gt;
+Date: Thu, 11 Sep 2014 13:51:07 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+On Thu, Sep 11, 2014 at 02:21:01AM -0500, Steve Thomas wrote:
+&gt; I was picking an absurd number to prove a point that apparently was
+&gt; known. I guess the escrow should have tipped me off that we don't see
+&gt; eye to eye on what we think is secure.
+
+It IS secure -- I am just going to the end of the logic.
+
+The CFP called for a desirable feature (among others): "For example, one
+may design a scheme that is slow to evaluate except on a server given
+some server-specific shortcut."
+
+It so happens that if such a "shortcut" exists, then it can be
+leveraged, by definition, into a much faster attack. The whole core
+assumption of PHC and password-hashing functions is that dictionary
+attacks work, which is why we cannot just use a simple MD5 and be done
+with it. I am then following that idea to its unavoidable conclusion: if
+a "shortcut" exists, then it is almost equivalent to a free password
+recovery for whoever can use it. So I am calling it "escrow" because
+that's what it is.
+
+
+If you think of the shortcut (or "fast path") as a kind of escrow, then
+the correct terminology is that of asymmetric encryption. A password
+hashing function with a possible shortcut really is deterministic
+asymmetric encryption:
+
+ - If you don't know the private key, you can still encrypt the
+   password. To _verify_ a password, you also encrypt it, and check that
+   you get the same value -- that's the point of the encryption being
+   deterministic.
+
+ - If you do know the private key, then you can decrypt, which is all the
+   escrow or shortcut that you may need.
+
+The beauty of the thing is that the private key needs not be known to
+anybody for the function to operate. In Makwa terms, if you generate the
+modulus N and simply forget the factors p and q (you don't save them
+anywhere), then you can hash passwords and verify passwords and do
+everything that you do with any other password hashing function. And the
+p and q factors then risk no exposure at all since they are not stored
+anywhere.
+
+If, on the other hand, you want to benefit from the "shortcut" in your
+system, then, as explained above, you have to be aware of what that
+power is: it really is an escrow private key. You must keep it safely,
+like any other private key.
+
+The important point is that there is no absolute requirement for the
+shortcut power to be held by anybody. If you are ready to do without the
+shortcut (and if you envision any other password hashing function in PHC
+then you are ready, since none of them offers such a feature), then you
+can achieve perfectly secure storage of the private key (p and q) by not
+storing it at all.
+
+
+Thus, Makwa is no more broken than, say, RSA encryption -- with the
+added benefit that when the private key is lost, RSA becomes useless,
+while Makwa functionality is still intact.
+
+
+As a side note, I must point out that the _other_ feature of Makwa
+(namely, the delegation feature) does not need the p and q factors. If
+nobody knows them, delegation still works unabated. This really is
+orthogonal.
+
+
+&gt; I stand corrected, not broken, but my opinion is this is bad.
+
+There IS one bad thing: as explained above, if you don't want to hear
+about any escrow or shortcut, and be sure that nobody can ever access
+the p and q factors, then you must "forget" them just after having
+generated them and multiplied them together to compute the modulus. This
+is easy enough to do (the generation tools provided with the reference
+implementations of Makwa do just that), but there is no way to do it
+_convincingly_.
+
+By this I mean that though I can generate a modulus, I have no method to
+convince _you_ that I did not keep the p and q factors around. This is a
+problem for which cryptography has not yet found a reasonable solution
+(there is a published construction, but it results in a very large
+modulus). If such a method was known, I would have applied it, and it
+would have resulted in a modulus that could be hardcoded and used
+everywhere in the whole world.
+
+Therefore, I turned to the next best thing, which is custom modulus
+generation. That is, if you want a modulus such that you are sure that
+the p and q factors have not been saved anywhere, then just generate it
+yourself. It will be your own modulus. It can be used for hashing all
+the passwords of people who trust YOU.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

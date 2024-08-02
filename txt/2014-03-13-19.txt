@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <7b4f98a622e2cc4ba8de32cde8702d92.squirrel@www.bolet.org>
+Date: Thu, 13 Mar 2014 18:52:00 -0000
+From: pornin@...et.org
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+2) On login servers you have much tighter time constraints. Perhaps
+only 10ms per password. This limits the memory use in scrypt a lot.
+
+Actually this calls for further comments: RAM bandwidth is a scarce
+resource on busy servers.
+
+Theory of password hashing is often expressed as following: the defender
+wants to use a function for which the best possible cracking hardware is
+what the defender already uses, i.e. his server (which is, basically, a PC
+with a general purpose CPU, a few cores, and some gigabytes of RAM). But
+that assertion does not capture the whole thing. Indeed, the defender also
+wants that the function runs on the kind of resource that is available in
+largest amount on his side. All this password hashing business is a muscle
+contest: the attacker has more patience and strength, but the defender
+chooses the battleground and engagement rules. The defender ought to
+select rules which favours him.
+
+It seems to me that common servers are much more starved on memory
+bandwidth than on CPU. On a typical server, the CPU spend substantial
+amounts of time waiting for the RAM to return a requested byte. Therefore,
+it is much easier for a server to allocate 10 ms worth of CPU time to a
+password hashing instance when the computation will fit and remain in the
+L1 cache for one core. If the function behaves nicely in that respect,
+then the cost is 10 ms for one core. If the function operates on a large
+RAM array, then it will clog the common RAM bus and virtually stall the
+other cores; the bill raises from "10 ms on one core" to (at most) "10 ms
+on _all_ cores".
+
+Of course, all of this depends on the context (number of cores, available
+memory bandwidth depending on what the other cores do, average and peak
+number of hashes per second...). However, it means that, generically
+speaking, scrypt-like functions which run on CPU are not necessarily a
+good idea, because they exercise resources which are already a bottleneck.
+
+(Or, said more succintly: if you want to engage in a sports contest, and
+you are 5' tall, then don't choose basketball.)
+
+
+    For disk encryption you can afford spending a second to derive the
+key.
+
+A crucial point here is that when a desktop machine boots up and the user
+wants to unlock the disk, the machine has absolutely nothing else to do
+with its CPU and RAM until the disk is unlocked. This is an intrinsically
+non-parallel problem, for which scrypt shines, because it can grab the
+whole CPU _and_ the whole RAM bandwidth with no ill effect on performance.
+Conversely, login servers are intrinsically parallel, and usually have a
+lot more free CPU than free RAM bandwidth to devote to password hashing.
+
+(Please note that I always say "RAM bandwidth", not "RAM quantity". The
+problem is not about allocating gigabytes of RAM, but about monopolizing
+the bus.)
+
+
+        --Thomas
+
+
+

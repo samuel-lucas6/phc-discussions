@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Compute time hardness (pwxform,blake,blamka)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150403111250.GA25096&#64;openwall.com&gt;
+Date: Fri, 3 Apr 2015 14:12:50 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness (pwxform,blake,blamka)
+
+Hi Marcos,
+
+Thank you for running these benchmarks.  They're very helpful.
+
+On Thu, Apr 02, 2015 at 06:22:38PM -0300, Marcos Simplicio wrote:
+&gt; BTW, does pwxform provide full diffusion (i.e., one bit ends up being
+&gt; dependent on all other bits) in an unbiased manner? It may not be
+&gt; critical here, but it is usually a "good to have" requirement.
+
+No, it does not - it provides no diffusion at all between the 64-bit
+parallel lanes.  (Within the 64-bit lanes, it might.)
+
+Full diffusion is provided at the end of each block, via Salsa20/8.
+
+&gt; - For 1 thread ("p1"), when both yescrypt and Lyra2 have the exact same
+&gt; number of passes through memory (Lyra2 with T=1 and yescrypt with T=2)
+&gt; and use an underlying hash with similar compute-time hardening (12 MULs,
+&gt; 12 ADDs and 12 XORs given by 1.5 BlaMka and pwxform) , then the lines
+&gt; almost overlap;  so I believe we are near to a draw.
+
+This is nice to know.  It's kind of a sanity check for both designs.
+
+There's a difference, though: I guess yescrypt's pwxform S-box lookups
+are much more frequent than Lyra2's equivalent (is there one?)  If so,
+yescrypt actually performs more attack-discouraging work in the same
+amount of time here.  Can you compare Lyra2 and yescrypt in this respect?
+
+Also, I never understood why you chose two full passes through memory as
+the minimum for Lyra2.  Is this arbitrary?  For yescrypt, the 4/3 can be
+shown as being the optimal stopping point assuming no AT-reducing TMTO,
+so it's not arbitrary at all.
+
+I currently recommend that yescrypt be used with t=0 unless more time
+can be spent and more memory can't be in a given case.
+
+&gt; - For 1 thread ("p1") with different passes through memory: say,
+&gt; yescrypt with T=0 does 4/3 passes though memory with 12 MUL+ADD+XOR,
+&gt; while Lyra2 with T=1 and BlaMka makes 2 passes through memory with 8
+&gt; MUL+ADD+XOR are comparable (?) in terms of compute-time latency (4/3*12
+&gt; = 2*8 = 16). Lyra2 in this case is slightly (3%) slower. Given the low
+&gt; difference, the reason is probably related to bandwidth usage, because
+&gt; Lyra2 purposely uses more bandwidth in this scenario: namely, it makes 2
+&gt; writes per call of the underlying hash instead of 1, and 4 reads (2 from
+&gt; cache and 2 from memory) instead of 2. I'm not sure if that is good or
+&gt; bad, but improvements on memory bandwidth are usually slower than on
+&gt; computation power, so I would rather say it is good in terms of attack
+&gt; resistance, as it limits an attacker's parallelism ability.
+
+This makes sense, but you also need to factor in yescrypt's S-box lookups.
+
+&gt; - For 2 threads ("p2"), Lyra2 is faster for similar compute-time
+&gt; hardening and also for higher compute-time hardening. That (and a very
+&gt; old e-mail by Bill) is why we think bandwidth is likely to be at play
+&gt; for p=1: we reduce the number of writes to 1 per thread during the
+&gt; Wandering phase when more threads are active.
+&gt; 
+&gt; - For 4 threads ("p4"), Lyra2 is again faster for similar compute-time
+&gt; hardening, and also faster for higher compute-time hardening.
+
+OK.  I expect yescrypt's S-box lookups come into play here.  In fact,
+they also affect the 1 thread case, so I'm lucky yescrypt didn't appear
+to run slower there.
+
+Would you also benchmark Lyra2 vs. yescrypt for the maximum number of
+threads supported in hardware on your machine, please?
+
+What machine is this, for these benchmarks?  Are both Lyra2 and yescrypt
+built for the same SIMD intrinsics (and which)?
+
+There's significant room for improvement for yescrypt with AVX2, which I
+haven't added yet.  In fact, on pre-AVX2 CPUs the compute hardening can
+be doubled by reducing the parallelism from 512-bit to 256-bit, with
+only a moderate slowdown, so the hardening per defensive running time
+would likely be improved by 50% or so - but I preferred the defaults to
+be balanced, with newer and near future CPUs in consideration as well,
+and also with CPU attacks considered (where an attacker could bring the
+extra parallelism in from having multiple candidate passwords to test).
+
+Thanks again,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

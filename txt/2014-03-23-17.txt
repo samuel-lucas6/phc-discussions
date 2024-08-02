@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+Message-ID: <20140323142800.GB9796@bolet.org>
+Date: Sun, 23 Mar 2014 15:28:00 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+On Sun, Mar 23, 2014 at 03:31:42AM +0400, Solar Designer wrote:
+My excuse is that it got a bit long (covering several topics at once)
+
+Indeed, I have a strong tendency for verbosity.
+
+
+Being on the panel for PHC, I am aware that you made this submission
+(thank you!), but I did not look at it closely yet because (1) I didn't
+have time for that yet, and (2) you didn't make it public yet, which
+might be deliberate, so I didn't want to be "exposed" to it yet (given
+my plans to possibly make a PHC submission too).
+
+That's more a consequence of my own mental rigidity, and a habit from
+previous competitions: radio silence until the deadline.
+
+My candidate (called "Makwa"), in a nutshell, is based on squarings
+modulo a composite integer N (a Blum integer, i.e. the product of two
+bir primes p and q such that p and q are equal to 3 modulo 4). Input
+password is first padded into a big integer modulo N (deterministic
+padding, using a custom KDF and the salt), then squared repeatedly. Pre-
+and post-hashing (again with the KDF) can be optionally applied, if you
+want to support an arbitrarily long input password and/or an unbiased
+and short output.
+
+When p and q are not known, there seems to be no known shortcut to
+doing all the squarings. When p and q are known, however, computations
+can be done modulo p and modulo q, and assembled with the CRT, so the
+total cost is about the same as a RSA private key operation, regardless
+of the actual work factor (number of squarings): that's the "fast path".
+
+Offline cost upgrade is done by simply taking the value and squaring it
+again (note: post-hashing breaks that functionality). Squaring is a
+permutation of quadratic residues modulo a Blum integer, so there is no
+"space reduction" to fear here. If p and q are known, offline cost
+_downgrades_ are possible as well (ultimately, it can also serve as an
+escrow mechanism for the password).
+
+Delegation indeed uses some kind of blinding, though not the same as RSA
+blinding. Normal RSA blinding is about choosing a random r, multiplying
+with r^e on entry and 1/r on exit. Here, the exponent "e" is equal to a
+big power of 2, and computing that blinding would be as expensive as
+computing the whole function, which defeats the purpose. Instead, I
+precompute 300 "blinding pairs" and I apply a random selection of them.
+This is akin to a multiplicative knapsack problem. The cost of
+delegation is then close to that of a RSA private key operation.
+
+
+As can be seen, such a function is not memory hard; the bulk of
+computations fit in about 256 bytes (for a 2048-bit modulus). By all
+rights, a GPU or, even more so, a dedicated ASIC ought to be quite
+faster than a plain PC for such jobs. The idea of Makwa is that
+delegation allows for harnessing external systems (including the
+connecting clients themselves), making up for that relative
+inefficiency. It seems, though, that the boost that can be achieved with
+a GPU for a given budget is not that big, because modular squarings is
+all multiplications, and modern x86 are very good at it (in particular,
+they have a fast 64x64->128 multiplier).
+
+
+The code in OpenBSD is the spec.
+
+I guess that's the point. I come from the "academic crypto world" where
+articles rule, and implementations are only secondary elements of often
+poor quality. In these circles, the notion of "the code is the spec" is
+quite alien.
+
+
+	--Thomas Pornin
+

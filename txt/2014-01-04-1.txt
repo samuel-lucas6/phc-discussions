@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104034239.GX24286@brightrain.aerifal.cx>
+Date: Fri, 3 Jan 2014 22:42:39 -0500
+From: Rich Felker <dalias@...ifal.cx>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+On Fri, Jan 03, 2014 at 05:26:48PM -0500, Bill Cox wrote:
+The hashed memory from NOELKDF passed the dieharder tests!  Given how dumb
+the hash is, I'm floored.  A very simple routine can be written that will
+identify this as non-random output after 32KB with 100% accuracy.  It was
+
+Dieharder is not suitable for testing cryptographic properties. My
+version of rand_r, which is constrained by the API which allows only
+32 bits of state, passes dieharder if I'm not mistaken and it's a
+simple LCG with tempering function applied to the output:
+
+http://git.musl-libc.org/cgit/musl/tree/src/prng/rand_r.c?id=20d01d83b5a13c77805976e7c520f566244ba3ff
+
+Basically, what's going on is that while it's hard to write a good
+PRNG (most code producing output that "looks random" isn't) it's also
+very hard to write the test which identifies the output as non-random;
+statistically speaking, almost-all tests will fail to detect the
+badness of any given candidate sequence produced by a PRNG.
+
+Rich
+

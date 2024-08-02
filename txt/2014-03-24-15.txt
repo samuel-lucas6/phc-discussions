@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <20140324161330.GB2722@openwall.com>
+Date: Mon, 24 Mar 2014 20:13:30 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Mon, Mar 24, 2014 at 10:11:20AM +0100, beloumi wrote:
+But I agree to Bill, that increasing the memory cost of Pufferfish would
+achieve more confidence, even if it is much less than other memory-hard
+schemes. The authors of bcrypt thought (1999) of 14 KB as a ?moderate?
+
+(You meant 4 KB.)
+
+memory amount. Maybe in this time ?moderate? means something like 1 MB.
+I like Bcrypt and I would be glad if we could extend this algorithm for
+the current requirements. Good luck, Jeremi!
+
+Note that L1 cache sizes haven't changed much in the last 25 years -
+that's more than bcrypt's age!
+
+In the x86 world, Intel 486 released in 1989 had 8 KB of on-chip L1
+cache (unified).  Before it, 386 systems typically had 64 KB or 128 KB
+(off-chip).  Shortly after it, roughly when bcrypt was introduced, L1
+cache sizes of then-relevant x86 systems varied between 8 KB unified
+(Intel 486), 16 KB unified (some AMD 486, AMD/Cyrix "586 class CPUs"),
+8 KB data (original Pentium), or 16 KB data (Pentium MMX).
+
+On current x86 CPUs, we still only have 16 KB of L1 data cache per
+thread.  On Bulldozer, it's separate 16 KB caches.  On Intel CPUs, it's
+a 32 KB cache shared between two hardware threads.
+
+Beyond x86, it's similar, with the major exception of PA-RISC - but it's
+been this sort of exception for 20+ years, thus including the time when
+bcrypt was introduced.  PA-RISC systems tend to have larger, off-chip L1
+caches.  They may also have on-chip buffers, but the first level of
+off-chip cache is an L1 cache, including in terms of its friendliness to
+bcrypt's access pattern.  e.g. bcrypt ran faster per-MHz on my 712/80
+with its off-chip 128 KB L1 data cache (only 4 KB of which is used for
+the Blowfish S-boxes, obviously) than it did on a Pentium:
+http://www.openpa.net/systems/hp-9000_712.html
+This says "1KB on-chip L1 and 256KB off-chip L1 cache" and "The 1KB
+on-chip L1 cache is not really a true cache", which is about right.
+IIRC, the off-chip 256 KB is split into 128 KB instruction + 128 KB data.
+Other PA-RISC machines generally have even larger L1 caches, into the
+megabytes.  This page: http://www.openpa.net/pa-risc_processors.html
+lists some impressive "on-chip" L1 cache sizes, up to 1.5 MB.  But
+that's just PA-RISC - it was already an exception in the 1990s.
+
+Can we really go much higher than 4 KB while retaining bcrypt's access
+pattern (frequent, tiny accesses)?  Should we?  Why didn't we in 1990s -
+did no one think of it, were we trying to save RAM (yet UFC-crypt in
+glibc wasted 128 KB on expanded and doubled DES S-boxes, IIRC even
+before bcrypt was introduced), was it simply because Blowfish was
+designed that way and bcrypt built upon it, or did we not want to incur
+the slowdown and waste bandwidth(*) by exceeding L1 cache size while
+doing those tiny accesses?  I think it's some mix of these factors, and
+the last one is still relevant and very important now.
+
+(*) Yes, when we exceed L1 cache size in a bcrypt-like algorithm,
+without increasing the size of individual accesses a lot, we incur not
+only a slowdown, but we also _waste_ bandwidth (from higher level caches
+or from memory), because entire cache lines (64 bytes on current x86, up
+to 128 bytes on IBM POWER) are fetched on most accesses (except for L1
+cache hits).  Do we really want to literally waste defender's resources
+(waste, not use them for greater defense - this differs from stretching,
+etc.), hoping that attackers will incur the same wastage?  Even if they
+do, through them using similar systems with caches, do we want to
+compete with those attackers in terms of L2+ cache and RAM bandwidth?
+Don't we know that GPUs have higher memory bandwidth than server systems
+do?  While we're in L2 or L3 cache, we might still be competitive with
+GPUs' memory bandwidth, but when we exceed L3 cache, we'd give GPUs an
+advantage - we'd be worse than the original bcrypt with its 4 KiB in
+terms of GPU resistance, and that's while wasting memory and bandwidth.
+
+Oh, and PA-RISC systems will be rather attractive to attackers. ;-)
+Luckily, they might be behind the curve in terms of clock rates, and are
+pricey, but HP might appreciate the free advertising from pufferfish
+cracker benchmarks anyway (they might be cited in other contexts). ;-)
+
+I am currently considering the range of 8 KB to 16 KB for bcrypt-like
+accesses from escrypt's BlockMix.  In fact, I'll probably choose 8 KB or
+12 KB, since there's a ~20% performance hit at 16 KB given escrypt's
+other memory accesses.
+
+Alexander
+

@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] yescrypt throughput vs. PWXrounds
+
+Message-ID: <20150403210122.GB29058@openwall.com>
+Date: Sat, 4 Apr 2015 00:01:22 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt throughput vs. PWXrounds
+
+On Fri, Apr 03, 2015 at 09:09:14PM +0200, Dmitry Khovratovich wrote:
+Could you also clarify how you measure "GPU-unfriendliness"?
+
+I was referring specifically to bcrypt-like GPU-unfriendliness.
+
+I run an optimized defensive implementation of bcrypt on a machine,
+using as many threads as the hardware supports (e.g. 8 on FX-8120) to
+compute independent bcrypt hashes.  I take note of the cumulative hashes
+per second rate, like this:
+
+user@...l:~/crypt_blowfish-1.2-hack$ ./crypt_test_threads 
+497.4 c/s real, 497.4 c/s virtual
+0: 384.0 c/s real
+1: 383.6 c/s real
+2: 384.0 c/s real
+3: 383.6 c/s real
+4: 384.4 c/s real
+5: 383.8 c/s real
+6: 383.8 c/s real
+7: 383.8 c/s real
+
+(The "-hack" has runtime self-test removed.)  That's 384*8 = 3072 c/s.
+This is for bcrypt cost 5, as traditionally used for benchmarking.
+
+I tune yescrypt for roughly the same throughput on the same machine.
+As I've posted, with the current pwxform default settings it achieves
+2772 c/s at 2 MB.  This is 10% lower, but is still close enough.
+I normally keep t_cost at 0, adjusting only m_cost.  I use the "userom"
+program included in the current yescrypt submission for this test (this
+program can work without a ROM too).  The memory allocation overhead is
+bypassed, because an authentication server can similarly have it out of
+the loop (yescrypt provides such APIs).
+
+Then I count the number of S-box lookups performed by bcrypt and by
+yescrypt in these tests.
+
+bcrypt at cost 5 performs this many S-box lookups:
+
+((512+9)*(1+32*2)+64*3)*16*4 = 2179648
+
+and they are 32-bit to 4 KB S-boxes, with 4x parallelism.
+
+yescrypt performs this many S-box lookups:
+
+2*1024*1024 * 4/3 / 64 * 6 * 4 * 2 = 2097152
+
+and they are 128-bit to 8 KB S-boxes, with 8x parallelism.
+
+For GPU local memory attacks, the doubled size of the S-boxes
+compensates for the doubled parallelism, whereas the frequency of
+lookups is roughly the same.  For GPU global memory attacks, it's just
+the frequency of lookups, which is roughly the same.
+
+Overall, by these metrics yescrypt at its current default settings
+achieves 2772/3072 * 2097152/2179648 = 87% of bcrypt's GPU resistance.
+
+This is close enough, and maybe yescrypt's use of 128-bit S-box lookups,
+vs. bcrypt's 32-bit, will make attacking it slower than bcrypt, in fact
+up to 128/32*0.87 = ~3.5 times slower on GPUs with no spare width in the
+ports used for gather loads from local memory (but they'd probably
+achieve a smaller slowdown by using global memory, as e.g. on HD 7970
+bcrypt using global memory ran only ~2x slower than with local memory).
+As you have seen I am not counting on the lookups width difference in my
+calculations above, in part because it is not relevant to possible GPU
+global memory attacks.
+
+Alexander
+

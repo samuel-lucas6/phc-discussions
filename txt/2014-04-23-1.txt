@@ -1,0 +1,55 @@
+phc-discussions - Dumb fast file digest idea...
+
+Message-ID: <CAOLP8p63PjksYJBziypASr3K60LkQQOL-fdSbcXkjxVDN8R8tA@mail.gmail.com>
+Date: Wed, 23 Apr 2014 09:11:57 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Dumb fast file digest idea...
+
+Sorry about going slightly off-topic for this list, but certainly there are
+experts here who will see the flaws in this idea.  Basically, I'm wondering
+if we can use a memory buffer to considerably speed up computation of
+secure file hashes using reducing rounds, without giving up any security.
+
+I was trying last night use the new AESENC instruction to compute file
+hashes very rapidly.  There are probably more problems with AESENC, but a
+major one is that a single round (one AESENC instruction) is by itself not
+cryptographically secure.  It normally requires 10 rounds to produce a 128
+bit encrypted result, plus a lot of mucking with round keys and such.  When
+I use AESENC to encrypt a "state" using sequential 16-byte blocks of the
+message as the key, I don't think the resulting hash is secure.  Being a
+speed freak, I love it's speed!  I am able to compute a digest of a random
+512MiB file in 68 milliseconds!  The file was already cached, of course.
+ Being secure would be a plus in this situation...
+
+To find a collision, an attacker only has to figure out how to modify two
+adjacent blocks of 16 bytes of the file in such a way that it results in
+the same encrypted state 2 AESENC instructions later.  While that is likely
+difficult, it is nowhere near the effort of doing that if we had performed
+the full AES algorithm each 16 byte block.
+
+What if we do a simple post-process on the sequence of states generated?
+ Just fill a memory buffer with the computed 16-byte state values,
+incrementing by say 128*16 every time, so that we have to make 128 passes
+over the memory to fill it.  This insures that state blocks which are near
+each other in memory are vastly separated computationally, by very many
+rounds of AESENC.  Once the block of memory is full, feed it into the
+original simple AESENC loop, using sequential blocks of 16-bytes from the
+buffer as the key.
+
+This takes 2 AESENC instructions per 16 bytes of output, and probably busts
+into L2 cache, but I bet it's still very fast.  As with EARWORM, running 4
+parallel tracks of AESENC speed things up considerably.  I've probably
+messed up a number of details, but can such an algorithm provide the same
+security of other 128-bit cryptographic hashes, while running much faster?
+ The same scheme could be (and maybe I'll write this) used with Blake2b,
+doing 1 round of Blake2b rather than 8, filling memory as above, and doing
+a 1 round hashes of the buffer when full.  The last partial buffer could be
+processed in the usual way, with full rounds.  I think it would run
+amazingly fast.  We'd be doing an average of 2 rounds rather than 8 per
+32-byte block.  Would it be secure?
+
+Bill
+
+
+

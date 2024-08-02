@@ -1,0 +1,111 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150927185214.GA21050@openwall.com>
+Date: Sun, 27 Sep 2015 21:52:14 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+Hi Anthony,
+
+Thank you for sharing your opinion.
+
+On Sun, Sep 27, 2015 at 09:40:50AM -0400, Anthony Ferrara wrote:
+Please, can the encoding be kept human-readable?
+
+Maybe.  At least I've counted your vote. ;-)
+
+Going with one-off encodings does look elegant,
+
+What do you mean by one-off here?  That no other hashing scheme would
+use the same encoding?  Ideally, we'd come up with an encoding, whether
+human-readable or not, that multiple schemes would adopt.
+
+but it makes the implementation significantly more error prone.
+
+Does it?  Maybe that depends on the kind of errors you care about vs.
+disregard.  In my proposed numeric encoding, I am focusing on having
+implementation errors detectable in normal encoding/decoding of valid
+inputs, or being impossible (e.g., can't overflow an int, can't encode
+the same parameter more than once).  With a human-readable encoding like
+Thomas', there are less critical potential errors that, on the other
+hand, would tend to go undetected for long.  Even if the spec has lots
+of MUST's and MUST NOT's, implementations will end up parsing strings
+like p=1,t=2,p=3 (is it p=1 or p=3, then? parsing will vary between
+implementations, and only a handful will actually reject such strings).
+
+People are even confused by the fact that the salt-boundary in bcrypt
+occurs mid-character (leading to only 4 possible character values for
+the last salt character).
+
+Yes, and I have no good solution for that one (short of the workaround
+of using multiples of 6 for bit sizes of salts and hashes, or for
+salts+hashes combined as Alexander Cherepanov mentioned to me off-list).
+
+So it's a problem common for compact and verbose encodings, and not a
+reason to choose one over the other.
+
+Instead, can we focus on readability?
+
+I'd be happy to, but it comes with drawbacks.  Such as:
+
+For parameters that have well
+defined defaults, simply don't require that parameter to be specified.
+
+This means the encoding is not deterministic.  A parameter can be
+omitted, or it can be explicitly included with its default value.
+
+That's bad.  There's value in having canonical encodings, and in there
+being only one canonical encoding for a given set of parameters, salt,
+and hash.
+
+If we change "don't require that parameter to be specified" to "require
+that parameter not to be specified", that's better, but then many
+parsers will not actually enforce this rule.  Maybe that's a minor
+enough issue to accept it.  (The issue with multiple specification of a
+parameter is worse.)
+
+For those that don't have well defined defaults, then always require
+them. Yes, it is a little bit more parsing overhead on the crypt()
+implementation, but it greatly reduces the overhead on the calling
+code. Especially for those building wrappers (which happens all the
+time).
+
+I do like the approach of specifically identifying parameter that was
+brought up in the other thread. Something along the lines for scrypt:
+
+    $7$n=14;r=8;p=1$ALotOfSalt$Hash
+
+But since p=1 could reasonably be default, the following is identical:
+
+    $7$n=14;r=8$ALotOfSalt$Hash
+
+Whether a parameter is power-of-2 or base 10 would depend on the
+algorithm. Also, please don't define the parameter order as rigid.
+It's simple enough to implement arbitrary order, so why put arbitrary
+restrictions?
+
+Deterministic canonical encoding.  Side-stepping the issue of multiple
+specification of a parameter (as long as the parser actually rejects
+encodings with parameters appearing in unexpected order).
+
+So my overall suggestion is make it easier on the developer using the
+API, rather than the one writing it. After all, there are going to be
+FAR more people writing a salt string then there will be writing the
+backend implementation. Optimize for the greater use-case...
+
+This makes sense to me.  We will need to provide an API for generating
+salt strings (or "setting strings", as they're called for bsdicrypt and
+on) anyway, but you have a valid point that, especially if the encoding
+is simple for an application developer to understand, many developers
+will be generating such strings on their own.
+
+For PHP and such, I think this pretty much implies the encoding will
+also need to use RFC Base64.  Then it's just sprintf of some decimal
+numbers and some base64()'s.  So my point remains that Thomas' proposed
+encoding is neither here nor there.
+
+Thanks again,
+
+Alexander
+

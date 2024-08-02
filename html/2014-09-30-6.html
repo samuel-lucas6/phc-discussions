@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Rig version 2.0</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOqphBd-9CyR4DGTbbafrKv4_yjA--GYkyaUMPiVMORJJJrg6g&#64;mail.gmail.com&gt;
+Date: Tue, 30 Sep 2014 18:03:08 +0530
+From: Sweta Mishra &lt;swetam&#64;...td.ac.in&gt;
+To: discussions &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Rig version 2.0
+
+Dear PHC mailing list members,
+
+Please find attached a new version of Rig (Rig version 2.0). The
+attachments  contain a pdf document describing the design and its analysis,
+and an efficient implementation in the zip file.
+
+For the previous version of `Rig' we did not provide the optimized code as
+that time we did not realize the essence of this. From the discussion of
+PHC mailing list, we realize the requirement and hence have included an
+optimized version of `Rig'. The speed has significantly changed. For 512
+MiB of memory consumption the speed is 835 MiB/sec.
+
+The changes from the previous version are mostly minor, as we did not
+intend to significantly change the design while the competition is running.
+Although, we did rewrite the description of Rig in more general terms. This
+allowed us to propose a new building block in the design, which we call
+'BlackPerm' (for details, please see the document).
+
+Following are the items which differ in this version of Rig from the
+previous version:
+
+1. There was a mismatch in the reference implementation and in the
+algorithm for the memory access with bit-reversal permutation. We have
+fixed the issue by
+adding few steps (line 19 to 22) in Algorithm 2. We want to thank Mr. Cox
+for his observations on this error in the previous version.
+
+2. Input of initialization phase is changed from
+x=pwd||s||binary_{64}(n)||binary_{64}(l) to
+x=pwd||binary_{64}({pwd}_l)||s||binary_{64}(s_l)||binary_{64}(n)||binary_{64}(l).
+We want to thank Mr. Cox for this change, as he correctly observed
+collisions on different length password and salt in the previous version.
+
+3. As per the suggestion of Mr. Cox, we modified our implementation of the
+bit-reversal permutation to be in "Catena style".
+
+4. We have optimized the reference implementation and also provided another
+optimized version of `Rig' with detailed description and performance
+analysis.
+The performance figures show, to the best of our understading, that the
+memory consumption rate of 'Rig' is better than all other submissions at
+this moment.
+
+5. More descriptive analysis for low-memory resistance is added. Proof for
+collision resistance of the design is also added.
+
+6. We have added a reference to the latest cryptanalysis results on Blake2b
+from CT-RSA 2014. Few more references are also added.
+
+7. Writing has been changed at a few places in the document.
+
+8. The reference implementation is now available at
+<a href="https://github.com/arpanj/Rig" rel="nofollow">https://github.com/arpanj/Rig</a> (It is also attached in the zip file with
+this mail).
+
+9. An acknowledgement section is added in the document.
+
+A list of all the changes is available in the Section 'ChangeLog' in the
+Appendix of the document.
+
+We would appreciate if this version can be considered from now on. We will
+be happy to answer any questions on the design.
+
+We take this opportunity to thank the PHC mailing list members for vibrant
+discussions on various issues related to password hashing and
+implementations.
+
+Regards,
+Sweta (on behalf of the 'Rig' team).
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="6/1" rel="nofollow" download>Rig_v2.pdf</a><strong>" of type "</strong>application/pdf<strong>" (509083 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="6/2" rel="nofollow" download>Rig-master.zip</a><strong>" of type "</strong>application/zip<strong>" (455216 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

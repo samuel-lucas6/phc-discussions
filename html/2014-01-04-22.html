@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Weakness in keystretch hashing, and a solution (I think)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="21">[&lt;prev]</a> <a href="23">[next&gt;]</a> <a href="13">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140104225350.GA4803&#64;openwall.com&gt;
+Date: Sun, 5 Jan 2014 02:53:50 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Weakness in keystretch hashing, and a solution (I think)
+
+On Sat, Jan 04, 2014 at 05:45:36AM -0500, Bill Cox wrote:
+&gt; On Sat, Jan 4, 2014 at 3:09 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; 
+&gt; &gt; How did you arrive at log2(numPages)?  Is this assuming that the
+&gt; &gt; attacker keeps a certain number of full pages (perhaps some function of
+&gt; &gt; numPages) and thus only recomputes the missing random pages until
+&gt; &gt; finally hitting a present one?  If so, why don't you count those pages
+&gt; &gt; towards attacker's memory usage?
+&gt; 
+&gt; Here I assumed an attacker only keeps the 64-byte key data, and no RAM data
+&gt; at all.  To generate the next page of data, I randomly pick a previous
+&gt; page, which on average is 1/2 the way back through memory.  Since that page
+&gt; is not available, I have to generate it, again jumping on average half way
+&gt; back.  This converges to an average of log2(N), where I'm generating the
+&gt; Nth page.
+
+Sounds right.
+
+&gt; &gt; &gt; The simplest fix I see is to increase the state used to compute pages to
+&gt; &gt; &gt; the page length or more (scrypt uses 2X).
+&gt; &gt;
+&gt; &gt; Where do you see scrypt using 2x?  The size of "X" in scrypt is the same
+&gt; &gt; as its block size.
+&gt; 
+&gt; The code I read had an X and Y, each being 1 KB, so the majority of the
+&gt; state in scrypt's RNG seems to be 2KB.  It's block size is 1KB.  Wouldn't I
+&gt; have to store both X and Y to reproduce the output from a specific point?
+
+No, only X is needed.  Having X and Y is an optimization in some of the
+implementations (uses of X and Y are interleaved in a 2x unrolled loop
+in order to avoid unnecessary data copying).
+
+BTW, increasing the state size beyond the block size is a way to
+discourage TMTO.  Then whatever blocks the attacker chooses not to store
+will require for recomputation not only other blocks, but also more of
+the normally-not-stored state.  IIRC, I first arrived at this thought
+when considering adding a Blowfish-like construct with variable S-boxes
+(primarily as an anti-GPU measure) that would keep state across
+invocations of BlockMix.  The size of such S-boxes would be a few KB,
+and usually higher than the 128*r block size (e.g. for r=8).  So I think
+we may have this as an optional feature, to be enabled when neither TMTO
+nor GPU friendliness are desirable for the defender.  Drawbacks:
+complexity, too many knobs.
+
+&gt; &gt; &gt; Some thoughts: later pages are accessed less than early pages, but why
+&gt; &gt; &gt; do I care?  If the attacker has to keep later pages in RAM, we've won.
+&gt; &gt;
+&gt; &gt; This makes sense, but the attacker may have multiple types of RAM (e.g.
+&gt; &gt; local to the cores vs. far away).  For later pages that are less likely
+&gt; &gt; to ever be read, they may be sent to the far-away memory, thereby
+&gt; &gt; leaving more of the very limited area close to the cores for use for
+&gt; &gt; portions that are more likely to be randomly read from.  This works well
+&gt; &gt; if the address to physical memory location mapping is static (e.g.
+&gt; &gt; hard-wired in the circuit).
+
+Consider that first N/2 memory may be local and fast and second N/2 far
+away and slow.  With your fill and hash approach, 7/8th of the reads
+will be from the first N/2 and only 1/8th from the second N/2.  This is
+because on iteration counts up to N/2, all of the reads are from the
+first half, and then the ratio of reads from the first half linearly
+decreases to 1/2, so it is on average 3/4 during the second N/2
+iterations.  Averaging 1 and 3/4 again (to get the all time average), we
+get the 7/8 figure.
+
+So with a very simple circuit and no overhead - no address translation,
+no caching, no data copying (swapping in/out) - the attacker is able to
+use a lot slower memory for the second N/2 locations, while incurring
+only very moderate performance impact overall.  For example, if the
+hashing is memory bandwidth and/or latency bound, and the slower memory
+is 2x slower than fast memory in these terms (whichever combination of
+them is relevant), the total running time will be only 9/8 of that with
+100% of fast memory.  So at 2/3 of the full memory speed, the running
+time is increased to only 9/8.  This tradeoff is likely beneficial to
+attackers with ASICs.
+
+&gt; &gt; That said, you're right that requiring some relatively unlikely to be
+&gt; &gt; read memory is better than not requiring it at all.  It's just that the
+&gt; &gt; advantage from continuing to fill memory after time/2 is less than 2x,
+&gt; &gt; and it is unclear where in the 1x to 2x range it is.  To make matters
+&gt; &gt; worse, this issue arises within the first time/2 iterations as well, as
+&gt; &gt; with your current approach accesses are non-uniform even within the
+&gt; &gt; first half of the allocation and running time.  Thus, it is not clear
+&gt; &gt; whether the total cost is even in the 1x to 2x range, or possibly below
+&gt; &gt; 1x of scrypt's.  We avoid this in escrypt by ensuring uniform access
+&gt; &gt; after time/2 (this gives us the 1x scrypt baseline), as well as closer
+&gt; &gt; to uniform access before time/2 (this probably gives us nearly 1.33x
+&gt; &gt; scrypt, but with no guarantee).
+&gt; 
+&gt; There is a significant advantage in generating pages that depend on a
+&gt; random previous page in terms of how much memory an attacker can eliminate
+&gt; without incurring a huge runtime.
+&gt; 
+&gt; The attack I have been thinking about is when the attacker wants to use
+&gt; N/2, if N is the number of memory locations.
+[...]
+
+Yes, TMTO needs to be considered too.
+
+&gt; &gt; In other words, assuming same memory latency and cost (and other costs,
+&gt; &gt; such as routing and access ports), your approach has 2x higher area*time
+&gt; &gt; than scrypt, and escrypt's is exactly 4/3 of scrypt.  (For same running
+&gt; &gt; time.)  However, with the unknowns considered (which may be affecting
+&gt; &gt; the time factor via latency and the area factor via other aspects),
+&gt; &gt; things become unclear, and escrypt's approach provides better assurance
+&gt; &gt; (while possibly only 2/3 of NOELKDF's attack cost in many real-world
+&gt; &gt; scenarios, I admit).
+&gt; &gt;
+&gt; &gt; Building upon scrypt, I wanted to stay strictly no worse than it rather
+&gt; &gt; than merely likely no worse in many real-world scenarios.
+
+&gt; I suspect you're still thinking that the 2 loops in scrypt require twice
+&gt; the memory bandwidth as noelkdf.  I don't think that's true.
+
+It's not true for the original scrypt, but it is for some modes in which
+escrypt may run: when random lookups are enabled in first loop and
+random writes are enabled in second loop.  The random writes are always
+disabled when p&gt;1, though, so for high p it's 1.5x the memory data
+transfer size of NOELKDF per the same total allocation size.
+
+&gt; You are likely to succeed with escript.  I think trying to make a better
+&gt; scrypt rather than a whole new system will be an attractive to a lot of
+&gt; people.  Just the fact that you're doing that gives me enough confidence
+&gt; that this contest will find a decent solution that I hardly feel any need
+&gt; to participate, other than to have fun.  I was thinking of forking
+&gt; TrueCrypt to add scrypt, but I'd lean towards an escript enable version
+&gt; now.  You don't have to prove your security with escript, at least in
+&gt; compatibility mode.  I do with noelkdf or any other new system.  There's
+&gt; incredible value in time-tested algorithms in security.  They're just not
+&gt; as much fun :-)  Also, it's fun to do better.
+
+Your participation is helpful in providing a KISS design and
+implementation to use as a baseline - to see whether the higher
+complexity of escrypt or whatever is justified.  This makes it
+harder for me to compete, but that's great.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

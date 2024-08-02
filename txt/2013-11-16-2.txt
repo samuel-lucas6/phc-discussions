@@ -1,0 +1,275 @@
+phc-discussions - Re: [PHC] The EARWORM password hash
+
+Message-ID: <20131116061744.GC6367@openwall.com>
+Date: Sat, 16 Nov 2013 10:17:44 +0400
+From: Solar Designer <solar@...nwall.com>
+To: Daniel Franke <dfoxfranke@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] The EARWORM password hash
+
+Daniel,
+
+On Sun, Aug 11, 2013 at 11:09:40PM -0400, Daniel Franke wrote:
+EARWORM is a password hash designed to be bound by memory bandwidth.
+It is inspired somewhat by Solar Designer's concept of "ROM-port
+hardness", and has in common the benefit that it can demand an almost
+arbitrarily large amount of (read-only) memory for an almost
+arbitrarily small amount of time.  This should make it an appealing
+choice for busy web servers that need to process a high volume of
+login requests at low latency.
+
+I am happy to hear that you're experimenting with this.  We're going to
+make a PHC submission built around this concept and some other ideas as
+well (yes, its complexity is a drawback, so we'll need cut-down
+special-purpose versions as well).
+
+EARWORM has some drawbacks that will likely make it unappealing for
+most other use cases. Using EARWORM only makes sense if its ROM is
+kept resident in memory most or all of the time, because for most
+reasonable choices of time and space parameters, loading the ROM from
+disk will take a lot longer than the hash computation itself. Hogging
+a big chunk of RAM 24x7 is fine if it's actually in use for most of
+that time, but it's an undue burden if you're using it twice a day to
+hash your laptop password.
+
+Right.  How do you propose the ROM be initialized?  Is this within scope
+of EARWORM itself or totally external to it?
+
+This ROM initialization step for our password hashing scheme involves
+some non-trivial tradeoffs.
+
+One approach is to fill a disk file with random data (and discard/wipe
+the CSPRNG seed, if one existed) and have it read into memory each time
+the authentication service starts up.  Unfortunately, at 100+ GB sizes
+(and this is what our current target is, given modern servers'
+affordable RAM sizes vs. botnet nodes' RAM sizes), reading this from
+disk will be taking a while.  Even with SSDs this is several minutes,
+and it may be preferable to avoid the cost of SSDs in those servers -
+better to have more CPU and RAM - unless there's an even larger
+ROM-on-SSD, as I had proposed too.
+
+Another approach is to fill the would-be-ROM with data generated from a
+seed (a local parameter) on authentication service start up.  While this
+can be done quicker than reading from disk, the resulting data is
+susceptible to efficient TMTO attacks.  For a trivial example, if we use
+the exact same algorithm as scrypt SMix's first loop does, then the same
+kind of TMTO would apply to the ROM (an attacker with less memory would
+store every Nth element and would recompute the rest on the fly).  In
+fact, this scrypt-like TMTO not only lets an attacker use less memory
+efficiently, but it also reduces the area-time cost for ASICs (also
+relevant e.g. for GPUs), albeit by up to a small constant factor.
+What's worse, the TMTO is even more relevant for memory bandwidth bound
+schemes than for scrypt, because it frees up memory bandwidth, thereby
+allowing for more parallel cores to access the same ROM.  That's smaller
+ROM _and_ more parallel cores - it's a clear win for the attacker.
+
+Thus, we need a TMTO-discouraging way to initialize the ROM, yet we need
+it to run reasonably quickly.  This is a security vs. service startup
+time tradeoff.  One of its aspects is parallelism available during ROM
+initialization - or lack thereof.  If we split the ROM into smaller
+chunks, we can have multiple threads work on the initialization
+independently, but this may also benefit the kind of attacker who
+recomputes/discards portions of the ROM in a smaller RAM (such as on a
+botnet node) whenever needed (during a password hash computation).
+
+Another case where initializing the ROM by (fairly large) chunks is
+helpful is being able to upgrade to a larger ROM size (after server
+upgrade) for newly set passwords while preserving the initial portion of
+the ROM (so that it can be used for computing both old and new hashes).
+This may similarly benefit some attackers too, so is a tradeoff.  One
+approach to partially mitigate this drawback is to have newer chunks
+(with higher offsets) depend on data in older chunks - but unfortunately
+not vice versa since the newer chunks couldn't(?) have existed when the
+older ones were computed and put to use before the server upgrade.  Or
+could they?  Sort of yes: by using a TMTO during ROM initialization on
+the smaller server, in anticipation of a possible upgrade.
+
+These are some of the challenges we're going through for Openwall's
+upcoming PHC submission - although I guess we could just keep this
+aspect beyond scope of PHC (the reference implementation interface does
+not allow/require the initialization logic to be included). ;-)
+
+EARWORM is designed to take advantage of Intel AES-NI instructions,
+and takes a steep performance hit if they're not available. This makes
+it a poor choice for use on mobile devices, or in sandboxed
+environments (e.g. web browsers) that do not allow native code
+execution.
+
+Have you measured how steep this performance hit is?  How are you
+handling this case in your source code?  For example, do you have
+drop-in replacements for AES-NI intrinsics for use on machines without
+such instructions?
+
+We're considering AES-NI too.  A drawback it has is lack of scalability
+beyond 128-bit vector width.  It's essentially 128-bit scalar.  Yes,
+EARWORM has lots of parallelism around AES-NI (which is OK, unlike in
+scrypt, because EARWORM is memory bandwidth bound rather than
+memory-hard) - but near-future CPUs with AVX-512 are not expected to
+offer any SIMD form of AES-NI, so EARWORM won't run on them any faster,
+whereas a SIMD-scalable alternative could run 4x faster (unless, of
+course, it'd hit the [also upgraded] memory bandwidth sooner).
+
+In spite of these drawbacks, I think EARWORM will fill its chosen
+niche more effectively than anything else proposed to date.
+
+"To date", yes.  We've been working to change that. ;-)
+
+EARWORM is focused only on memory bandwidth (the scarce resource) and
+high parallelism (the threats model permits to use lots of parallelism).
+
+We're trying to get the best of both worlds, referring to scrypt-like
+sequential memory-hardness and ROM port hardness:
+
+http://www.openwall.com/presentations/ZeroNights2012-New-In-Password-Hashing/mgp00009.html
+
+So we'll have this hybrid, and it'll likely exploit (for defense) other
+properties of the memory subsystem as well (beyond what was mentioned in
+the ZeroNights presentation).  The drawback is complexity.  I think that
+for the places where this is to be deployed with the full functionality
+(including the ROM), this level of complexity is OK - but it is great
+that there will be the (likely simpler) EARWORM as well.
+
+(For some other places, such as crypt(3) to be put into a Unix system's
+libc or libcrypt, something simpler is desirable - but EARWORM is not
+suitable for that anyway, so not comparable.)
+
+I'll over-quote a little since this thread I am replying to is rather old:
+
+Anyway, without further ado, here is a pseudocode description of
+EARWORM.
+
+|| denotes concatenation.
+
+The function
+
+  prf(secret,salt,outlen)
+
+is PBKDF2-SHA256-HMAC with an iteration count of 1. outlen is in bytes.
+
+The function
+
+  aesround(block,roundkey)
+
+is the round function for AES encryption. The Intel AESENC instruction
+computes precisely this function.
+
+It is curious that Colin chose to use Salsa20 with 8 rounds in
+essentially the same place, whereas you're using just one round of AES.
+
+What risks (or other drawbacks) can there be if this transform is too
+simple?
+
+CHUNK_LENGTH, CHUNK_WIDTH, and WORKUNIT_DEPTH are integer constants,
+provisionally defined to be 128, 4, and 256 respectively.
+
+The function
+
+  workunit(secret,salt,m_cost,arena,outlen)
+
+takes the following inputs:
+
+  * 'secret' is the password being hashed, considered as an octet
+    string of variable length.
+
+  * 'salt' is another octet string of variable length.
+
+  * 'm_cost' is the memory cost parameter.
+
+  * 'arena' is a read-only three-dimensional array of 128-bit words,
+    with dimensions (2**m_cost) by CHUNK_LENGTH by CHUNK_WIDTH.
+
+  * 'outlen' is the desired output length.
+
+The arena's entire contents are random, initialized once by the site
+administrator and then reuseable indefinitely.
+
+workunit() maintains the following state variables:
+
+  * 'scratchpad' is a one-dimensional array of CHUNK_WIDTH 128-bit words.
+  
+  * 'index_a' and 'index_b' are integers.
+
+Its body is as follows:
+
+begin workunit(secret,salt,m_cost,arena,outlen)
+
+    index_a || index_b := prf(secret, 0x00 || salt, 32)
+    index_a := mod(index_a, 2**m_cost)
+    index_b := mod(index_b, 2**m_cost)
+
+    scratchpad[0 .. (CHUNK_WIDTH - 1)] :=
+        prf(secret, 0x01 || salt, 16 * CHUNK_WIDTH)
+   
+    for d from 0 to (WORKUNIT_DEPTH / 2)
+
+        for l from 0 to (CHUNK_LENGTH - 1)
+            for w from 0 to (CHUNK_WIDTH - 1)
+                scratchpad[w] := aesround(scratchpad[w], arena[index_a][l][w])
+            end for
+        end for
+
+        index_a := mod(scratchpad[0], 2**m_cost)
+
+        for l from 0 to (CHUNK_LENGTH - 1)
+            for w from 0 to (CHUNK_WIDTH - 1)
+                scratchpad[w] := aesround(scratchpad[w], arena[index_b][l][w])
+            end for
+        end for
+
+        index_b := mod(scratchpad[0], 2**m_cost)
+
+    end for
+
+    return prf(scratchpad[0 .. (CHUNK_WIDTH - 1)], 0x02 || salt, outlen)
+end workunit
+
+The above has what we'd consider a flaw under our threat model (attackers
+with many smaller memory machines), but you might not (you mentioned
+using this with only 256 MiB anyway).  scratchpad[] elements beyond
+index 0 are only needed for the final prf() computation, so instead of
+working on the full arena[] under each workunit, an implementation could
+efficiently work on portions of the (re-structured) arena[] on a machine
+with a smaller amount of fast memory (and swap those portions outside of
+the "for d from 0 to (WORKUNIT_DEPTH / 2)" loop).
+
+The EARWORM hash function is then computed by calling workunit()
+t_cost times with distinct salts, and XORing together the
+outputs. (Hence, workunits can be computed in parallel).
+
+The structure of the workunit function provides opportunities for some
+nice optimizations.  Presuming that the length/width/depth constants
+are known at compile-time, all loops can be unrolled, and all the
+function's mutable state (scratchpad, index_a, and index_b) can be
+held in registers.  Therefore, the 'l' and 'w' loops can be optimized
+down to nothing but a long series of AESENC instructions.  Since
+index_a and index_b can be computed right after one 'l' loop but then
+are not used until the after the completion of the next one, chunks
+of ROM can be prefetched and be warm in L1 cache by the time they're
+needed.
+
+Have you experimented with such prefetching (using the corresponding CPU
+instructions)?  Similarly, have you tried removing the second index
+variable (and thus the ability to prefetch this much in advance) - does
+it affect performance on current CPUs or does it not matter (yet)?
+
+Experimentation on my Opteron 6376 workstation shows that computing a
+single workunit takes about 350 microseconds, and that two CPU cores
+are sufficient to saturate my memory bandwidth (PC3-12800 ECC,
+quad-channel).
+
+I'd rather avoid saturating the memory bandwidth with only two threads,
+because this means you're not making full use of your CPU's execution
+units (even those few that you do make use of at all).  Yes, this is OK
+per your threats model (unlike per scrypt's), yet if we can do a little
+bit better, why not do it.  OK, maybe you're trying to ensure you'd also
+almost saturate the memory bandwidth with the same settings on a machine
+without AES-NI?
+
+On a related note, you're invited to use our dev box for your testing
+and benchmarks: http://openwall.info/wiki/HPC/Village (I am now
+experimenting with a 112 GB "ROM" on this 128 GB RAM machine).
+
+Thanks,
+
+Alexander
+

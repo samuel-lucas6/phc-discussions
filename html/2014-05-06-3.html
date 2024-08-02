@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Hashing password while typing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140506144357.GA588&#64;bolet.org&gt;
+Date: Tue, 6 May 2014 16:43:57 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Hashing password while typing
+
+On Tue, May 06, 2014 at 07:53:33AM -0400, Bill Cox wrote:
+&gt; Here's a dumb idea for reducing the pain associated with long password
+&gt; hashing runtimes.  Simply hash the password while the user is typing it.
+&gt;  I'm sure it's an old idea, but I haven't heard it before, so just in case,
+&gt; I thought I'd post it here before someone patents it.
+
+Unfortunately, this idea means that cost sharing becomes possible.
+
+Namely, the password hashing function for your idea must be such that
+it uses a _state_:
+
+ - Initial state value is S_0 (possibly salt-dependent)
+ - Processing letter i is computing S_{i+1} = f(S_i) (there again, the
+   salt may appear)
+ - After processing n letters (n is the password length), the final hash
+   value is g(S_{n+1}) for some function g() (again, the salt may be
+   used within g()).
+
+The core of your idea is that the cost of each f(), and the cost of the
+finalizer function g(), can be small, sinc what matters would be the
+overall cost of the processing for all the letters. The problem is that
+it is wrong: if the attacker has hashed password 'Ultr4Str0ngP&#64;...0rdA'
+with a cost of 20 times the cost of f() (plus 1 evaluation of g()), then
+he can compute the hash of 'Ultr4Str0ngP&#64;...0rdB' for considerably less,
+namely only 1 evaluation of f() and 1 of g(): the attacker can start the
+computation for the second password with state S_19 (just after
+processing the 'd').
+
+The general case may depend on the dictionary on which the attacker is
+working, but we can assume that the cost for the attacker will be mostly
+reduced, on average, to the processing which follows the last letter.
+Sure, you have some free CPU time while the user is typing, but your
+security against the attacker will have to rely on the processing time
+which happens necessarily _after_ the last password letter was entered.
+This does not mean that your idea has no merit, but it cannot lead to a
+significant increase in security.
+
+(In a network context, the sending of each letter would leak the password
+length -- not something which I find really critical, but some people are
+nervous about it.)
+
+
+&gt; However, the time between typing the last character in his password
+&gt; and hitting Enter is time well used for hashing.
+
+That time is typically very small. Remember that we have two concurrent
+notions of time:
+
+ 1. The CPU/memory that the computer can afford on the computation.
+ 2. The user's patience.
+
+The cost on the computer is completely unchanged by your idea:
+regardless of when the computation occurs, the computer still has to to
+it whole, and that's the cost which defeats attackers.
+
+The user's patience is limited to, say, one or two seconds (some people
+who work in the smart card industry told me that a complete payment
+operation must be done within 8 seconds, otherwise the user loses
+patience and panics or becomes angry or both). The count-down for user
+patience starts when he types the "Enter" key. This calls for two comments:
+
+ - The password being typically typed "blindly" (there are only '*'
+   characters on the screen), the user has no feedback on what he types.
+   Therefore, he has no reason whatsoever to wait between the last
+   password character, and the "Enter" key. In my case, the time between
+   the last two keystrokes (last charater, then "Enter") is well below
+   0.1s (the large size of the "Enter" key helps in reducing that
+   delay). Thus, this extra time will contribute to the "patience
+   window" less than +10%.
+
+ - The extra time to "do computations" is worth anything only if the
+   user's patience was indeed the bottleneck. This does not necessarily
+   apply to any authentication system, in particular a busy system.
+
+   For instance, suppose that a system has to sustain an average of N
+   user authentications per second. The total amount of CPU that the
+   system can devote to any specific user is then 1/N. Whether the
+   system can start 0.1s earlier does not change much: it won't give it
+   more available power to do its N hashings per second.
+
+   To some extent, peak loads can be managed by trading latency against
+   CPU: when there are too many authentication requests in a given time
+   frame, we just make clients wait a bit longer, so as to push them
+   into the later times, after the peak. This is sustainable only if the
+   peak is indeed a peak (which stops soon), and the extra latency is
+   not intolerable to the user.
+
+To sum up, the gain offered by the use of computational time between the
+last two keystrokes must be measured against the overall user's patience,
+and, in that scale, it is very small.
+
+
+&gt; In a challenge-response system, each password guess could hash memory
+&gt; differently, thwarting precomputation of prefixes.
+
+In a challenge-response system:
+
+ - either the attacker could observe a challenge and the corresponding
+   response, and thus can virtually repeat the experience on his own
+   machines with always the same challenge;
+
+ - or the attacker cannot see a challenge/response pair and instead must
+   try to respond to a given challenge (an "online dictionary attack"),
+   in which case the password hashing function is completely out of
+   scope.
+
+Thus, I don't exactly understand what you are trying to say here.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

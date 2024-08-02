@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <52B9C3CF.1040307@dei.uc.pt>
+Date: Tue, 24 Dec 2013 17:26:39 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+On 24-12-2013 15:09, Bill Cox wrote:
+For the random number generator to fill memory, I found "modified"
+ARC4, by Jianliang Zheng and Jie Li:
+>
+http://conferences.telecom-bretagne.eu/fps2012/program/slides/59.pdf
+>
+I just benchmarked it, and it's faster on my core i7 than the SSE
+version of blake2s, and slightly slower than blake2b.  Not that my
+opinion counts, but I'm a fan of blake2 as a stream cipher since it's
+very fast and ARC4 has known long-term correlations in it's output.
+ I'm not sure there is any future for MARC as a stream cipher.
+ However, for memory-hard key stretching, MARC is very simple, and
+extremely fast.  It is slightly faster than blake2b-ref (64-bit
+reference version without SSE extensions), and slightly slower than
+blake2b (with SSE).  It's faster than both versions of blake2s (32 bit
+version).  No other cryto-strength RNG I know of is anywhere near as
+fast as MARC and blake2.  Since we only generate a 256 bit hash in the
+end, I don't think long-term correlations of 1-bit per 10MB is an
+issue, so I'm leaning towards MARC for it's simplicity and CPU
+architecture independence.
+
+If all you want is to generate a random stream of bytes, you might be
+interested in Salsa20/12 or Chacha12 (Salsa20/8 is used in scrypt, and
+for this purpose even 8 rounds are quite likely OK). It can get up to 4
+times faster than BLAKE2b on Intel processors, and is trivially
+parallelizable to multiple cores. Unlike BLAKE(2), Salsa20 and Chacha
+are designed to be stream ciphers.
+
+In comparison ARC4, by its very design, cannot get faster than about
+about 4 cycles per byte, which is slower than BLAKE2b, and much slower
+than Salsa20. It is definitely not the state-of-the-art in speed anymore.
+
+

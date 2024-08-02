@@ -1,0 +1,45 @@
+phc-discussions - Re: Combining sliding window and bit-reversal
+
+Message-ID: <CAOLP8p6rVQi0AiV63kDOT1EJdyRjK1KaMWBF8iEstkjvJUPpYA@mail.gmail.com>
+Date: Tue, 28 Jan 2014 07:17:10 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Combining sliding window and bit-reversal
+
+I added in fixed pebbles based on shortest edge pointing to a node,
+and in edge degree.  Catena with a sub-Catena-7 DAG was dramatically
+easier to pebble with the short edge heuristic and fixed spacing of
+pebbles.  Fixing pebbles on nodes of in-degree >= 3 was very effective
+for pebbling the sliding window with bit-reversal.  Edge length was
+very effective against my NoelKDF cubed distribution of edge lengths.
+
+The numbers for pebbling 1/8 sized graphs came down a lot, but the
+power-of-two sliding window with bit-reversal still wins by about 2X
+as before.
+
+The most interesting benchmark to me is Catena-3, with a Catena-3
+sub-graph in the first row, with just one too few pebbles:
+
+predict./pebble -r -p 255 -m 1024 -s 6 -l 40 catena
+========= Testing catena
+Total pebbles: 255 out of 1024 (24.9%)
+Recalculation penalty is 4.5518X
+Mid-cut size: 256 (25.0%)
+
+That's quite a punishing cliff for saving 1 memory location.  However,
+the sliding window with bit reversal has a higher penalty than
+catena-3 with a catena-3 sub-graph at every point, though typically by
+only 2X.
+
+For stand-alone, I think Catena-3 with a Catena-3 subgraph in the
+first row is the natural choice.  For one thing, it's pretty hard just
+to know how to write the algorithm to pebble the sliding-reverse
+algorithm with minimal memory and recalculation penalty.  However, for
+a 2-pass KDF using a password-independent first-pass, followed by
+password-dependent second pass, we don't need to use less memory for
+the first pass.
+
+I am leaning towards the sliding-reverse DAG for the first pass
+
+Bill
+

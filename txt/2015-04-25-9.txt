@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Client-side hashing (was side-channel stuff)
+
+Message-ID: <1917194154.573385.1429983230410.JavaMail.open-xchange@oxuslxltgw07.lxa.perfora.net>
+Date: Sat, 25 Apr 2015 12:33:50 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Client-side hashing (was side-channel stuff)
+
+On April 25, 2015 at 10:35 AM Dmitry Chestnykh <dmitry@...ingrobots.com>
+wrote:
+
+On 25 Apr 2015, at 15:46, Bill Cox < waywardgeek@...il.com
+<mailto:waywardgeek@...il.comwrote:
+
+On Sat, Apr 25, 2015 at 2:57 AM, Sascha Schmidt
+<sascha.schmidt@...-weimar.de <mailto:sascha.schmidt@...-weimar.de>
+wrote:
+2015-04-25 0:40 GMT+02:00 Steve Thomas <steve@...tu.com
+<mailto:steve@...tu.com>:
+h = fastHash(password, salt)
+for u = 1 to upgrade
+{
+  h = fastHash(slowHash(h, t_cost, m_cost))
+  t_cost = increaseTCost(t_cost)
+  m_cost = increaseMCost(m_cost)
+}
+return encrypt(h, key) // HSM? :)
+>
+You are totally right. I don't know how I missed this. The most
+embarrassing thing is, that this would already be possible with
+Catena. The only thing missing is the server-side finalization with
+encryption.
+I hope I haven't caused any confusion with my previous mail.
+
+In this case, can everything but the last step be done client-side?
+ Ideally, the salt is a secret known only to the server and client, where
+the client preferably stores it in a security key of some sort.
+>
+Well, if a client can store a secret, we can ditch passwords altogether.
+
+
+You'd probably want it to be a public/private key. Basically like U2F but FIDO
+needs to stop eating their own dog food (LOL FIDO... dog food) and remove the 10
+second window, use deterministic signing, remove signature counter, and replace
+key ids with user name/id and server domain. So they can do privateKey =
+kdf(user name/id, server domain, secret key). They can keep the BS DRM as long
+as the key is changed less than every 100,000 devices. It would be nice to have
+verifiability (ie set my own secret key) so I can verify it's not leaking info.
+
+That fixes tracking and some other things but you're now susceptible to the
+device cloning "the James Bond attack".
+<funny joke can skip>
+Were James Bond sneaks in grabs your U2F dongle, takes it to a lab rips it
+apart, steals the secret key, and makes a clone. He walks back in but your back
+looking for the your U2F dongle. And he goes over to your desk and says "is this
+what you're looking for" bends over and fakes picking something up off the
+ground and hands you the clone *splosh*. Oh wait no that's Archer.
+</funny joke can skip>
+
+Also we will always need passwords for encryption.
+

@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] PHC output specifics
+
+Message-ID: <20150307143807.GA16043@bolet.org>
+Date: Sat, 7 Mar 2015 15:38:07 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] PHC output specifics
+
+On Sat, Mar 07, 2015 at 09:04:05PM +1300, Peter Gutmann wrote:
+Another consideration is, how much of a problem is this in practice?
+
+The problem arises in practice when:
+ - the user chooses a password that contains a character (or glyph) which
+   admits two or more representations as sequences of Unicode code points,
+ - the user enters the password on two distinct systems,
+ - and these systems don't agree on the representation used for the
+   problematic character.
+
+Therefore, the problem is not very common: most users will use a single
+system (always the same browser on the same OS, for instance), and, even
+when they use two distinct systems, most user interfaces follow NFC
+normalization naturally (they represent "é" as U+00E9, not as U+0065
+followed by U+0301). So I'd say that once you have said "UTF-8" you have
+avoided most of the problems (unless one of the systems takes it upon
+itself to add a BOM...).
+
+UTF-8/UTF-16 confusions tend to be solved quite fast since they break
+pure-ASCII passwords. Bugs that still lurk around are usually related to
+non-Unicode encodings: one system uses UTF-8, another uses one of the
+various monobyte codepages (e.g. Windows-1252); these bugs can remain
+undetected for quite some time because it takes a non-American tester
+(or an inordinately creative American tester) to find them.
+
+Another point is that most users will type passwords "blindly" (the GUI
+displays dots or stars, not the actual glyphs), so they will naturally
+stick to characters that minimize typing errors -- they tend not to use
+Alt+NNN combinations.
+
+I have no idea how such things fare in practice for users with non-latin
+scripts. Especially for scripts where glyphs tend to morph depending on
+their situation in a word and their neighbours (Arabic, Hangul...).
+
+
+
+I still think that implementers should be alerted of the issue. While
+the encoding will be addressed elsewhere, the need for an unambiguous
+deterministic encoding still arises from the password hashing function
+itself, so it seems "natural" that the PHS specification says a word
+about it.
+
+
+
+Another point that is to be made is that while a PHS implementation is
+usually written in C or assembly (since speed is its lifeforce), most
+developers will use the function from another language, through
+bindings. In these other languages, character strings are often "Unicode
+aware" in some way (e.g. Java and C# strings are sequences of 16-bit
+code units). The binding implementation will actually decide on the
+encoding.
+
+I think it would be part of the specification job to define API for some
+non-C languages (Java, C#/.NET, Python, even Node.js and PHP), for
+pretty much the same reasons that a standard C API is a good idea. but
+this naturally implies that a "standard encoding" WILL have to be
+decided upon.
+
+
+  Implementers should be aware of potential interoperability problems
+  due to character-representation issues and, if cross-platform
+  portability for a wide range of character types is an issue, use
+  appropriate encodings such as Unicode or UTF-8.
+
+I cringe at the use of the word "Unicode" to describe an encoding. I
+know that it is a widespread usage in most Windows-related
+documentations, but it still is quite wrong. I'd suggest something like
+that:
+
+    Implementers should be aware of potential interoperability problems
+    due to character-representation issues; they should define and
+    follow unambiguous encoding rules that will cover all character
+    types that will be encountered by the implementation in practice. It
+    is RECOMMENDED that passwords are encoded in UTF-8, with NFC
+    normalization and no BOM [REF-Unicode]. The security properties of
+    PHS are maintained regardless of the used encoding, but using these
+    encoding rules is likely to maximize interoperability.
+
+where REF-Unicode points to a couple of places on www.unicode.org that
+give all the needed information with the proper terminology. That way,
+the developer is alerted about the issues AND learns the adequate
+keywords for further research if he decides to deal with them in a clean
+way (i.e. by not ignoring it).
+
+In general, raw UTF-8 encoding of code points "as received" will be
+enough to make issues rare enough to be ignored or handled manually.
+
+
+	--Thomas Pornin
+

@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <20140417163941.GA10369@openwall.com>
+Date: Thu, 17 Apr 2014 20:39:41 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+Bill,
+
+How did you convert the "time" output to peak GiB/s?  I tried
+double-checking your results, and I am getting different numbers.
+
+Did you include the memory allocation overhead time or not?  I guess you
+did, which is a reason why faster schemes (those filling 2 GiB sooner)
+would appear to use less bandwidth (they'd spend _relatively_ more time
+on memory allocation overhead).  Anyhow, I failed to confirm your
+results, whether with this assumption or not.
+
+On Thu, Apr 17, 2014 at 11:08:25AM -0400, Bill Cox wrote:
+*********** Lyra2 - no modifications, hashing 2GiB of memory
+[...]
+real    0m1.320s
+user    0m1.200s
+sys     0m0.110s
+
+2/1.320 = 1.52 GiB/s
+2/1.200 = 1.67 GiB/s
+
+*********** Yescript - 5 of 6 calls to PWXFORM_ROUND commented out, and 3
+of 4 calls to SALSA20_2ROUNDS
+[...]
+real    0m0.709s
+user    0m0.560s
+sys     0m0.140s
+
+2/0.709 = 2.82 GiB/s
+2/0.560 = 3.57 GiB/s
+
+*********** TwoCats - multiples was set to 1, and #threads set to 1
+[...]
+real    0m0.431s
+user    0m0.330s
+sys     0m0.080s
+
+2/0.431 = 4.64 GiB/s
+2/0.330 = 6.06 GiB/s
+
+Lyra2:
+Peak memory/second: 1.63 GiB/s
+[...]
+
+Yescript:
+Peak memory/second: 3.03 GiB/s
+[...]
+
+TwoCats:
+Peak memory/second: 4.98 GiB/s
+[...]
+
+These don't match any of the above, as you can see.  Oh, I think I
+figured it out: you meant GB/s, but mistyped GiB/s.  Right?  e.g.:
+
+2/0.431*2^30/10^9 = 4.98 GB/s
+
+And the memory allocation overhead is a reason why Lyra2, with its
+higher number of r/w per location, appears faster in terms of memory
+bandwidth usage.  (Not necessarily the only reason.)
+
+Alexander
+

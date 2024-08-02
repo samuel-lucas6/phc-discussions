@@ -1,0 +1,124 @@
+phc-discussions - Re: [PHC] Halting Password Puzzle support
+
+Message-ID: <CAOLP8p7_YONGFqfzLpMsPi5uhe3eJhepUjnfhXYaGKRNO78obw@mail.gmail.com>
+Date: Fri, 7 Feb 2014 08:20:28 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Halting Password Puzzle support
+
+On Thu, Feb 6, 2014 at 8:19 PM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+Bill Cox asks, "I just added Halting Password Puzzle support to my code.  There are no patent issues with it are there?"
+>
+TLDR: Yes.
+>
+Details
+>
+The paper appeared in 2007: <http://ai.stanford.edu/~xb/security07/index.html>.  A related 2009 paper may also be valuable: <http://dl.acm.org/citation.cfm?doid=1533057.1533089  (available via <http://crypto.stanford.edu/~xb/asiaccs09/index.html>).
+>
+Boyen does not list any patents on his Stanford CV.
+>
+I found the patent that appears to be for this technique here: <http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=4&f=G&l=50&co1=AND&d=PTXT&s1=Boyen.INNM.&OS=IN/Boyen&RS=IN/Boyen>.
+>
+It is US Patent 8,254,571, filed December 21, 2007 and issued August 28, 2012.  There appear to be at least 14 security-related patents with a Boyen as an inventor <http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=0&f=S&l=50&TERM1=Boyen&FIELD1=INNM&co1=AND&TERM2=&FIELD2=&d=PTXT>.
+
+Yes, this is his patent.  IANAL, but I reviewed the claims - some are
+new but easy to work around, and the rest are invalid due to prior art
+in TrueCrypt.
+
+However, the PHC would be foolish to allow anything in the code that
+stinks of potential patent issues.  Even invalid claims such as these
+can be the basis for lawsuits.  So... sorry, but no Halting Password
+Puzzles for us!
+
+In particular, the claims requiring the user to abort some password
+hashing process are interesting and AFAIK new, but not required for
+most real situations.  Are we really going to make a user press
+"Abort" or "Retry" to retry a password?  I made no provision for such
+user interaction, and instead the password hashing simply fails at
+some maximum level of complexity.  The other claims that cover
+password hashing without having the user halt hashing of incorrect
+passwords are all invalid due to prior art in TrueCrypt.
+
+Boyen may not have known that TrueCrypt has an ever-growing list of
+KDF functions, which in general get more complex and resource
+intensive as we go.  The user can specify which one to use, as a
+"complexity parameter".  When a user enters a password, TrueCrypt
+tries each one in sequence from least complex to most complex until it
+finds one that matches a verification step.  Until this happens, it
+continues in the loop until all methods have failed.  TrueCrypt is
+careful not to allow an attacker to know any information about this
+complexity parameter, so an attacker has to try all TrueCrypt's KDFs
+to be sure a password guess is incorrect.
+
+Therefore, I can, without violating any *valid* patents issued after
+TrueCrypt was published, add NoelKDF with garlic 1 (1MiB) as a new
+password KDF to TrueCrypt, and I can add NoelKDF with garlic 2 as
+another KDF, and so on up to some reasonable limit like NoelKDF with
+garlic 12 (4 GiB).  This is no different than what TrueCrypt does
+today, and since it came first, it cannot violate any valid claims.
+
+Here's my reading of the claims.  Independent claim 1 requires user
+input to halt the loop, which we wont do.  Claims 2-6 depend on claim
+1 and you can't violate them without first violating claim 1 so we can
+ignore them.  Independent claim 7 also requires a user to manually
+halt the loop, and claims 8-12 depend on 7.  Independent claim 13 is
+nonsensical.  It specifies an infinite loop: "if there is no match ...
+continuing in the loop".  Dependent claims 17 and 18 specifically
+terminate the loop based on user input, which contradicts claim 13's
+requirement of having an infinite loop.  The only hard part here is
+interpreting claim 13 in some sensible way.  I interpret it to mean
+what claims 17 and 18 amend it to mean, where user input is required
+to halt the loop, so we can ignore it in it's infinite-loop
+nonsensical form.  Claims 19-20 again require a user to stop the loop
+manually.  Independent claim 21 patents what TrueCrypt already does,
+except that it runs multiple threads in parallel.  That's one of those
+"duh" claims, but fine, whatever.  The unfortunate reality is "duh"
+claims like that are often the most powerful... Who would have thunk
+to do stuff in parallel!?!  Let's patent it!  IIRC, the patent office
+is currently frowning on "duh" claims like this, but I think this is a
+new trend.  I didn't want to run it multi-threaded anyway :-p
+
+Claim 22 is broad, but invalid due to prior art in TrueCrypt.  It
+claims having a user selectable complexity parameter, where that
+parameter is not made visible to an attacker in any way.  This is
+exactly what TrueCrypt does, allowing a user to select a KDF from a
+list, sorted from lowest to highest complexity.  The user's selection
+is not made visible to an attacker, and TrueCrypt has to try each one
+in sequence on each password guess.  Claims 23-25 depend on 22.
+
+Independent claim 26 again requires an infinite loop: "continuing in
+the loop until the trial password is determined to be valid", but does
+not specify that a user can abort the loop.  As with claim 13, 26's
+dependent claims 27-29 all rewrite claim 26 to allow the user to halt
+the loop.  Giving Boyen the benefit of the doubt, we can interpret 26
+to only apply when there is such a user interface, and we can ignore
+it otherwise.
+
+In general, I understand why people file software patents.  I don't
+like them, but I've got several myself.  I refused to file one until a
+competitor blanket patented an algorithm I invented that we'd
+been using as a trade secret for years.  Boyen may not like software
+patents anymore than I do.  His patent is assigned to Voltage Security, and
+they may have required him to file it.  I can't really blame Voltage
+Security for taking part in the software patent game.
+
+However, it really sucks.  This patent looks bad for Boyen, IMO.  He
+did after all do a lot to promote his Halting Password Puzzle idea,
+and never mentioned his patent while promoting it, SFAIK.  There are
+at least two of us in the PHC who were planing on implementing some
+form of it.  In any case, I'm removing his ideas from my code and my
+paper.
+
+Do I have to go do a full password hashing patent search now?  Scrypt
+easily could have been patented top to bottom, making this PHC nearly
+pointless.  It says a lot about the author that he didn't go this
+route.  If Catena were patented front to back, that would also suck
+heavily, and I hate to think what would happen if SolarDesigner
+patented everything he ever thought of.  Patent's like Boyen's make
+the world less secure.  The generosity of ideas I'm seeing from the
+likes of Christian Forler, Alexander Peslyak, and Colin Percival is
+making the world more secure.
+
+Bill
+

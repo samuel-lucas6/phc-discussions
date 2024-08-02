@@ -1,0 +1,108 @@
+phc-discussions - Re: [PHC] C99 in reference implementations
+
+Message-Id: <05549388-30E6-44BB-BE96-01D2122E1F9E@gmail.com>
+Date: Mon, 12 Aug 2013 12:46:24 -0400
+From: Mansour Moufid <mansourmoufid@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On 2013-08-10, at 1:45 PM, Daniel Franke wrote:
+
+I have a reference implementation of a prospective PHC entry written in
+"portable" C99. By "portable", I mean that it uses only standard C99
+language features, has no external library dependencies, and should
+produce identical output regardless of host CPU architecture. However,
+it makes extensive use of C99 language features, including
+<stdint.h>/<stdbool.h>, mixed declarations and code, and variable-length
+arrays. Taking advantage of these features significantly improves
+readability, but will prevent the code from compiling on MSVC and any
+other compilers with poor C99 support. Does/should this pass muster for
+PHC submission requirements?
+
+
+The only problematic compiler is MSVC, and its single biggest problem is
+the header <stdint.h>. MSVC implements the LLP64 data model, the other
+popular data model being LP64:[1]
+
+            short   int     long    long long   size_t
+     LP64   16      32      64      64          64
+    LLP64   16      32      32      64          64
+
+The common denominator is: 'int' is 32-bit and 'long long' is 64-bit.
+
+So for MSVC one can minimally replace the <stdint.hheader with:
+
+    typedef int i32;
+    typedef long long int i64;
+    typedef unsigned int u32;
+    typedef unsigned long long int u64;
+
+I propose the following solution: that submissions conform to C99, using
+the types int32_t, int64_t, uint32_t and uint64_t defined in the header
+<stdint.h>; and that a patch for MSVC be generated automatically using
+Coccinelle[2] and the semantic patch listed at the end of this message.
+
+The reason being that there are as many definitions of "Clean C" as
+there are developers. C99 however is unambiguous.
+
+For example:
+
+    $ cat << EOF foo.c
+    #include <stdint.h>
+    int main(void)
+    {
+        uint32_t foo;
+        int64_t bar;
+        return 0;
+    }
+    EOF
+    $ spatch --sp-file rm-stdint.cocci foo.c | tee foo-msvc.patch
+    ...
+    @@ -1,7 +1,10 @@
+    -#include <stdint.h>
+    +typedef int i32;
+    +typedef long long int i64;
+    +typedef unsigned int u32;
+    +typedef unsigned long long int u64;
+     int main(void)
+     {
+    -    uint32_t foo;
+    -    int64_t bar;
+    +    u32 foo;
+    +    i64 bar;
+         return 0;
+     }
+
+Of course other issues like <stdbool.hare similarly easily solved.
+
+[1]: <http://www.unix.org/version2/whatsnew/lp64_wp.html>
+[2]: <http://coccinelle.lip6.fr/>
+
+The semantic patch referred to above, rm-stdint.cocci:
+
+@typedefs@
+@@
+-#include <stdint.h>
++typedef int i32;
++typedef long long int i64;
++typedef unsigned int u32;
++typedef unsigned long long int u64;
+
+@replace_types depends on typedefs@
+identifier x;
+@@
+(
+- int32_t x;
++ i32 x;
+|
+- int64_t x;
++ i64 x;
+|
+- uint32_t x;
++ u32 x;
+|
+- uint64_t x;
++ u64 x;
+)
+
+

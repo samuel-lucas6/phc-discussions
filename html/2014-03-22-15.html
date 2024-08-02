@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Transforming hash to different cost setting</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="14">[&lt;prev]</a> <a href="16">[next&gt;]</a> <a href="14">[&lt;thread-prev]</a> <a href="17">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;1123848421.20140322154752&#64;gmail.com&gt;
+Date: Sat, 22 Mar 2014 15:47:52 +0100
+From: Krisztián Pintér &lt;pinterkr&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+
+Thomas Pornin (at Saturday, March 22, 2014, 2:33:38 PM):
+
+&gt; there is a need to regularly (not often, but regularly)
+&gt; increase the hash cost,
+
+it is not that tight. upgrading every year seems perfectly
+appropriate.
+
+&gt;  - It requires the login process to be able to process two kinds of
+&gt; hashed passwords,
+
+not if we are talking about parameter upgrade. you can't upgrade
+between different primitives anyway. and being able two use different
+parameters does not look very hard.
+
+&gt; implies that there must be some extra old/new flag stored along
+
+or the parameters themselves. note that this is also required if you
+want upgradable hash, unless you can upgrade all of them in one go
+while logging in is disabled.
+
+&gt;  - It requires the login process to contain the re-hash logic. This
+&gt; is not hard, but that's still extra code and complexity
+
+seems negligible to me.
+
+&gt;  - Rehashing upon login means that the login system must pay the
+&gt; cost for the old hash AND the new hash.
+
+rehashing is spread out in a year or more. for ever rehash, there will
+be dozens if not hundreds of regular logins. the relative cost should
+be irrelevant.
+
+&gt; - The upgrade process is then spread over time; a given password
+&gt; will be upgraded only when the owner comes by next, which can take a
+&gt; few months or years.
+
+which is perfectly fine. that also spreads out the load. if the use
+does not come back for a long time, the password hash should be
+destroyed.
+
+&gt; it has its own cost, namely
+&gt; that the user, if he evers come back, will need to go through the
+&gt; hoops of the forgotten password process.
+
+which, again, is a negligible cost compared to the usual routine. we
+are talking about users that didn't show up for at least a year.
+
+&gt; As a rule, users don't like these password things;
+
+they also don't like their stuff be stolen, mails read, etc. it is all
+about education. and if they still prefer weakly hashed passwords over
+the hassle, a service provider can simply skip upgrading. after all,
+we want to serve the people, not the cryptographers. if people don't
+want safe passwords, fine. all we can do is to make it available.
+
+but again, i can't imagine it would cause a significant user
+dissatisfaction if they face some password reset procedure after
+coming back to a website after a year of absence. i can't imagine
+angry forum posts about it. personally, i always forget my password
+after such long time, so i start with resetting anyway.
+
+&gt; "Offline cost upgrade" is a feature that some password hashing
+&gt; functions may provide.
+
+the question is not whether we want to use it if present. the question
+is, how much value it represents. my point is that not much. two
+candidates needs to offer very much the same, for upgradeability to be
+the deciding factor.
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

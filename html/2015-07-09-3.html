@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="../../../2015/07/10/1">[next&gt;]</a> <a href="../../../2015/07/05/3">[&lt;thread-prev]</a> <a href="../../../2015/07/14/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAELGc4WSPC11ukBhRF8jDwK6nt2FGS+11cvf04eboes5ediUuw&#64;mail.gmail.com&gt;
+Date: Fri, 10 Jul 2015 02:22:32 +0800
+From: Hongjun Wu &lt;wuhongjun&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Hi Jocob,
+
+Thanks for the report.
+
+1.   To be precise, the state of POMELO (of the second round) is updated
+ 3*2^{t_cost}+2 times on average  (some details: a state is updated through
+feedback; local table lookup; global table lookup).
+
+      For example, for t_cost = 0, the state is updated 5 times on average;
+for t_cost = 1, the state is updated 8 times on average; for t_cost = 2,
+the state is updated 14 times on average.
+
+2.  Assume that the memory usage data in Table 1 is accurate, it is a
+surprise that only two (?) finalists provide memory usage in a wide range
+(Battcrypt: 128KB to 128M;   POMELO: 8 KB to 256GB).  Argon is another
+candidate that provides memory in a wide range (1KB to 1GB), but Argon2
+does not have that feature.
+
+3.  Since the report talks about the security of each candidate in Table 3,
+I add something on POMELO below.
+
+     As analyzed in the POMELO document, even for t_cost = 0, POMELO
+provides strong protection against the low memory attack since it is costly
+to store partial state in the attack due to the combination of local table
+lookup and global table lookup.  The protection mechanism of POMELO against
+low memory attack is completely different from all the other candidates,
+and I think that POMELO provides a very efficient approach to defend
+against low memory attack.
+
+Best Regards,
+Hongjun
+
+On Thu, Jul 2, 2015 at 11:05 PM, Jakob Wenzel &lt;jakob.wenzel&#64;...-weimar.de&gt;
+wrote:
+
+&gt; -----BEGIN PGP SIGNED MESSAGE-----
+&gt; Hash: SHA256
+&gt;
+&gt; Hi all,
+&gt;
+&gt; we have updated the classification document (including analysis
+&gt; regarding to (weak) garbage-collector attacks -- (W)GCA).
+&gt;
+&gt; See: <a href="https://eprint.iacr.org/2014/881" rel="nofollow">https://eprint.iacr.org/2014/881</a>
+&gt;
+&gt; Among other minor changes, the update includes:
+&gt; 1) Argon2d and Argon2i (as two instantiations of the finalist Argon2)
+&gt; 2) yescrypt now provides (W)GCA resistance under certain requirements
+&gt;    depending on the input parameter
+&gt; 3) tables now differentiate between finalist/non-finalists
+&gt; 4) added motivation for (W)GCA attacks in the introduction
+&gt; 5) BLAKE2b-1 is added as hash function for Catena
+&gt; 6) BlaMka is added as permutation for Lyra2 (in brackets, since it is
+&gt;    not fully analyzed yet and thus, not recommended as default
+&gt;    instantiation by the authors of Lyra2)
+&gt;
+&gt; Comments are welcome.
+&gt;
+&gt; Best regards,
+&gt; Jakob
+&gt;
+&gt; - --
+&gt; Jakob Wenzel
+&gt; Research Assistant
+&gt; Chair of Media Security (Prof. Lucks)
+&gt; Bauhausstraße 11 (Room 217)
+&gt; 99423 Weimar
+&gt; -----BEGIN PGP SIGNATURE-----
+&gt; Version: GnuPG v2
+&gt;
+&gt; iQEcBAEBCAAGBQJVlVNOAAoJEDFlRQsgEDnD0+cH/RLJMf44PMy3kJ+Zn5/Z+3du
+&gt; /npOODTTYkxWXjxaQXEkHyKuX/Xm0l77/fpHtndx7KtKIQ0s+gKY/0Bu63xxYXXb
+&gt; k/2Oit4t6LFvQIdUILIkbcnqPmZTZtvbu5VfPCx7e2bSWJjFOjc1NRd24RkhfUn7
+&gt; cgK24yxK5fkJwVu6lSJ3sbYA3xb1xYY0/67gEPmA8Jt50sKKqCs8zE+GSjz9Vwdf
+&gt; HYpU8veYEFaXKsryeqeJrcD67KgRAEZ0k+9BRUjB27dd80NlDi4OO5wSyn+7Fw0r
+&gt; Ix2YUcd4JzYnjdnO2B8RLalLgVQSGiYMqgie49dKnIpG37kiednagzyEG5SHOwE=
+&gt; =6pgK
+&gt; -----END PGP SIGNATURE-----
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

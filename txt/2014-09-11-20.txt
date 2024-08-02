@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] Makwa parameter generation
+
+Message-ID: <5411D76B.7000004@dei.uc.pt>
+Date: Thu, 11 Sep 2014 18:10:03 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa parameter generation
+
+On 09/11/2014 02:54 PM, pornin@...et.org wrote:
+The core idea of RSA UFO is the following: if we want a modulus with
+two prime factors of at least k bits, then we generate several random
+integers of 3k bits, and multiply them all together. If we use enough
+such integers, then probability that at least one of them has two
+prime factors of at least k bits can be made arbitrarily close to 1.
+However, the resulting modulus is very large. Sander says that if
+you want 512-bit-or-more primes, and a probability of having at least
+two such factors in the final product of at least 1-2^(-80), then the
+modulus will have size "much greater than 40000 bits".
+>
+To keep on with security levels as recommended in 2014, we would
+prefer prime factors of at least 1024 bits, so the modulus size will
+probably need to be more than 80000 bits, in fact probably much more
+than that (I did not do the maths to get the actual size, and I suspect
+that Sander did not either).
+
+Sander's analysis is a little rough; I point to [1] to a more refined analysis, albeit in a slightly different context,
+which achieves moduli of 20k bits for the 80-bit security level, and 60k bits for the 128-bit level.
+
+These methods have in common that they make modulus generation very quick: it is just a matter of generating kl
+pseudorandom bits, and multiplying them together. If we instead choose to trade generation speed by modulus size, it may
+be possible to use trial division and/or ECM to 'tilt' the probabilities down by rejecting unsuitable integers, and get
+smaller moduli in return. This requires more careful analysis.
+
+[1] http://link.springer.com/chapter/10.1007%2F978-3-642-38980-1_35
+
+

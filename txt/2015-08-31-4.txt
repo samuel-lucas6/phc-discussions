@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] RE: [FORGED] [PHC] Argon2 using memset still
+
+Message-ID: <CALW8-7KdE0Eu4uF7xOoHfHy9mcw6uxJr+ELKNP+EpVpfLLKXGw@mail.gmail.com>
+Date: Mon, 31 Aug 2015 15:20:30 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] RE: [FORGED] [PHC] Argon2 using memset still
+
+OK, so it is now as follows:
+
+#ifdef _MSC_VER
+#include "windows.h"
+#include "winbase.h" //For SecureZeroMemory
+#define VC_GE_2005( version ) ( version >= 1400 )
+#endif
+#if defined __STDC_LIB_EXT1__
+#define __STDC_WANT_LIB_EXT1__ 1
+#endif
+
+#if defined(__clang__)
+#if __has_attribute(optnone)
+#define NOT_OPTIMIZED __attribute__((optnone))
+#endif
+#elif defined(__GNUC__)
+#define GCC_VERSION (__GNUC__ * 10000 \
+                    + __GNUC_MINOR__ * 100 \
+                    + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 40400
+ #define NOT_OPTIMIZED __attribute__((optimize("O0")))
+#endif
+#else
+#define NOT_OPTIMIZED
+#endif
+
+static inline void NOT_OPTIMIZED secure_wipe_memory( void *v, size_t n )
+{
+#if defined  (_MSC_VER ) &&  VC_GE_2005( _MSC_VER )
+    SecureZeroMemory(v,n);
+#elif defined memset_s
+    memset_s(v, n);
+#elif defined( __OpenBSD__ )
+explicit_bzero( memory, size );
+#else
+static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
+    memset_sec(v,0,n);
+#endif
+}
+
+On Mon, Aug 31, 2015 at 3:08 PM, Peter Gutmann <pgut001@...auckland.ac.nz>
+wrote:
+
+Dmitry Khovratovich <khovratovich@...il.comwrites:
+>
+>as Samuel Neves pointed out, it seems there are few compilers (if any)
+that
+>support memset_s
+>
+Sure, but hopefully that'll change over time, and the __STDC_LIB_EXT1__
+will
+mean it's enabled as soon as support appears.
+>
+>Visual Studio 2013 does not know about it, for example.
+>
+VS has had SecureZeroMemory() since VS 2005, so it doesn't really need it.
+clang and gcc have partial C11 support now, so hopefully it'll appear
+eventually.
+>
+Peter.
+
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

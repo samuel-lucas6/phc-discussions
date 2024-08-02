@@ -1,0 +1,114 @@
+phc-discussions - Re: [PHC] An additional PHS API to include a string?
+
+Message-ID: <20140831134658.GA21032@bolet.org>
+Date: Sun, 31 Aug 2014 15:46:58 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] An additional PHS API to include a string?
+
+On Sun, Aug 31, 2014 at 07:31:22AM -0400, Bill Cox wrote:
+I think this is important enough of an issue that the PHC should
+recommend an additional interface that takes this string and password
+as the only hashing parameters, and where the string is suitable for
+storage as an ASCII text field in a database or password file.
+
+As Krisztián points out, this is mostly orthogonal to the actual hash
+function, so it can be decided later. However, I totally agree with
+Marsh and Greg: this is important. Casual observation of what people do
+in practice with cryptographic algorithms (e.g. by reading their
+panicked questions on specialized online forums) shows that any method
+to get things awfully wrong _will_ be used by some people. In
+particular, if the function needs a salt and the API requests the salt
+as a separate parameter (as is common with PBKDF2 implementations), then
+an alarmingly high number of developers will use a fixed constant salt,
+or use the password itself as salt.
+
+Storing all parameters and salt along with the hash value in a single
+character string, and (crucially) making the implementation by default
+generate the salt values randomly, will make the situation better. This
+is what can be observed right now: botched usages of bcrypt are much
+rarer than PBKDF2-based abominations.
+
+
+
+Ideally, PHC should concentrate on the cryptographic qualities of the
+candidates, using code made for research, not for production.
+Production-ready implementations will come later on, for the winner(s),
+and these will include a simplified string-based API. Developers at
+large will cautiously wait for these implementations to emerge, and use
+them.
+
+I do not believe that things will go that way, though. Some people with
+the "early adopter" frame of mind will not wait; they will use the
+reference implementations right away (I suppose that some have already
+begun). Others, based on some assumption of "purity" (or any other
+name), will insist on using the "reference" code, and not any other
+implementation. For this reason, in the case of Makwa, I took care to
+already define a string-based format and implement it right away in the
+reference code. Thus, Makwa offers right now the simplified API that
+we are talking about here.
+
+On the up side, this means that if you need C or Java code which handles
+some Base64 encoding/decoding for salts and parameters, then you can
+reuse the functions from Makwa's reference implementations. On the other
+hand, there cannot be a single, unified string format which will fit all
+candidates, since they differ in parameter types and ranges.
+
+
+So while I agree with you that it would be better if the PHC candidates
+already included a simple string-based API in their reference
+implementations, I must point out that it does not seem feasible to
+define a _generic_ API and format which will fit all candidates, so this
+will have to wait for the list of candidates to thin out (as Krisztián
+states).
+
+Some extra notes:
+
+ - String outputs should be compatible with "whatever needs strings", e.g.
+   /etc/shadow files on Unix-like systems. The list of allowed or
+   disallowed characters thus varies, depending on context. In general,
+   you should stick to plain ASCII without space or control characters,
+   and you should avoid:
+
+     ':' and '$' (for /etc/shadow files)
+     '<' and '>' (for XML)
+     '"' amd ''' (for CSV files)
+     '`' and '\' (for literal strings)
+
+   In the case of Makwa, I used Base64 (letters, digits, '+' and '/')
+   and '_' as separator.
+
+ - If you need something like Base64, then please use actual Base64, not
+   just something similar (like bcrypt does). It helps for implementing
+   in various languages which may already feature some Base64 machinery,
+   e.g. C#/.NET. (Removing the trailing '=' signs may be worthwhile,
+   though).
+
+ - String encoding for the output is fine, but you must also mind the
+   input. Password hashing is about hashing passwords (duh), and
+   passwords tend to be sequences of characters. Invariably, any
+   password hashing function begins by converting a sequence of
+   characters into bytes. C-based implementations often assume that
+   the conversion has already been done, but this is a known source
+   of bugs; famously, one widespread implementation of bcrypt had
+   trouble processing non-ASCII characters, and I saw the same bug
+   in PGP 5.5 code (because of assumptions on the signedness of the
+   'char' C type).
+
+   We cannot ignore the non-Western world; thus, ISO-8859-1 ("latin-1")
+   encoding is not appropriate. We have to embrace Unicode, which means
+   UTF-8, UTF-16 or some other encoding. Unfortunately, humans have been
+   extremely creative with regards to writing systems, which means
+   ambiguity (e.g. even a simple "é" character has several possible
+   decompositions in code points). Therefore, it seems best if any
+   implementation of a password hashing function, in a language where
+   strings are strings (i.e. almost all of them except C and C++), takes
+   care to apply strictly defined and unambiguous encoding rules.
+
+
+See Annex A of Makwa's specification for further discussion on this
+subject.
+
+
+	--Thomas Pornin
+

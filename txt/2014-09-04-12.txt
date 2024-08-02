@@ -1,0 +1,132 @@
+phc-discussions - Re: [PHC] [SPAM?] Re: [PHC] A review per day - MCS_PHS
+
+Message-ID: <54087083.6000303@ciphershed.org>
+Date: Thu, 04 Sep 2014 10:00:35 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] [SPAM?] Re: [PHC] A review per day - MCS_PHS
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Great.  Thanks!
+
+I have only one remaining request for a code change.  In mcssha8.h,
+you have:
+
+// Total MCSSHA8 hash calculation
+HashReturn Hash(DataLength hashbitlen,
+	        const BitSequence *data,
+		DataLength databitlen,
+		BitSequence *hashval);
+
+Could you change this to:
+
+// Total MCSSHA8 hash calculation
+HashReturn Hash(BitSequence *hashval,
+                DataLength hashbitlen,
+		const BitSequence *data,
+		DataLength databitlen);
+
+If I understand these parameters correctly, then this would match the
+order in the PHS function.  I'm not saying that this is the only good
+order, but I'm pretty sure that your current order will confuse people.
+
+Bill
+
+On 09/04/2014 09:36 AM, Mikhail Maslennikov wrote:
+I prepare new version of MCS_PHS - ver.3.  I put it on 
+http://crypto.systema.ru/PHC/MCS_PHS_v3.zip 
+<http://crypto.systema.ru/PHC/MCS_PHS_v2.zipIn it, I tried to
+consider all your notes Best regards Mikhail Maslennikov 
+04.09.2014, 14:20, "Bill Cox" <waywardgeek@...hershed.org>:
+>
+>
+>
+>On 09/04/2014 02:33 AM, Mikhail Maslennikov wrote:
+>
+>Sorry, may be you analize old version MCS_PHS? New version
+>(ver.2) was upgraded 30.08.2014, as wrote JP. In ver.2 I remove
+>do ... while cycle. If you have problems to find latest version,
+>you can download it from
+>http://crypto.systema.ru/PHC/MCS_PHS_v2.zip.
+>
+>You're right!  I reviewed the old code.  Sorry.  The new code
+>does is indeed a lot easier to read.  Line 72 doesn't make it
+>harder to read, but I think it is more common to just let the for
+>loop execute 0 times, so 72 could be deleted.
+>
+>More importantly, if you could change the order of your variable 
+>parameters in the Hash function, it will make life easier for
+>users and reviewers.  That random variable order is what made me
+>think you must be a mathematician (that plus the fact that you
+>are a hashing function enthusiast).  They never seem to agree on
+>variable order.  We can't even get them to use HMAC with the
+>password and salt in a consistent order!  That is a real pain.
+>Every time I review code that calls HMAC, I have to go check
+>which variable order they used in the definition.
+>
+>About reducing hash degree from 64 to outlen.  I want to use one 
+>specific feature of MCSSHA8 hash function: if Hi(M) and Hj(M) - 
+>hash with length i and j for some fixed message M, so this
+>values will be different as random values for any not equal i and
+>j. One of possible attack on Password Hashing Scheme like PBKDF
+>could be Dictionary Attack, when attacker try to build dictionary
+>for transformation hash->Hash(hash). In "standart" PBKDF it's
+>enough to build dictionary only for one hash function H, but if
+>we use MCS_PHS it's neccessary to buid dictionary for each of
+>different Hi. About internal buffer clearning - agree with you.
+>Now I try to prepare ver.3 whith this clearning. About "some
+>oddities in the code" and "fearful of using it" - please, look
+>latest version. May be it will be not so "fearful". About
+>mathematician - it's true. Thank you. Mikhail Maslennikov
+>04.09.2014, 01:18, "Bill Cox" <waywardgeek@...hershed.org
+><mailto:waywardgeek@...hershed.org
+><mailto:waywardgeek@...hershed.org
+><mailto:waywardgeek@...hershed.org>>>:
+>
+>I'd love to discuss more about the merits of how you are hashing,
+>but I wont.  This list has already had to put up with me learning
+>the basics of password hashing schemes.  They don't need to put
+>up with me learning about hashing functions.  Your new code is a
+>lot less scary, and with the variable order fixed, it would pass
+>my code review.
+>
+>Thanks for the reply, and sorry about reviewing the old version.
+>
+>Bill
+>
+>-----BEGIN PGP SIGNATURE----- Version: GnuPG v1
+>
+>iQIcBAEBAgAGBQJUCDzAAAoJEAcQZQdOpZUZwiQP/1l9Z8JuRg7r//axzjV7s26c 
+>pKcH6OKBNvBFGaqPly57VpLEtgYzCxyu8o1enm4p7MB7Rm0fLRzYvXlMrx8IDDlt 
+>GFzR33sVRNO1CK0z5VAbAo10HgHmRikPi3FOhf/3kTQAbGH5AOJfahBtWOyGFLRm 
+>z17g2bPxKKbMgL7THxZF+GocfspwM+8Rgm3uBoumAw+hgAox30WLhBySBz+nQ2An 
+>G9oK+OUq2AYg1NJjIXdTmQGg1XBMrHFDqQrMkyluOpQ+TfJhvhabsaAFX6UmqWdq 
+>hm1ngeMWlm/MUD0o7uHMeRaZrs/vER+Ya4+anCxsy4MSl4AIuoO0vrhBuDdVlLrT 
+>xuPf2XO7YOZjYNmrcVVViOJbCb9CI8A5lQWobigE/2JS+Q9+6J3WmT2HLoGeSqG7 
+>NHVIJdo18bYSbyaq2oZSwn9CYvOo1/UUkDJPQPonypELJEuhSE1kYv3V24OOhB6M 
+>19VeDgcQBenDQ2qJMz33Bb3RRq4XCMAtMp0eQ0/jG4XPzO/vQVlKCEbnCclXD5hb 
+>6DmVgsX7YrJphQSZJGXLvikJOhtL0cJtvi/g4vhDnnbP/xbdMO555MAWci5PjcLk 
+>FHnYk5aPL8pWPJDUNicXWU7SKN7Ktpg/dZ5U2aqK8SyYGatsBxtX2S1jCormt7PT 
+>2ndW7eWruI3wS1wP/Fxd =y2h9 -----END PGP SIGNATURE-----
+--
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUCHB/AAoJEAcQZQdOpZUZYmYP/ie6zmSi4fqMnLGp4iyiiFiP
+9BSa1hUR2Gtds1cmyV8KUY/jO3VpHDMs4RPhqL0RimCpN2eJlNo3pBhKgqc6hRTt
+8Ph4lGdtCQoCIwp4yzd6DQypOAO5vAplgrMscIcgEYAPxRn3nMQ75TtYlARyFW4u
+HX+RaMyJLrFIhoikpmkhbZIRxTm6HlayFiIx3jj35VbGYAo0OL+Avtl0jcy4Q4Xs
+uHo7VBsUwo4ZOSjFde/HqsyaFH9Ok7ROfuZGJ451dBUP2+gbLT2rL2e/0C4GXWRb
+GY7+PYafJdvZ+i+TxtMkgtZ8UWuUJ9E9GRzSPAhzu/ii97AypTzjTsyTxpQ9cVg9
+nvat6q0CIVJCVlemJ79covAi+CfVz0jNVgHXPnA+asbwTv0kAXVINzLVJUn7ofLh
+YN4F0wII3RCH6nPbiOIKkuloEJzGRpLE/kaqAcnK4L3ROkRKUX5nurgF034lCszn
+5XuHLW0WawgOxW4Nh7QmwyIzcJ0G/eAxgPF5ap3BoYP5DOv92MNHGcqMB1LLjwBf
+ENmsl61MkDyAx5NzwI5VlN+/DyPrEhoIoHtiz8adzQCVjXxxmqjMeb+IPvFtOOBT
+IYsG7iIasewTHVQjk8CqVFeevVO5sE//saXd5bxZXg5OJorSZs5ianZIok88cvv9
+UvPAPRqMjBFrqWZx7Mbf
+=v8K/
+-----END PGP SIGNATURE-----
+

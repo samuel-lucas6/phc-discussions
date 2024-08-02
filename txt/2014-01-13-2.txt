@@ -1,0 +1,103 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+Message-ID: <1564351344.680851.1389603022884.open-xchange@email.1and1.com>
+Date: Mon, 13 Jan 2014 02:50:22 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with
+ optimizations)
+
+I attached a faster version of Catena.
+
+
+On January 12, 2014 at 9:12 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Sat, Jan 11, 2014 at 09:09:11AM -0600, Steve Thomas wrote:
+Current scripting memory (not so) high vs current Catena:
+2 MiB: 544 ms vs 2030 ms (3.73x)
+1 MiB: 249 ms vs 1040 ms (4.17x)
+[...]
+Optimized scripting memory (not so) high vs optimized Catena:
+2 MiB: 431 ms vs 995 ms (2.31x)
+1 MiB: 195 ms vs 499 ms (2.56x)
+>
+I was getting ~560 ms for 10 hashes at 1 MiB on i7-4770K. Your Q9300 is
+maybe up to twice slower, but you're reporting twice lower time. Yet if
+it was for just one hash computation rather than 10, then it'd be much
+lower. So I am puzzled.
+
+Sorry about that those are single runs. Measured in code with microtime().
+I averaged 7 calls and took the average of 3 runs. So your i7-4770K is
+4.45x faster.
+
+
+On i7-4770K, the speed at 1 MiB is 37 c/s for 1 instance, 136 c/s
+cumulative for 8 concurrent instances. Can you benchmark it on your
+system, including against your Catena scripts?
+
+1 MiB, 4 concurrent instances:
+Catena: 8.34 c/s
+Catena-original: 4.21 c/s
+smhkdf-v2: 28.1 c/s
+
+
+Scripting memory (not so) high:
+$ja = unpack('V', $x);
+vs
+$ja = unpack('V', substr($x, -4));
+>
+I've included this change now. The reason for substr($x, -4) was to
+prevent an optimized (non-PHP) implementation from prefetching the next
+block a few steps (3 steps, I think) before completing the SHA-512
+computation. But if this costs us too much in terms of PHP overhead,
+let's omit it. Besides, such prefetching may be helpful for defensive
+native code implementations as well.
+
+At first that's why I thought you were doing that, but it's the exact opposite
+of
+what's happening:
+
+h = g
+g = f
+f = e
+e = d + temp1
+d = c
+c = b
+b = a
+a = temp1 + temp2
+
+So the best choice is the first 4 bytes. You get the last value 3.25 rounds
+prior
+to finishing. temp1 only depends on e, f, g, h, and w[]. On round 74 (1-80) you
+can calculate the next 4 temp1s then you have the last value. It's about "4"
+rounds.
+
+
+$v = array();
+>
+BTW, if we do that, we can also discourage TMTO by random writes in the
+last loop:
+>
+http://www.openwall.com/lists/crypt-dev/2013/11/20/1
+>
+I think the same is not easy to do on a string, where substr() can only
+be used on the right hand side, right? We're lacking an equivalent of
+Perl's vec() in PHP, right?
+
+I believe so, but you could do this with reading and writing characters. Only
+problem is this is slow.
+
+
+I think PHP arrays are always associative (they use hash tables), which
+means they're somewhat inefficient for our needs here. Right?
+
+Correct, I don't know what they use to store arrays but it's order preserving.
+If I had to guess it would be a b-tree with two extra pointers for next and
+previous.
+I was actually impressed with the speed of Catena in PHP. I thought it would
+be much worse because of the use of arrays.
+
+
+Download attachment "catena-sha512.php" of type "application/x-httpd-php" (4549 bytes)
+

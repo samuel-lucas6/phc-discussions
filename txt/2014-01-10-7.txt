@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <1370465767.576289.1389349269648.open-xchange@email.1and1.com>
+Date: Fri, 10 Jan 2014 04:21:09 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+On January 10, 2014 at 4:03 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Fri, Jan 10, 2014 at 02:37:49AM -0600, Steve Thomas wrote:
+>
+BTW I was just working on a scripting language hash.
+[...]
+for ($i = 0; $i < $m_cost; $i++)
+{
+$h = hash('sha512', $h, true);
+$mem = $h . $mem;
+}
+>
+Wouldn't appending to $mem be faster than prepending?
+
+Then it wouldn't be sequential memory-hard. You are also looking at the
+simplified reference code (ie slow).
+
+
+// Hash mem $t_cost+4 times
+$ctx = hash_init('sha512');
+for ($i = 0; $i < $t_cost + 4; $i++)
+{
+hash_update($ctx, $mem);
+}
+return hash_final($ctx);
+>
+This is not sequential memory-hard! This allows for TMTO that benefits
+attackers with ASICs by more than a constant factor. Specifically, on
+each of the $t_cost + 4 iterations, the attacker may recompute and use
+the whole $mem one block at a time, without storing them. This only
+doubles the effort of that loop (and eliminates the first loop), and it
+reduces the memory needs from $m_cost to a small constant.
+
+I'm pretty sure this is sequential memory-hard.
+
+Simplified:
+mem[x] = sha512(pw . salt)
+mem[x-1] = sha512(mem[x])
+...
+mem[1] = sha512(mem[2])
+mem[0] = sha512(mem[1])
+
+Then you need mem[0] and mem[1] before using mem[2] and mem[3] ...
+
+If you use 1/2 the memory it will cost 1.5x for each loop. So for $t_cost = 1
+it will take 7.5x more computations. Which is comparable to $k = 4.
+
+

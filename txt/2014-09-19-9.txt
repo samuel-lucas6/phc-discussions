@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <541C9AC5.60106@rub.de>
+Date: Fri, 19 Sep 2014 23:06:13 +0200
+From: Markus Duermuth <markus.duermuth@....de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On 17.09.2014 12:30, Bill Cox wrote:
+On 09/17/2014 05:53 AM, Krisztián Pintér wrote:
+>i picked omegacrypt because i just spotted this. out of the 3, 
+>antcrypt seems to be the worst, the other two can get away with 
+>some blinding (dummy operations), but you can't compensate for 
+>differences in floating point, as the timing is just unknown and 
+>depends on zillions of factors, including the data itself.
+
+Honestly, I'm not worried too much about the resulting timing leak.  It
+is correct that the single branches can have vastly different timing,
+but when you observe the overall timing for one password what you will
+see is the sum of a very large number of (pseudo-)random timings.  One
+should check mean and variance of the resulting runtime, but I would be
+_very_ surprised if this carries enough useful information.
+
+
+Of the four, AntCrypt does the best job of making it's case for using
+data-based branching for SIMD defense.  I think OmegaCrypt, POMELO,
+
+Thank you :-)
+
+POMELO, I'd drop an calls to existing cryptographic hashes, and depend
+
+I don't see a good reason to totally stop using hash functions.  Calling
+a hash function at least once (in the correct way, of course), and
+refraining from doing something really bad outside the hash function,
+guarantees one-wayness of the construction and you have one less thing
+to worry about.  Apart from that you can use them to easily implement
+nice features such as strength-extensibility (by collapsing and then
+expanding the state again), like AntCrypt is doing.  But I agree that
+you should/can use them sparingly.
+
+Cheers,
+Markus
+
+
+

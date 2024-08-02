@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] yescrypt on GPU</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2015/10/11/6">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALWCaoaAN4rwSOaLh13t3pt+hpqC5OKqdAjxm5KZV5o3UG27Sw&#64;mail.gmail.com&gt;
+Date: Mon, 12 Oct 2015 17:08:19 +0200
+From: Massimo Del Zotto &lt;massimodz8&#64;...il.com&gt;
+To: Solar Designer &lt;solar&#64;...nwall.com&gt;
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+I read the links a few times. I feel like I'm getting a bit lost connecting
+them to the instruction latency issue being considered. Maybe that's not
+even the point anymore, I'm not focused.
+What I'm sure is that between errata, language barriers and maybe some slip
+error the documentation around is fairly inconsistent.
+
+*When the linearized work size is &lt; native wavefront size the hardware is
+under-utilized.*
+The ALU still dispatches at full rate but the some elements of a SIMD will
+be masked out. In the profiler this produces high VALUBusy% but low
+VALUUtilization% (how many elements of a SIMD are valid). This matches my
+experience and the picture with the grayed mask. Size 32 -&gt;
+VALUUtilization% &lt;= 50%, Size 8 -&gt; VALUUtilization &lt;= 12.5%, but VALUBusy%
+can still be 100%.
+
+*It is necessary to provide at least 1 Wavefront each SIMD.*
+In my experience even in this case the performance is very low but I cannot
+tell whatever this is related to ALU operation itself or something else
+ticking inefficiently. The benefit going to occupancy 1/10 to 2/10 is
+usually immense but that could well be due to memory latency hiding alone.
+
+*It seems some instructions even have variable clock count.*
+Taking from codeXL disassembly of SecondSmix1, S_CBRANCH_EXECNZ (there are
+6) is reported as taking 4/16 clocks (depending if coherent or not).
+V_CMP_GT_U64 (1!) takes 32 clocks.
+The rest are only SALU ops such as S_AND_SAVEEXEC_B64 (8), S_ANDN2_B64
+(13?), S_MOV_B64 (33), S_AND_B64 (6). They all take 4 clocks. This is from
+~2400 ops. *Where did the 64-bit ops go?* I'm surprised as well.
+
+Your observation about LDS layout is accurate and matches my understanding.
+
+I made an error in quoting the message from himanshu.
+Emphasis was made on the 3 quarters of a wavefront being used to hide
+instruction latency but I agree that he doesn't make much sense as it seems
+to contradict the grayed image (as well as my understanding). In my mind I
+probably "auto-corrected" CU to "SIMD unit". This would *make sense*. The
+chip-level dispatcher puts wavefronts to CUs and the CUs distribute them to
+the SIMD lanes as they become available. The SIMD is 16 uint wide so it
+needs 4 clocks to process 64 WIs in packed registers (similarly to some
+CPUs). Then if the ALU is 4-stage pipeline we have basically 0 latency.
+While the CU-level dispatcher waits for those 4 clocks, it dispatches to
+the other SIMD lanes.
+That's probably the "4 stages pipeline" realhet writes as:
+
+stage0,         stage1,         stage2,         stage3
+instr0[ 0..15], idle,           idle,           idle
+instr0[16..31], instr0[ 0..15], idle,           idle
+instr0[32..47], instr0[16..31], instr0[ 0..15], idle
+instr0[48..63], instr0[32..47], instr0[16..31], instr0[ 0..15]
+And here we are at 4 cycle latency: the workitems[0..15] of Instr0 is
+completed, the ALU can continue with the first quarter of the next
+instruction
+instr1[0..15], instr0[48..63], instr0[32..47], instr0[16..31]
+...
+
+
+Yes, we need 64 WIs to fill a SIMD and 256 WIs to fill a CU (4 clocks!).
+SIMD units from the same CU can communicate only using memory (it's not
+like they pipeline themselves somehow).
+
+Is there a problem with that? It seems to me at this point the model is
+coherent but I suspect I might be misunderstanding the point of your last
+message.
+
+Cordially,
+Massimo
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TwoCats multiplication chain</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="../../../2014/06/23/1">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="../../../2014/06/25/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7HOgArE36nMOfJa0ur--okxLZUn_ujCeYyBX3xGNTYMw&#64;mail.gmail.com&gt;
+Date: Sun, 22 Jun 2014 16:35:37 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sat, Jun 21, 2014 at 5:06 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+
+&gt; Bill, all -
+&gt;
+&gt; Here's one more idea I'd like to have recorded in here, and it's about
+&gt; multiplication latency hardening in general, not TwoCats specifically.
+&gt;
+&gt; An attack which I think we haven't mentioned yet is speculative
+&gt; computation of multiple possibilities of the next MUL before a previous
+&gt; MUL completes.
+&gt;
+&gt; For a simplified example, suppose there's exactly one MUL output bit
+&gt; that limits the overall speed (it arrives late and/or is needed early,
+&gt; overall more so than the rest of bits do/are).  We can trivially
+&gt; eliminate this bottleneck, exposing whatever next bottleneck there may
+&gt; be, by starting to compute the next MUL for both possible values of this
+&gt; one bit before its actual value is known.  Ditto for the next bottleneck
+&gt; bit, and so on.  To do it for e.g. 10 bits at once, we need 1024
+&gt; multipliers - this is likely still affordable in terms of die area (it
+&gt; may be less than the die area we're forcing the attacker to spend on
+&gt; memory), but it might or might not be affordable in terms of routing and
+&gt; extra MUXes (which introduce delays, too).
+&gt;
+
+This is the basic idea behind a carry select adder:
+
+<a href="http://en.wikipedia.org/wiki/Carry-select_adder" rel="nofollow">http://en.wikipedia.org/wiki/Carry-select_adder</a>
+
+More generally, the speedup technique you are describing is application of
+what I used to call "Shannon Decomposition", though Wikipedia seems to
+prefer Bool's expansion:
+
+<a href="http://en.wikipedia.org/wiki/Boole's_expansion_theorem" rel="nofollow">http://en.wikipedia.org/wiki/Boole's_expansion_theorem</a>
+
+This can be a very effective technique for speeding up logic, especially
+when there is a clearly identifiable critical path, such as a carry chain.
+ I've written code to automate this, and it can speed up carry-chain adders
+a ton.
+
+I think I could accelerate multiplication chains built using the last
+multiplier I designed by about 2X.  The LSB of the upper output word had
+about 1/2 the latency of the MSB.    It is possible that Intel and AMD used
+something as lame as my Booth encoded multiplier.  I hate to assume they
+decided to design something faster, even if they are so speed competitive
+with each other.
+
+However, I think it is far more likely they did something awesome like a
+Booth encoded Wallace Tree multiplier.  Wallace Tree multipliers generate
+outputs at nearly the same time on all of the upper 32 bits, so there would
+be little chance to speed up those designs from just a logic redesign.  The
+last stage is typically a fast carry-select adder, which is why the output
+bits are computed so close in time to each other.  Here's a paper on
+multiplier verification that leaks a hint that Intel is comfortable using
+Wallace Tree multipliers:
+
+<a href="http://www.cs.utexas.edu/users/hunt/FMCAD/FMCAD13/papers/80-Relational-STE-and-Theorem-Proving.pdf" rel="nofollow">http://www.cs.utexas.edu/users/hunt/FMCAD/FMCAD13/papers/80-Relational-STE-and-Theorem-Proving.pdf</a>
+
+If you can come up with a way to significantly reduce the propagation delay
+through multiplication chains compared to chains of Booth Encoded Wallace
+Tree multipliers with registers between them, I will be very impressed!
+ I've scanned some recent papers that save an adder or two, but there
+aren't any practical implementations that demonstrate a significant speedup
+over the venerable Wallace Trees.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

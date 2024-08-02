@@ -1,0 +1,125 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <1534129819.2531786.1397751539636.JavaMail.root@larc.usp.br>
+Date: Thu, 17 Apr 2014 13:18:59 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+Hi again. 
+
+----- Mensagem original -----
+
+De: "Bill Cox" <waywardgeek@...il.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Quinta-feira, 17 de Abril de 2014 10:08:15
+Assunto: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 8:46 AM, Solar Designer < solar@...nwall.com
+wrote:
+
+Bill, this sounds cool, but let's not forget that maximizing single
+
+thread's memory bandwidth usage is a goal only in a subset of use
+cases
+
+(in 1 out of 3 categories, as I tried to explain earlier), whereas
+in
+
+others it's actually a drawback (it means that other resources are
+not
+
+fully made use of for defense when the defender is running more
+than
+one
+
+thread).
+
+Agreed. This level of analysis is one reason I'm sticking to yescript
+as my favorite Script-inspired entry. However, speed is fun! Also,
+most entries run into problems like cache miss penalties dominating
+runtime at large memory sizes, where an attacker could find ways
+around that. I would say that on the whole, the PHC entries are
+erring on the side of being too slow and not using enough memory,
+like you say, there is a point beyond which speed becomes a
+negative.
+
+With decent compute-time hardening, using multiple CPUs adds some
+defense, especially if you are able to tie up multiple caches, which
+of all the entries, only Yescript seems and TwoCats seem able to do
+well (thanks to your inputs on TwoCats). I misused the t_cost
+parameter to tune cache bandwidth vs external memory. I'm hoping to
+correct that in the tweak phase where if it's allowed, I'll make
+t_cost control outer loop iterations, and change my current timeCost
+to something like bandwidthControl.
+We are still analyzing our "p" parameter to see if we get a good result with multiple cores (it is one one of the tweaks we did not have enough time to tune in the original submission, but that is described in the documentation). This definitely does not mean we will be able to beat TwoCats ou Yescrypt in that regard, especially considering that you understand better hardware details than I believe we do, but it will be fun trying :-) 
+
+When comparing against scrypt or yescrypt in terms of single
+thread's
+
+memory bandwidth usage, I think we need to compare against reduced
+
+rounds versions of scrypt and yescrypt. This means scrypt with 2
+rounds
+
+of Salsa20 (just delete 3 out of 4 uses of SALSA20_2ROUNDS from
+
+SALSA20_8_BASE in yescrypt-simd.c) and yescrypt native mode with 1
+round
+
+of pwxform (just delete 5 out of 6 uses of PWXFORM_ROUND in
+PWXFORM).
+
+
+A hashing scheme pretending to win solely(?) in these terms would
+need
+
+to show that it outperforms these trivial modifications of
+[ye]scrypt.
+
+And there's not a lot of room to outperform them, even when we do,
+as
+
+we're getting quite close to the available bandwidth.
+
+
+I agree. However, I'm enjoying this metric as my "alternate win
+condition". It's how I entertain myself. I'm bummed that EARWORM and
+Lyra2 beat my memory bandwidth with one thread, but at least I'm
+writing to more memory per thread than the rest :-)
+Well, it is just as trivial to change our "rho" parameter, which controls the number of rounds of Blake2b, which is currently hardcoded... We are, however, more inclined to verify the usefulness of the "chi" parameter to slow things down, since it controls small random reads on the rows used in each loop (and, hopefully, that remained on cache). With this, we could reduce the memory bandwidth usage, using more of the machine's processing budget to provide better GPU resistance. 
+
+Finally, I think I prefer the win condition "best TMTO resistance", which was one of the things we put more effort at, so, even if we lose, hopefully it won't be by too much :-) 
+
+I would actually be (somewhat) interested if you do this sort of
+
+comparison for Lyra2 vs. scrypt with Salsa20/2 vs. yescrypt with 1
+round
+
+of pwxform (and, if you like, also with Salsa20/2 instead of /8 for
+the
+
+final, real crypto sub-block per block). I wrote "somewhat" because
+I
+
+expect all of these to be similar, since we're getting close to
+full
+
+memory bandwidth available from one thread in hardware. ;-)
+
+
+Thank you for helping review PHC candidates!
+
+
+Alexander
+
+
+Done! I was looking for a way to procrastinate just a bit longer at
+work. I'll have data probably before lunchtime, at least for my Ivy
+Bridge machine. Done properly, I should test on your high memory
+bandwidth Sandy Bridge machine and also your AVX2 Haswell box. That
+may take me longer.
+
+Bill
+
+

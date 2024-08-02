@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <6143830.164525.1393940753487.open-xchange@email.1and1.com>
+Date: Tue, 4 Mar 2014 07:45:53 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On March 3, 2014 at 10:04 PM Samuel Neves <sneves@....uc.ptwrote:
+>
+static const uint16_t ctrl = 0x1f7f; // 64-bit mantissa, round to 0
+
+Nice with that you can do umul64_hi with one fmul and one fscale:
+
+#define __STDC_CONSTANT_MACROS
+#include <inttypes.h>
+
+uint64_t umul64_hi(uint64_t a, uint64_t b)
+{
+    uint64_t r;
+    float    bit63 = 9223372036854775808.0; // 2^63
+    int32_t  shift = -64;
+    uint16_t ctrl  = 0x1f7f;
+
+    a -= UINT64_C(0x8000000000000000);
+    b -= UINT64_C(0x8000000000000000);
+    asm(
+        "fldcw   %4  \n\t"
+        "fildl   %3  \n\t"
+        "fildll  %1  \n\t"
+        "fadd    %5  \n\t"
+        "fildll  %2  \n\t"
+        "fadd    %5  \n\t"
+        "fmulp       \n\t"
+        "fscale      \n\t"
+        "fsub    %5  \n\t"
+        "fistpll %0  \n\t"
+        "ffree   %%st\n\t"
+        : "=m"(r)
+        : "m"(a), "m"(b), "m"(shift), "m"(ctrl), "m"(bit63));
+    return r + UINT64_C(0x8000000000000000);
+}
+
+A few notes on the code fildll loads a signed 64 bit int so you need to
+subtract 2^63 and load then add 2.0^63 to make it an unsigned load and the
+reverse on the store. ffree is needed because after 6 calls the stack is full
+or something and gives bad data. Lastly I have never done x87 before today.
+So there's probably a better way to do it. Also this stack thing I don't get
+it besides: there are 8 registers, it's a cyclical stack, you push and pop,
+it breaks if you push to much instead of overwriting oldest, there's a notion
+of free that isn't a pop but works like it?, and you can change the stack
+pointer by +-1 and somehow doesn't make it implode.
+
+

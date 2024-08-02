@@ -1,0 +1,116 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <CALW8-7+6BcSXgorakpd4oLqKnvxr-xnRbea+tS0wk+w20SUmvw@mail.gmail.com>
+Date: Wed, 23 Mar 2016 10:47:36 +0100
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] hash encryption
+
+Simplest scheme would be SHA-256 in the counter mode.
+
+Just XOR SHA-256(Key||Nonce||0..0)||SHA-256(Key||Nonce||0..01) to the
+block[4], that's it.
+
+Dmitry
+
+On Wed, Mar 23, 2016 at 8:54 AM, Jean-Philippe Aumasson <
+jeanphilippe.aumasson@...il.comwrote:
+
+What are your requirements wrt key size, block size, mode, speed?
+>
+With all the crypto in yescrypt, we'll probably find a decent scheme based
+on existing code :-)
+>
+On Wed, Mar 23, 2016 at 5:39 AM Solar Designer <solar@...nwall.comwrote:
+>
+>On Tue, Mar 22, 2016 at 09:08:41PM -0700, Andy Lutomirski wrote:
+>My recollection of the different security properties of different
+>numbers
+>of Luby-Rackoff rounds is a bit vague, but they have nothing to do with
+>bits of security or work factor.  Can you justify them?
+>>
+>I found Thomas Pornin's answer here helpful:
+>>
+>>
+>http://crypto.stackexchange.com/questions/1352/are-there-any-specific-requirements-for-the-function-f-in-a-feistel-cipher
+>>
+>Regarding 7 rounds for 256-bit security:
+>>
+>https://www.iacr.org/archive/crypto2003/27290510/27290510.pdf
+>>
+>In other words, 128-bit security for a 256-bit block is what
+>Luby-Rackoff's usual 3 or 4 rounds provide (it's 4 for chosen ciphertext
+>attacks, which might or might not be relevant here).
+>>
+>Almost 256-bit security for a 256-bit block is achieved at 7 rounds, as
+>shown in that other paper above.  I did not verify their results.
+>>
+>IMO the error case should not result in the identity function.  Abort or
+>memset-to-zero would be better.
+>>
+>For an error case, sure.  But this isn't meant to be an error case: it
+>is how we typically use password hashes now, without encryption.
+>>
+>I could encrypt with the empty key, but there's no security difference
+>here from not encrypting at all.  Zero key length is not the same as a
+>key that just happens to be all-zero.
+>>
+>I could treat zero key length as an error, but then why not treat low
+>key length as an error as well?  And what's "low"?
+>>
+>Hashing the key length in before the key would avoid needing to think
+>about
+>related-key attacks that might lose you one round or so of security
+>under
+>some circumstances.  Using a short-key variant as an oracle against a
+>long-key variant would be nasty
+>>
+>That's an interesting thought.  SHA-256 already hashes in the full
+>message length in bits, and with only the key being of variable length
+>here this feels sufficient.  Do you think it might not be, and why?
+>>
+>Hashing in the full key length may be tricky to implement because it'd
+>require converting it to an endianness-independent layout first.  I am
+>trying to avoid cluttering the code with unneeded(?) stuff like this.
+>>
+>Round number was much easier since those numbers are definitely small
+>enough to fit in 1 byte, and this is a requirement for the Luby-Rackoff
+>proof (independent functions for each round).
+>>
+>BTW, I am considering changing:
+>>
+>                SHA256_Update(&ctx, &round, 1);
+>>
+>to:
+>>
+>                {
+>                        uint8_t round_bytes[4] = {round};
+>                        SHA256_Update(&ctx, round_bytes,
+>sizeof(round_bytes));
+>                }
+>>
+>to ease optimized implementations (so that the key would start at an
+>aligned boundary, fitting SHA-256's 32-bit words directly).  But this
+>clutters the SHA256_Update()-using code as above.  Any thought on that?
+>Optimize for cleaner code here or for cleaner and shorter optimized code?
+>>
+>This cipher isn't exactly performance-critical here, since it'll
+>normally correspond to a negligible fraction of the password hashing
+>time.  But it's also 100% overhead, because an offline attacker who has
+>the key will be able to decrypt the hashes prior to cracking them.
+>>
+>And maybe someone will reuse it elsewhere.
+>>
+>Thank you for the review!
+>>
+>Alexander
+>>
+>
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

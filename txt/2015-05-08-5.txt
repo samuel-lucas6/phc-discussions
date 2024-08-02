@@ -1,0 +1,119 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Message-ID: <20150508231230.GA26640@openwall.com>
+Date: Sat, 9 May 2015 02:12:31 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+On Fri, May 08, 2015 at 07:08:18PM -0300, Marcos Simplicio wrote:
+I also discussed that in another thread: our numbers are way closer to
+those obtained by Milan than yours are (again, this does not mean any of
+them are wrong, since the platforms are different). Hence, while you
+have all the right to take our numbers with skepticism, they are not as
+strange as you suggested.
+
+Yes.  I now primarily blame mmap()/munmap().
+
+Anyway, the CPU and GPU tests are independent, so the comparisons
+suggested in the third column of our figures can be updated simply by
+dividing new/our CPU numbers by new/our GPU numbers for any algorithm
+having a GPU implementation.
+
+Right.
+
+I think you actually used a different metric on CPU, per
+readme_attacks.txt:
+
+"The CPU benchmarks focused in legitm usage of the kdfs.
+
+    To obtain the medium execution time:
+    - We executed "n" times each derivation;
+    - With the parameters seted accordingly with parallelism and memory
+usage desired."
+
+While this would make sense for KDF use at large m_cost, it doesn't for
+password hashing use at low m_cost.  You should use a throughput figure
+for CPU, just like you do for GPU.
+
+Like Milan Broz's tests, I imagine, which makes perfect sense. We will
+use the exact same methodology for p=1 (as done already) to 12.
+
+Yes, as long as by p you mean not yescrypt's p, but parallelism added
+external to yescrypt, like I believe Milan did for Figure 10.
+
+I'd make sense to include bcrypt, too.  Especially if you claim that
+your GPU outperforms CPU at yescrypt despite of pwxform's rapid random
+lookups, it becomes extremely relevant that you show the same for
+bcrypt, because yescrypt-simd's rapid random lookups are on par with
+bcrypt's when both are run defensively on a modern x86 CPU.
+
+That makes sense, and can be added to our TODO list and eventual
+academic publication (thank you for the advice!).
+
+I'd be interested in your results (and you're welcome!)
+
+>The only situation in which we got Lyra2 running faster on our GPU than
+>on our CPU was for p=1 and 8 threads per warp (for 256KB).
+
+You mean when you used unoptimal settings on GPU and didn't fully use
+the CPU?  This doesn't count, for either or both of these reasons.
+
+It is actually:
+
+1) Optimal settings for GPU: the setting with highest throughput
+
+OK, I misunderstood you.
+
+2) One possible setting for CPU: it corresponds to a a constrained
+device that cannot afford GiBs of memory in their KDF operation, or to
+lightly loaded server (e.g., it cannot afford to use a lot of memory
+because it was designed for peak usage much higher than the current one,
+or because other tasks consume a lot of memory and, thus, the
+authentication processes should not get too much memory).
+
+I agree about the memory, but I disagree that the server wouldn't run
+max number of p=1 instances at once if there's enough load.  And if the
+server is lightly loaded (as you say), then it's not a scenario that
+limits the admin's choice of m_cost and t_cost, so irrelevant to us.
+Also, I think CPU vs. GPU comparisons should be per chip, and not e.g.
+1 core vs. 1 chip.
+
+So, I would say it does count, but also that there is also a wider
+picture that would be interesting to explore (="highly loaded server"),
+much like done in Milan Broz's Figure 10.
+
+I think this wider picture is the primary or even the only relevant case
+for this range of m_cost.
+
+Indeed, a server will usually not be highly loaded, but the cost
+settings are determined by server capacity at max load.
+
+I am sorry that my messages might sound dismissive.  Once again, I
+appreciate your work on this a lot, and I think you got very close to
+producing valuable results here.
+
+I respectfully disagree that we have no valuable results yet, for the
+reasons mentioned above and in the previous e-mail. However, we do
+prefer constructive criticism (as you provided!) to plain acceptance,
+since this will help to improve this study.
+
+Given the discussion so far, I am starting to see some value in your
+results.  It is just not apparent.  The biggest help so far is making me
+benchmark just how much slower mmap()/munmap() are than malloc()/free()
+when repeatedly invoked from the same process.  Now this sounds obvious,
+but without this discussion maybe I wouldn't realize that Milan's
+results are also badly impacted by this.  I previously thought this
+overhead would be roughly the same for all schemes, but it actually
+varies a lot between implementations.
+
+Hence, there is absolutely no need to apologize: quite the opposite,
+even though we do not agree with every point you raised, we are very
+thankful for the feedback! It will probably save us a lot of work
+responding to peer reviewers in the future :)
+
+I appreciate how you're responding to feedback, on this and on other
+occasions.  Thank you!
+
+Alexander
+

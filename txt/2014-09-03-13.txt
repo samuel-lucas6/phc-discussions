@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] Argon is highly parallelizable...
+
+Message-ID: <CALW8-7Kvq-fcfwRRdAhPHVr_QPh_AJWTxmCTHphAuOK==e-YUw@mail.gmail.com>
+Date: Wed, 3 Sep 2014 16:23:52 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon is highly parallelizable...
+
+Hi Bill,
+
+thank you for the analysis.
+
+Argon indeed allows different sorts of parallelism. The one you noticed in
+ShuffleSlices is not documented in the submission, but it is used in our
+tradeoff energy estimates (and you can see it on slides).
+
+In the ASIC energy model it benefits the attacker only slightly, actually,
+since it keeps the read/write energy and the AES computation energy
+untouched, and only the retention energy may be reduced. However, for such
+high bandwidth the retention energy will likely to be dominated by the
+active energy, so the actual win would be tiny.
+
+Also, the parallelism in ShuffleSlices is helpful only in running the
+password cracking with no memory reduction, i.e. with no tradeoff. Even if
+the memory is reduced by the factor of two, the scheme latency will
+increase much more due to the need to run a stack of AES's to recompute the
+entry in ShuffleSlices.
+
+A defender might be able to use this parallelism to hide the memory access
+pattern if there is a concern about cache-based timing attacks. Indeed, as
+many as 2^15 AES states can be read in parallel in an arbitrary order. The
+defender generates a random permutation of this size and reads the states
+from the memory according to it. The consequences are different for
+different types of adversary, but the cross-VM attacks will definitely have
+much lower signal-to-noise ratio due to the increased uncertainty in the
+cache contents.
+
+Best regards,
+Dmitry
+
+
+On Tue, Aug 26, 2014 at 8:18 PM, Bill Cox <waywardgeek@...hershed.org>
+wrote:
+
+The SubGroup call is "embarrassingly parallelizable", meaning for N
+blocks of 32 128-bit state values, we can run it in parallel N ways.
+Each "SubGroup" hash on groups of 32 128-bit states is independent from
+the others.
+>
+The ShuffleSlices is parallelizable well beyond the intended 32-way
+parallelism.  First, run all 32 slices in parallel.  Then, for each
+slice, compute many sequential j values in parallel.  This is not a
+problem if we build a custom cache that presents many sequential state
+values at once to each slice computation unit.  Parallel addition of
+all the j values is then a simple matter,  Once they are computed, we
+can compute the destination addresses for swapping in parallel, and
+even do the swapping in parallel with our custom cache.  The only
+problem is if any destination j address is within the set of states we
+added together in parallel, in which case we abort and do this group
+in sequentially.
+>
+With the right choice for number of j values, aborting should not
+happen often enough to reduce the runtime.  For an extra 16-way
+parallelism on a 16MiB hash (total of 512 parallel cores, since we
+have 32 parallel slices), only about 1 in 128 blocks of 32 would have
+to be computed sequentially.
+>
+Memory bandwidth could be a limiting factor, but a cache architecture
+for delivering 32 pseudo-random values in parallel is doable with
+reasonable latency.
+>
+Not only that, but Argon can be run in constant time and memory with
+cache timing data, regardless of m_cost and t_cost settings.  An
+attacker only needs to hash the first 512 bytes before he can
+replicate data dependent reads.  This is a far worse parallel attack
+with cache timing data than the one the Catena paper outlined against
+Script.
+>
+I had not realized that the Argon authors claimed that t_cost == 3 is
+the minimum safe number of rounds for 1GiB, and for 10MiB, it was 236.
+ Running the benchmarks again with these numbers:
+>
+10MiB case:
+>
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 10 -tcost
+234 -pwdlen 64 -saltlen 16 -threads 5
+Memory allocated: 1 MBytes, 5 threads
+Argon:  346.15 cpb 338.04 Mcycles 0.3923 seconds
+>
+real    0m0.106s
+user    0m0.347s
+sys     0m0.047s
+>
+1GiB case:
+>
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 20 -tcost 3
+-pwdlen 64 -saltlen 16 -threads 8
+Memory allocated: 1024 MBytes, 8 threads
+Argon:  13.25 cpb 13250.55 Mcycles 18.4738 seconds
+>
+real    0m4.097s
+user    0m18.329s
+sys     0m0.146s
+>
+I claim my 7ms TwoCats hash of 16MiB is far more secure against brute
+force off-line guessing attacks, with or without cache timing data.
+Given a full 100ms, I'd hash over 500MiB on this machine, providing
+even more security.  Yescrypt can do this just as fast, when
+appropriate settings are used.  Lyra2 does pretty well, though not as
+fast.
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

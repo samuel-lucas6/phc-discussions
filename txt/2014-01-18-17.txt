@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <CAOLP8p6vcbotFvK=3d4UM9JU+4MkS11D9oRrZ_uKdViGqqz4og@mail.gmail.com>
+Date: Sat, 18 Jan 2014 14:51:23 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sat, Jan 18, 2014 at 9:16 AM, Solar Designer <solar@...nwall.comwrote:
+Another option is making use of a larger "ROM" (multi-gigabyte).  As I
+had mentioned, for busier-than-in-example-above dedicated authentication
+servers, we're currently playing with parameters that give
+7300 req/s/machine on a large(r) machine, using 112 GiB ROM (= 120 GB) +
+1.75 MiB RAM/instance.
+
+Awesome.  I just ran this code in my Chrome browser in 1.4 seconds:
+
+memhash = function(m) {
+    var hash = m;
+    var v = new Array();
+    v[0] = hash;
+    var memlen = 10000000;
+    for (var i = 1; i < memlen-1; i++) {
+        hash = (hash*(v[i >1] | 1) + 12345) % (1 << 30);
+        v[i] = hash;
+    }
+    return v[hash % memlen];
+}
+
+writeln(1 << 30)
+writeln(memhash(45));
+
+I think it writes 40MB, and reads 20MB.  Maybe twice that if it is
+storing 64-bit floats.  I think this shows we can probably allow users
+to perform hashing in their browsers, offloading the servers.  For
+clients without javascript, just do it on the server, but that's a big
+offload.  This even works on PHP backed servers with no native code
+access.
+
+Bill
+

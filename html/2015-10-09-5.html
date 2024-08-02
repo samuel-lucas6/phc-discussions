@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - memory bandwidth usage for hashing vs. other server tasks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20151009025227.GA29160&#64;openwall.com&gt;
+Date: Fri, 9 Oct 2015 05:52:27 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: memory bandwidth usage for hashing vs. other server tasks
+
+Hi,
+
+Here's a recent blog post and paper related to a topic that kept coming
+up in here once in a while - can we use a lot of memory bandwidth for
+password hashing yet not impact other server usage too badly (if the
+server isn't dedicated to just password hashing)?
+
+<a href="http://danluu.com/intel-cat/" rel="nofollow">http://danluu.com/intel-cat/</a>
+<a href="http://csl.stanford.edu/~christos/publications/2015.heracles.isca.pdf" rel="nofollow">http://csl.stanford.edu/~christos/publications/2015.heracles.isca.pdf</a>
+
+"LLCs for high-end server chips are between 12MB and 30MB, even though
+we only need 4MB to get 90% of the performance, and the 90%-ile
+utilization of bandwidth is 31%.  This seems like a waste of resources.
+We have a lot of resources sitting idle, or not being used effectively.
+The good news is that, since we get such low utilization out of the
+shared resources on our chips, we should be able to schedule multiple
+tasks on one machine without degrading performance.
+
+Great!  What happens when we schedule multiple tasks on one machine?"
+
+A lot of stuff happens, and it takes more than just a quick glance at
+the blog post to start to understand it.
+
+Here's my take at it, as it relates to our question above: there's
+plenty of idle memory bandwidth on servers even under full load by
+memory latency bound tasks, which is typical, however trying to use
+this idle memory bandwidth for an extra task (such as password hashing)
+might push the other tasks above their latency SLA, even though their
+throughput isn't impacted as much.  The paper presents ways to avoid
+unacceptable latency impact, but doing so takes effort in a given
+deployment (it isn't something that will just happen by default), and
+besides password hashing is usually not a best effort task, but is also
+an on-demand task.
+
+My opinion remains that we should use computation and memory bandwidth
+in a balanced manner, maximizing both at full server load by the
+password hashing, yet expecting that in actual usage the server's load
+may come from some mix of password hashing and other tasks.  It's
+unrealistic to expect that password hashing, whether computation or/and
+memory bound, won't have significant impact on other tasks, but it is
+realistic to make it such that it degrades other tasks' performance
+(both latency and throughput) gracefully as the password hashing request
+rate increases.  For example, 50% usage of a server's password hashing
+request rate capacity may actually leave 50% of the server's capacity at
+other tasks for use by those tasks.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+phc-discussions - Replacement index function for data-independent schemes (Catena)
+
+
+Message-ID: <CAMtf1HuSx0A_fbqhv3pH2X2tDAsuUKa=TEzjHOQr_T1etkAJUA@mail.gmail.com>
+Date: Thu, 19 Feb 2015 14:38:03 +0800
+From: Ben Harris <mail@...rr.is>
+To: discussions@...sword-hashing.net
+Subject: Replacement index function for data-independent schemes (Catena)
+
+Building on the analysis of Catena and Lyra2 by Alex and Dimitry (
+http://orbilu.uni.lu/handle/10993/20043), I'd like to suggest a replacement
+to bit-reversal hashing (BRH) that, unlike the double-butterfly, maintains
+most of the advantages of BRH.
+
+The function is a combination of bit-reversal (to promote low-order bits
+higher) and a grey-code-like xor (to permute the weight/population count).
+The function is:
+
+phi(i) = reverse(i) ^ (reverse(i) >ceil(n / 2))
+
+Where reverse is a bit reversal, ceil is the ceiling function, n is the
+number of bits (garlic).
+
+Using this function 0 is a fixed point - later I will cover a small change
+to move the fixed point to the last index instead.
+
+To permit an in place algorithm like Catena's BRH, the above function can
+be modified to a constant time function including the round number.
+
+phi_round(i, round) {
+      var ret = i;
+      var shift = (garlic + 1) >1; // ceil(n / 2)
+      var mask = (1 << (garlic >1)) - 1;
+      if ((round + 1) % 6 >= 4) ret ^= i & (mask << shift);
+      if ((round + 4) % 6 < 4) ret ^= i >>shift;
+
+      if ((round + 5) % 6 < 4) ret ^= i << shift;
+      if ((round + 2) % 6 >= 4) ret ^= i & mask;
+
+      ret &= (1 << garlic) - 1;
+
+      if (i & 1 == 1) ret = reverse(ret);
+
+      return ret;
+}
+
+The function is 6-cyclic instead of 2 like bit reversal. It also permutes
+the population count which is a stronger permutation than just reordering
+the bits. On rounds 0, 2 and 4 the reversal is cancelled out, the index
+values are as follows for each round (4 bit example)
+
+0    1234
+
+1    4343 xor
+       12
+
+2    1212 xor
+     34
+
+3    2143
+
+4    3434 xor
+       12
+
+5    2121 xor
+     43
+
+6    1234
+
+The lower order bits are spread around, ensuring that nodes are separated
+for up to 6 rounds. The final change is to move the stationary point to the
+final point with a bit inversion:
+
+phi(i) = reverse(i) ^ ( ~reverse(i) >ceil(n / 2) )
+
+phi_round(i, round) {
+      var ret = i;
+      var shift = (garlic + 1) >1; // ceil(n / 2)
+      var mask = (1 << (garlic >1)) - 1;
+      if ((round + 1) % 6 >= 4) ret ^= i & (mask << shift);
+      if ((round + 4) % 6 < 4) ret ^= i >>shift;
+
+      if ((round + 5) % 6 < 4) ret ^= i << shift;
+      if ((round + 2) % 6 >= 4) ret ^= i & mask;
+
+      if ((round + 5) % 6 < 2) ret ^= mask << shift;
+      if ((round + 2) % 6 < 2) ret ^= mask;
+
+      ret &= (1 << garlic) - 1;
+
+      if (i & 1 == 1) ret = reverse(ret);
+
+      return ret;
+}
+
+An illustration is available at http://bharr.is/d3-catena/
+
+
+

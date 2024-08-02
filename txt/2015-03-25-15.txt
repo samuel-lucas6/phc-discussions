@@ -1,0 +1,104 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <CAOLP8p4-13ETqXdXJf7Mjx19iHZfaEjdsBZmENmWGuPQ1w9VoQ@mail.gmail.com>
+Date: Wed, 25 Mar 2015 15:40:02 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+>
+Isn't it what Figure 1 already shows? Or you mean some combination?
+(tcost is minimal for each candidate there, memory cost is increasing and
+chart
+shows real memory use + real run time).
+>
+
+I would like to see a chart with real memory on the X axis, and real
+runtime on the Y axis.  The data is all here, but is hard to compare, since
+t_cost and m_cost are interpreted arbitrarily by each algorithm.  Any chart
+with either m_cost or t_cost is mostly showing this arbitrary scaling.
+
+
+Why I do not use multiple threads is based on disk-encryption my use case:
+>
+In general, FDE-enabled disk can be moved between several machines with
+completely different performance and hardware configurations.
+>
+On slow machine unlocking should take more time and it would be
+probably acceptable (in some reasonable limits).
+>
+But if it cannot be unlocked at all (cannot run parallel threads) it is
+unacceptable for the user (usability fail). Security/usability tradeoff...
+>
+The second reason is that it can could run in a very limited environment
+(a bootloader for full system encryption) where threads are not easily
+manageable.
+>
+But it is just my opinion.
+>
+Your opinion counts very much for this case!  I unlock my Goobuntu machine
+every day with 200ms of PBKDF2, which is far weaker than 1ms of Scrypt.  I
+don't worry about this because I know you're on the case, and a good
+upgrade will happen.
+
+In the specific case of LUKS, I think we can expect the authors (including
+you) to do a good job picking default parameters for the password hashing
+algorithm.  This is not a simple task, and we can expect users generally to
+mess up on this step, which is why we should give them an API with only one
+knob: runtime.  However, for critical applications such ask LUKS, I think
+you guys can choose the parameters to match the machine.  In TwoCats, I
+provided a utility to pick parameters automatically.  I would be happy to
+provide a similar utility for whatever algorithm(s) wins the PHC.  You
+could run this utility when encrypting a hard drive to tune hashing to the
+machine to optimize password protection.  On other hardware, it may take
+longer to decrypt, but it should decrypt successfully.
+
+Is it actually the case that there are LUKS encrypted hard drives that are
+decrypted without multi-threading capabilities?  If this is the case, can't
+we choose to disable multi-threading when compiling for that platoform,
+while taking advantage of the improved protection multi-threading provides
+on most platforms?  I do not like the idea of substantially weakening
+password security for the majority of use cases based on a rare corner case.
+
+The case for multiple threads is compelling, IMO.  A single thread on
+modern Intel and AMD CPUs can only typically fill half the memory
+bandwidth.  To take full advantage of a short 200ms hashing runtime, you
+want at least two cores hammering memory in parallel, which typically
+results in an 80-ish% memory usage increase.  I had the default parallelism
+in TwoCats set at 2 originally for this reason, and I like Lyra2's default
+of 2 as well.  With Yescrypt's default of 6 rounds, most of our 4-core
+machines should use 4 threads.  If Alexander were less picky about purity
+in benchmarking, he would have set his default to a more reasonable value
+such as 4.  This password protection enhancement is so significant, I
+believe one of the two remaining passwords that has this capability should
+be chosen as the winner.  Even Scrypt has this ability, though the
+implementation left something to be desired.  Going back to purely
+single-threaded hashing is a move backwards.
+
+I know that many people think, "but I need those other cores available for
+other processes".  I'm afraid that in reality, these SSE optimized memory
+hashing algorithms are so fast, other tasks get their cache data completely
+flushed.  This is one reason I feel it will be hard in practice to mount a
+cache-timing attack against Lyra2 or Yescrypt.  By the time the attackers
+thread is allowed to run, there's nothing left in L3 cache at all.  Giving
+those other cores to other tasks will just cause them to run 10X slower
+than usual due to constant cache misses, slowing down hashing, and causing
+everything to take much longer.  This is a real effect I've measured with
+sse-optimized Scrypt.  As far as I can tell, the best case is to just let
+memory hashing take over and thrash everything and get it over with.  This
+makes the most sense to me specifically for FDE.
+
+Your LUKS use case, IMO, is the most important data you've gathered.
+However, I think it would be best to optimize parameters for each algorithm
+specifically for this use case.  That's what I hope you will do when you
+upgrade LUKS.  I am much more interested in hearing how Lyra2 will compare
+to Yescrypt as you would actually deploy it, rather than how they run with
+default PHS parameters.
+
+By the way, awesome work!  I nit-pick, but you're doing the best
+benchmarking I've seen to date.
+
+Bill
+
+
+

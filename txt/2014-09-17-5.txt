@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <54195B25.4080604@ciphershed.org>
+Date: Wed, 17 Sep 2014 05:57:57 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+I think it would be very difficult to make use of the runtime to guess
+who had just authenticated.  However, Krisztian is right that this is
+a timing leak, though as he said, it may be a minor one.
+
+All three of these algorithms are at more risk of leaking information
+in cache-timing, I think.  Going full timing-attack resistant is one
+extreme worth exploring.  I think massive data-dependent branching and
+addressing is the other, and also worth exploring.
+
+On 09/17/2014 05:53 AM, Dmitry Khovratovich wrote:
+The running time will be different, but the question is how you are
+going to exploit it without full hashing. Suppose you have the time
+information, then you do only partial hashing and look at the
+running time of this part. Both running times should have normal
+distribution, so you might be able to calculate your advantage in
+terms of false positive and false negative rates. However, to win
+even a factor of two, your distributions should have very large
+sigma, which is doubtful if you have say millions of branches.
+
+On Wed, Sep 17, 2014 at 10:56 AM, Krisztián Pintér
+<pinterkr@...il.comwrote:
+
+>can someone explain me how omegacrypt does not leak secret
+>through timing? i mean total runtime, not cache timing.
+>
+>in the central part, we derive 0..3 number B from the secret,
+>and based on that value we do different branches that has
+>different number of operations. B will on average have all
+>possible values with the same probability, but there will be a
+>deviation. therefore for two given passwords, the total running
+>time is different.
+>
+>i understand that memory latency screws up such fine grained
+>timing, making practical attacks difficult. but theoretically
+>there is a leak. am i right?
+>
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGVshAAoJEAcQZQdOpZUZoeYQAJX41YFOSxyb9SR+QX17o0lO
+S7phmUGcdZhAkQiXt/xvSLOVcX0O/qQ2CuV4Ov/hlZ7Koiv80dtkUuRVVYG0xeLH
+6XspyxifNAGwO0iSkaAahehQwkkbq8lQtC4fsAtIWqIpwGd0peO8VdkXxne+gZ3t
+UB1y4Ra87a22IgU9vZJGKw0BxdMDji90OtPGCG2qiuV7q1tKuSZmNejApmHXl+LQ
+DKaEJuTY9ameiaQdRrvzzh6zqXr747uonXMEJc43YR/bmwJDcCixCVJlfzFBJ9KS
+kTJ/gNX+b+MFEUT7ShCHZkHyT/YaXGj3zt6jy9rOQ/F3ItQEr5dovsWSr4+kNljM
+KjcHYgyzm4X8HjS+3qZS3XyHhnRNDdzxDVNWKq46w10CY9CyKVTZ3kksI/5DY3d7
+bcf98rG8YRRIDFoBurwBoV6GRwoPD1coP0DmZkUHFFJHOdzKe6pspWFnwINc4E5f
+jGsfYkPXWnsYDWqrNCEydn3/8VgUFqptTT3+qXHu3WbHvfLdr7Vk8jwzFoaCBibA
+vpy5+bUGwY7XMwGHGnnqaFPGrfZRXQzET+VH3Z32CA/4gOlOF5hL6FgA4HtzNL+k
+ZfNCunqq1DnSCAeZU4zTHDA1NSJjRmPQVtOG05ZWMibcDWc3FQWrjiNmJQcUNbce
+v0ZHiaUxuVlqD/xMjwrS
+=HqGf
+-----END PGP SIGNATURE-----
+

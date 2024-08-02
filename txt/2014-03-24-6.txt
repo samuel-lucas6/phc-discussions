@@ -1,0 +1,106 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <CAOLP8p4UsbWLrTqmE9GVHX4wFqz5bw5BcNjPxUcvjqWZgp--iA@mail.gmail.com>
+Date: Sun, 23 Mar 2014 23:43:32 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Sun, Mar 23, 2014 at 10:59 AM, Jeremi Gosney <epixoip@...dshell.nlwrote:
+I've pushed code to a public repository for the candidate I will be
+submitting, pufferfish. This repository will be frantically updated over
+the coming week as I prepare my submission, but I wanted to get some
+initial feedback before the cutoff.
+>
+https://github.com/epixoip/pufferfish
+
+My comments should not carry much weight compared to the guy's who've
+already chimed in, but I did read your code.  It is well written, and
+as a guy who reads a ton of more typical open source code, I really
+appreciate that.  I liked the gen-salt concept, which is new to me.  I
+was thinking that managing all the parameters for a sophisticated PHS
+is a lot to put on a user, and given your KISS oriented entry, I like
+that this was the feature that you put a few extra lines of code into.
+
+As the name implies, pufferfish is an improvement upon bcrypt, and ergo
+blowfish. Concisely stated, pufferfish modifies the blowfish algorithm
+to use 64-bit words, a 128-bit block size, and dynamic s-boxes. The
+reference implementation uses a fixed key size of 256 bits, simply
+because for these purposes there is no need to support different key
+lengths.
+>
+The dynamic s-boxes are of course the biggest differentiating factor
+between pufferfish and blowfish. The s-box generation is as follows:
+>
+1. Hash the raw salt as sha512
+2. hmac-sha512 the password using the hashed salt as the key
+3. hmac-sha512 the password again, using the output of the hmac
+operation in step 2 as the key
+4. These two hmac hashes are concatenated to initialize the 1024-bit state
+5. The four s-boxes are each filled with m_cost / 4 / sizeof (uint64_t)
+words by iterating over the internal state with a variant of chacha8
+>
+The state is then iterated 64 more times with chacha8 to generate a
+third hmac key, which is used to hmac-sha512 the password one more time
+to generate the inital encryption key.
+
+This seems a bit complicated to me for a nice simple password hashing
+function.  I'm still fairly new to this stuff, but after reading the
+code and a couple papers describing motivations behind HMAC, PBKDF2,
+and HKDF, I feel that even these simple key derivation functions have
+more complexity than we need for a memory hard PHS.  HMAC seems
+designed to allow random stream ciphers to be used securely, but in
+our case, we're specifying the allowed secure block hash functions,
+and I can't see any reason for an inner HMAC wrapper around SHA-512,
+especially when we're already doing an HKDF-like extract and expand,
+similar to HMAC's inner and outer contexts.
+
+I prefer Catena's approach of trusting the underlying hash function
+and passing all of the input parameters to it for the extract step,
+and dropping HMAC.
+
+The rest of the construction is largely identical to bcrypt, using the
+same eksblowfish algorithm. However, to support variable output lengths,
+the 256-bit ciphertext is hashed with sha512 after being repeatedly
+encrypted before being written to the output buffer.
+
+Similar to my thoughts above, do you need to go the extra mile in
+hashing the output blocks?  If I read the code correctly, you're doing
+64 rounds of hashing on the internal key state, and then using SHA512
+to hash it one more time to become part of the output result.  Don't
+we trust SHA512 enough to just send it your internal key state and a
+counter?  Wouldn't that be just as secure?
+
+I elected to use this design because I really like bcrypt, and I really
+like the idea of being memory hard while using as little memory as
+possible. And I believe that the modifications I have made increase the
+effectiveness and extend the longevity of the original bcrypt design.
+
+Other people on this list also seem impressed by Bcrypt.  I haven't
+read it yet :-(
+
+I guess extending bcrypt into the future is a good thing.  I'm not a
+fan of sticking to tiny memory sizes that either fit in L1 cache or
+barely bust out.  I'd rather make an attacker pay for multiple GiB of
+memory for a full second per guess, but I understand there is a need
+for in-cache hashing.
+
+My concern over people going the Bcrypt route is that we may soon see
+commodity multi-CPU chips with as many as 1024 independent processors,
+all capable of computing Bcrypt rapidly.  You can defeat that by
+hashing 1MiB or more, so that each processor will not have enough
+local memory, but Bcrypt's 4KiB seems like the ideal target for these
+new multi-CPU chips.  Modern GPUs may have trouble, but Bcrypt has
+nothing I've seen so far to make me feel confident in using it to
+protect my passwords over the next 10 years.
+
+The reference code is clear, concise, and extensively commented, so it
+should easy to read, especially if you are already familiar with
+blowfish and/or bcrypt. I welcome your feedback.
+>
+- epixoip
+
+The reference code is both clear and concise.  Very nice!
+
+Bill
+

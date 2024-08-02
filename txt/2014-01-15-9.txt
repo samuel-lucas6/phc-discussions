@@ -1,0 +1,37 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <20140115150552.GA25279@openwall.com>
+Date: Wed, 15 Jan 2014 19:05:52 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Wed, Jan 15, 2014 at 06:42:40AM -0500, Bill Cox wrote:
+I don't see how reading from unpredictable RAM locations helps.  Maybe
+my pseudo-code is hiding the loop dependencies.  Here's the actual
+current first loop (I switched from using the word "page" to "block"):
+[...]
+    uint32 hash = 1;
+[...]
+    for(i = 1; i < c->numBlocks; i++) {
+[...]
+        for(j = 0; j < c->blockLength; j++) {
+[...]
+            hash = hash*(fromVal | 1) + prevFromVal;
+
+Oh, you're right: you do have the dependency via "hash" across
+iterations of the outer loop, so the attacker shouldn't be able to
+precompute the multiplies for another iteration of the outer loop
+despite of the lookup indices being predictable.
+
+The same applies to scrypt (even if its access pattern were made
+predictable), where X stays across loop iterations.  In fact, the same
+happens inside scrypt's BlockMix: the next 64-byte block to read is
+known, but Salsa20/8 can't be precomputed because of the data dependency.
+
+I think the same applies to Catena, too (although I have yet to take a
+look at the new Catena).  I was wrong about it depending on only one of
+three constraints, then.  It depends on two of three.  Not that bad.
+
+Alexander
+

@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <CAOLP8p7ZP+ege3DgA=C7U3WDmR1CnVi0pbKU39gMjG1JPGRUmw@mail.gmail.com>
+Date: Thu, 17 Apr 2014 16:36:55 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 4:10 PM, Solar Designer <solar@...nwall.comwrote:
+
+I tried r=32, and here are the results:
+>
+Thanks!  Did you also try r=16?  In some of my tests, r=16 was actually
+faster than r=32, although that was with 2 threads/core.  r=32 needs
+about 16 KiB of L1 cache per thread, because it's 4 KiB for current
+block (X or V_i), 4 KiB for random block (V_j), and 8 KiB for pwxform
+S-boxes, so we're bumping into 32 KiB L1 cache size with 2 threads/core.
+This is not yet the case with 1 thread/core, though.
+
+
+I just tried it: r=32 is faster than 16 (0.6s vs 0.644s).  r=64 is also
+slower, since it begins to have cache misses.
+
+
+Lyra2:
+Peak memory/second: 1.52 GiB/s
+Average memory/second: 1.14 GiB/s
+>
+These look correct to me, given the Lyra2 algorithm on page 11 in
+Lyra2ReferenceGuide.pdf for T=1.
+>
+Memory bandwidth: 10.64 GiB/s
+>
+This assumes a total of 7 reads plus writes per location, which I'm not
+sure is correct.  Looking at the algorithm, it might be even more, but
+that would push the memory bandwidth usage even higher, which would be
+surprisingly high.  It might be 4 r/w per iteration in Filling Loop, and
+5 r/w per iteration in Visitation Loop, so 9 total.  If this is correct,
+we'd see 13.68 GiB/s here.  This might be realistic because, if I
+understand correctly, the same rand is reused with and without rotW(),
+which halves the amount of crypto-like processing per memory access even
+compared to reduced round TwoCats and yescrypt.  (If one round of
+pwxform is crypto-like, whereas one bit-rotate is not.)
+>
+
+I think for DRAM bandwidth, 7 is the right number.  The first loop calls
+this for each memory location sequentially:
+
+    reducedDuplexRowSetup(state, memMatrix[prev], memMatrix[rowa],
+memMatrix[row]);
+
+memMatrix[prev] is still in cache, but this function does a read and write
+to memMatrix[rowa], and a write to memMatrix[row].  This loop causes 3 DRAM
+accesses.  The second loop calls:
+
+    reducedDuplexRow(state, memMatrix[prev], memMatrix[rowa],
+memMatrix[row]);
+
+This function reads from all three and writes to two, but memMatrix[prev]
+is in cache, so I only count two reads, for a total of 4 accesses.  If
+Lyra2 were running in cache, I'd count the cached reads and use a 9X
+multiplier.
+
+BTW, yescrypt at zero rounds of pwxform might well be a reasonable thing
+to use, if we're to maximize memory bandwidth usage while not even
+trying to keep any compute time hardening (besides the occasional Salsa20).
+I just haven't studied it enough to recommend it as an option, and I am
+not aware of a use case where zero compute time hardening would be good.
+When making the rounds count tunable (and encoding it in the flags
+field), I am not sure if I should make zero a supported value.
+
+
+I think having a mode that is not explicitly compute-time hardened would be
+a good thing.  My SkinnyCat subset of TwoCats has no multiplication chains,
+and only has memory bandwidth to force attackers to take a while.  For
+machines without a dedicated multiplier, this might be a better mode for
+them to run.
+
+I don't know what skipping pwxform calls does to security, though.  I'm
+sure you can deal with that.
+
+Bill
+
+
+

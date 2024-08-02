@@ -1,0 +1,515 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="../../../2015/09/14/1">[next&gt;]</a> <a href="../../../2015/09/14/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150913182650.GA6219&#64;bolet.org&gt;
+Date: Sun, 13 Sep 2015 20:26:50 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Specification of a modular crypt format
+
+Hello,
+
+here is my take at specifying a string format for the output of a
+password hashing function; this aims at supporting password verification
+in a way compatible, in particular, with the Unix crypt() API and the
+/etc/shadow files. This is not for use of a function as a KDF. I tried
+to remain as generic as possible, although of course the primary target
+is Argon2.
+
+All of the text below is a draft. I made some (many) choices for reasons
+which may be good or bad, but are almost never strong, so everything is
+really open to debate. Please read, comment, and point out problems.
+
+Later this week, I'll try to write some generic implementations of
+encoders and decoders for this format.
+
+
+	--Thomas Pornin
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Requirements
+============
+
+We want a string format for encoding the output of a password hashing
+function with the following characteristics:
+
+ -- The format must be compatible with the Unix /etc/shadow file format.
+
+ -- The format must be compatible with inexpert handling, especially by
+ code that builds SQL statements dynamically without using prepared
+ statements.
+
+ -- The string must contain an unambiguous identification of the function,
+ its parameters, the salt, and the output.
+
+ -- A similar format should exist, that contains everything except the
+ hash output. This is for compatibility with the Unix crypt() API. Let's
+ call "salt string" the string without the hash output, and "hash string"
+ the string with the hash output.
+
+ -- Code that expects a salt string should be able to easily process a
+ hash string, by ignoring the hash output. There again, this aligns with
+ the traditional Unix crypt() API.
+ 
+ -- The "parameters" part of the string should be human-readable.
+
+ -- Arbitrary binary salts shall be supported.
+
+ -- All fields should have clearly specified maximum sizes, so that
+ parsing is made easy (especially for languages such as C that lack
+ easy character string handling and dynamic allocation, and are happier
+ with fixed-sized stack-allocated buffers).
+
+ -- The encoding should be deterministic: for a given set of parameters,
+ salt value and hash output, there shall be only one valid hash string.
+ Having a deterministic output makes it much easier to verify an
+ implementation against test vectors. It also helps interoperability.
+
+ -- Implementations should _validate_ the string syntax, rejecting
+ any string which is not the exact expected deterministic output.
+
+ -- Both production and parsing should be easy in a variety of
+ languages.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Specification
+=============
+
+We define the following format:
+
+  $&lt;id&gt;$[&lt;param&gt;=&lt;value&gt;(,&lt;param&gt;=&lt;value&gt;)*$]&lt;salt&gt;[$&lt;hash&gt;]
+
+where:
+
+  '&lt;id&gt;' is the symbolic name for the function
+  '&lt;param&gt;' is a parameter name
+  '&lt;value&gt;' is a parameter value
+  '&lt;salt&gt;' is an encoding of the salt
+  '&lt;hash&gt;' is an encoding of the hash output
+
+The string is thus the concatenation, in that order, of:
+  -- a '$' sign;
+  -- the function symbolic name;
+  -- a '$' sign;
+  -- optionally, one or several parameters, each with a 'name=value'
+  format; the parameters are separated by commas, and the list ends
+  with a '$' sign;
+  -- the (encoded) salt value;
+  -- optionally, a '$' sign followed by the (encoded) hash output.
+
+The function symbolic name is a sequence of characters in: [a-z0-9-]
+(lowercase letters, digits, and the minus sign). No other character is
+allowed. Each function defines its own identifier (or identifiers in the
+case of a function familu); identifiers should be explicit (human
+readable, not a single digit), with a length of about 5 to 10
+characters. An identifier name MUST NOT exceed 32 characters in length.
+
+Each parameter name shall be a sequence of characters: in [a-z0-9-]
+(lowercase letters, digits, and the minus sign). No other character is
+allowed. Parameter names SHOULD be readable for a human user. A
+parameter name MUST NOT exceed 32 characters in length.
+
+The value for each parameter consists in characters in: [a-zA-Z0-9/.-]
+(lowercase letters, uppercase letters, digits, '/', '.' and '-'). No
+other character is allowed. Interpretation of the value depends on the
+parameter and the function. The function specification MUST
+unambiguously define the set of valid parameter values; an invalid
+parameter value makes the whole string invalid. The function
+specification MUST define a maximum length (in characters) for each
+parameter. For numerical parameters, functions SHOULD use plain decimal
+encoding (other encodings are possible as long as they are clearly
+defined).
+
+The function specification MUST be such that the encoding of each
+parameter value is deterministic. For any parameter value, there shall
+be a single sequence of characters that is a valid encoding of that
+value.
+
+Parameters are not optional. All the parameters that the function may
+use MUST be present. The parameters MUST appear in lexicographic order
+of their names (using ASCII codes: '-', then digits, then letters).
+No parameter shall appear more than once. Presence of an unknown
+parameter name makes the whole string invalid.
+
+If the function expects no parameter at all, then the complete list,
+including its terminating '$' sign, is omitted. However, any decent
+password hashing function should have at least one configurable cost
+parameter, so in practice the parameter list is always present. Note
+that the '=' sign may appear within the complete string only as part of
+a list of parameters.
+
+The salt consists in a sequence of characters in: [a-zA-Z0-9/.]
+(lowercase letters, uppercase letters, digits, '/' and '.'). The
+function specification MUST define the set of valid salt values and a
+maximum length for this field. Functions that work over arbitrary binary
+salts SHOULD define that field to be the B64 encoding for a binary value
+whose length falls in a defined range or set of ranges.
+
+The hash output itself may be present or not. If the hash output is not
+present, then the string is a "salt string" that can be used to compute
+a hash but not to verify a password; it would typically be used as part
+of a password registration procedure. If the hash output is present,
+then the string is a "hash string"; the hash output MUST be the B64
+encoding of the raw output of the hash function.
+
+Consumers of salt strings and hash strings MUST validate the provided
+string, and reject invalid strings. In particular, they must verify
+that all parameters are present, in due order, with their unique valid
+encoding.
+
+
+B64
+---
+
+The B64 encoding is the variant of Base64 used in traditional crypt()
+implementations:
+
+  -- Input is split into successive groups of bytes. Each group, except
+     possibly the last one, contains exactly three bytes.
+
+  -- For a group of bytes b0, b1 and b2, compute the following value:
+        x = (b0 &lt;&lt; 16) + (b1 &lt;&lt; 8) + b2
+     then split x into four 6-bit values y0, y1, y2 and y3 such that:
+        x = (y0 &lt;&lt; 18) + (y1 &lt;&lt; 12) + (y2 &lt;&lt; 6) + y3
+
+  -- Each 6-bit value is encoded into a character in the [./A-Za-z0-9]
+     alphabet, in that order:
+
+     ** '.' = 0
+     ** '/' = 1
+     ** 'A'..'Z' = 2 to 27
+     ** 'a'..'z' = 28 to 53
+     ** '0'..'9' = 54 to 63
+
+  -- If the last group does not contain exactly three bytes, then:
+     1. The group is completed with one or two bytes of value 0x00,
+        then processed as above.
+     2. The resulting sequence of characters is truncated to its
+        two first characters (if the group initially contained a single
+        byte) or to its first three characters (if the group initially
+        contained two bytes).
+
+A B64-encoded value thus yields a string whose length, taken modulo 4,
+can be equal to 0, 2 or 3, but not to 1.
+
+
+Decimal encoding
+----------------
+
+For an integer value x, its decimal encoding consists in the following:
+
+  -- If x &lt; 0, then its decimal encoding is the minus sign '-' followed
+     by the decimal encoding of -x.
+
+  -- If x = 0, then its decimal encoding is the single character '0'.
+
+  -- If x &gt; 0, then its decimal encoding is the smallest sequence of
+     ASCII digits that matches its value (i.e. there is no leading zero).
+
+Thus, a value is a valid decimal for an integer x if and only if all of
+the following hold true:
+
+  -- The first character is either a '-' sign, or an ASCII digits.
+
+  -- All characters other than the first are ASCII digits.
+
+  -- If the first character is '-' sign, then there is at least another
+     character, and the second character is not a '0'.
+
+  -- If the string consists in more than one character, then the first
+     one cannot be a '0'.
+
+
+For Argon2
+==========
+
+For Argon2, the following is specified:
+
+  -- The identifier for Argon2d is 'argon2d'.
+
+  -- The identifier for Argon2i is 'argon2i'.
+
+  -- The parameters are:
+
+     ** m    Memory size, expressed in kilobytes, between 1 and (2^32)-1.
+             Value is an integer in decimal, over 1 to 10 digits.
+
+     ** p    Degree of parallelism, between 1 and 64.
+             Value is an integer in decimal, over 1 or 2 digits.
+
+     ** t    Number of iterations, between 1 and (2^32)-1.
+             Value is an integer in decimal, over 1 to 10 digits.
+
+     Since all three parameters use decimal encoding and are always
+     positive integers, the corresponding values can only consist of
+     ASCII digits, and none of the values may start with a '0'.
+     The three parameters appear in the 'm,p,t' order (as per the
+     lexicographic order of their names).
+
+  -- The salt value is encoded in B64. The length in bytes of the
+     salt is between 8 and 48 bytes, thus yielding a length in
+     characters between 11 and 64 characters (and that length is never
+     equal to 1 modulo 4). The recommended byte length of the salt
+     is 16 bytes (22 characters in B64 encoding).
+
+  -- The hash output is encoded in B64. Its length in bytes is
+     32 bytes, thus encoded over exactly 43 characters.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Rationale
+=========
+
+The format is inspired from what already exists for Unix crypt() and
+/etc/shadow files. Its alphabet is limited to: [a-zA-Z0-9./$=-]; as
+such, it contains no quoting characters (that could break
+handmade SQL statements).
+
+For the Unix crypt() function, the API relies on encoding extra parameters
+in the "salt" string. Basically, the format looks like this:
+
+   $&lt;id&gt;$&lt;params+salt&gt;$&lt;hash&gt;
+
+where '&lt;id&gt;' is a symbolic identifier for the hashing function, '&lt;salt&gt;'
+is the salt possibly preceded by parameters, and '&lt;hash&gt;' is the encoding
+of the hash output. As an illustration, consider the 'SHA-256 crypt' which
+is a custom scheme with some thousands of invocations of SHA-256. Identifier
+for this scheme is '5'. The string will have one of these two formats:
+
+   $5$pGRKt89LXQl2$DX7QpZ2MZHf3wCBrGfpwoZq8/VnyrZqhOtEIsMKptKJ
+   $5$rounds=5000$pGRKt89LXQl2$DX7QpZ2MZHf3wCBrGfpwoZq8/VnyrZqhOtEIsMKptKJ
+
+The Solaris version will also support this format:
+
+   $5,rounds=5000$pGRKt89LXQl2$DX7QpZ2MZHf3wCBrGfpwoZq8/VnyrZqhOtEIsMKptKJ
+
+but, interestingly, upon generation, it will output a string that starts
+with '$5$rounds=', not '$5,rounds='. For "Solaris", I mean here what I
+think I understand from the source code of the opensource fork illumnos,
+under the possibly bold assumption that recent versions of Solaris (from
+Oracle) still behave that way.
+
+The crypt() function expects a "key" (the password) and a "salt"; the
+salt string really is the start of a hash string, possibly the hash string
+itself. The application is supposed to do the following:
+
+   -- When first recording the password, use:
+        crypt("ThePassword", "$5$rounds=5000$pGRKt89LXQl2")
+   -- When verifying the password, use:
+        crypt("ThePassword", "$5$rounds=5000$pGRKt89LXQl2$DX7QpZ2MZHf3wCBrGfpwoZq8/VnyrZqhOtEIsMKptKJ")
+
+I.e. the "salt" string may either be the "salt with parameters", or the
+"salt with parameters and hash output". The crypt() function really
+stops parsing the salt at the first relevant '$' and ignores the rest,
+so the complete hash string can be used as salt string as long as it
+_begins_ with the salt string.
+
+Solaris identifies the hash function to use by looking at the start of
+the salt string, after the initial '$', up to the next '$' or ',',
+whichever comes first. From the id and the contents of the crypt.conf
+file, it loads the relevant scheme-specific DLL, and (crucially) invokes
+it with the _complete_ salt string. This implies that there is no hard
+constraint on the string syntax, beyond the bare minimum required to
+unambiguously identify the scheme name: the parsing is really done by
+the scheme-specific DLL.
+
+On Linux (glibc) and FreeBSD, a similar mechanism is used, but without a
+configuration file; the list of scheme identifiers is hard-coded.
+Interestingly, FreeBSD recognizes '$5$' (with the second '$') as meaning
+"SHA-256 crypt", but matches '$2' (without the second '$') to
+Blowfish/bcrypt variants.
+
+So while using '$argon2i$' as prefix would be stylistically more in line
+with existing hash strings (on Linux and FreeBSD) than '$argon2i,',
+there is no absolute requirement here. Solaris would be happy with both.
+
+
+Initial scheme names were single digits, e.g. '5' for SHA-256. However,
+this raises namespace collision issues, and other users of the sort-of
+standard "modular crypt format" have used longer sequences, e.g. 'apr1'
+or 'bcrypt-sha256'. This page:
+   <a href="https://pythonhosted.org/passlib/modular_crypt_format.html" rel="nofollow">https://pythonhosted.org/passlib/modular_crypt_format.html</a>
+advocates for using "6-8 character descriptive identifiers". Also, the
+current implementations of crypt() seem to make case-sensitive
+comparisons, so any scheme name must be defined with a specific case.
+Current user of that format tend to use lowercase-only names, so
+following that trend is probably a good idea.
+
+
+It is probably preferable if extra parameters are in a format that is
+compatible with human consumption. This is what happens with the
+'rounds' parameter in the format for SHA-256 crypt: an explicit name
+("rounds"), an equal sign, a count in decimal; this is all for the human
+user. A computer would have been happier with a fixed-size sequence of
+characters with an easier to convert format (e.g. Base64 or
+hexadecimal). However, existing practice seems to show that the
+conversion from a human-readable format is not too hard, both in code
+complexity and in performance (since we are talking about slow hashing,
+parsing performance tends to be very negligible).
+
+
+The SHA-256 crypt format (and other similar formats) use _optional_
+parameters. When the parameters are not specified, then a default value
+must be used; that default will either be hardcoded (FreeBSD uses 5000
+as default value), or configured through a system file (Solaris'
+crypt.conf). In my opinion, a configurable default can only lead to
+trouble: if you have an existing hash string that was computed with the
+default number of rounds, but without recording that value in the
+string, and the default is changed in the system configuration file,
+then the string is broken.
+
+Conceptually, a function could specify a hardcoded (non-configurable)
+default value for each parameter, and use that value if the parameter is
+omitted from the string. This may make strings shorter; however, this has
+two drawbacks:
+
+   -- Omitting the parameter decreases readability, because the human
+   reader must then know the default values instead of simply reading
+   them.
+
+   -- If we want a deterministic output, then the encoder must
+   systematically omit the value when it matches the default, which
+   makes that code slightly more complex.
+
+For these reasons, I declare that parameters are non-optional.
+
+A system-wide configuration may still exist, that provides default
+values for parameters then the salt is generated -- application code
+does not have to manually provide such values. But once the salt has
+been generated, the parameters are always encoded with the salt string.
+
+
+The hash output size for password verification should be fixed
+(otherwise, if people have to choose that length, it is unavoidable that
+some will do something stupid). While collisions are not a concern, it
+would probably be a good marketing move to use an output size which is
+"naturally" immune to collisions, i.e. 256 bits. This is what SHA-256
+outputs, and is larger than the 192 bits of bcrypt. A 32-byte output is
+not too huge with regards to the rest of the string, and also with
+regards to existing hash strings that rely on SHA-256 crypt or, even
+more so, SHA-512 crypt. While a 128-bit output would save some resources
+and make more sense (cryptographically speaking), a 256-bit output
+should ensure wider acceptance by the user base.
+
+
+I limit the salt length for Argon2 to a maximum of 48 bytes (64
+characters after B64 encoding) so as to help decoders (stack buffers
+again...). Argon2 can process much longer salts, but that does not make
+a lot of sense for password verification, where a 16-byte salt (say, an
+encoded UUID) is already fine.
+
+
+I am not using standard Base64 (RFC 4648) for encoding of binary
+strings, but the "traditional" variant which is already used in some
+existing hash strings, for the following reasons:
+
+ -- Using the standard Base64 makes sense if it allows reusing existing
+ facilities. However, these existing functions may implement Base64 for
+ PEM or MIME, and thus add extra line breaks or reject input lines that
+ are longer than 64 or 76 characters.
+
+ -- Similarly, "normal" Base64 implementations may add padding
+ characters (one or two '=' signs) that we do not want in our strings,
+ notably because we would like to unambiguously detect the presence of
+ parameters by the mere presence of an '=' sign in the string.
+
+ -- Reusing the Base64 variant which is already used in some hash
+ string formats should allow a bit of code reuse.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

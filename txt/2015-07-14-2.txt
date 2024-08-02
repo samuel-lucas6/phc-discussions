@@ -1,0 +1,108 @@
+phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Message-ID: <55A4F8BC.6010407@uni-weimar.de>
+Date: Tue, 14 Jul 2015 13:55:40 +0200
+From: Jakob Wenzel <jakob.wenzel@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+On 05.07.2015 21:57, Solar Designer wrote:
+Hi Jakob,
+
+On Thu, Jul 02, 2015 at 05:05:50PM +0200, Jakob Wenzel wrote:
+>we have updated the classification document (including analysis 
+>regarding to (weak) garbage-collector attacks -- (W)GCA).
+>
+>See: https://eprint.iacr.org/2014/881
+>
+>Among other minor changes, the update includes: 1) Argon2d and
+>Argon2i (as two instantiations of the finalist Argon2) 2)
+>yescrypt now provides (W)GCA resistance under certain
+>requirements depending on the input parameter
+
+It is unclear from your description whether you think yescrypt
+provides GC resistance at t 0 and/or g 0, and why.  Can you
+clarify?  You first list t = 0 among requirements for yescrypt's GC
+resistance, and then describe how things change at t 0 and/or g >
+0, but you seem to never clearly state whether it's GC attack
+resistant at those settings. (And there's a missing closing brace,
+but this doesn't affect meaning.)
+
+Hi Alexander,
+
+Thanks for the comment! My explaination was indeed not as clear as it
+should have been. I updated the yescrypt part by considering the
+following cases:
+
+g - cost upgrade parameter (client-independent update increasing time)
+V - array in RAM
+N - defining the size of the array V (memory cost in RAM)
+p - number of threads
+r - memory per thread
+
+1) no flags are set and g = 0
+scrypt compatibility mode (when used without ROM) =same attacks as
+for scrypt applicable.
+
+2) no flags are set and g >= 0
+yescrypt is vulnerable to WGC atacks since at least one full
+invocation of the time- and memory-consuming core of yescrypt has to
+be invoked before the password is overwritten.
+
+3) YESCRYPT_RW is set and g = 0
+The second loop of ROMix (Line 6-9) performs less than N writes to V
+if t = 0 and if (t = 1 and N >= 8). GC attacks similar to that for
+scrypt are applicable but with higher effort since V is at least
+partially overwritten. For t 1, it is most likely that the whole
+state V is overwritten, making yescrypt resistant to GC attacks
+
+4) g 0
+yescrypt provides resistance to GC attacks since V is overwritten at
+least once (second invocation of first loop (Lines 2-5) of ROMix).
+
+5) YESCRYPT_RW is set, p >= 1, N/p >= 256, N/p * r >= 2^17
+Under these requirements, a 64-times smaller instance of yescrypt is
+invoked before the full yescrypt. Then, yescrypt overwrites the
+password significantly fast, hence, providing WGC resistance.
+
+
+It would be really cool, if point 5) would also be mentioned in the
+specification of yescrypt (and not only the reference code).
+
+
+On a related note, the tweaked yescrypt defines client-independent 
+updates, so you may check this in Table 2.
+
+Done.
+
+
+An updated version of the classification is available here:
+http://eprint.iacr.org/2014/881
+
+
+
+Best regards,
+Jakob
+
+
+- -- 
+Jakob Wenzel
+Research Assistant
+Chair of Media Security (Prof. Lucks)
+Bauhausstraße 11 (Room 217)
+99423 Weimar
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJVpPi8AAoJEDFlRQsgEDnDR50H/RKvNdyqVx6pXlxClsOe/FXq
+W6doRbJOEwg6QAlAN1vzx+40wChq1wbhyBPor8mgeEKy6ui4XQ72Ye4u/VAqST2G
+EByRPueBTViUE5J0FyZtxAuiYhYpfHFRmQH8afN0vXJBgauxzG43z3Y2KI9BCeO2
+qeUxfl+HzZnV3GHWtgdrAk4RCn0x2nfSrjpHtQi1PxwEgw+35JWfhYrQIOIM98jf
+/ioWwRD/G+AFj/+oTpMhUJQM5RRWifvxa6aktWkVClH4uNf9o5ypqW9xhPiF6V02
+wFCFR1rVwN1t80U53khu2OuaYI6Gd3sbrbsg7PMkJnk/TvGcY3zXxpSddremu8Y=
+=+ZJC
+-----END PGP SIGNATURE-----
+

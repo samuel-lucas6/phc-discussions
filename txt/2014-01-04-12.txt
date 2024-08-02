@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p7_w9g4A0c=PAySCnMNBivrS8CwtybniBxwFLoALGXL0A@mail.gmail.com>
+Date: Sat, 4 Jan 2014 06:14:26 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Sat, Jan 4, 2014 at 3:19 AM, Solar Designer <solar@...nwall.comwrote:
+
+On Thu, Jan 02, 2014 at 09:44:20AM -0500, Bill Cox wrote:
+I've done some hand optimization, and gotten the speed to be only about
+2.2X slower than memmove when copying 2GB over itself.  To get the
+speed, I
+stopped reading randomly from the "from page", and read it linearly
+instead.  This seemed to help the optimizer quite a bit
+>
+I think what helped the optimizer is your addition of lots of
+parallelism (way too much for current CPUs, in fact).  The sequential
+nature of reads allows PAGE_LENGTH to be beyond L1 data cache size.
+>
+I think it'd be better to have random reads, keep PAGE_LENGTH*3*2 within
+L1 data cache size, and have just enough parallelism for current and
+near-future CPUs (preferably, have it tunable).  Also, make it SIMD
+friendly (tricky with random reads - would need to make them the size of
+a SIMD vector, so that you don't require gather loads).
+>
+Alexander
+>
+
+I'll play around with hashing within the page, but I honestly don't think
+it's needed for improving the hashing.  The data in memory is already
+hashed well enough.  Trying to make it SIMD friendly while simultaneously
+trying to make it unfriendly for a GPU or FPGA are opposing goals, when in
+reality it's memory bandwidth that really counts.
+
+I converted it to 32-bit, and it runs exactly the same speed as before.  I
+guess in that case I'll leave it 32-bit so that it will be more SIMD
+friendly and 32-bit processor friendly.  I feel a lot better about those 32
+bit multiplies.
+
+Bill
+
+
+

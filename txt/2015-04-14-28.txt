@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <20150414213632.GA6883@openwall.com>
+Date: Wed, 15 Apr 2015 00:36:32 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 12:11:28PM +0200, Dmitry Khovratovich wrote:
+On Tue, Mar 31, 2015 at 1:18 AM, Solar Designer <solar@...nwall.comwrote:
+That's cool, but that's 8192-bit parallelism, right?
+
+I would like to comment on this as well, but I do not quite understand
+how you measure the parallelism. Maybe the compression function
+picture in Argon2 specification helps.
+
+On the panel list, Samuel Neves has just convinced me that Argon2's
+current parallelism isn't "insane" (as I had said there), but is merely
+"not _that_ bad, particularly considering the near future" (as he said).
+
+Specifically, Samuel provided some info and some well-reasoned guesses
+as to how many BLAKE2b instances may be interleaved on current CPUs
+while still achieving significant per-instance speed improvement, and
+also some guesses as to what may be beneficial on AVX-512 with either
+lane-slicing or word-slicing.  While I think this may be offset by
+those CPUs' maybe-higher number of hardware threads per core (thereby
+needing less parallelism within each thread), we are in fact getting to
+within 1/4 or possibly even 1/2 of Argon2's 8x BLAKE2b parallelism.
+So for those near future CPUs, it's excessive only by a factor of 2x to
+4x, which I agree "is not that bad".  (For older CPUs, it's still pretty
+awful, I'd say.)
+
+Samuel, were you thinking just one thread per core, though?  I guess
+with two threads/core on Haswell, BLAKE2b wouldn't need the 2 to 4
+instances you mentioned (for reaching full speed, overall)?
+
+I had been thinking too much in terms of pwxform, where the current
+512-bit feels like the maximum we can have on current CPUs without
+benefiting attackers too much.  In this context, Argon2's 8192-bit felt
+insane.  But Argon2's isn't actually 8192-bit parallelism, since each
+BLAKE2b has ILP of "only" around 4 (per Samuel) for 64-bit instructions
+or SIMD lanes.  So it's more like 8 instances * 4 * 64-bit = 2048 bits.
+Right?  2048 is still very high, compared to yescrypt's current 512, but
+it isn't out of consideration for near future.
+
+Also, I see how Argon2 kills a whole dimension of potential TMTO attacks
+by its compression function design criteria, of which the parallelism is
+a side-effect.  Without that, some non-trivial reasoning is needed to
+see whether what the Argon2 paper calls an "iterative compression
+function" ends up allowing for practical TMTO attacks on the whole
+scheme or not, and what its highest reasonably TMTO-safe block size is.
+
+Alexander
+

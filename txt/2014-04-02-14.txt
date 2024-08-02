@@ -1,0 +1,178 @@
+phc-discussions - data-dependent branching (Re: [PHC] A little nit which bothers me...)
+
+Message-ID: <20140402133904.GA26931@openwall.com>
+Date: Wed, 2 Apr 2014 17:39:04 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Brandon Enright <bmenrigh@...ndonenright.net>
+Subject: data-dependent branching (Re: [PHC] A little nit which bothers me...)
+
+The Subject was among the worst one could have used, not carrying any
+meaning.  I reluctantly chose to fix it.
+
+Also, Brandon, I'm not sure if you're subscribed (you didn't post in
+here until recently), hence the CC.  Let me know if you're in fact on
+the list (I hope so!)
+
+On Wed, Apr 02, 2014 at 11:38:06AM +0000, Poul-Henning Kamp wrote:
+In message <20140402082306.GA24793@...nwall.com>, Solar Designer writes:
+
+>Data-dependent branching has not been used as much yet, [...]
+
+I never saw the point really.
+
+I thought you advocated data-dependent branching or something like it
+(switching between multiple crypto primitives) in your md5crypt EOL
+announcement a couple of years ago.  I recall e-mailing you at the time,
+expressing an opinion against data-dependent branching.  Well, that's
+how it is in my memory.  It's good to know that your opinion is (now)
+different (or I recall incorrectly). :-)
+
+There is a point, and it is in causing attackers with massively parallel
+hardware to waste some of their resources on some of:
+
+1. Idle execution units (wasted die area, L1i cache or local memory).
+If your hashing scheme may take one of many code paths on each
+iteration, then an attack core implementing all of those code paths in
+hardware will have all but one execution unit idle at each time.
+
+2. Computation of never used intermediate results (multiple circuits
+working in parallel followed by a MUX to choose the right result, or
+eager execution on a GPU).
+
+3. Buffering of intermediate results from multiple hash computations
+(many more than there are parallel cores for), so that each individual
+hash computation may temporarily stall, letting another proceed to a
+next step instead.  That way, groups of operations matching each core's
+actual circuits may be issued, not leaving any circuits idle most of the
+time.  (I think this is roughly how the SunMD5 code in JtR -jumbo
+manages to use SIMD, although I didn't review it very closely.  JimF
+wrote it.  IIRC, its buffering is on the order of hundreds of candidate
+passwords per CPU core, even though the target SIMD parallelism is an
+order of magnitude lower.  The extra parallelism, which is easily
+available to the attacker, is needed to ensure that the probability of
+leaving idle resources (SIMD lanes in this case) is comfortably low.)
+
+4. Routing of requests between attack cores, to pool the cores'
+resources together.  In a sense, this moves the buffering to a higher
+level: instead of each core maintaining a buffer sufficiently large to
+keep its circuits busy most of the time, there's a shared (virtual)
+buffer (comprised of each core's current outstanding requests to other
+cores).  The required total buffer size is lower, but we get extra cost
+of the routing.
+
+A question is whether the lowest-cost (to the attacker) combination of
+the above is still costly enough for the defender to bother going for
+data-dependent branching.  In the case of SunMD5, we know that it is
+not, at least not for attackers with SIMD CPUs.  This is in part because
+in SunMD5 the amount of processing done per each data-dependent branch
+is substantial, so the overhead of approach #3 above (and probably of #4)
+is acceptably low.  This is why I especially oppose data-dependent
+branching when we're talking e.g. about switching between different
+crypto primitives, each consisting of multiple rounds and possibly with
+a pipeline taking multiple cycles - this might be worth spending a
+cycle(?) (only of latency?) e.g. on routing to a nearby core (and die
+area on such routing).
+
+AntCrypt tries to deal with #3 and #4 by making the bits of computation
+performed per data-dependent branch very small(*), so the overhead would
+be relatively much larger.  It tries to deal with #1 and #2 by having 16
+possible functions, so the die area wastage from parallel circuits or
+the wastage of a GPU's execution units or SIMD lanes from eager
+execution would be 16x (arguably, this is still not good enough against
+ASICs, where spending die area with memory may be more effective than
+with computing cores even despite of the 16x wastage of the latter).
+
+(*) They're like a handful of assembly instructions each... yet I think
+the sin/cos/tan are not small enough (~100 cycles on modern CPUs), and
+are very wasteful on a CPU, so they will need to be replaced for that
+reason as well.
+
+A simple if/else in a loop would be only 2x.  It'd take 4 nested levels
+of if/else to reach 16x.  AntCrypt approaches this by having 16
+alternatives at one level (in the code it's a switch statement, which is
+presumably/hopefully compiled to a table lookup and one computed branch).
+That's nice.  More than 16 would be nicer (but adds complexity and code
+size for defenders).
+
+The above were some comments on "why one might want to do data-dependent
+branching", "how to do it if you're doing it anyway", and "how to attack
+it".  My opinion remains that it's better to avoid it.  But it's not
+totally unreasonable.  It's just risky, and tricky to do well (so that
+it'd hurt attackers more than it hurts defenders).
+
+First, the construct needs to be symmetic in order to not leak
+too much timing information:
+
+	if (CONDITION(entropy)) {
+		entropy = FUNC1(entropy);
+		discard = FUNC2(entropy);
+	} else {
+		discard = FUNC1(entropy);
+		entropy = FUNC2(entropy);
+	}
+
+But there are so much junk between the CPU and the memory these
+days that I still expect timing attacks can demask the condition bit.
+
+Yes, this is still risky.
+
+The way to solve that is to only condition data-dependent
+branching on "dead-end bits" which don't lead back to our entropy:
+
+	if (CONDITION(HASH(entropy || "Lorem ipsum dolor sit..."))) {
+		entropy = FUNC1(entropy);
+		discard = FUNC2(entropy);
+	} else {
+		discard = FUNC1(entropy);
+		entropy = FUNC2(entropy);
+	}
+
+How does this not lead back to our entropy?  Do you assume the "Lorem
+ipsum dolor sit..." is a secret key?  If so, we sort of already have
+that, in the form of salts, if they're large and unpredictable enough
+and don't leak until the hashes leak.  This is why we say that the
+relevant attack scenario is when the attacker already has the salts and
+(still) has online access to the system.
+
+We cannot lower our standards and allow timing attacks against
+"dead-end" bits:
+
+	if (CONDITION(HASH(entropy || "Lorem ipsum dolor sit..."))) {
+		entropy = FUNC1(entropy);
+	} else {
+		entropy = FUNC2(entropy);
+	}
+
+That would give a 50% discount on a brute-force attack with timing
+information.
+
+I don't understand what you mean here.  If the "Lorem ..." is a secret
+key, then either version of code is good.  If it is not, then either is bad.
+
+In brute-force attack without timing information, the "discard"
+bits could obviously be optimised out, that's also no good, so lets
+not discard those bits anyway:
+
+	if (CONDITION(HASH(entropy || "Lorem ipsum dolor sit..."))) {
+		entropy[first_half] = FUNC1(entropy);
+		entropy[second_half] = FUNC2(entropy);
+	} else {
+		entropy[second_half] = FUNC1(entropy);
+		entropy[first_half] = FUNC2(entropy);
+	}
+
+And then it follows trivially that this is the same as:
+
+	i = CONDITION(HASH(entropy || "Lorem ipsum dolor sit..."))
+	entropy = FUNC12(entropy);
+	if (i)
+		swap_first_and_second_half(entropy)
+
+Ohh well...
+
+Looks like you were going after a holy grail while writing that e-mail,
+but didn't quite reach it. ;-)
+
+Alexander
+

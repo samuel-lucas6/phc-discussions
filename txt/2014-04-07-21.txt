@@ -1,0 +1,160 @@
+phc-discussions - Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+Message-ID: <5342D4E6.7070104@rub.de>
+Date: Mon, 07 Apr 2014 18:40:06 +0200
+From: Ralf Zimmermann <ralf.zimmermann@....de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Sorry for the late reply.
+
+On 04/03/2014 11:39 AM, Solar Designer wrote:
+On Thu, Apr 03, 2014 at 10:20:05AM +0200, Ralf Zimmermann wrote: I
+think you can pipeline the functions and receive their results
+every clock cycle if you use the routing or buffering approach
+(number #4 and number #3 on the list I had posted).  The real
+question (for the attacker) is whether this is worth the overhead.
+I think for complicated functions, it is.  And for simple functions
+their die area is negligible, and portions of them like multipliers
+may easily be shared between them, as Bill pointed out.
+That is true in theory, though the overhead of interleaving many more
+computations than parallel units might kill you (in hardware).
+
+To #3: If you consider that you need to have a medium size memory -
+let's say 64kB - per core (and as their content differs for each step,
+you need to store them all in parallel), then you will most likely hit
+the limit of parallel cores due to the memory consumption in hardware.
+In this case, you will need to reduce the number of parallel cores
+manually to keep more copies on the chip, working in an interleaved
+mode of operation.
+It might work, but I agree that the overhead is very likely to
+outweight the benefits. Still it would be interesting to see someone
+implement this buffering approach on an FPGA and compare it to a
+straight-forward implementation.
+
+To #4: see next paragraph :)
+
+In fact, now that I think of it that way, the sharing of e.g. 
+multipliers that Bill pointed out is not very different from "my" 
+routing approach.  It's a similar concept applied at a different
+level: in Bill's example it'd be "within a core" (and would apply
+to portions of functions) and in my example it'd be "across cores"
+(and would apply to whole functions).  Looking at this from yet
+another angle it can be said that with the routing approach we're
+re-defining "core" such that it tests lots of candidate passwords
+at once using its pool of resources.
+As this is the same idea that #4: you suggest to share the resources
+between attacking cores or functions. You can do this of course, but
+you will need to stall the computation in case you have a collision,
+e.g., two or more cores/functions need the same hardware modules at
+the same time.
+
+So if you want to get a valid output every clock cycle *without any
+stalls*, you need to use as much area as needed to perform any
+operation in every pipeline stage.
+Of course, you may reuse for example a multiply unit for two different
+functions *within a pipeline stage*, as only one function needs to be
+computed per step.
+Nevertheless, you may not share modules over the boundary of the
+pipeline stages without stalling the pipeline.
+
+>This does not matter if you use friendly functions like XOR,
+>shift, etc., but we hope that using more complex but still CPU
+>friendly functions (this is why we tried floating-point), the
+>area consumption *may* hurt a little more.
+
+Maybe, but how would you avoid the kind of sharing that Bill
+mentioned? Can you come up with a large number of sufficiently
+different functions that not much sharing could occur?  To me, even
+16 feels too low, and I doubt you can come up with 16 without
+allowing for shared multipliers, etc., yet being CPU-friendly.
+You are correct: You cannot avoid it. But to be honest, it is not
+really an issue, at least not for me. The idea is to add *something*
+with each function, which increases the area a bit. In the worst case,
+you just add to the complexity of the multiplexers and thus to the LUT
+usage.
+In the best case, you enforce the use of an additional
+hardcore/additional logic circuit, e.g., a DSP core, which was
+previously not needed.
+
+[..]
+
+Here's a CPU attack on AntCrypt (as I understand it): define all 
+possible two-function groups.  For 16 original functions, this
+will result in 256 dual-function functions, and if they're as tiny
+as they currently are they will probably still fit in a CPU's L1i
+cache.  Now you can define a dual-AntCrypt, testing two candidate
+passwords at a time, and using the CPU core's parallel processing
+capabilities (SIMD, multiple issue, super-scalar) it'll likely run
+no slower than a single AntCrypt does.  So you get a 2x performance
+boost for the attacker. Moreover, the cost of conditional branches
+is amortized,
+[.. removed due to followup email ]
+
+I must admit, that I am not really the best when it comes to
+platform-based, optimized CPU implementations. Would you benefit in
+case the instructions inside of the dual-functions differ heavily? For
+example, if one function computes an AND and the other an DIV or if
+one is a simple MUL and the other a XOR? Or would you only benefit in
+case you share the same instruction(s) at some point inside the functions?
+
+And: how important do you rate the CPU attacker, if the GPU and FPGA
+implementations are still likely to provide a much higher parallelism
+due to the larger amount of parallel cores?
+
+[..]
+
+A way to mitigate these CPU attacks would be to define many more 
+individual functions.  Another way would be to include sufficient 
+parallelism in them (tunable to be barely enough for current and 
+very-near-future CPUs), so that the defender is not at a
+disadvantage. These two approaches may be used together.  (Not that
+I like this whole approach, but like I said some diversity in PHC
+is good anyway.)
+We already mentioned a potential parallelism in the paper. The most
+straight-forward method would be to process not one sequence alone but
+n (independently permuted) sequences in parallel. The n sequences
+should still diverge for GPUs (as they are not the same permutation),
+but the speedup due to the parallel processing would be usable for
+both the attacker and the defender.
+
+The reason why we did not implement it directly is that we need to be
+careful with synchronization when reading/writing from/to the memory.
+As "#parallel_resources" is no part of the interface, we need to
+ensure that the result is the same for every batch size.
+
+Anyway: Would adding such parallelism help address/soften the
+relevance of the CPU attack? It will at least give the defender more
+control over the utilized resources.
+
+
+A last question: Are we allowed to update the code and document for
+such a change? Then I would add the parallelism to the code as soon as
+I find the time to implement and test it.
+
+Cheers,
+Ralf
+
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. & Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+http://www.emsec.rub.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlNC1NsACgkQ/N3XAntS/5bPPwCgi5scj1KFJpJrG/s0fvhBn71b
+LzkAn2p60uxyzmHdeB9yJwbp2MvRQCQG
+=z4hA
+-----END PGP SIGNATURE-----
+

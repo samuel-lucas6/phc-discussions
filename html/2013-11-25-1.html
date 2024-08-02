@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A (naively?) simple PHC submission using hash chains</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2013/11/16/5">[&lt;prev]</a> <a href="../../../2013/11/27/1">[next&gt;]</a> <a href="../../../2013/08/07/22">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20131125072143.GA27228&#64;openwall.com&gt;
+Date: Mon, 25 Nov 2013 11:21:43 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+On Wed, Aug 07, 2013 at 10:11:28AM +0200, CodesInChaos wrote:
+&gt; I don't know any sources for this technique, but I suspect it can be used
+&gt; on all hashing schemes with predictable memory access.
+&gt; 
+&gt; * You can use it to accelerate scrypt's first phase, but not the second
+&gt; phase. Since scrypt only claims that the second phase is memory-hard, this
+&gt; doesn't break scrypt.
+&gt;    Discussed this with solardiz on twitter:
+&gt; <a href="https://twitter.com/solardiz/status/362644103546142721" rel="nofollow">https://twitter.com/solardiz/status/362644103546142721</a>
+&gt; * You can use it on yarrkov's high AT proof-of-work scheme:
+&gt;    Discussed on the crypto mailing list a few months ago
+&gt; <a href="http://www.mail-archive.com/cryptography&#64;randombit.net/msg03689.html" rel="nofollow">http://www.mail-archive.com/cryptography&#64;randombit.net/msg03689.html</a>
+&gt; 
+&gt; The general idea is that you don't keep everything in memory you're
+&gt; supposed to, but only an occasional checkpoint. From this checkpoint you
+&gt; can recompute memory near it. Often it's a good choice to keep sqrt(n)
+&gt; checkpoints from which you can recompute any value you're interested in in
+&gt; time n/sqrt(n)=sqrt(n).
+
+The total AT cost, disregarding area consumed by computation cores, is:
+
+N^(1/2 area + 1 time) + N^(1 area + 1/2 time) = 2*N^1.5
+
+&gt; On specialized hardware it's often cheap to recompute it in parallel to
+&gt; your normal computation without delaying the normal computation.
+&gt; Unpredictable memory access often breaks this, since the recomputation
+&gt; delays the normal computation instead of running in parallel.
+&gt; 
+&gt; It's often possible to improve upon the sqrt(n) technique by adding more
+&gt; intermediate steps. But I didn't work out the details.
+
+I gave this some thought today.  Here's what I am getting with one extra
+intermediate step (and N^(3/4) parallel cores in the last step):
+
+N^(1/2 + 1) + N^(3/4 + 1/2) + N^(1 + 1/4) = N^1.5 + 2*N^1.25
+
+So it's still O(N^1.5) due to the first step, regardless of how many
+more steps we add, but there is an up to a factor of 2 improvement over
+the 2-step algorithm.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

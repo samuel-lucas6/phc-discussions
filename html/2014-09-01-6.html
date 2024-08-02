@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - A review per day - POMELO</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5404CB8A.3000103&#64;ciphershed.org&gt;
+Date: Mon, 01 Sep 2014 15:39:54 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: A review per day - POMELO
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+POMELO got off to a rocky start, with an input hashing scheme that was
+buggy, resulting in lots of input collisions that people noticed.
+Here's a link to the POMELO discussion:
+
+    <a href="http://comments.gmane.org/gmane.comp.security.phc/1394" rel="nofollow">http://comments.gmane.org/gmane.comp.security.phc/1394</a>
+
+However, once the bugs were fixed, POMELO does have some things going
+for it.  On the positive side:
+
+- - Very simple - only 127 lines!
+- - hybrid algorithm: first loop cache-timing resistant, second loop
+uses password dependent unpredictable addressing
+- - It does 4-way parallel 64-bit reads, just like PufferFish, but with
+predictable addressing in the 1st half, and unpredictable addressing
+in the second half
+- - Uses simple mix of ADD, XOR, and ROTATE which is the basis of
+several strong cryptographic hashes, such as Blake2.
+
+This algorithm will run painfully slowly if we try to run with more
+memory than fits in cache, so POMELO is really closer to a bcrypt
+replacement than an Script replacement.  It should have good GPU
+defense, though I really can't say for sure, since GPUs aren't
+something I understand well.
+
+Compared to PufferFish, POMELO is less than 1/2 the code size.
+However, PufferFish also includes encoding/decoding hashing parameters
+to a string, and a self-contained SHA512-HMAC implementation.
+Benchmarking is required, but I think they would be fairly close in
+speed for a total amount of L1 cache read/written.
+
+There are two negatives that I see in the code:
+
+- - Needs input checking!  If password length is &gt; 8192 &lt;&lt; m_cost, it
+overwrites memory! Line 46.  This can be used to launch Solar
+Designer's famed "Return To Libc" attack for arbitrary code execution.
+ Same problem with salt.  Adding input checking is a must-have tweak.
+- - The end of memory is copied to the output, so we need to either
+prove that the last bytes are irreversible and undetectably
+non-random, or add a call to a respected hash function, such as SHA512.
+
+POMELO simply must be upgraded to check inputs.  Having a simple
+"Return To Libc" attack against a PHC winner is not OK!  However, this
+is simple to do.
+
+The author says that in calling these ARX (ADD/ROTATE/XOR) so many
+times compared to respected cryptographic hash functions, that the
+data should be more than adequately scrambled.  He think he is
+probably right.  I'm running the Dieharder tests now on hashes
+produced by POMELO with t_cost = 1 and m_cost = 7 (the author says
+that t_cost + m_cost should be at least 8).  I think t_cost = 1 is the
+weakest hash POMELO does, so that's what I'm using.  It passes the
+Birthday test, as well as several more difficult tests, but my sample
+data is too small to pass them all.  I'm doing an over-night run that
+I think will show that it passes.
+
+Minor nit picks:
+
+- - Step 8 checks output length and returns 1 if it's too large.
+Shouldn't this be done before hashing memory?
+- - Why limit the input salt + password length so much?  Why not let
+them each go to 2048 bytes or so?  Similarly, why limit the output key
+length so much?
+
+As for ASIC resistance, PufferFish, and POMELO all fall into the same
+category.  Assuming we typically use &lt; 32KiB hashing to maximize small
+unpredictable memory accesses, then my ASIC will be memory access
+limited, running at 1 F computation per clock cycle.  My CPU likely
+will run at less than half that speed, but that's not bad
+time-hardening.  The bigger issue is that if the caches are small,
+like &lt; 32KiB, then I can start integrating a bunch of them on an ASIC,
+and run POMELO hashes in parallel.  The same goes for PufferFish, and
+certainly the original bcrypt, with it's tiny 4KiB memory.
+
+Overall, I've come to like POMELO as a potential bcrypt replacement.
+It's main advantage is even more simplicity than bcrypt, and I like
+it's cache-timing resistant first loop.  I'm keeping PufferFish as my
+current favorite for a bcrypt replacement, but that might change if
+the input checking is solid, and if more experienced crypto guys give
+POMELO a thumbs-up security-wise.  POMELO could be a solid contender
+in a bcrypt-replacement category, once it's input checking is fixed.
+
+I should remind people that my opinion doesn't count.  I'm not a
+judge, nor a cryptographer of any kind.  This is just a hobby for me.
+ This also means I'm more free to be a dick, which occasionally I am.
+ However, I'm having fun, so if people don't mind, I'll keep doing
+public reviews.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBMuHAAoJEAcQZQdOpZUZrLcQAIjQy+3UF43XWxpYn71tqQYo
+IEqkRsO6IeBvfps0XLZzPbUykibzde+BZlrhZ2cOhtOBw12Uv5zOL3tZSppHDAPS
+VR1jxyjSV4XBqxtFt2OwSo9AbwAxppzRr+pMUIkRNAtzE6gWrwaaELDY6kL9jGMJ
+Yvs2ECGvD9GXFoafAy+HOJ8Crmr6xN0EbY46dqguZk0FRKeEz+v5zznrFjHNltF6
+KLKjLU536osXYJ9Yfp+H7XaiKBNBtcJ/7ZSgprazfR5FqPaMDOYR7sCTvkRIIYzX
+/GBCEAehXJwa+PlMkE2mcZxLKNKIy/oBHzjhy6cYTz2LLIk+ccxJ/+X8TVd/tFyE
+oNx59vvCGNVaG+MtxoJ5wcmtg/8huRmbNngp40E8/ryDWwQ/NahJp439cBKbWMNX
+u2HQW3frLZI4Kl0NQQM0rwzaP2P5LTA+mXMRXq7GvTFkLf2I9qdC1ilbtCFzuyHF
+Qfzi9eyD2pN4yOcUMFdZ1816qZdXPHG21lTFzqBO0bHQkoqjpHTu/6cLBJJXST0V
+719kRX00ad2CVrl8f4YoPozEr3pcgIY1QU2NbYfhSAbrpVxPDQwGTgVTfCouEKod
+0qmKxt00tT7m0U4aIHGL9Dgsxg17soMI41L1NgJHu4xJvPrz7xzvp9747bnZwo1l
+YMb7JGDmggTUHvDkJ+W4
+=DdPj
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

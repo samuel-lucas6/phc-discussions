@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] yescrypt pre- and post-hashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="../../../2015/01/31/3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p58FP_a80bzj2H21h8+D3cA6+mCqWYGh-MKG2BFJOr30A&#64;mail.gmail.com&gt;
+Date: Mon, 31 Mar 2014 05:53:24 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] yescrypt pre- and post-hashing
+
+On Sun, Mar 30, 2014 at 10:36 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; In particular, is it a good idea to enable this on any (other) deviation
+&gt; from classic scrypt, without requiring that this feature itself be
+&gt; requested explicitly?
+
+I don't think it's important to be able to use this feature while
+everything else remains Script compatible.  The password collision
+problem hasn't seemed to be a problem in the wild so far, and if a
+user is going to upgrade his password hashing scheme, I'd hope he'd
+consider using some of your other features, and not just this one.
+
+I guess I would prefer to specify if I want script compatibility, and
+if I say I don't need it, then then this should be enabled, along with
+any other improvement.
+
+I think your solution to the collision problem is cool.  You fixed the
+biggest drawback of how HMAC is used in PBKDF2, as if you'd simply
+gone in and deleted the offending if statement and forced SHA256 to
+always be called on the password.  You added a line to effectively
+delete one.
+
+&gt; This pre-hashing serves two purposes:
+&gt;
+&gt; 1. Avoid the trivial "collisions" discussed in here, where a &gt;64 chars
+&gt; password and its SHA-256 hash would have produced the same yescrypt
+&gt; hash.  This is no longer the case, except in scrypt compatibility mode.
+
+I like this solution better than XORing the length into the hash
+afterwards.  It eliminates my banana attack for trying to guess the
+password length.  The value of eliminating a banana attack like that
+is just to quell any noise that might result, but that's enough reason
+to use this new scheme, IMO.  I think I'd prefer that there be some
+"compatibility" boolean option, and if true, then use the old scheme,
+otherwise, use the new scheme as well as any other upgrades you've
+added.
+
+I did something more dangerous in the version of TwoCats I finally
+submitted.  A while ago I upgraded from PBKDF2 to HKDF, but in the
+submitted version, I just hash all the inputs, including lengths, to
+form the PRK.  I know I don't understand the design of HKDF well
+enough to guarantee my PHS has no need to call HKDF.  This may cause
+TwoCats to fall early in cryptanalysis, but since I'm already rolling
+my own memory hash function, I figure I might as take other risks.
+Besides, it's more fun to roll your own :-p
+
+I also eliminated user-selectable output hash lengths,  I have no idea
+how important this feature is to users, but I just didn't feel right
+providing a longer hash with no additional security.  I've seen a few
+guys on the TrueCrypt forum argue that their 512 bit salt provides
+more password security than anyone will ever need, and therefore,
+memory-hard password hashing schemes are not needed.  I imagine they
+would be thrilled to have the added security of a 2048 bit password
+hash.
+
+&gt; 2. Ability to upgrade raw SHA-256 hashes, which unfortunately are in use
+&gt; by some sites, to yescrypt hashes.  The specific choice of SHA-256 is
+&gt; simply because it's used in (ye)scrypt anyway, but it happens to be
+&gt; somewhat relevant for such upgrades.  Indeed, this sort of upgrades are
+&gt; always possible, but now for raw SHA-256's the resulting hashes would be
+&gt; genuine yescrypt hashes, with no need to record that they've been
+&gt; upgraded from raw SHA-256.  (For upgrading anything else to yescrypt,
+&gt; such info would still need to be recorded.)
+
+By raw SHA-256 hashes, do you mean just a hash of the password,
+without even salt?  I'm sure this is how many people store passwords.
+It's probably the second most common technique after just storing the
+password as plain text.  In fact, I wrote a web site a few years ago
+that stored passwords... I'm going have to go see how security
+ignorant I was and read the old code...
+
+I just read it.  Sure enough, all I did was store SHA256(password ||
+salt).  Except for the lack of key stretching, is this insecure?  I'm
+sure JtR would have torn up my password database in a hurry.
+
+&gt; Another relevant change is that first block of output from the first
+&gt; PBKDF2 call is now preserved (during most computation) in place of the
+&gt; original password, and is rolled into the final PBKDF2.  This change
+&gt; serves two purposes:
+&gt;
+&gt; 1. Not only password entropy, but also salt entropy, is (by)passed into
+&gt; the final PBKDF2, so that even if the memory-hard portion of yescrypt
+&gt; catastrophically fails to preserve entropy, both the password and the
+&gt; salt affect the final hash anyway.  This way, it can be said that
+&gt; yescrypt's cryptographic security depends solely on that of SHA-256,
+&gt; HMAC, and PBKDF2, but not on any of its heavy/custom/complicated parts.
+&gt; For scrypt, the same can be said for the password, but not for the salt.
+&gt; A catastrophic failure of SMix (and below) would potentially result in
+&gt; scrypt having easy collisions for same password with different salts.
+&gt; This is no longer so for yescrypt.
+
+I also preserve the original PRK computed at the start of a level of
+garlic, and hash it with the result of memory hashing.  I think this
+is the right solution.  It does bother me that I'm keeping data in
+memory that is isolated from the password by only a single
+cryptographic hash, but I prefer this to the possibility that the
+resulting hash could be weaker than what I started with.  Even if
+memory hashing did lose a ton of entropy, it may be OK with this
+solution.  For example, if you have 256 bits of entropy coming out of
+SHA256, and only have 64 bits left at the end, I think it's no problem
+with this scheme.
+
+&gt; 2. It is possible to zeroize the password early on, keeping only the
+&gt; PBKDF2(SHA-256(password), salt) during most computation.  (I did not
+&gt; include this in the code yet, but now it's a matter of implementation.)
+&gt; Of course, PBKDF2 at 1 iteration is quick, yet it's better than
+&gt; plaintext, and better than a saltless hash.
+
+I remain a fan of zeroing the password, even though it's a flawed
+system that may not work very well, as you pointed out before.  If
+it's hard for us to get right, how can we expect users to do it?
+
+I have this system which might add more complexity than it's worth,
+where I apply levels of garlic from 0 .. memCost-6 before applying the
+main level of memCost.  Each level isolates the current hash from
+password by another memory hashing round twice as large.  That does
+two things: it gives the remaining hash in memory a bit more strength
+in case it is leaked, and it hopefully it causes earlier versions of
+the PRK to be overwritten on the stack or wherever the optimizer
+decided to stuff it.
+
+&gt; If desired, a tunable parameter may now be added to make it multiple
+&gt; iterations of PBKDF2 for this first block.  In terms of code, a
+&gt; separate instance of PBKDF2 would need to be invoked for 256-bit
+&gt; derived key size, and it would just happen to produce the same results
+&gt; as the current code when the iteration count is set to 1.  Before this
+&gt; change, hacking in more PBKDF2 iterations relative to classic scrypt
+&gt; would unnecessarily waste CPU time on additional PBKDF2 output blocks.
+
+With an upgrade to scrypt, I would appreciate this feature.  For a
+1-ish second memory hash, I cant see why I would want to spend less
+than 10ms on pure SHA256 hashing of the password before allocating
+multiple GiB of memory.  It also allows you to claim you're at least
+as strong as something like 2000 rounds of PBKDF2-SHA256.  It's a
+simpler solution than my application of a few low levels of garlic.
+
+&gt; The post-hashing allows for most computation to be done on the client
+&gt; while producing the same yescrypt hashes that are produced with 100%
+&gt; server-side computation.  This is similar to Catena's "Server Relief".
+&gt; I implemented it in a way that fits SCRAM (RFC 5802) to the extent
+&gt; possible, so that existing yescrypt hashes stored on a server (sometime
+&gt; in the future) would happen to be usable with a straightforward
+&gt; extension of RFC 5802 (to appear at an even later future time).
+
+Does that mean you implemented these steps from the RFC?
+
+SaltedPassword  := Hi(Normalize(password), salt, i)
+ClientKey       := HMAC(SaltedPassword, "Client Key")
+StoredKey       := H(ClientKey)
+
+I guess Hi would be replaced with a call to yescript?  I'm not sure
+why they're concerned about the encoding of the password.  It seems
+odd to me to force it to be in UTF8.  Is there a reason to treat it
+differently than a buffer of uint8_t data?
+
+One thing that bugs me is that server-relief mode involves sending the
+salt to anyone who is allowed to try to authenticate.  It seems like
+there should be a better way.
+
+&gt; BTW, there's some nice confusion in RFC 5802 regarding the order of
+&gt; arguments to HMAC().  Tweets:
+&gt;
+&gt; &lt;solardiz&gt; In RFCs, is it HMAC(msg, key) (per RFC 2104's code) or HMAC(key, msg)? RFC 5802 <a href="http://tools.ietf.org/html/rfc5802#page-8" rel="nofollow">http://tools.ietf.org/html/rfc5802#page-8</a> vs. Dovecot <a href="http://hg.dovecot.org/dovecot-2.2/file/d55ae5d268a2/src/auth/mech-scram-sha1.c#l223" rel="nofollow">http://hg.dovecot.org/dovecot-2.2/file/d55ae5d268a2/src/auth/mech-scram-sha1.c#l223</a>
+&gt; &lt;solardiz&gt; I guess RFC 5802 assumes HMAC(key, msg). Is the ordering of HMAC() args specified in an RFC? <a href="http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-scram.c#n346" rel="nofollow">http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-scram.c#n346</a> <a href="http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-utils.c#n43" rel="nofollow">http://cgit.collabora.com/git/user/sjoerd/wocky.git/tree/wocky/wocky-sasl-utils.c#n43</a>
+&gt; &lt;+&#64;...f&gt; @solardiz Well, the source code in Krawcyk's RFC does M(msg, key) :)
+&gt; &lt;@solardiz&gt; @tqbf Right. So RFC 5802's use of HMAC() looks inconsistent with RFC 2104. Either that, or multiple implementations got it wrong.
+&gt; &lt;@solardiz&gt; @tqbf It's easy to verify RFC 5802's intent, though: it includes test vectors. I just don't have time right now. Anyone?
+&gt; &lt;solardiz&gt; Impls of RFC 5802 with its test vectors, thus presumably tested: <a href="http://bm2.googlecode.com/svn-history/r1222/trunk/src/login/SASL_ScramSha1.java" rel="nofollow">http://bm2.googlecode.com/svn-history/r1222/trunk/src/login/SASL_ScramSha1.java</a> <a href="https://bitbucket.org/sco0ter/babbler/src/6e5daf195414/src/test/java/org/xmpp/sasl/?at=default" rel="nofollow">https://bitbucket.org/sco0ter/babbler/src/6e5daf195414/src/test/java/org/xmpp/sasl/?at=default</a> Confirms HMAC(key, msg)
+&gt;
+&gt; Alexander
+
+Does this mean that they are passing the password as the message, and
+the salt as the key, the way HKDF does?  That seems to be the prefered
+solution, though I like yours better: passing H(password) as the key,
+and the salt as the salt.  HKDF has salt input collisions instead of
+password collisions.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

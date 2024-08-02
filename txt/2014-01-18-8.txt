@@ -1,0 +1,143 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140118124738.GA14548@openwall.com>
+Date: Sat, 18 Jan 2014 16:47:38 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sat, Jan 18, 2014 at 03:15:03AM -0800, Jeremi Gosney wrote:
+On 1/18/2014 1:47 AM, Solar Designer wrote:
+There's no problem with saturating the memory bandwidth for password
+hashing on busy web servers.
+
+I think I'm inclined to disagree with this. But that's not to say you
+are necessarily wrong.
+
+First, I think it's a bit too broad of a statement.
+
+I'd say it's too brief.  There's some context to it.  Some of that
+context was in my message, some was implied.
+
+It's hard to say
+what a "webserver" is now, or what it will be in 10 years. For a
+traditional webserver where you're just serving pages off disk, then
+yes, there's technical justification for saturating the memory bus. But
+large websites especially make heavy use of in-memory caching and
+key-value stores like Redis, mod_mem_cache, memcached, etc, and a
+function such as this could very likely have a negative impact on
+performance.
+
+I'm not saying that saturating the memory bandwidth will have no
+performance impact.  It will usually have some performance impact.
+
+Rather, I am saying that there's not that much of a difference between
+using memory bandwidth and using CPU time.  Both take up resources away
+from other processing.  Depending on what that other processing is, one
+or the other may have greater impact on it.  Yes, using both a lot of
+memory bandwidth and a lot of CPU time at once will generally have
+somewhat greater impact than using only one of those.
+
+No matter whether we use memory bandwidth or/and CPU time, we need to
+tune the password hashing scheme's cost settings.  What I am saying is
+that for a suitably designed password hashing scheme, suitable cost
+settings for this use case should exist, even if that password hashing
+scheme makes a lot of use of the memory bandwidth.
+
+Now one my say that a large site would likely have the financial
+resources to run dedicated caching servers, or dedicated authentication
+servers, or whatever. And that's probably true. It's not hard to scale
+up and scale out when you have money. But what I'm concerned about is
+how well this will scale down. Which leads me to my second concern: a
+webserver may not even be running on dedicated hardware. Webservers
+running on a hypervisor with other memory-intensive virtual machines, or
+even an oversubscribed hypervisor where virtual machines do not have
+dedicated cores, could become problematic as well.
+
+This means that a good password hashing scheme should be scalable down,
+by tuning its cost settings accordingly.
+
+So that's why I'm not so sure we can make a blanket statement like this.
+
+I didn't mean it as a blanket statement, although I admit I worded it
+that way, in part to oppose Peter's to a greater extent. ;-)
+
+I meant it in context.  Recall that cost settings are to be tuned for a
+certain maximum throughput, which in practice will only be seen in a
+worst case scenario.  We're not talking about what happens all the time,
+but rather about what happens when we're already fully using the CPU
+cores for password hashing, because the number of concurrent
+authentication requests has reached our worst-case maximum.  Why would
+we want idle memory bandwidth in that extreme case?  Even in terms of
+CPU time alone, other web server threads would run about twice slower
+than they do on an idle server, if they're as numerous as the password
+hashing threads.  This is how time-sharing works.  The same thing
+applies to memory bandwidth in that scenario - twice less of it is
+available to those other threads, if they use it as much as our password
+hashing scheme does (although chances are that they don't).  The fact
+that there are generally fewer memory channels than CPU cores doesn't
+affect anything when, as in this example, there's equal demand for
+memory bandwidth from an equal number of threads.  And if the demand is
+not equal, then the memory bandwidth is split non-equally accordingly,
+which is great.
+
+Yes, 2x slowdown is bad, but it needs to be thought of in context.  If
+we can't afford 2x slowdown at a throughput of e.g. 1000 req/s, let's
+e.g. halve our cost setting(s), so that this condition would occur only
+at 2000 req/s, even if our target throughput for the web server is only
+1000 req/s.  With such settings, on one hand we won't ever fully use the
+server's resources for password hashing under planned-for throughput (no
+more than 1000 req/s), but on the other we have a bonus of supporting
+higher throughput just in case, albeit with higher than planned for
+proportion of resources used for password hashing when that unplanned
+scenario does occur.
+
+This sort of tradeoff and tuning has nothing to do with us using memory
+bandwidth rather than only CPU time.  It applies when we're only using
+CPU time as well.
+
+Additionally, I think the "convincing folks" part of Peter's statement
+is the key.  Even if we do have sufficient technical justification for
+saturating the memory bus, convincing users that it's totally cool to do
+so is another story. Gaining widespread adoption will already be our
+biggest challenge regardless of the function we select as the winner,
+and a function that saturates memory bandwidth may be an even harder sell.
+
+Yes, adoption is difficult.
+
+Let's look at this from a different angle: why would a password hashing
+scheme want to saturate the memory bandwidth (under maximum supported
+throughput with the tuned settings)?  A reason is if it can't make
+something else (or a comfortably high number of other things) be a
+component in the lower bound for attacker's cost.  This is the case for
+EARWORM.  It is also the case for escrypt at high-throughput settings
+(thousands of requests per second, thus can't fill much memory in scrypt
+fashion, so it's important to also have a large "ROM").
+
+These examples don't apply e.g. to default installs of typical web apps.
+They're slightly more likely to appear as non-default / advanced
+settings or extra modules, although even that would be a hard sell.
+Another use case would be dedicated authentication servers for large
+user databases and/or with high-value accounts.
+
+Without a "ROM", do we want to saturate the memory bandwidth?  Do we
+want to get close to saturating the memory bandwidth?  I think that yes,
+in a sequential memory-hard KDF/PHS, we want to stay close to saturating
+the memory bandwidth.  This is for two reasons: filling more memory in
+limited running time (when somewhat high throughput is needed, or/and
+when we have a lot of memory for such use), and requiring that the
+attacker provide memory that is about as fast in order to achieve a
+similar speed.
+
+Yes, bcrypt avoids this nicely yet defeats GPUs (so far) - but it
+doesn't defeat ASICs.  I think a good PHC candidate intended (possibly
+among other use cases) for general password hashing use with native code
+implementations (not scripting) on commodity servers should possess best
+properties both of bcrypt and of sequential memory-hard KDFs with
+non-trivial memory sizes (unlike bcrypt's).  So far none of the proposed
+PHC submissions qualify (they don't bother about GPU resistance at low
+memory sizes, so are likely weaker than bcrypt on current server
+hardware at throughput levels required for mass user authentication).
+
+Alexander
+

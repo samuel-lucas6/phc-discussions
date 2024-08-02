@@ -1,0 +1,53 @@
+phc-discussions - New version of PolyPasswordHasher (PolyPassHash).
+
+
+Message-ID: <20141202210604.GH3257@LykOS.nyu.edu>
+Date: Tue, 2 Dec 2014 16:06:08 -0500
+From: Santiago Torres <torresariass@...il.com>
+To: discussions@...sword-hashing.net
+Cc: submissions@...sword-hashing.net
+Subject: New version of PolyPasswordHasher (PolyPassHash).
+
+Hello everyone,
+
+We are submitting an updated version of PolyPassHash (we now call it
+PolyPasswordHasher). In this new version, we changed terminology to
+better convey the meaning of some concepts (e.g., thresholdless accounts
+are now called shielded accounts). We also added some features to the
+algorithm based on the feedback we got in the mailing list some months
+ago:
+
+    1) We added alarm code to notify the administrators of a collision
+    in the partial bytes field (now called isolated validation field).
+    If an attacker is able to find a collision and the server has
+    finished unlocking (we call this bootstrapping now), the complete
+    hash might mismatch (if the password is incorrect) and the admin
+    is notified than an attacker has almost certainly stolen the database.
+
+    2) We increased the time for an operation which is more frequently
+    performed by the attacker than the server.  The bottleneck in offline
+    cracking is in verifying that secret recombination was successful.  The
+    attacker performs this operation for every set of protector (threshold)
+    account guesses.  However, this operation only needs to be performed once
+    by a server (when transitioning to normal operation).  To increase the
+    resistance to offline cracking, we use many iterations of the secret
+    integrity check to increase this time this operation takes. Since this hash
+    needs to be calculated each time an attacker wants to verify a guess and
+    the server only runs this once after reboot, this dramatically increases
+    the attacker's effort without impacting server performance.
+
+    3) Similarly, to better address concerns on the partial validation field
+    (see the PPH is broken thread), we added key stretching to our default
+    implementation.  While this cost requires the same factor of effort from an
+    attacker and the server, this is a cost that only affects the server during
+    bootstrapping.  Thus a server only incurs this cost some of the time.
+
+
+We appreciate the feedback from the community on our previous submission.
+We welcome comments and insight on this new version.
+
+Thanks!
+-Santiago.
+
+Download attachment "polypasshash-v1.tar.gz" of type "application/octet-stream" (1971273 bytes)
+

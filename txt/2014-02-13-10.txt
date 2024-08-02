@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <52FCEB4E.5040200@dei.uc.pt>
+Date: Thu, 13 Feb 2014 15:57:02 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On 13-02-2014 15:40, Solar Designer wrote:
+On Wed, Feb 12, 2014 at 06:20:38PM -0500, Bill Cox wrote:
+>I wrote an SSE 4.1 version of the inner hash loop in NoelKDF, with a
+>quick hack where I compute 4 separate interleaved hashes, so it gets a
+>different answer, and has 4 times the parallelism.  I used the fast
+>packed 32x32->32 multiply available on my Ivy Bridge processor
+>(_mm_mullo_epi32), which we know will run a lot slower on Haswell.
+>This instruction isn't even available until SSE 4.1, so that's a
+>narrow band of processors that support it well.
+Right, although Samuel Neves posted nice emulation of it via SSE2 in:
+>
+Date: Sun, 09 Feb 2014 05:47:29 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+By the way, as an addendum to this, I should point out that the
+performance of running 4 64x64->64 multiplications in parallel in
+Haswell is not significantly worse than VPMULLD.
+
+The best measured latency for emulated VPMULLD I got (with the SSE2
+version) is 9 Haswell cycles, whereas emulating a 64x64->64-bit
+multiplication (using 3 VPMULUDQ and a few shifts/additions) can be done
+in 11 cycles of latency. Native VPMULLD itself is 10 cycles.
+
+
+

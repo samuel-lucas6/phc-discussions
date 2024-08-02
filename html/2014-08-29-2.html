@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A review per day - TwoCats</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2014/08/28/14">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140829012728.GA5030&#64;openwall.com&gt;
+Date: Fri, 29 Aug 2014 05:27:28 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A review per day - TwoCats
+
+On Thu, Aug 28, 2014 at 07:38:42PM -0400, Bill Cox wrote:
+&gt; Therefore, I decided to hash memory as fast as possible.  In
+&gt; single-thread mode, TwoCats I believe is the world's fastest hashing
+&gt; algorithm.
+
+It probably is.  yescrypt may achieve similar single-threaded speed with
+reduced round counts, but I chose its defaults to be optimal for
+multi-threaded rather than single-threaded use.  (Note that this does
+not necessarily mean use of multiple threads for computation of one
+hash, but rather use cases - which I think many of them are - where the
+cost settings are limited by total capacity of the machine, including
+its ability to run multiple tasks in parallel.)  Perhaps I should make
+this configurable.
+
+Another quality TwoCats might win at is multiplication latency hardening.
+By using scalar multiplication only, TwoCats probably squeezes more
+_sequential_ MULs per byte written than yescrypt does, at least with
+yescrypt's defaults that try to keep the SIMD multipliers busy on every
+clock cycle (meaning there must be much parallelism).  Again, I should
+make yescrypt's instruction-level parallelism configurable (right now,
+it's #define in -ref and fully hard-coded in -simd), which yescrypt's
+design deliberately allows for.
+
+&gt; One thing I screwed up was how to use t_cost.
+
+You can probably fix that during the tweaks period, if TwoCats becomes a
+PHC finalist.
+
+&gt; That's all I have for now!  Please feel free to dump on TwoCats!  It's
+&gt; my turn :-)
+
+OK, you asked for it.  I don't recall all of my complaints about TwoCats
+anymore, but I think its small random lookups, which are meant to be
+bcrypt-like, might not actually provide as much GPU resistance as
+bcrypt's did.  I think TwoCats makes them 256-bit only, meaning that on
+pre-AVX2 CPUs they might not be frequent enough, and you might not be
+making enough of them per byte read/written to the large arena.  Have
+you actually checked TwoCats vs. defense-optimized bcrypt running on the
+same CPU when exhausting the machine's capacity (e.g., 8 independent
+concurrent hash computations on your i7-3770), in terms of frequency of
+those small random lookups?  And then you need to factor in how soon
+their results are needed (the available parallelism, compare it against
+bcrypt's four S-box lookups) and the total size of your equivalent of
+bcrypt S-boxes (if 4x larger, then you probably have 4x more room for
+parallelism while staying the same as bcrypt in terms of GPU resistance).
+
+As I had mentioned, the results of such testing were one of my reasons
+to keep yescrypt's default pwxform rounds count no lower than 6, or
+alternatively I'd need to reduce instruction-level parallelism.  I think
+you did not include such criteria when deciding on the amount of work to
+do along with the main arena reads/writes in TwoCats.  You simply wanted
+to maximize your memory bandwidth usage, well and the number of
+sequential MULs, which is related, but not exactly it.
+
+That said, I think TwoCats is a very good PHC candidate!
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

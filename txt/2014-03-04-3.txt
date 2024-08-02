@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <20140304023650.GA6700@openwall.com>
+Date: Tue, 4 Mar 2014 06:36:50 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On Mon, Mar 03, 2014 at 06:23:32PM -0800, Andy Lutomirski wrote:
+On Mon, Mar 3, 2014 at 6:13 PM, Solar Designer <solar@...nwall.comwrote:
+I think 4 instructions, including the loads and stores, for a 63x63->63
+multiply is rather good.  Without this trick, it'd take 4 _multiplies_
+to implement the equivalent via 32x32->32 (or perhaps 3 multiplies if we
+also use the 32x32->64).  Some bigint library could use this trick,
+perhaps for some nice speedup on those older CPUs/builds (does any use
+it already?)
+
+I think that Poly1305 and related things use a similar trick, at least
+on some architectures.
+
+I thought Poly1305 used IEEE double, so up to 53-bit only, and it's not
+a bigint library.  But yes, it's similar.
+
+Silly question, though: why are i387 instructions better than SSE2 here?
+
+Not better, but as I mentioned I'd expect many real-world builds to be
+SSE2-less, unfortunately.  Even when running on an SSE2-capable CPU.
+
+On the other hand, if someone is OK with building a version that
+contains pieces of asm, perhaps they'd be OK with it detecting the CPU
+type and using SSE2 if available.  So the point is moot.
+
+As to whether we care to be more efficient when actually running on a P3
+or older, I'm not sure.  I think this will depend on use case.  For some
+use cases (free operating systems supporting legacy machines and
+architectures, along with modern ones), even the dependency on _any_
+multiply is too much.  The question is then: is it worth having special
+support for (roughly) P1 through P3, when many of the same use cases
+also need support for VAX and such? %-)  I'm not sure.
+
+Alexander
+

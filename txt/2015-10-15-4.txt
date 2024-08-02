@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Argon2 CPU/GPU benchmarks
+
+Message-ID: <20151015135708.GA10775@openwall.com>
+Date: Thu, 15 Oct 2015 16:57:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 CPU/GPU benchmarks
+
+On Thu, Oct 15, 2015 at 03:13:09PM +0200, Kriszti??n Pint??r wrote:
+On Thu, Oct 15, 2015 at 3:03 PM, Solar Designer <solar@...nwall.comwrote:
+
+For 2i, the best result is for Titan X: 6301/2480 = 2.54 times faster
+than the CPU.
+>
+For 2d, the best result is for the old TITAN: 11715/7808 = 1.5 times
+faster than the CPU.
+
+so far, i'm not convinced that data dependent access worth the
+increased timing risk.
+
+Yes, from these two results it's not convincing.  I expect the
+difference to be far greater when a MAXFORM chain is added (it should
+then be close to the difference between Argon2i and yescrypt, which for
+the GPU implementations so far is 5x to 10x), and that's only possible
+with data dependent access (since MAXFORM itself uses data dependent
+S-box lookups).  Maybe that's a reason to exclude the data dependent yet
+MAXFORM-lacking version.  Data dependent accesses provide most advantage
+when they are rapid and their parallelism within one instance is low.
+
+(A data independent replacement for MAXFORM is possible, even if less
+effective - but we haven't even discussed that yet.  So it's non-PHC.)
+
+although, argon uses a randomish access pattern
+in i mode too, so maybe it leaves space for significant optimization
+not done yet?
+
+We're already taking advantage of coalescing, for all block lookups in
+2i (since it's the same order across concurrent instances), and for the
+initial writes in 2d.  Also, 1 KB blocks are pretty large, and it's
+sequential access within each block.  Like I said before, something
+like MAXFORM is needed to have a GPU-unfriendly random access pattern.
+
+do you plan to do some clever pre-reading?
+
+There's not a lot of cache or local memory on GPUs to prefetch to, given
+how many concurrent instances need to be run.  That said, I think there
+is in fact room for some prefetching, possibly just of portions of a
+block as computation on the previous block is being finished.  (IIRC,
+with Argon2 specifically, this may also be possible for 2d, starting
+after 9 out of 16 BLAKE2b's.  Not the case for (ye)scrypt.)  We're not
+taking advantage of this yet, and we have no immediate plans to do so,
+in part because I think there are still bigger opportunities for
+optimization:
+
+I mentioned the register spills and the code size issue.  We need to
+make our memory accesses explicit (and see if we can optimize them)
+rather than just let the compiler spill.  Also, for the original Argon2,
+parallel computation of several BLAKE2b's may be implemented, even if
+non-trivial to do under the SIMT model, requiring use of local memory to
+pass the results much like we've seen for the BSTY mining yescrypt
+implementation discussed in here recently.
+
+Alexander
+

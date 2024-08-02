@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="../../../2015/09/24/1">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="../../../2015/09/26/3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150922211838.GA19113&#64;openwall.com&gt;
+Date: Wed, 23 Sep 2015 00:18:38 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+&gt; The hash output size for password verification should be fixed
+&gt; (otherwise, if people have to choose that length, it is unavoidable that
+&gt; some will do something stupid). While collisions are not a concern, it
+&gt; would probably be a good marketing move to use an output size which is
+&gt; "naturally" immune to collisions, i.e. 256 bits. This is what SHA-256
+&gt; outputs, and is larger than the 192 bits of bcrypt. A 32-byte output is
+&gt; not too huge with regards to the rest of the string, and also with
+&gt; regards to existing hash strings that rely on SHA-256 crypt or, even
+&gt; more so, SHA-512 crypt. While a 128-bit output would save some resources
+&gt; and make more sense (cryptographically speaking), a 256-bit output
+&gt; should ensure wider acceptance by the user base.
+
+While I agree with the above, possible reasons to support other hash
+output sizes are:
+
+1. Desire to be able to convert from possible alternative encodings to
+our would-be canonical one.  If someone uses e.g. Argon2 with 128-bit or
+512-bit output, those hashes would end up not having canonical encoding
+equivalents.  (It's basically the same reason why we may want to store
+the salt encoded, and decode it when passing into the PHC scheme.  The
+proposed scheme implements that, but not variable hash output size.)
+
+2. Potential KDF use via an API that only provides encoded output, e.g.
+pgcrypto and SQL queries.  (Arguably, this would be a hack.)
+
+To reduce the risk of someone doing something stupid (and accept that we
+won't be able to convert such hashes to our encoding), maybe the minimum
+size should be set at 16 bytes (and the maximum at 128 bytes, which is
+enough e.g. for 4 256-bit keys?)  Of course, then implementations might
+not enforce that, allowing for potential extension... and misuse.
+
+I am not sure this is worth it; I am just thinking out loud.  If we go
+for a compact encoding instead of what Thomas proposed so far, then
+output size being 256 bits only makes more sense.  But with a bloated
+syntax, we could as well encode the requested output size in there.
+
+A reason not to allow output sizes other than 256 bits is that some
+features such as hash upgrade and server relief may reasonably only be
+defined for a fixed size like this.  (This is the case for yescrypt.)
+
+&gt; I limit the salt length for Argon2 to a maximum of 48 bytes (64
+&gt; characters after B64 encoding) so as to help decoders (stack buffers
+&gt; again...). Argon2 can process much longer salts, but that does not make
+&gt; a lot of sense for password verification, where a 16-byte salt (say, an
+&gt; encoded UUID) is already fine.
+
+No objections about the maximum, but what should the minimum be?  For
+actual use, I'd set the minimum to 12 bytes (16 B64 chars), but for
+ability to convert from alternative encodings that might not have had
+such minimum, should we possibly support shorter salts in the encoding
+syntax and in verification (but not when generating new hashes)?  This
+is tough.  Supporting shorter salts (even zero length?) anywhere at all
+might make such misuse more likely.  (Again, just thinking out loud.)
+Anyway, this is easy to extend, and e.g. JtR will probably support a
+wider range.  With hash output size, it's trickier (need a parameter to
+request it and to ensure hash comparison expects a certain length).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+phc-discussions - Re: [PHC] Doubts about AntCrypt floating-point use
+
+Message-ID: <533BEEFA.7090303@rub.de>
+Date: Wed, 02 Apr 2014 13:05:30 +0200
+From: Ralf Zimmermann <ralf.zimmermann@....de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Doubts about AntCrypt floating-point use
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hey everyone,
+
+First of all, thanks for all the feedback and opinions on the AntCrypt
+submission and sorry for the late answer(s).
+
+Let me try to address the latest questions and doubts below and keep
+the discussion running :)
+
+Cheers,
+Ralf Zimmermann
+
+**********************************
+On the discussion on the floating point operations:
+**********************************
+On 04/02/2014 12:55 AM, Poul-Henning Kamp wrote:
+[..]
+I must admit that I had not previously considered floating point
+in this context.
+
+I agree that the use of floating point operations is an unusual
+approach for cryptographic primitives and we had a lot of discussion
+internally as well. The decision to use them was made very late
+(that's why we submitted shortly before the deadline) and we put them
+as ideas into the function list and source code to start a discussion
+about it - which worked surprisingly well and fast. :)
+
+There are certainly some (minor) disadvantages with respect to 
+ensuring correct rounding behaviour and minimizing entropy loss, 
+but thanks to IEEE those should be manageable problems.
+
+We did neglect to specify some important details, for example the
+rounding mode and the precision, which are both important for
+portability. We should have used (and written about) the IEEE 754
+definitions and might have avoided some of the doubts.
+
+Of course, we should have added this to the reference implementation
+as well (my fault, I quickly wrote it down), i.e., using the
+fesetround() function and verify which operations in the math library
+are IEEE conform *cough* to estimate the impact on the portability.
+
+Any more feedback, discussions and ideas on the use of floating point
+operations is very welcome.
+
+Calling library trig functions is bit too optimistic though.
+Very true, we did not check about the precision and iirc trig
+functions are not covered at all by the IEEE standard (?). We will
+check this and probably have to remove them, if there is no standard
+covering them.
+
+But pulling in FP also means that you can pull all the
+"non-giraffe mathematics"[1] into the cryptographic playpen.
+
+Think about the potential Mandelbrots fractals or The Lorentz 
+Attractor has as "dial-a-hardness one-way functions[2][3].
+
+It probably is about high time that we eject the "integers-only" 
+dogma in the non-symmetric parts of cryptography.
+
+Thanks to AntCrypt for inspiring that thought.
+
+Poul-Henning
+
+
+[1] "Modulus arithmetic is to math, what the giraffe is to 
+zoology."
+
+[2] Not to mention the vast improvement of aesthetic quality in 
+crypto-paper illustrations.
+
+[3] At the absolutely ridiculous upper end of FP-password hash 
+functions, you take each byte of your password as a signed 8 bit 
+integer and plug it into the GISS climate model at initial 
+temperature at particular grid-points in 1900, and see if you get 
+the right level of water in a harbour of your own choice in 2100.
+**********************************
+
+**********************************
+On the effect of the construction on GPU/FPGAs:
+**********************************
+On 04/01/2014 11:34 PM, Bill Cox wrote:
+[..]
+Clearly he'll have to change his functions to eliminate the trig. 
+Either that or provide software versions that always yield the same
+result. He did say that he may want to update the function list in
+the "tweak" period, so I think he should be allowed to move away
+from the trig stuff, and maybe floating point all together, and
+replace them with more portable simple one-line functions like the
+ones he has.
+We hope that the discussions here and our own tests will provide a
+good set of such functions and other ideas we did not think about.
+
+Apart from that, we should try to evaluate if the scheme itself -
+given a set of "good" functions (however we define them) - is usable.
+Of course, the functions have an efficiency impact in the end, but we
+hope that the surrounding construction is strong enough.
+
+That said, while the pseudo-random function sequence may frustrate 
+current GPUs (does it?), it wont be a problem for FPGAs and ASICs 
+that will simply compute each in parallel and have a mux on the 
+output to select which one is next.
+I don't know about GPUs. The construction should lead to forced
+branching, which will slow down the GPUs. As this is bound to
+happen a lot, we hope that the slow-down will have a visible effect.
+
+For FPGAs, it will still be annoying, as it uses up LUTs and makes the
+routing slightly worse. Of course, we could increase the effect by
+putting in more complex functions into the pseudy-random function
+sequence, and/or by changing the datapath from 32-bit to 64-bit or
+128-bit.
+
+An implementation will be restricted by the construction however, as -
+like you said - you need to evaluate all n functions (however many we
+will have in the end) in a sequence. Thus, you need area for every of
+those functions. That is no big deal as the functions are small, but
+you also need to spend at least n clock cycles (no latency for FP
+operations) and cannot easily make use of a fully pipelined design due
+to possible collisions in subsequent calls.
+
+The second aspect are the multiplexers. Every function needs to have:
+1) an input multiplexer to choose between the memory output (state[j])
+and the result of all other functions.
+2) a control signal to choose the appropriate input from the mux
+
+In the current version, this control signal takes one out of all
+outputs and uses some bits from the selected signal, taking another
+multiplexer and logic (as every function must be executed only once),
+adding to area and the critical path. (*)
+
+These are all small things, but they will get annoying if you try
+to utilize your FPGAs as good as possible, as the effect on the
+routing increases.
+
+Also, the author may be mistaken about how large floating point 
+operations are in silicon now days.  A 64-bit multiplier is at 
+least half the size, if I'm not mistaken, of a floating point 
+multiplier with a 64-bit mantissa.  Multiplications are good, 
+though.
+I looked at the double precision tables for the existing Xilinx IP
+Cores. Depending on the availability of DSP hardcores and the latency
+setting, the implementation is not too small.
+
+But I must admit, that I did not have time to implement an FPGA design
+yet, which we should do for benchmarking in any case.
+
+With the limited memory (32 KiB is suggested), it also is a target 
+for the multi-CPU thingies.
+You can always adjust the memory by increasing the m_cost parameter. I
+think we wrote 32 KiB (?) as a suggested minimum.
+
+To be honest: we did not write a real recommendation, as we also lack
+the GPU implementation of an attack, and only after both FPGA and GPU
+attack are benchmarked, we can optimize and tweak the construction.
+
+
+Apologies to the author... sorry, you were at the top of the list.
+Don't be, we are glad to get feedback and improve the construction :)
+
+Bill
+
+
+(*) Please note that this is a data-dependent branch using "secret"
+data and we are currently waiting for internal feedback on a possible
+change here, which keeps the "pseudo-random" sequences but where the
+data does not depend on the secret state.
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. & Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+http://www.emsec.rub.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlM77vMACgkQ/N3XAntS/5a8MACgjMdZ0hsG69PCsetbYkTlU7BR
+BWgAnR6GnGPVgbBC95azJlcIeKNS5cS6
+=CRVQ
+-----END PGP SIGNATURE-----
+

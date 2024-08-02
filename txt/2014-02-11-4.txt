@@ -1,0 +1,115 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p4J3LgxCg0UVtZ-s9sD5Gez3mGg=qBz_gWmOiiGH1WZ6A@mail.gmail.com>
+Date: Tue, 11 Feb 2014 07:47:22 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Tue, Feb 11, 2014 at 2:00 AM, Solar Designer <solar@...nwall.comwrote:
+VMULPD working on 4 packed 64-bit floats is 5 cycles latency, 1 cycle or
+better throughput (is listed at 0.63c throughput in
+GenuineIntel00306C3_Haswell*.txt) on all CPUs supporting it (both Intel
+and AMD), it seems.  Masking the right bits in inputs/outputs will add
+some overhead, though.  There's no point in using it on 32-bit inputs,
+since PMULUDQ is about as fast, is available starting with older CPUs,
+and avoids the need to mask the inputs.
+
+VMULPD sure sounds good for 64-bit versions.  I was also toying with
+the idea of 8-way 32-bit float operations, since the history of
+graphics cards seems to show we're headed towards caring a lot about
+32-bit float SIMD more than 32-bit ints.
+
+>I agree unsigned is prefered.  Java can add a few instructions to
+>emulate unsigned if needed.
+>
+I think this is not needed - we can simply treat its signed ints as
+unsigned, as long as we don't do right shift and division.
+>
+>The hybrid that uses 64-bit memory read/write, but only a 32x32->64
+>multiplication had some extra overhead for converting from 64-bit to
+>32-bit.
+>
+Can you show the instructions that were generated for this?
+>
+Alexander
+
+Here's code for testing the hash function:
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MEMSIZE (1u << 31) // 2GiB
+#define MEMLEN (MEMSIZE/sizeof(uint64_t))
+
+int main(int argc, char **argv) {
+    uint64_t *mem = (uint64_t *)malloc(MEMSIZE);
+    uint64_t value = 1;
+    uint64_t fromAddr = 0, prevAddr = 4096;
+    uint32_t i;
+    for(i = 8192; i < MEMLEN; i++) {
+        value = (uint32_t)value*(uint64_t)((uint32_t)mem[prevAddr++] |
+3) + mem[fromAddr++];
+        mem[i] = value;
+    }
+    uint32_t addr = rand() % MEMLEN;
+    printf("mem[%u] = %u\n", addr, mem[addr]);
+    return 0;
+}
+
+Here's the code generated for the loop with -O2 optimizations:
+
+.L3:
+        movq    32768(%rbx,%rdx,8), %rax
+        movl    %ecx, %ecx
+        addq    $1, %rdx
+        orl     $3, %eax
+        imulq   %rax, %rcx
+        addq    -8(%rbx,%rdx,8), %rcx
+        cmpq    $268427264, %rdx
+        movq    %rcx, 65528(%rbx,%rdx,8)
+        jne     .L3
+
+The "movl %ecx, %ecx" I think is used to clear the high 32-bits.  That
+causes a bit of extra latency in the loop:
+
+time ./bar
+mem[193676647] = 1615625288
+
+real    0m0.528s
+user    0m0.400s
+sys     0m0.120s
+
+Here's the code generated when the casts are removed and we do
+64x64->64 multiplication:
+
+.L3:
+        movq    32768(%rbx,%rdx,8), %rsi
+        addq    $1, %rdx
+        orq     $3, %rsi
+        imulq   %rsi, %rcx
+        addq    -8(%rbx,%rdx,8), %rcx
+        cmpq    $268427264, %rdx
+        movq    %rcx, 65528(%rbx,%rdx,8)
+        jne     .L3
+
+And the runtime:
+
+temptime ./bar
+mem[193676647] = 1615625288
+
+real    0m0.457s
+user    0m0.280s
+sys     0m0.170s
+
+The cast is almost free, but we need 0's in both upper registers.  I
+also don't like down-sizing value to 32-bits in the loop, but it's
+more fair for comparing to the 32x32->32 and 64x64->64 versions.  When
+I XOR the 64-bit result into value, the loop doesn't slow down
+significantly for the 32x32->64 version, but it does for the other
+two.
+
+Bill
+

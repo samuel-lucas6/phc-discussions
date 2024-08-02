@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] attacking and hardening escrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/03/09/14">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/03/09/3">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140310072900.GA8842&#64;openwall.com&gt;
+Date: Mon, 10 Mar 2014 11:29:01 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] attacking and hardening escrypt
+
+On Sun, Mar 09, 2014 at 07:04:29AM +0400, Solar Designer wrote:
+&gt; Somehow I am especially interested in comments from Steve Thomas
+&gt; (@Sc00bzT) and Christian Winnerlein (@CodesInChaos), please. ;-)
+&gt; Indeed, I'd appreciate anyone else's comments as well.
+
+This is still true. ;-)
+
+&gt; Now, this attack appears to be defeated by moving away from XORs to a
+&gt; _suitable_ non-associative operation (e.g., subtraction is _not_ suitable,
+&gt; still allowing for a similar attack, so non-associativity alone is not
+&gt; sufficient), or to alternating sufficiently different operations.  Would
+&gt; it be sufficient to alternate XORs and ADDs for even and odd sub-blocks?
+&gt; (I think so.)  Is this change worth making (drawback: adds complexity),
+&gt; or is it best to stipulate that S_ROUNDS is at least 1 and define the
+&gt; sub-block transformation such that it can't be precomputed out of order
+&gt; with the sub-block XORs (or in other words without having the actual
+&gt; input values to it yet), or is it best to do both of these things (harden
+&gt; for the case of S_ROUNDS = 0, yet require S_ROUNDS &gt; 0)?  I think the way
+&gt; the sub-block transformation is currently defined satisfies this property
+&gt; (for S_ROUNDS &gt; 0).
+&gt; 
+&gt; This gives us a requirement for the sub-block transformation function.
+&gt; Further requirements are that it must not significantly reduce entropy,
+&gt; nor introduce significant biases - although these appear to be less
+&gt; important.  Are there any other requirements?
+
+More required properties:
+
+If the sub-block transformation uses multiple rounds per sub-block
+(S_ROUNDS &gt; 1), there shouldn't exist a practical way to compute
+multiple rounds with significantly less effort or significantly quicker
+(in terms of latency) than with sequential computation of the individual
+rounds given a particular input to the first round.
+
+Both individual and multiple rounds at once may be computable faster
+with a lookup table.  To thwart this, the lane width should be large
+enough that the table would need to be unrealistically big, or/and extra
+variable inputs to the round function may be used.  In escrypt, the lane
+width is 64-bit, and the extra inputs are the S-boxes, which depend on
+the password and salt.  So both the table would need to be
+unrealistically big and it'd need to be recomputed for each password and
+salt combination.
+
+Can smaller lookup table(s) be used efficiently (along with some
+computation), such as applied to a portion of the lane width only?  This
+depends on how the round function is defined.  For example, could our
+64-bit lane width be decomposed into 4 16-bit lanes, with only trivial
+enough mixing between them that 4 16-bit lookup tables could be used
+efficiently?  (The 4x 16-bit split is arbitrary, used for the sake of
+providing a specific example with lookup tables that are small enough to
+be practical.)  I think not, but this is a concern to keep in mind when
+revising the round function.
+
+Also, I've been seriously considering using 32-bit lanes.  (This has
+some pros and cons.  Among the pros is better compatibility with Salsa20,
+where it'd let us ignore SIMD shuffling of 32-bit words.  escrypt
+currently has some extra complexity because of this shuffling, yet
+having its new sub-block mixing work on 64-bit lanes.)  I think that
+with careful design and with use of the variable S-boxes, 32-bit lanes
+would be OK in terms of issues described above, but they'd provide a
+smaller safety margin.  (Luckily, we're not talking cryptographic
+security here, but just attacks that would allow for computation of the
+hash with somewhat less resources than intended.)
+
+&gt; BTW, this is similar to the question Bill Cox asked a few months ago,
+&gt; and got no real answers to.  My answer was: depends on context.  I do
+&gt; provide the context to my question now (it's escrypt 0.3.1 that I posted
+&gt; the other day, or/and the explanation above for those too busy to read
+&gt; the code), and my opinion on required properties - and I'd appreciate
+&gt; comments from others in this community.  Thanks!
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

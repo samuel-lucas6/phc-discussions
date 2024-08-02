@@ -1,0 +1,38 @@
+phc-discussions - Another dumb idea: compute hardened KDFs
+
+Message-ID: <CAOLP8p7kEAyYwzb5942sa988pWa9F424fvdb3qNwcLshC=z_rw@mail.gmail.com>
+Date: Sun, 12 Jan 2014 17:50:26 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Another dumb idea: compute hardened KDFs
+
+Alexander had yet another great idea, and I'm pretty excited about it.
+ It may be an old idea, but it's the first I've heard of it.
+
+Multipliers are hand optimized computing engines that go just as fast
+on my CPU as on a high-end ASIC (except for liquid nitrogen cooled
+ASICs... yeah, they exist).  A 32x32 -32 multiply takes 3 cycles, or
+almost 1ns on my development machine.  By having a single multiply
+operation in the inner loop that computes hash data along with one or
+two 1 cycle operations, we can have the multiply delay dominate the
+runtime.
+
+An ASIC attacker can speed up the other operations as if they didn't
+even exist, but the multiply is hardened, and there's nothing he can
+do about it.  To fill the memory bandwidth pipe, we have to run
+multiple multiplier loops in parallel, either through instruction
+level parallelism or on multiple threads.  My initial tests shows that
+we can run multiple threads until the memory bandwidth limit is over
+half full.
+
+This way, we harden both the time (multiplies) and cost (memory)
+dimensions of our time*cost goal to within 2X of optimal for a given
+computer.
+
+What do you think?  Old idea, or is everyone doing this, or for some
+reason not?  I can't believe I was giving Alexander grief for
+bothering to try to slow down an ASIC attacker by doing a lot of ALU
+operations.  Multiply rules.
+
+Bill
+

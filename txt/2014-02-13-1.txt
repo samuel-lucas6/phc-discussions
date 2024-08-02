@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <52FC2BBF.6090706@dei.uc.pt>
+Date: Thu, 13 Feb 2014 02:19:43 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+This thread has gone rather offtopic by now, but this happens to be a
+topic that I like :)
+
+On 11-02-2014 20:31, Dennis E. Hamilton wrote:
+The Art of Computer Programming volume 2 section 4.6.3 (pp.461-485!) is all about Evaluation of Powers.  This devolves into an extensive treatment about addition chains, which have certain applications to optimization of arithmetic, including some interesting material about x^n mod w).  Some of this material seems relevant to folks concerned about speed-ups that overcome work-factor-increasing devices.
+>
+The use of multiplications and divisions for powers is a case of addition-subtraction chains and the only mention I spotted is in exercise 4.6.3-30.  There are times when the addition-subtraction chains are shorter than the addition chain and the solution mentions some heavy-duty analysis (i.e., by Paul Erdos) and also ties to other material where addition-subtraction chains are workable (although having 1/x available as part of it strikes me as a stretch for integer work, but maybe not for modular arithmetic).  These matter when n is a known constant.  Otherwise the so-called binary method is what works best.
+
+Addition-subtraction chains are popular with elliptic curves, where
+"division", i.e., subtraction, is very cheap. Similarly, multiplication
+by a constant can make good use of subtractions. You can see them (plus
+many other techniques) put to good use in, e.g., [1].
+
+We can do much better than the binary method, at very little
+computational cost. Namely, by doing a small precomputation at the start
+and processing w bits of the exponent at a time, we can perform lg(e) +
+lg(e)/w + 2^w multiplications on average instead of lg(e) + lg(e)/2.
+There are many improvements building on this idea, of course; the survey
+by Dan Bernstein [2] is a good read on the subject, on top of Knuth.
+
+
+>
+I couldn't find more in any of the Knuth Collected Works papers that I have, and the early paper might be in the Discrete Mathematics volume.  
+
+"Duality in Addition Chains", co-authored with Christos Papadimitriou,
+is reprinted in Chapter 31 of Selected Papers on the Analysis of
+Algorithms. It does not contain any particular improvement, but it
+contains an interesting observation: for each addition chain that
+"scans" the exponent bits left-to-right, there is another addition chain
+that scans right-to-left, which is its transpose (when looking at the
+chains as matrices).
+
+[1] http://www.hyperelliptic.org/EFD/precomp.pdf
+[2] http://cr.yp.to/papers/pippenger.pdf
+
+

@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] Quick gripe... in case there's ever another contest
+
+Message-ID: <53409C01.30809@gmail.com>
+Date: Sun, 06 Apr 2014 04:12:49 +0400
+From: Evgeny Kapun <abacabadabacaba@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Quick gripe... in case there's ever another contest
+
+06.04.2014 02:47, Solar Designer wrote:
+>(In fact, my opinion is that a _reference_ implementation, meant to test
+>other implementations for correctness, should be done in a language
+>which does NOT have undefined or architecture-dependent behaviour. C
+>should be banned for that; reference implementations should be in Java
+>or C#, or ideally something even stricter because even Java or C# may
+>offer non-portable behaviour when using floating-point types.)
+
+This is not without merit, but which approach is best is unclear to me.
+
+As you pointed out, there may be language-related bugs in Java code too,
+and here's a relevant example:
+
+http://mindrot.org/files/jBCrypt/internat.adv
+
+It is important that cryptographic functions are defined to operate on
+bytes, not characters. Otherwise, the definition of such functions would
+depend on the definition of what a character is, and how they are
+represented, which could be as much as the entire Unicode standard.
+
+When it comes to arithmetic operations on integers, results are defined
+unambiguously in Java, unlike in C. It is even possible to get
+unambiguous behavior of floating point operations (if someone seriously
+decided to use them in cryptography) by using strictfp modifier. The
+above mentioned bug was caused by incorrect representation of a Unicode
+string as bytes, which is not what a hash function should be about
+anyway.
+

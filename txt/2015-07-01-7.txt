@@ -1,0 +1,48 @@
+phc-discussions - [PHC] RE: Password hashing as a self-overwriting Turing machine
+
+Message-ID: <1788157451-2612@skroderider.denisbider.com>
+Date: Wed, 1 Jul 2015 20:32:32 +0100
+From: denis bider <pwhashing@...isbider.com>
+To: discussions@...sword-hashing.net
+Subject: [PHC] RE: Password hashing as a self-overwriting Turing machine
+
+Responses to recent comments:  
+
+Marsh Ray:
+
+ If it does not allow data dependent branching, then you don't get to use the halting problem as proof of irreproducibility. 
+Larry Bugbee:
+
+I very much doubt you have a true Turing machine.
+
+  I used "Turing machine" mainly in this submission as an attempt to convey the idea. "Turing-like" may be more accurate. The algorithm  initially used a single block generated from both salt and password which  controlled both the order of operations, and the locations of memory access.  This had the potential to leak side channel information to an attacker with  ability to measure cache timing.   To avoid this, I have altered the algorithm so it has two blocks, one of them  dependent on only the salt. Now, the salt block controls memory access, while  the password block continues to control what operations are performed. I understand this may make formal proof  more difficult, but is worth it to not leak  password-dependent information in cache timing.
+
+I consider formal proof a nice thing to have, but less than crucial. We don't have formal proof for ECC, DH, or RSA, either. An algorithm with formal proof may indeed have inferior characteristics in practice than an algorithm without it. Focusing solely on formal proof seems to me like the case of building a fence around a house where most of the planks are six feet, but one of the planks is sky-high.
+ 
+
+Marsh Ray:
+
+what is the advantage of executing a randomized
+stream of operations over, say, performing a large
+block encryption using the salt as key?
+
+Even better: why not include AES block encryption as one of the operations the algorithm performs?
+
+I did not use AES because I wanted something in portable C++ (CPU AES would require assembly), and also - we cannot yet count on CPU AES support in the platforms we target. However, a future version of the algorithm should probably also use AES.
+
+Why this is better? Well, if you randomize the way your AES encryption accesses memory, like this algorithm does; if you put in some byte-size reads and writes to screw with the GPU and its inefficient access of global memory; then arguably, what you have is similar.
+
+If you don't have CPU AES support, then the way I see it, if you rely solely on AES, you're spending proportionally more time operating on small blocks of data, instead of exercising what the CPU does well, which is fetching stuff from memory. Without AES, the algorithm spends less time computing, and more time exercising the advantages of CPU memory caching.
+
+
+Larry Bugbee:
+  May I suggest a name change?   I'm not sure if this relates to the name "BusyBeaver", or to my references to "Turing machine". If it relates to "BusyBeaver", is the problem that the word "beaver" sounds silly, or that it evokes the same-named concept in computability theory? The latter is actually why I chose it.
+
+If the suggestion relates to my references to "Turing machine", see above. I do not actually claim that the algorithm is one, I use it to convey the idea behind the design.
+
+
+denis
+
+
+
+

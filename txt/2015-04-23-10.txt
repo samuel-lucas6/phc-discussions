@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] PHC: survey and benchmarks
+
+Message-ID: <148288449.480225.1429796365319.JavaMail.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Thu, 23 Apr 2015 08:39:25 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] PHC: survey and benchmarks
+
+On April 1, 2015 at 8:33 AM Solar Designer <solar@...nwall.comwrote:
+>
+Steve,
+>
+On Mon, Mar 23, 2015 at 09:33:28PM -0500, Steve Thomas wrote:
+Name       | t_cost for 2x | t_cost for 3x | t_cost for 4x | t_cost for 5x
+-----------+---------------+---------------+---------------+---------------
+Argon      | 2             | 3             | 4             | 5
+battcrypt  | 0             | 1             | 3             | -
+Catena     | 2             | 3             | 4             | 5
+Lyra2      | 2             | 3             | 4             | 5
+POMELO     | 1             | -             | 2             | -
+Pufferfish | -             | 0             | -             | 1
+yescrypt   | 3             | 4             | 5             | 6
+>
+For yescrypt it's t = 2 to have it perform 2x the number of read-writes
+compared to the total number of blocks. t = 0 means 4/3, t = 1 means
+5/3, and t = 2 means 2. Then it's just whole numbers.
+>
+
+Oh I must of miss read the code I thought t = 0 was 1/3, t = 1 was 2/3, and t =
+2 was 1. Wait are you counting the initial filling of memory because I didn't
+count that for the others?
+
+
+So if I understood you right, all of the numbers for yescrypt in the
+table above should be decreased by 1.
+>
+... or are you only counting memory accesses starting with the point
+where the memory is filled, and not counting the initial accesses
+during memory filling (which often involves reads of previously-written
+blocks, and thus contributes to the attacker's area-time product too)?
+If so, your table is correct (for yescrypt; I didn't verify the rest).
+>
+
+And you just answered that question. OK so I don't remember off the top of my
+head but I think all of these write random sequentially over the memory then
+start doing stuff. I think only one was Gambit.
+
+I was thinking of tweaking battcrypt so that it zero fills memory and inits the
+extra block (2 KiB) with random. Then start the main loop. This would save the
+initial blowfish encryption of memory, but then it's hard to know how resistant
+it is to TMTO. Currently I think 2x passes over memory from the table above
+(which ignores initialization) should be the required minimum. And probably 3x
+if initialized with zeros. I was running out of time on the tweak deadline.
+Which now that I think about it I really should have just made it an option. And
+if it turned out to be a lot slower than the original, then just suggest no one
+use it :).
+
+Sorry about the long delay.
+

@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <CAOLP8p6Hep2MjosmjdSLKsiMTTZnXNrnV0UsEMgAtRkvQ9h5ig@mail.gmail.com>
+Date: Tue, 7 Jul 2015 15:29:21 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+On Tue, Jul 7, 2015 at 1:56 PM, Zooko Wilcox-O'Hearn <zookog@...il.com>
+wrote:
+
+Okay *one* more follow-up to my own post then I'll give you a chance
+to get a word in edgewise. I showed this thread to Greg Maxwell on IRC
+and he reminded me that the issue of the stale rate is actually very
+important for decentralization of mining. We call this
+"progress-freedom" — meaning that you don't get closer to a solution
+the more work you put in, but instead it is more of a pure Poisson
+process where, the more work you put in, the higher your *chance* of
+winning, during each successive moment. The reason this is important
+for decentralization of mining is that if the Proof-of-Work algorithm
+allows the miner to make progress then a miner with slightly more
+power than its competitor will win 100% of the blocks from its
+competitor, because each block is a race to the finish line and the
+slightly-faster runner will win every race.
+>
+In practice nothing is a purely instantaneous Poisson process, and my
+rule of thumb is that if the time to run a single trial (to pick a
+single nonce, calculate the Proof-of-Work, and check whether you just
+found the winning ticket) is less than 1% of the average block time,
+that's good enough. The average block time is 10 minutes, so that
+means if the time to verify (== the time run a single trial, as long
+as we're using the simple approach of verification being the same as
+re-running the winning nonce) is less than 6 seconds then I'm not too
+worried about progress-freedom.
+>
+Regards,
+>
+Zooko
+>
+
+One more concern is a possible DDoS attack on the network.  Publishing
+1,000's of fake solutions to blocks per second that require the entire
+network to debunk them with a very computationally expensive verification
+would be bad.  I read about that DDoS problem somewhere recently... can't
+remember if it was the Argon2 paper or somewhere else.
+
+In any case, assuming the reason we want a memory-hard PoW is to discourage
+ASIC mining, I think we might want to consider memory-hard algorithms that
+max out L1 + L2 + L3 capacity and bandwidth (or some reasonable fraction of
+it, like 1/2).  I am not convinced we do better busting out of on-chip
+cache, since a GPU and probably an ASIC or GPU would win the total I/O
+bandwidth to external DRAM war.  However, it would be very hard for them to
+beat the performance of my L1+L2+L3 cache system on my CPU for random
+access.
+
+I _think_ I saw the impact of botnets on the Yescrypt-based crypto-currency
+(which does not use any ROM).  Whenever someone posted enough BitCoins to
+make it interesting to have the Yescrypt based coins, suddenly the mining
+rate would hugely increase.  As soon as those BitCoins were bought, the
+mining rate would hugely decrease.  It definitely seemed like someone
+controls a huge number of CPUs and can move them around quickly.  I'm not
+sure it makes a ton of sense working on generic CPU based systems until
+there's some resolution to that.  ShinyCoin hashed 15GiB as their solution,
+which isn't too bad, except for the verification problem, and because their
+Ramhog algorithm is defective.
+
+Bill
+
+
+

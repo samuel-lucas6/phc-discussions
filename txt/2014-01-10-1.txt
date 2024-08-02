@@ -1,0 +1,146 @@
+phc-discussions - scripting memory (not so) high
+
+Message-ID: <20140110043232.GA28937@openwall.com>
+Date: Fri, 10 Jan 2014 08:32:32 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Anthony Ferrara <ircmaxell@...il.com>
+Subject: scripting memory (not so) high
+
+Hi,
+
+Attached is a PHP script implementing a sequential memory-hard KDF.
+At this point, this is primarily an experiment to see how much memory
+can be used in this fashion from scripting languages (with PHP being the
+primary target) while maintaining run times suitable for web apps' user
+authentication.
+
+I am using SHA-512 as the crypto primitive for several reasons:
+
+- It's possibly the fastest way to fill memory in PHP (other than with a
+repeating pattern, which would be unsuitable), due to it producing 64
+bytes per call.  (The interpreter overhead per byte produced is low.)
+
+- It's strong crypto, so the same primitive is also usable to provide
+the crypto properties of the KDF.  (No need to have two different
+primitives, like scrypt's Salsa20/8 and SHA-256, which is its drawback.)
+
+- It's widely available by now (although not as widely as MD5).
+
+- It makes relatively good use of the CPU, even when invoked on just one
+input (when no multi-input parallelism is available, like it is not with
+the limited interfaces of scripting languages).  It uses 64-bit integers,
+and moreover the message scheduling portion may be SIMD'ed.
+(Unfortunately, it's not as efficient on 32-bit CPUs and in 32-bit mode
+on x86 CPUs, although optimized implementations on the latter can access
+64-bit operations via SSE2, using half the vector width - e.g., I think
+OpenSSL's does.)
+
+- It has relatively high registers*time cost internally, doubling both
+the amount of processing and the required total size of fast registers -
+thus, a total of 4x increase - as compared to SHA-256.  We're currently
+seeing this sort of performance difference between SHA-512 and SHA-256
+on GPUs (SHA-512 is typically 4x+ slower than SHA-256 on most GPUs, in
+terms of hashes per second per chip).
+
+- It's NIST-approved.  (This argument did arise in discussions around
+Drupal 7's password hashing, and it switched to SHA-512 for the crypto
+primitive specifically for this reason.)
+
+- It's already in use by Drupal 7's revision of phpass, giving us a
+performance baseline and easing migration of future Drupal to a possible
+sequential memory-hard password hashing scheme also based on SHA-512.
+
+The KDF structure is currently similar to scrypt's SMix, including its
+TMTO susceptibility and indexing by secret.  (There's room for
+improvement here, as discussed for the "native code" KDFs.)
+
+The hard-coded parameter k controls the read block size used by the
+second loop.  Lower k speeds things up, allowing us to increase m_cost
+for the same target running time.  Higher k reduces interpreter
+overhead, thereby reducing the gap between scripting and native code
+implementations.  For the test results below, k is 4 (512-byte blocks).
+
+Time to compute 10 hashes (sequentially) at 1 MiB each, on one CPU core
+in different machines:
+
+i7-4770K, 64-bit PHP build:
+
+$ time php5 smhkdf.php 
+S9PWB9zxGviqNY0vqBMAT2jg+dTYAzcF+GE7Wea1ajY=
+
+real    0m0.567s
+user    0m0.556s
+sys     0m0.008s
+
+FX-8120, 64-bit PHP build:
+
+$ time php5 smhkdf.php 
+S9PWB9zxGviqNY0vqBMAT2jg+dTYAzcF+GE7Wea1ajY=
+
+real    0m1.055s
+user    0m1.048s
+sys     0m0.004s
+
+Pentium 3, 1 GHz:
+
+$ time php5-cli smhkdf.php 
+S9PWB9zxGviqNY0vqBMAT2jg+dTYAzcF+GE7Wea1ajY=
+
+real    0m13.410s
+user    0m13.315s
+sys     0m0.093s
+
+This is 17.6 c/s on the fastest machine (on one core in it) and 0.75 c/s
+on the slowest.
+
+Running 8 concurrent instances, they complete in 1.18s on i7-4770K and
+in 1.58s on FX-8120.  This gives 67.8 c/s and 50.6 c/s, respectively.
+
+Are these numbers good enough?  I'm not sure.  They indicate pretty good
+speed of computing SHA-512 for a CPU - almost as good as native (indeed,
+setting k higher than 1 helps here: we get a native code loop around the
+SHA-512 compression function).  We're computing (1+4)*16384 = 81920
+SHA-512 compressions per call.  This corresponds to 5.5M (on i7-4770K)
+or 4M (on FX-8120) SHA-512's per second.  This is only ~3x lower than
+what a password cracker with SIMD code achieves on these CPUs.  Not bad
+for a scripting language and our fairly low k (setting k higher than 4
+improves efficiency somewhat further, but reduces memory usage per time).
+
+However, if a web app install could reasonably handle more than 50
+requests/s and no extra anti-DoS measures are being added along with the
+move to slower password hashing like this, then the app may become more
+susceptible to DoS.  Maybe lower m_cost or/and k should be used in those
+cases.
+
+For comparison, Drupal 7 was once using 16384 iterations of SHA-512, and
+I think they've since moved to 32768.  Personally, I find these a bit
+too high given the lower-than-native PHP code efficiency and considering
+the DoS susceptibility, but maybe they know they have features that are
+more attractive DoS targets anyway, in which case this is sort of fine. ;-)
+(I think they have no per-source rate limiting or such.)  So apparently
+32768 invocations of SHA-512 is considered an acceptable default by a
+major web app now (although not by most other web apps).  In my tests
+above, I also had 32768 invocations of SHA-512, but they correspond to
+81920 invocations of the SHA-512 compression function.  Thus, this is up
+to 2.5x slower - but less than that in practice because k>1 results in
+higher efficiency.  In practice this might be 1.5x slower than Drupal's
+upgraded default of 32768.  Perhaps this will match Drupal developers'
+desired amount of processing per hash computed by the time PHC is over,
+and if not - and for other projects - lower settings may be used (e.g.,
+512 KiB memory or less), which is probably still much better than having
+no memory hardness at all (except for SHA-512's "built in" demand for
+much register space).
+
+Disclaimer: there may be bugs in the smhkdf code (e.g., some off-by-ones
+are likely).  Implementations in other languages will be needed before
+we can have much confidence in its correctness.  Besides, several
+enhancements relative to scrypt's SMix structure may be implemented.
+These possible errors and enhancements may affect smhkdf's performance,
+although I expect its performance to stay within a factor of 2 of the
+numbers given above.
+
+Alexander
+
+View attachment "smhkdf.php" of type "text/plain" (958 bytes)
+

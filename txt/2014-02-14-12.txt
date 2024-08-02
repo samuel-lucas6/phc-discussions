@@ -1,0 +1,128 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140214152129.GA11254@openwall.com>
+Date: Fri, 14 Feb 2014 19:21:29 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 09:00:29AM -0500, Bill Cox wrote:
+Actually, my little test loop above always has *from in L1 cache
+because it it always points to the first block of mem.  The actual
+loop in NeolKDF does read from a random previous block.
+
+Yes, I had noticed both of these.
+
+I am not yet able to explain this.  I compared the generated assembly
+code, and the loops are very similar, with only scalar instructions
+generated.  The mask operation comes right after the multiply where it
+seems like it should happen in parallel.
+
+Yes, but this may mean that the load starts 1 or 2 cycles after the
+multiply started, although register renaming and out-of-order execution
+could have helped.
+
+When I iterate the inner
+loop 10X to amplify the impact of this effect versus memory
+allocation, I see that changing the from pointer to mem + (value &
+mask) versus (mem + j) results in almost a 2X slowdown.  This is nuts!
+
+I am also surprised the slowdown is so significant.
+
+Maybe try two "rounds" of the multiply per one random lookup, if it
+somehow takes more multiply latency to hide the latency of the mask+load?
+
+When I switch to randomizing the "prev" address, the same slowdown
+happens, but just a bit worse, likely due to the increased sequential
+work required.
+
+Right.
+
+In my testing on Haswell earlier today, it was 1.5x for randomizing the
+"from" address (when "from" is in L1, which would not be the case in
+NoelKDF) and 2x for randomizing the "prev" address.
+
+You might want to decouple the multiply latency hardening from random
+reads (make it two separate chains, only joined at end of block).
+>
+Alexander
+
+I see you've suggested this multiple times :-)  It's a fantastic idea,
+and I am going to play around with it.  I agree that with this idea,
+it should be possible to max out bandwidth while having solid
+multiplication-time hardening, at least for CPUs with SSE.
+
+Yeah.  The worst drawback of it that I currently see is that you'd have
+to manually adjust the length of chains such that they finish at roughly
+the same time without leaving much resources idle.  On a future CPU,
+this may correspond to keeping some of the resources idle, with the
+total running time dominated by one of the chains.  In fact, this is
+very similar to what we're trying to cause for non-CPU attackers - but
+it might bite us too, when our own hardware changes.  A way around that
+is to have more tunable parameters, to be encoded along with hashes, so
+that the chains can be kept roughly the same duration on the currently
+relevant defensive hardware.  In sim-mix.c that I posted, "ROUNDS" would
+be such a tunable (in that file it controls the amount of computation
+per memory access, but we can as well have two rounds count settings to
+separately control the computation by two chains vs. memory accesses by
+one or both of them).  New drawback is code complexity and having too
+many tunables...
+
+On CPUs without SSE, the multiplication hardening would be diminished,
+
+Why would it be?  On the contrary, I think only it might remain,
+although it's up to you to choose how you handle that.  You could have
+just one scalar thread doing sequential multiplies like you have now, or
+you could have that one scalar thread do multiplies and random lookups,
+or you could have two scalar threads (one of each kind), or you could
+have one scalar thread do random lookups without multiplies so that in
+this mode your KDF is friendly to ancient CPUs:
+
+but as
+you suggested, this may be a good thing, since those older CPUs may
+have inefficient multiplication anyway, and we'd likely be better off
+going for max memory bandwidth in that case.
+
+I was referring to ancient non-x86 CPUs, which are still supported by
+two *BSD projects.  On simply older CPUs like Pentium 1 and Pentium 4,
+multiplication is 9 to 11 cycles - nasty, but not necessarily
+prohibitive, considering that we'd have a few other instructions in the
+sequence as well, which won't be impacted as bad (so it may be e.g. 4-6
+cycles/loop on modern CPUs and PPro/P2/P3 vs. 11-13 cycles/loop on P1/P4).
+
+If we do support a multiplication-less mode, I wouldn't mind having a
+way to enable it for P1/P4 as well, though, if e.g. a distro finds it
+important to have good efficiency on those old machines.
+
+Throwing in a
+cryptographic hash after every block hash is another great idea I will
+play around with.  That's a good way to combine the multiplication
+chain and SSE chains.
+
+You're simultaneously suggesting how to max out the bandwidth,
+alleviate what is likely to be seen by the PHC as a serious weakness
+(billion non-crypto-hashes in series), how to address bcrypt, and
+GPUs.  I guess I've said before that it's hard for me to claim being
+the primary author of NoelKDF, rather than the code monkey
+implementing the great ideas from SolarDesigner and Christian Forler.
+However, I'm a pretty good code monkey.
+
+I appreciate how you're trying things out, and you're contributing some
+good ideas too.
+
+This small random read runtime penalty is driving me crazy.  If it
+were just my Ivy Bridge processor, I could maybe explain it as a weird
+Intel/gcc quirk.  I just don't see how to explain this happening on
+both Intel and AMD processors while the assembly code looks about
+right.
+
+Yes, I was surprised too.
+
+Maybe try precomputing the random address one iteration in advance.
+In bcrypt, there are 4 S-box lookups, which means that computation (on
+results of first 2 lookups) doesn't have to start (or be stalled) until
+all 4 lookups are issued.  So you have a little bit of room for
+parallelism too, without necessarily becoming worse than bcrypt.
+
+Alexander
+

@@ -1,0 +1,28 @@
+phc-discussions - RE: [PHC] A must read...
+
+Message-ID: <3eaf7fdd647c40f5b2f7cf809585237f@BY2PR03MB074.namprd03.prod.outlook.com>
+Date: Tue, 14 Jan 2014 22:45:09 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] A must read...
+
+v[0] = Hash(password)
+hash = v[0]
+for i = 1 .. memoryLength - 1
+    addr = Rand(i) % i
+    hash = MultHash(hash, v[addr], prevV)
+    v[i] = hash
+    prevV = v[addr]
+>
+function MultHash(v1, v2, prevV2):
+    return v1*(v2 | 1) + prevV2
+>
+Actually, the % operation would dominate, but I hash a page at a time... so assume it costs 0.1 clocks.
+
+Since Rand(i) % i doesn't depend on anything specific to the candidate password, couldn't it be precomputed? Or computed and fed to a large number of processors performing the rest of the loop in parallel.
+
+It looks like all memory accesses are predictable, therefore a custom external memory subsystem could be constructed which accepts streaming data as fast as you can you can move it on and off the chip (IO pin count * clock rate * DDR perhaps). But presumably the defender would not be able to utilize such an architecture, so it would represent an advantage to the attacker.
+
+- Marsh
+
+

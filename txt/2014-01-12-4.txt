@@ -1,0 +1,83 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Message-ID: <52D262A4.207@uni-weimar.de>
+Date: Sun, 12 Jan 2014 10:38:44 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On 11.01.2014 16:09, Steve Thomas wrote:
+I wanted to get benchmarks to compare a hashing algorithm optimized for
+a scripting language vs another algorithm that did not consider this.
+Since I'm familiar with Catena I decided to implement Catena-3-SHA512 in
+PHP.
+ 
+Current scripting memory (not so) high vs current Catena:
+2 MiB: 544 ms vs 2030 ms (3.73x)
+1 MiB: 249 ms vs 1040 ms (4.17x)
+512 KiB: 124 ms vs 514 ms (4.13x)
+256 KiB: 60.5 ms vs 240 ms (3.96x)
+128 KiB: 30.0 ms vs 118 ms (3.94x)
+Basically scripting memory (not so) high can use 4x more ram than Catena
+and run in about the same time.
+ 
+Optimized scripting memory (not so) high vs optimized Catena:
+2 MiB: 431 ms vs 995 ms (2.31x)
+1 MiB: 195 ms vs 499 ms (2.56x)
+512 KiB: 97.0 ms vs 249 ms (2.57x)
+256 KiB: 48.5 ms vs 121 ms (2.49x)
+128 KiB: 24.0 ms vs 59.7 ms (2.48x)
+ 
+Catena takes about 2.5 times longer for the same amount of memory, but
+Catena is much better at defending against attackers that use less
+memory. Pretty sure it's O(N^2) vs O(N).
+
+Yes, you either stick to the recommended way to compute
+Catena or you get punished due to the strong TMTO.
+
+
+Test machine: Core2 Quad (Q9300 2.5GHz), PHP 5.3.4 (64 bit), Windows 7
+ 
+ 
+*** Optimizations ***
+ 
+Scripting memory (not so) high:
+        $ja = unpack('V', $x);
+vs
+        $ja = unpack('V', substr($x, -4));
+The optimized version's look ups are aligned to 384 bytes with a
+$blocksize of 384 bytes vs byte aligned with a $blocksize of 431 bytes.
+Note both require four SHA512 blocks.
+ 
+Catena:
+    for ($c = $garlic; $c <= $garlic; $c++)
+vs
+    for ($c = 1; $c <= $garlic; $c++)
+2x increase in speed by not calculating the smaller sizes. Note that you
+could have "minGarlic" and "maxGarlic". To save on calculations and
+still be upgradeable.
+
+
+For the sake of simplification, we got rid of the minGarlic idea. :)
+But I'm not sure if this was a wise decision. There is a good chance
+that the actual PHC submission will again support minGarlic and maxGarlic.
+
+
+Catena is the only known PHC candidate providing strong
+pseudo-randomness (Adv^$(q) < q^2/2^n-g), so far. Maybe we sacrifice
+this extra level of security for  better performance benchmarks.
+
+Then we have,
+
+H(v[i-1] || v[reverse(i,c)])
+instead of
+H(c || i ||v[i-1] || v[reverse(i,c)]).
+
+Best regards,
+Christian
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (552 bytes)
+

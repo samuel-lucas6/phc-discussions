@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - What is "basic cryptography" ?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/10/10/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20141012142443.GA26315&#64;bolet.org&gt;
+Date: Sun, 12 Oct 2014 16:24:43 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: What is "basic cryptography" ?
+
+Hello everybody,
+
+in his survey, Dmitry Khovratovich includes a property called "basic
+cryptography" and defined succinctly as:
+
+  "Basic cryptography — collision/preimage resistance, unpredictability."
+
+While I can intuitively have a rough idea of what this means, I struggle
+to write it down as a mathematically precise definition. My goal is to
+have sufficiently clean definitions so that I could set out to "prove"
+security of some functions (in my case Makwa, but this may be applicable
+to other candidates as well) in the sense that any successful attack
+would have to either break a known underlying hard problem, _or_ to be a
+computational shortcut such as a TMTO or something like that. In
+informal terms, I want to separate the "cryptography" from the
+"engineering".
+
+
+For collision resistance, I can have something satisfactory: for a
+password hashing function h(), that takes as inputs a salt s and
+password p, collision resistance is about the computational
+infeasibility of finding (s,p,p') where p &lt;&gt; p' and h(s, p) = h(s, p').
+Note that I am talking about infeasibility, regardless of the space of
+plausible or potential passwords. While collisions can help an attacker
+only within rather esoteric usage scenarios involving active misuse of
+the function by the defender, it is still a nice thing to have.
+
+In particular, collision resistance implies second-preimage resistance,
+and THAT is good for security proofs, in the following sense: if the
+attacker is given s and h(s, p), and is challenged with finding a
+password p' such that h(s, p') = h(s, p) (that is the normal setup when
+considering an authentication server), then second-preimage resistance
+means that if the attacker succeeds, then he found p' = p; otherwise,
+that would contradict second-preimage resistance. So far so good: if
+second-preimage resistance can be proven (and proving collision
+resistance implies proving second-preimage resistance), then we have
+shown that if an attacker finds a matching password, then he found _the_
+password, meaning that no password entropy was lost in the process: the
+space of potential passwords, already quite small (that's the problem
+with passwords), is not unduly shrunk through some misbehaving of the
+function.
+
+
+It is with preimages (not second-preimages) that I have a problem. The
+usual definition for a cryptographic hash function is the following:
+
+   Given a hash function f() with inputs in space X and outputs in space
+   Y, f() is said to be preimage resistant if it is not feasible, given
+   y in Y, to find x in X such that f(x) = y with a computational
+   average cost lower than #Y times the cost of evaluating f().
+
+It is important to note that preimages and second-preimages are very
+different things. In the second-preimage setup, there is no secret; in
+the preimage setup, the target output is a given and there is no
+information, indeed no condition on how it was generated.
+
+With normal hash functions such as SHA-1, the output space is "all
+possible 160-bit blocks" and, crucially, the space of possible inputs is
+much larger (even if we restrict ourselves to inputs that imply only
+minimal evaluation cost, we have 2^448-1 possible inputs, i.e. all
+sequences of 0 to 447 bits). Under these conditions, it is rather easy
+to define preimage resistance with a target output taken randomly and
+uniformly in that well-defined output space.
+
+With password hashing, things are not as easy. The space of possible
+inputs will be a lot smaller, and quite smaller than the apparent size
+of the output space. For instance, a password hashing function may
+produce a 128-bit value, but since there are much fewer than 2^128
+possible passwords (realistically), then not all 128-bit outputs are
+actually possible. In any case, brute force on the input is assumed
+to work (the input is a password). So I could try something like this:
+
+   Password-hashing function h() will be said to be preimage resistant
+   if it is not feasible, given s and h(s, p) for an unknown p chosen
+   randomly and uniformly in space P, to find p' such that
+   h(s, p) = h(s, p') with average cost less than #P/2 the cost of
+   evaluating h().
+
+I am not satisfied with that definition for the two following reasons:
+
+ - This depends on the space of potential passwords. For the definition
+   to be useful, it must hold for all spaces of a given size, and not
+   just "on average". That is, the "average cost of #P/2 evaluations"
+   must be understood as "over all p in P for a single, given P". I
+   fear that such a definition may be defeated by anomalous spaces of
+   passwords that are not realistic in any way.
+
+ - This definition includes the cost of evaluating h(), i.e. it
+   postulates the lack of any shortcut. Thus, it fails at separating
+   cryptography from engineering.
+
+So far my best attempt at producing a clean, mathematical definition of
+preimage resistance for a password hashing function is the following:
+
+   For a given space P of inputs, the password-hashing function h() will
+   be said to be preimage-resistant over P if, given s and h(s, p), the
+   average cost (for p chosen randomly and uniformly in P) of finding p'
+   such that h(s, p) = h(s, p') is not less than the computational cost
+   of evaluating h(s, t) for all t in T, for any subset T of P such that
+   #T &gt;= #P/2.
+
+   h() will be said to be preimage-resistant up to "k bits" if it is
+   preimage-resistant over all possible spaces P of size less than 2^k.
+
+The intuition behind this definition is that h() must be such that
+cracking a password must involve obtaining the hashes for at least half
+of the potential passwords. If that can be proven, then it will imply
+that any successful attack on the function MUST be a "computational
+shortcut" that allows computing, say, 30 hash values for the cost of 25,
+or something like that.
+
+Now that is quite clunky and I don't really like it.
+
+Does anybody here has an idea on the subject ? Or maybe a reference to
+some existing published work that already covers these questions ?
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

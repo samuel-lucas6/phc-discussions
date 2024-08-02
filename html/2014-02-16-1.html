@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - KDF features?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/02/15/3">[&lt;prev]</a> <a href="../../../2014/02/18/1">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7O7Dh+8x71LRLXZ-=62PaRT3xrPYJs0u3kom0eZjo-zQ&#64;mail.gmail.com&gt;
+Date: Sun, 16 Feb 2014 11:45:19 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: KDF features?
+
+What features are important for a competitive KDF?
+
+Because of great feedback and new ideas from SolarDesigner, I'm
+rewriting my NoelKDF password hasher to improve performance and
+support more features.  The new KDF will be called TigerKDF, after my
+other cat.
+
+Features I currently plan on supporting in TigerKDF include:
+
+- Selectable amount of compute time hardening with sequential
+multiplication chains
+- A fast non-cryptographic SSE/AVX2 friendly hash for the memory
+hashing inner loop
+- Parameter for reading/writing memory more than once to increase
+bandwidth without increasing memory
+- PBKDF2 initial password hash, after which an optional attempt can be
+made to clear the password.
+- Small Blake2 hashes between larger block hashes, and at the start and finish.
+- Catena's "garlic" for client independent updates
+- A first loop without password dependent addressing to protect
+against cache timing attacks
+- A second loop that does unpredictable password based addressing to
+hurt attackers doing a TMTO
+- User specified parallelism to increase memory bandwidth - any number
+of memory hashing threads in parallel, which depend on hash results
+from the multiplication chain to force them to keep memory loaded as
+long as the multiplication chain takes to run
+- Option to do lots of small unpredictable reads to hurt GPU
+performance, similar to bcrypt
+- Variable memory and block size to allow efficient hashing in small
+caches, or huge external RAMs
+- Method for initial password hashing for a specified time which
+generates good values for multiplication chain length and amount of
+memory to hash
+- Support for server relief where the client does most of the hashing.
+- Option to force memory from parallel threads to be loaded at the same time
+
+How important are shared ROMs?  I suspect this would be useful on a
+password authentication server in that the memory could be hashed
+extensively, making it nearly impossible to do a useful TMTO against
+it, and a password authentication server could reuse it for each
+password hashed.
+
+What can be added to better support GPU hashing?
+
+Are there important features I've left out, or features I've included
+that should be left out?
+
+The tunables for TigerKDF include:
+
+- Salt
+- Memory size
+- Block size
+- Multiplication chain length
+- Garlic (for client independent update)
+- Repetitions (to increase bandwidth without increasing memory)
+- Parallelism (number of memory hashing threads)
+- Sub-block hashing size for small unpredictable memory accesses
+- Boolean flag for enabling hashing between thread memory to force
+them to be loaded simultaneously.  Is this needed?  I think it might
+hurt GPU hashing if there is no way to disable this.  In NoelKDF, it's
+always enabled.
+
+Most of these could be set to reasonable defaults and would not have
+to be stored with each password hash.  At a minimum, only the salt and
+resulting hash would have to be stored.  In order of how useful it
+would be to store with the password hash, I would include:
+
+- Salt
+- Garlic (for client independent updates)
+- Memory size
+- Parallelism
+- Multiplication chain length
+- Repetitions
+- Block size
+- Sub-block size
+
+Thoughts?
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

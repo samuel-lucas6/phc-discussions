@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] On type aliasing and similar issues</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2015/03/31/20">[&lt;thread-prev]</a> <a href="../../../2015/04/08/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150407124925.GA16363&#64;bolet.org&gt;
+Date: Tue, 7 Apr 2015 14:49:25 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On Tue, Mar 31, 2015 at 04:30:34PM +0300, Solar Designer wrote:
+&gt; I have not yet seen it happen across object file boundary, but since
+&gt; link-time optimization is a thing I expect that it may (if not now,
+&gt; then later).
+
+I have witnessed cross-file optimizations with strict aliasing rules 15
+years ago, with a C compiler that came with HP/UX (on a PA-RISC system).
+
+That compiler was very aggressive in its optimizations; notably, it was
+good at detecting "useless" code and remove it. In particular, when
+benchmarking a crypto function, the compiler/linker could notice that
+that whole crypto algorithm was a "pure function" (no side effect) and
+that the calling code (the benchmarking loop) was not actually using the
+output, and then remove it altogether. For a shining but very brief
+moment I thought I hade produced a very optimized 3DES implementation,
+and then I realized that there was no way that my code, however
+streamlined, could compute a complete 3DES in 10 clock cycles...
+
+As a side-note, that kind of issue can happen quite naturally with
+JIT-based languages (CLR/.NET, Java, Python...), making benchmarking
+an increasingly thorny issue.
+
+
+
+As another side-side-note, take care of alignment too. The x86
+architecture is very forgiving for unaligned accesses (on most modern
+x86 CPU, an unaligned access triggers a mere 1-cycle penalty when
+crossing a L1 cache line boundary), except for some specific
+SSE2-related opcodes. PowerPC in big-endian mode also tolerates
+unaligend accesses. ARM, Sparc, Mips and a few other architectures do
+not (in some cases, the OS traps the unaligned exception and emulates
+the access transparently, but with a massive penalty).
+
+When code decodes 32-bit and 64-bit words with generic byte-by-byte
+functions, such problems do not occur. However, code that does things
+which break aliasing rules also tends to break alignment rules. Test
+code usually allocates inputs on a stack buffer or through a malloc()
+call, so the input password for a password-hashing function will tend to
+be in an already aligned buffer, while the same is not necessarily true
+of production code. For instance, consider HTTP basic authentication
+(RFC 2617): the user password is transmitted as the Base64-encoding of
+'userid:password'. On the server side, Base64 decoding will be applied,
+leading to a character string where the 'password' component appears at
+some point, not at the start of the buffer, and therefore with an
+alignment that depends on the number of characters in the user ID.
+
+
+&gt; A solution here is to use a union type containing all of the integer
+&gt; and SIMD types.  The called function may cast the pointer to a pointer
+&gt; to such union type, then access the fields of its desired type.  The
+&gt; compiler will then know that they might alias those other listed
+&gt; types.
+
+In fact, even with a union, the aliasing rules (as per the C standard)
+forbid such trans-type access. If you have this:
+
+    union {
+        uint32_t x[2];
+        uint64_t y;
+    } *v;
+
+    (...)
+    v-&gt;x[0] = 17;
+    v-&gt;y = 42;
+    printf("%u\n", (unsigned)v-&gt;x[0]);
+
+then the compiler may still "legally" print out '17', i.e. considering
+that the access to 'y' did not impact the values that can be accessed
+through 'x', because of the distinct types (there again, there are
+special rules for 'char' and 'unsigned char'). While the union guarantees
+identity of storage ((void *)&amp;v-&gt;x == (void *)&amp;v-&gt;y), it still does not
+allow seemless transtyping.
+
+Most (if not all) C compilers will still be wary of unions and interpret
+them the way you indicate, because doing otherwise would break a lot of
+code. However, this mostly complicates the issue: not only are aliasing
+rules relatively complex and arcane, but the _interpretation_ of these
+rules by the compiler writer may differ in some subtle points with what
+you may have come up with. In any case, it would be inordinately
+optimistic to believe that existing C compilers get it right all the
+time.
+
+
+
+Bottom-line: use byte-by-byte decoding and encoding functions. Don't
+assume anything about architecture native endianness and alignment
+requirements. This will make your code a lot more robust, and, probably,
+quite clearer for human readers as well.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

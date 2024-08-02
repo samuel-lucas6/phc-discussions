@@ -1,0 +1,118 @@
+phc-discussions - Re: [PHC] Best use of ROM in password hashing
+
+Message-ID: <20140421095939.GC25527@openwall.com>
+Date: Mon, 21 Apr 2014 13:59:39 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best use of ROM in password hashing
+
+On Sun, Apr 20, 2014 at 04:24:38PM +0000, Poul-Henning Kamp wrote:
+You cannot generate that TiB algoritmically and keep the algorithm
+around, that would defeat the purpose, it has to be based on
+randomness.
+
+The above is true only for a rather narrow definition of "the purpose".
+
+Even with the ROM generated algorithmically and even with the seed
+having been stolen, there's still a penalty on attack nodes that don't
+have that much fast local storage available to them.
+
+yescrypt's current ROM initialization algorithm is meant to work for the
+anti-botnet purpose (with botnet nodes much smaller then the defender's
+authentication servers), even if the seed is stolen.
+
+[ As a bonus, it also limits the ability to reconstruct the entire ROM
+from a partial stolen ROM, in case an attacker only manages to steal a
+part of the ROM and not the seed.  Specifically, reconstruction is
+possible given 1/2 of the ROM, but not given significantly less than 1/2.
+There's room for improvement here (can bring it closer to requiring the
+full ROM for reconstruction).  I expect that a typical setup would have
+some privsep between ROM-in-RAM initialization (done on authentication
+server bootup) and the authentication service.  For example, the
+included initrom demo program would run as a pseudo-user different from
+the one that the userom demo program would run as.  Indeed, this sort of
+privsep local to an authentication server is quite weak (a local root
+bug would bypass it, unless the attacker only had Heartbleed-like access
+to the authentication service, in which case we're "fine"), but it's a
+nice extra nevertheless.  An attacker with only the ROM itself and not
+the seed would have to distribute half the ROM size to attack nodes to
+make them useful.  Not a major obstacle, but a cost component nevertheless. ]
+
+Unless you want to dedicate a TB on each and every server, you have
+to either make the ROM available across the network or use a centralized
+authentication server.
+
+No problem having 128 GiB RAM per authentication server.  It even costs
+~4x less than the rest of the hardware in those servers (so 1/5 of the
+total hardware cost).  Currently, 128 GiB RAM costs about as much as one
+8-core or better E5-2600 series CPU, and you'd put two of those CPUs in
+a server.  Plus the chassis, PSUs, and motherboard cost about as much as
+the two CPUs do.
+
+Yet this little cost increase deals with the botnet threat for a few
+years.  (And I expect that similar ratios will be valid later, just not
+the same hardware.)
+
+Making it available across the network opens it for theft from any
+compromised system, whereas a central authentication server comes
+with its own problems in the form of passwords being sent across
+networks etc.
+
+For the ROM, I am considering primarily use cases where there are
+already central authentication server(s).  Most likely many of them.
+
+That makes a 1TB ROM economically unfeasible, except in installations
+which should have known better than to rely on passwords to begin with.
+
+Oh.  Really?  I think you're wrong about both of these points.
+
+You expect e.g. the major social networks would fully abandon passwords
+in the next few years?  I don't.
+
+What about banks?  Even if they don't "rely" on passwords, they should
+nevertheless continue to use passwords as one of the authentication
+factors.
+
+So, yeah, nice in theory, in practice not so much...
+
+Everything has its limitations.  I think there are realistic use cases
+here, and I think we'll see deployments soon.
+
+That said, an algorithm which can use a ROM sensibly gets a plus
+in my book, and another plus if it leaves the size/benefit determination
+to the administrator.
+
+OK, we're in agreement here.  In yescrypt, the ROM is optional, its size
+is tunable, and its access frequency is tunable (thus, the device type
+can vary e.g. between RAM, SSD, HDD, and arrays of these).
+
+Thinking a bit creatively:
+
+A USB stick with an ARM chip can be made for less than $10 in volume.
+
+Putting the entire hashing algoritm on that ARM, including a modest
+size random ROM, even as little as 8K, and offloading all password
+hashing (but not salt generation) to that ARM chip via the USB port,
+means that the ROM can only be stolen by physical access.
+
+And best of all: If you need to hash more passwords than the ARM
+will do, you can just plug in another.
+
+Sure, but there's no benefit from a ROM lookup table here.  Just one
+non-retrievable crypto key is enough.  It's just an HSM, much like
+YubiHSM (priced at $500, but that's still "low" for HSMs).  In my YaC
+2012 talk, I suggested using YubiHSM's HMAC function for that.  I now
+think that using YubiHSM (or any decent HSM) to reversibly encrypt
+hashes could work better, in that it allows for changing of the key.
+(Which would need to be backed up e.g. on paper in a physical safe.)
+
+That's probably what I would do, if I were in charge of a big site
+relying on passwords today...
+
+I had discussed pros and cons of the HSM vs. ROM-in-RAM vs. ROM-on-SSD
+approaches, and their combinations, with a big site.  Their current
+preference is ROM-in-RAM, mostly for the ease of logistics.  I expect
+that this will vary, though.
+
+Alexander
+

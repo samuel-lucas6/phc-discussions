@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALW8-7Km-H4SBfK5Lyhro34Bu-NahWeQeh2md-6xO_xcD6y_NA&#64;mail.gmail.com&gt;
+Date: Fri, 8 Aug 2014 11:02:06 -0700
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+Cc: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;, ben&#64;...rr.is
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Hi Bill,
+
+1. Yes, the tradeoff should be MT = 16N^2 indeed.
+
+2. Constants like 2^18 do not matter for deciding whether proof is correct
+or not. Our attack shows that q^lambda does not appear for q&lt;N^{1/3}. With
+some improvement, you can have the penalty O(q^2) for q&lt;N^{0.42} for any
+constant lambda. The gap between N^{0.42} and N^{0.5} is interesting to
+explore, but it is not so much important.
+
+3. I do not understand what is "lower bound for low q for Catena".
+
+4. I can try to break your primary submission, if you give some explicit
+security claims for your fastest secure set of parameters. This applies to
+all other candidates, actually.
+
+
+On Fri, Aug 8, 2014 at 10:13 AM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+
+&gt; First, good work on the pebbling!  I can confirm numbers close to yours
+&gt; for Catena on slide 29.  You beat my generic pebbling algorithm for
+&gt; Catena-3 by around 10-20% in your benchmarks.  I pebble a 1024 node
+&gt; Catena-3 graph using 128 pebbles with 8.7 times more computation, vs your
+&gt; 7.4.  I also agree with your second to last equation: for a 1/q fraction of
+&gt; memory, you have a  penalty of no more than 4*q for Catena-3, *for small
+&gt; q*.  More on that at the end...
+&gt;
+&gt; I think you're last line is off by 4X.  I agree that an attacker using N/q
+&gt; memory has no higher than about a 4*q penalty for small q.  My tests
+&gt; confirm your Catena-3 data.  Normally, the time is 4*N computations, so the
+&gt; attacker must spend (4*N)*(4*q) = 16*N*q.  Your last equation failed to
+&gt; include one of the factors of 4.
+&gt;
+&gt; After such careful analysis, you should point out that TMTO attackers on
+&gt; Catena-3 see almost a 4X overall MT penalty, even at the 1/2 q mark.  That
+&gt; compares well vs Script, where TMTO attackers gain a 4X MT *bonus* for high
+&gt; q.  IMO, Catena-3 is good enough in TMTO hardness.
+&gt;
+&gt; The other issue I had with the presentation is slide 24.  You state that
+&gt; 1/q memory should imply a penalty of q^lambda.  You seem to think the
+&gt; penalty should be strictly greater than q^lambda, but all Catena proved was:
+&gt;
+&gt;     T &gt;= G^4/(2^18*S^3)
+&gt;
+&gt; For q &lt; 2^18, this equation provides no useful estimate of the penalty at
+&gt; all!  When q aproaches sqrt(N), it is simple to show that the penalty
+&gt; increases as q^lambda, because pebbling each sequence of sqrt(N) pebbles
+&gt; will require full repebbling of N/2 pebbles on the prior row, and that
+&gt; penalty propagates to the prior row for each sqrt(N) that is pebbled, and
+&gt; so on.  It is clearly O(q^lambda).  This property is also a lower bound for
+&gt; TwoCats, Gambit, and some others.  Unfortunately, it says nothing about
+&gt; important TMTO attacks like q == 2 or 4.
+&gt;
+&gt; So, nice work on the pebbling!  This sort of experimentation is good
+&gt; evidence that we're nearing a lower bound for low q for Catena.  For
+&gt; example, I'd guess you'd scoff at the possibility that you've left another
+&gt; factor of 2 on the table.  That's about how I feel :-)  If you have time,
+&gt; try pebbling SkinnyCat :-)  It's an easily analyzed subset of TwoCats.  I
+&gt; believe it is weaker than Catena at q=2, but stronger at q=8 and up, but
+&gt; that's largely due to my pebbling work.
+&gt;
+&gt; Bill
+&gt;
+&gt;
+&gt; On Thu, Aug 7, 2014 at 8:47 PM, Dmitry Khovratovich &lt;
+&gt; khovratovich&#64;...il.com&gt; wrote:
+&gt;
+&gt;&gt; Hi Ben,
+&gt;&gt;
+&gt;&gt; indeed k has to be large enough to be efficient.
+&gt;&gt;
+&gt;&gt; Your calculations are correct. In fact, you will also have to add 2^3
+&gt;&gt; hash calls that actually compute the vertices in the interval to the
+&gt;&gt; 3.5x2^6 in precomputations (I will add this to the slides).
+&gt;&gt;
+&gt;&gt; However, the penalty is computed for the entire Catena. You spend
+&gt;&gt; 2^3 hashes to get 2^3 vertices at level 0 - penalty 1
+&gt;&gt; (0.5x2^6+2^3) to get 2^3 vertices at level 1 - penalty 5
+&gt;&gt; (1.5x2^6+2^3) at level 2 - penalty 13
+&gt;&gt; (2.5x2^6+2^3) at level 3 - penalty 21
+&gt;&gt; (3.5x2^6+2^3) at level 4 - penalty 29
+&gt;&gt;
+&gt;&gt; Average penalty is (1+5+13+21+29)/5 = 13.8
+&gt;&gt;
+&gt;&gt; To get 13.1 I used a more efficient method for levels 1 and 2, which does
+&gt;&gt; not do precomputations. Instead, I moved forward stored points at level X-1
+&gt;&gt; after they had been used at level X. This gives the penalty 3.375 for level
+&gt;&gt; 1 and 11.25 for level 2, so in total you have around 13.1 .
+&gt;&gt;
+&gt;&gt; Dmitry
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; On Thu, Aug 7, 2014 at 5:15 PM, Ben Harris &lt;ben&#64;...rr.is&gt; wrote:
+&gt;&gt;
+&gt;&gt;&gt; I'll have to test your pebbling scheme for Catena - but an initial
+&gt;&gt;&gt; comment on the time comparisons.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Catena with lambda=4 and n=20 takes 2^20 storage and 5x2^20 hashes.
+&gt;&gt;&gt; Presentation takes Lx2^(n-k) storage. So at k=1 you are using more
+&gt;&gt;&gt; memory, and k=2 you are using the same. Need k=3 to use 1/2 the memory.
+&gt;&gt;&gt; At k=3 you need 3.5x2^6 to get 2^3 vertices, so 3.5*2^6*2^(20-3) to get
+&gt;&gt;&gt; all the vertices for the final row. So 3.5x2^23 to get the last row.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Catena will take 2^20 to get the final row, so that is a slowdown of
+&gt;&gt;&gt; 3.5x2^3 = 28x. You only have 13.1x slowdown?
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; On 7 August 2014 17:15, Ben Harris &lt;ben&#64;...rr.is&gt; wrote:
+&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Thanks Dimitry,
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Page 26 just needs to be updated then - it says "Consider vertices
+&gt;&gt;&gt;&gt; [AB0]... where each letter has k bits" suggesting that A and B are k bits
+&gt;&gt;&gt;&gt; each - not that C is k bits.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; On 7 August 2014 17:10, Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+&gt;&gt;&gt;&gt; wrote:
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; Hi Ben,
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; the following points are important:
+&gt;&gt;&gt;&gt;&gt;  - A, C, *, 0 are all k-bit values. k&lt;n/3, and for the attack being
+&gt;&gt;&gt;&gt;&gt; efficient k&gt;2.
+&gt;&gt;&gt;&gt;&gt;  - [**0] takes 2^(n-k) storage per level as you store everything that
+&gt;&gt;&gt;&gt;&gt; ends with k zeros.
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; The example in presentation has |A| = |C| = 1, and |B|=2. Such small
+&gt;&gt;&gt;&gt;&gt; values are for the ease of understanding, but not for the efficiency. I
+&gt;&gt;&gt;&gt;&gt; attach the picture in the higher resolution. The red indices are those
+&gt;&gt;&gt;&gt;&gt; precomputed for the next level.
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; Best regards,
+&gt;&gt;&gt;&gt;&gt; Dmitry
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; On Thu, Aug 7, 2014 at 1:19 AM, Ben Harris &lt;ben&#64;...rr.is&gt; wrote:
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; Just getting my head around the Catena one.
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; Storing [**0] takes 2^2k storage per level? (presentation says
+&gt;&gt;&gt;&gt;&gt;&gt; 2^(n-k))
+&gt;&gt;&gt;&gt;&gt;&gt; And the [*B*] takes 2^(n-k) storage
+&gt;&gt;&gt;&gt;&gt;&gt; So L*2^2k + 2^(n-k) storage all up.
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; Computing each [*B*] at level 0 takes 2^(n-2k) operations from each
+&gt;&gt;&gt;&gt;&gt;&gt; 2^k [*B0]. total 2^(n-k) operations? (presentation says 2^2k)
+&gt;&gt;&gt;&gt;&gt;&gt; Computing each [*^B*] at level 1 is more complicated because we don't
+&gt;&gt;&gt;&gt;&gt;&gt; always have what we need.
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; At level 1, for the A = 1, B = 1, and len(C) = 2 (the example in the
+&gt;&gt;&gt;&gt;&gt;&gt; presentation). For the 2^(n-k) = 2^(4-1) = 8 [*^B*] we have
+&gt;&gt;&gt;&gt;&gt;&gt; [00 1 0] - h( h([00 0 0] + [1 0 00]) + [0 1 00]) = 2 hashes
+&gt;&gt;&gt;&gt;&gt;&gt; [00 1 1] - h([00 1 0] + [1 1 00]) - 1 hash
+&gt;&gt;&gt;&gt;&gt;&gt; [01 1 0] - h([01 0 1] + [0 1 10]) - but [01 0 1] is h([01 0 0] + [1 0
+&gt;&gt;&gt;&gt;&gt;&gt; 10]) and I don't have [1 0 10] it takes 2 hashes from [1 0 00]
+&gt;&gt;&gt;&gt;&gt;&gt; [01 1 1] - 1 hash from previous
+&gt;&gt;&gt;&gt;&gt;&gt; [10 1 0] - h([10 0 1] + [0 1 10]) -  again, I don't have [10 0 1]?
+&gt;&gt;&gt;&gt;&gt;&gt; [10 1 1] - 1 hash from previous
+&gt;&gt;&gt;&gt;&gt;&gt; [11 1 0] - again, we are missing something
+&gt;&gt;&gt;&gt;&gt;&gt; [11 1 1] - 1 hash from previous
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; These missing dependencies become exponential at level 2+.
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; So there are three bits I'm getting a bit stuck on:
+&gt;&gt;&gt;&gt;&gt;&gt;   - Storage per level
+&gt;&gt;&gt;&gt;&gt;&gt;   - Operations for level 0
+&gt;&gt;&gt;&gt;&gt;&gt;   - Missing dependencies at level 1
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; Maybe I'm just misreading the slides and needed to see the talk?
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; On 7 August 2014 05:10, Marcos Simplicio &lt;mjunior&#64;...c.usp.br&gt; wrote:
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; Hi, all.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; Very interesting analysis! We noticed the same attack venue
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; described in
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; slide 47 for Lyra2 some time ago, so we provided and evaluated a
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; simple
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; fix in the version provided in our website (<a href="http://lyra-kdf.net/" rel="nofollow">http://lyra-kdf.net/</a>,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; see
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; section 5.1.2.3 of the specification). I'm not sure how the tradeoffs
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; table is affected by this fix, but the costs are likely to grow (at
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; least that was my impression by crossing your results with our
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; preliminary analysis).
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; BTW, the document in our website is being continuously updated as new
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; tests are performed, so we expect to introduce this and possibly
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; other
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; tweaks in the corresponding phase of the PHC. We are still evaluating
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; the "possible extensions" mentioned in the original submission, for
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; example.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; BR,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; Marcos.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; On 06-Aug-14 14:31, Dmitry Khovratovich wrote:
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; Hi all,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; here is the link to the slides of the talk I have just given at
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; PasswordsCon'14. It investigates time-memory tradeoffs for PHC
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; candidates
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; Catena, Lyra2, and Argon, and estimates the energy cost per
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; password on an
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; optimal ASIC implementation with full or reduced memory.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; <a href="https://www.cryptolux.org/images/5/57/Tradeoffs.pdf" rel="nofollow">https://www.cryptolux.org/images/5/57/Tradeoffs.pdf</a>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; Additional comment: It is a standard practice in the crypto
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; community to
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; give explicit security claims for the recommended parameter sets
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; so that
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; cryptanalysts could easily identify the primary targets. Many PHC
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; candidates do not follow this rule by not only missing these
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; claims but
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; also concealing the recommended parameters. As a result,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; cryptanalysts like
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; me spend valuable time attacking wrong sets or spreading the
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; attention over
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; multiple targets.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; Remember: third-party cryptanalysis increases the confidence in
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; your
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; design, not decreases it (unless it is badly broken). Analysis of
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; a 5%-part
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; of your submission (one of 20 possible parameter sets) is little
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; better
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; than no analysis at all. It is also worth mentioning that to make
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; fair
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; comparison of candidates, benchmarks and performance discussion in
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; general
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt; should cover recommended parameter sets only.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; --
+&gt;&gt;&gt;&gt;&gt; Best regards,
+&gt;&gt;&gt;&gt;&gt; Dmitry Khovratovich
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; Best regards,
+&gt;&gt; Dmitry Khovratovich
+&gt;&gt;
+&gt;
+&gt;
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Suggestion: API should include a verifier function
+
+Message-ID: <20130327190736.GB4662@openwall.com>
+Date: Wed, 27 Mar 2013 23:07:36 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Suggestion: API should include a verifier function
+
+On Wed, Mar 27, 2013 at 12:18:37PM -0500, Matthew Green wrote:
+I think separating the Generate and Verify into formally distinct algorithms is a nice idea, and it's consistent with the way (some) people define MACs. It also allows for types of randomized hashing that wouldn't be possible using a single algorithm.
+
+Is such randomization, beyond what's provided by the supplied salt,
+desirable?  Even if it (potentially) is, how about we make the
+Generate/Verify interface optional/allowed rather than required?
+
+I can also imagine a Verify algorithm that works differently from
+Generate - e.g., a DES-based crypt(3) hash could be verified by
+decrypting it with the password being tested, and then the DES block
+would eventually be tested for being 0.  I see no reason to do things in
+this way, but perhaps for some other password hashing scheme it could
+make sense.  Again, it's a reason to allow for the Generate/Verify
+interface, but not a reason to require it.
+
+Other than possibly for the reasons given above, I think Verify is
+beyond scope of PHC (and a distraction from actual goals of PHC).
+I think we don't want 90% of PHC submissions to include their own copies
+of constant-time comparison code.  It is not really specific to PHC
+submissions.  Besides, with proper salting and with salts being stored
+along with the hashes as they should be (so they're unlikely to leak
+separately from the hashes), constant-time comparison is redundant.
+
+PHC submissions are primarily/initially to be discussed and reviewed,
+they're not for immediate use.  The PHS() function prototype was defined
+for consistency of the submissions, to assist with our evaluation.
+Would PHC benefit from having a PHS_VERIFY() function with every
+submission, even in cases where it's simply a memcmp() equivalent (or a
+constant-time one)?  Hardly.  Should we be reviewing those comparison
+functions at all?  I think not, and I think it'd be wrong to reject a
+potentially great password hashing scheme because its author e.g. chose
+not to implement constant-time comparison in PHS_VERIFY().  This is
+usually not part of the password hashing scheme; the comparison code may
+usually be replaced for an existing password hashing scheme without
+breaking compatibility.
+
+Once a PHC submission becomes a finalist or a winner, would its users
+benefit from the PHS() and PHS_VERIFY() functions?  Hardly.  I think the
+submissions will also have their own APIs that better reflect their
+available parameters, and some of these APIs will be recommended for use.
+
+Another aspect is that a password hashing scheme that is only usable in
+form of Generate/Verify, but not Generate alone (to be used for
+verification too), is not suitable for inclusion in crypt(3).  We should
+consider that as its drawback.
+
+That said, I agree that when it comes to actual use, a good
+implementation should provide the Generate and Verify functions.
+(I did just that in phpass, and it may have helped adoption.)
+It's just not PHC material, at least not until we're talking about
+publishing at least the finalists in a form intended for users.
+
+Alexander
+

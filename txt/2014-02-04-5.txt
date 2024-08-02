@@ -1,0 +1,104 @@
+phc-discussions - Re: [PHC] Re: NoelKDF ready for submission
+
+Message-ID: <CAOLP8p6C-qPOzxZQp3aN0r=+kcxBc4ZdP_4SjbMDPeox4iLtSA@mail.gmail.com>
+Date: Tue, 4 Feb 2014 18:03:14 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: NoelKDF ready for submission
+
+On Tue, Feb 4, 2014 at 2:01 PM, Steve Thomas <steve@...tu.comwrote:
+I found two bugs in your reference code:
+>
+NoelKDF() Line 102:
++   numblocks <<= startGarlic;
+    for(i = startGarlic; i <= stopGarlic; i++) {
+>
+NoelKDF() Line 107:
+-   value += mem[2 * p * numblocks * blocklen + blocklen - 1];
++   value += mem[(2 * p + 1) * (uint64) numblocks * blocklen - 1];
+I'm assuming this is a bug since the original is using the last int in the
+first
+block. Which is known early on.
+
+Thanks for finding these!  I'm using your suggested fix for the 1st
+one, and thinking of just initializing the second loop with value == 1
+like the first.  Do you think that would be OK?
+
+I also did some analysis of the access patterns. To build the first half
+with
+hashWithoutPassword() you only need 31% to 25% in active memory of that
+half.
+
+This is normal for "pure" KDFs that do no password derived memory
+addressing.  The DAG size can always be pebbled without recomputations
+in 1/2 memory (of the first half), for fanout degree <= 2, and it can
+be done efficiently with few recomputations at the 1/3 mark, and
+typically the penalty isn't bad at the 25% mark.  The 1/8th mark is
+where they seem to get hammered with punishing recomputations.
+
+The second loop is meant to force the attacker to show they have all
+the memory from the first pass at once.  I wont be able to detect if
+they've skimped on memory for the first loop, but they'll need to show
+it for the second.  This creates the possibility for one guess to be
+doing the first loop, and another to be doing the second, sharing the
+available memory more efficiently.  This would be about a 37.5% memory
+reduction for "free", though there's additional complexity and some
+recomputation.  This may be a generic issue with "hybrid" KDFs.
+
+If you don't want to regenerate data. Also you don't need to store 8.67% to
+10.94% of the total memory because these are not required in the first half.
+Since only 35.03% to 35.27% of the lookups from the second half are in the
+first
+half, regeneration of these will be minimal. Also if you have four times as
+many
+pebbles in the second half than the first. Obviously you would start with
+them
+all in the first half then move them over to the second half. Which has an
+added
+benefit because near the start of the second half it is much more likely
+(80.16%
+1 MiB to 98.03% 1024 MiB) to do a lookup in the first half. Then drops to
+20.63%
+chance that it will do a lookup in the first half.
+I still need to do more but this is just what caught my eye.
+Best I got is 8.67% to 10.94% reduction in memory for on average 3.06% to
+3.86%
+more time.
+
+That's a 7-ish% reduction in memory*time.  The best I'd done so far
+was 3%, but I was trying to keep less memory in the second loop near
+the end.  Combined, I suspect we could save 10% on memory*time.  It's
+not ideal, but I don't know how to defend better against it other than
+doing more read/write operations, losing significantly more than 10%.
+
+Nice work on the math!
+
+*** End ***
+>
+Now for the new stuff:
+>
+>
+xorIntoHash() needs to be replaced preferably with a cryptographic hash that
+uses more than the last hash's size bytes of data. You can reverse a 256 bit
+non-parallel hash to on average 3 bits of the state in "mem" 7 steps prior
+through hashBlocks()'s "fromAddr". Also 6 bits from 6 prior, 9 bits from 5
+prior, 12 bits from 4 prior, ..., 21 bits from 1 prior, and 256 bits from
+the
+last block.
+
+Did you notice that wordHash is initialized as the PBKDF2-SHA256 of
+the password and salt?  If I simply XOR-ed the results of the memory
+hashing together, that would be a problem, but since wordHash starts
+out life as indistinguishable from true random data, XOR-ing lower
+quality memory hashes into it cannot damage it's quality.
+
+I may be unfamiliar with the attack you are referring to, but I don't
+think there is an issue here.
+
+Thanks for all the work on analysis!  If I'm misunderstanding your XOR
+point, please set me straight.  All in all, I'm feeling pretty good...
+an analysis of the level you've done could have been a lot more brutal
+:-)
+
+Bill
+

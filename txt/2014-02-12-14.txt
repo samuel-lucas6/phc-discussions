@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p7Y64ztmOeYRUJz-_uVBBpRDU6mHBbku49fcBf35pxQ-g@mail.gmail.com>
+Date: Wed, 12 Feb 2014 18:20:38 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+I wrote an SSE 4.1 version of the inner hash loop in NoelKDF, with a
+quick hack where I compute 4 separate interleaved hashes, so it gets a
+different answer, and has 4 times the parallelism.  I used the fast
+packed 32x32->32 multiply available on my Ivy Bridge processor
+(_mm_mullo_epi32), which we know will run a lot slower on Haswell.
+This instruction isn't even available until SSE 4.1, so that's a
+narrow band of processors that support it well.
+
+The single-thread results dropped from 0.76 seconds to hash 2GB to 0.4
+seconds.  With two threads, it takes 0.3 seconds, so pretty darned
+fast.  The down-side here is the chains of multiplications are all cut
+to 1/4th the length, while I only got a 1.9X increase in speed.  That
+means an attacker will complete the hash a 4X faster, while I
+completed it only 1.9X faster, if computation speed is the bottleneck.
+ On the other hand, if memory bandwidth is the bottleneck, the
+attacker will take 1.9X longer to compute the hash compared to me.
+With the fastest version - two threads x 4-way SIMD - an attacker gets
+an 8X advantage in computation time, while I only get a 2.5X
+advantage, giving him a 3X compute time advantage.  However, I also
+make him buy 2.5X more memory that the single-threaded non-SIMD case.
+I wish I could ask the right guy at the NSA which version he hates
+more :-)
+
+This all fits closely with my guess that an SSE version would take
+about 9 cycles in the loop, compared to 4 for the native version,
+while computing 4X the number of results as the native version.
+
+I'm leaning towards abandoning this hack and SIMD all together.  With
+two threads, a user on my machine gets 9.5BG of bandwidth, hashing 2GB
+in .42 seconds, which isn't too bad compared to the 13GB he'd get with
+two threads and 4-way SIMD, and an attacker only gains a 10.5%
+advantage in compute time over me.
+
+Bill
+

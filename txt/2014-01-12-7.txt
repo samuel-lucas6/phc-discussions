@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+Message-ID: <CAOLP8p78zqvVXwCN1h4kV4_REHUaWFbgV0L+4dTtKNNfWAUfiA@mail.gmail.com>
+Date: Sun, 12 Jan 2014 07:45:25 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 11:47 PM, Andy Lutomirski <luto@...capital.netwrote:
+To be clear, I was thinking about the possibility of hammering cache
+and main memory at the same time.  Imagine some matrix multiplies or
+other cache-heavy operations needed to select the next memory index to
+access.  If you could get 30 or 40 GB/sec and, say, 100GB/sec to L2,
+you'd probably be doing even better.  (No clue whether this is
+possible -- I'm not at all sure whether modern CPUs can sustain that
+much bandwidth anywhere.  Something that depends on low-latency access
+to a block of cache might be a better bet.)
+>
+--Andy
+
+That might be an improvement.  I guess matrix multiplies would be good
+for machines with large vector processors.  I don't know how much
+vector processing hardware our CPUs have, but I doubt it's enough to
+justify the additional complexity.  Security is partly about the KISS
+rule, I think.
+
+Generally, people refer to me as a "router guy."  I've written a lot
+of routers to connect stuff on chips.  One mistake I see over and over
+when people come up with ideas for improving the speed of computation
+is forgetting to take the routing penalties into account.  For
+example, data flow machines would have dominated decades ago if not
+for data routing delays.
+
+Our CPUs are stuck with tremendous routing delays that just don't
+exist on an ASIC when computing our inner-loops.  Any attempt to
+protect passwords with computation-limited inner loops is not going to
+get us very far.
+
+If I really wanted to force an attacker to have a nice expensive CPU
+like mine, I would fill instruction memory with pseudo-random
+instructions.  Java is everywhere, so we could generate a megabyte of
+bytecode in a way that we know it will execute a certain number of
+hashing instructions before returning a hash result.  An attacker
+would have to execute the code to make a password guess, and there's
+no way he's going to execute that code faster than an Intel or AMD
+CPU.  That would destroy his speed advantage, and we could still
+hammer memory to reduce his cost advantage.  That would be awesome.
+
+However, that complicates the algorithm dramatically, hurts
+portability, and brings all the security holes in Java to our password
+KDF.  I think the security experts' heads would explode if we tried to
+standardize such a KDF.
+
+I think the next significant layer of protection after off-chip memory
+should be using GPUs for KDF.  Most smart phones and likely all future
+desktop and laptop CPUs have significant GPU hardware, and we could
+use that in parallel with hashing external memory.  That's why I think
+a KDF should be designed with an adjustable parallelism parameter.
+
+Bill
+

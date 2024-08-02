@@ -1,0 +1,123 @@
+phc-discussions - Re: [PHC] Re: NoelKDF ready for submission
+
+Message-ID: <CAOLP8p431_Gzru2f_JdgBRdzSJ-DtBf8L1aa7Uf0z8Y6gtAe1Q@mail.gmail.com>
+Date: Fri, 7 Feb 2014 00:38:42 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: NoelKDF ready for submission
+
+On Thu, Feb 6, 2014 at 10:48 PM, Steve Thomas <steve@...tu.comwrote:
+>On February 4, 2014 at 5:03 PM Bill Cox <waywardgeek@...il.comwrote:
+>>
+>On Tue, Feb 4, 2014 at 2:01 PM, Steve Thomas <steve@...tu.comwrote:
+>xorIntoHash() needs to be replaced preferably with a cryptographic hash
+>that
+>uses more than the last hash's size bytes of data. You can reverse a 256
+>bit
+>non-parallel hash to on average 3 bits of the state in "mem" 7 steps
+>prior
+>through hashBlocks()'s "fromAddr". Also 6 bits from 6 prior, 9 bits from
+>5
+>prior, 12 bits from 4 prior, ..., 21 bits from 1 prior, and 256 bits
+>from
+>the
+>last block.
+>>
+>Did you notice that wordHash is initialized as the PBKDF2-SHA256 of
+>the password and salt?
+>
+Yes.
+>
+>
+>If I simply XOR-ed the results of the memory
+>hashing together, that would be a problem, but since wordHash starts
+>out life as indistinguishable from true random data, XOR-ing lower
+>quality memory hashes into it cannot damage it's quality.
+>
+The quality of random is not in question here.
+>
+>
+>I may be unfamiliar with the attack you are referring to, but I don't
+>think there is an issue here.
+>
+hash = PBKDF2_SHA256(password, salt, 1, hashSize)
+...
+return hash ^ lastHashSizeBytesOfMem
+Make a guess and xor "PBKDF2_SHA256(password, salt, 1, hashSize)" to the
+hash
+you are trying to crack. You now have the assumed last bytes of mem.
+
+Holy cow!  These hashed bits are not meant to be cryptographically
+indistinguishable from random, so with a correct password guess, you
+might be able to check if it's correct just by analyzing the hashed
+memory bits.
+
+I added another PBKDF2-SHA256 as a post-process to the XORed hash.
+This should defeat such attacks, shouldn't it?
+
+Let's say the hash is 256 bits that's 8, 32 bit numbers. We can reverse this
+data modulo 4 to 7, 2 bit numbers from "mem[fromAddr+j]":
+>
+memHash[i+1] % 4 = (memHash[i] * (mem[prevAddr+blockSize-8+i] | 3) +
+mem[fromAddr+blockSize-8+i]) % 4
+memHash[i+1] % 4 = (memHash[i] * 3 + mem[fromAddr+blockSize-8+i]) % 4
+mem[fromAddr+blockSize-8+i] % 4 = (memHash[i+1] - memHash[i] * 3) % 4
+>
+mem[fromAddr+blockSize-8] % 4 = (memHash[1] - memHash[0] * 3) % 4
+mem[fromAddr+blockSize-7] % 4 = (memHash[2] - memHash[1] * 3) % 4
+mem[fromAddr+blockSize-6] % 4 = (memHash[3] - memHash[2] * 3) % 4
+mem[fromAddr+blockSize-5] % 4 = (memHash[4] - memHash[3] * 3) % 4
+mem[fromAddr+blockSize-4] % 4 = (memHash[5] - memHash[4] * 3) % 4
+mem[fromAddr+blockSize-3] % 4 = (memHash[6] - memHash[5] * 3) % 4
+mem[fromAddr+blockSize-2] % 4 = (memHash[7] - memHash[6] * 3) % 4
+>
+mem[fromAddr2+blockSize-8] % 4 = (mem[fromAddr+blockSize-7] -
+mem[fromAddr+blockSize-8] * 3) % 4
+mem[fromAddr2+blockSize-7] % 4 = (mem[fromAddr+blockSize-6] -
+mem[fromAddr+blockSize-7] * 3) % 4
+mem[fromAddr2+blockSize-6] % 4 = (mem[fromAddr+blockSize-5] -
+mem[fromAddr+blockSize-6] * 3) % 4
+mem[fromAddr2+blockSize-5] % 4 = (mem[fromAddr+blockSize-4] -
+mem[fromAddr+blockSize-5] * 3) % 4
+mem[fromAddr2+blockSize-4] % 4 = (mem[fromAddr+blockSize-3] -
+mem[fromAddr+blockSize-4] * 3) % 4
+mem[fromAddr2+blockSize-3] % 4 = (mem[fromAddr+blockSize-2] -
+mem[fromAddr+blockSize-3] * 3) % 4
+...
+>
+Now do the first half in modulo 4. 1/16 memory plus the extra 31% to 25%
+memory
+reduction and this removes the multiplication. You can do this in AVX2 and
+get
+128 different password guesses running at a time.
+>
+Vectorized version of modulo 4 of value = value*3 + mem[fromAddr + i]:
+tmp = ((value & 0x5555...) << 1) ^ value
+value = (tmp ^ mem[fromAddr + i]) ^ ((tmp & mem[fromAddr + i] & 0x5555...)
+<< 1)
+>
+Now that we have the first half we just check if we can find this in the
+first
+half:
+mem[fromAddr7+blockSize-8] % 4
+>
+mem[fromAddr6+blockSize-8] % 4
+mem[fromAddr6+blockSize-7] % 4
+>
+mem[fromAddr5+blockSize-8] % 4
+mem[fromAddr5+blockSize-7] % 4
+mem[fromAddr5+blockSize-6] % 4
+
+Wow.  So, modulo 4, the multiply goes away and you developed an attack
+from there that can be highly parallel and memory efficient.  Nice.
+
+With an additional application of H at the end of the loop to the hash
+value, this attack becomes unfeasible, doesn't it?  Is there any
+reason to apply H to more of the data than the last hashlen bits of
+each thread's memory, or is a post-process application of H to the
+existing XOR-hash just as good?  This is what my revised version
+currently does, but if there's a reason to change this, I will.
+
+Thanks,
+Bill
+

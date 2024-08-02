@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Updated tests document
+
+Message-ID: <552372FC.7040801@gmail.com>
+Date: Tue, 07 Apr 2015 08:02:36 +0200
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Updated tests document
+
+On 04/06/2015 11:54 PM, Solar Designer wrote:
+Milan,
+
+On Mon, Apr 06, 2015 at 11:10:27PM +0200, Milan Broz wrote:
+>I updated PHC candidates test output for the previously discussed tests
+>>
+>  https://github.com/mbroz/PHCtest/blob/master/output/phc_round2.pdf
+>>
+>- added "normalized" test from tables in http://article.gmane.org/gmane.comp.security.phc/2550
+>- fixed Lyra2 to us just one thread
+>- added memory/time combined chart
+>- added Argon2 git versions (just for comparison)
+>- added more functions to KDF example
+>>
+>Otherwise it is kept in the same format.
+
+This is good stuff.  Thank you!
+
+When you provide speeds for "Reference" implementations, in yescrypt's
+case is this -ref or -opt?  I ask since yescrypt is unusual in providing
+3 implementations currently: -ref (not for use at all, beyond testing),
+-opt (for non-SIMD builds), and -simd (for SIMD builds).
+
+It is -ref (and the SSE is yescrypt-simd).
+
+BTW simd version seems to not "easily" provide way how to decrease
+PWXrounds (in other two it is just define, here is more complex macro IIRC).
+
+If -ref starts being benchmarked, this gets me thinking that maybe I
+should drop it in favor of -opt. ;-)  But that's counterproductive in
+terms of providing an implementation that is easier to read and is more
+self-contained (-ref does not use the yescrypt-platform.c functions,
+whereas -opt and -simd do).
+
+Well, yes. Anyway, for x86 it is simd version what matters here.
+
+I think that there are more important criteria than just speed,
+readability is very important. (That said, I should probably run
+test for all 3 implementations...)
+
+Well, if algorithm is very slow (and it is clear that optimization cannot fix it)
+then it is probably a problem but it is not the case for yescrypt.
+
+I am a little bit scared of another things... like using reduced-round algorithms
+elsewhere but that's just me. :)
+
+I think it makes more sense to list speeds for non-SIMD vs. SIMD builds,
+because non-SIMD builds may actually be in use (e.g., if someone builds
+a program that is meant to be portable to older CPUs).
+
+yescrypt-ref.c even has:
+
+$ fgrep warning yescrypt-ref.c
+#warning "This reference implementation is deliberately mostly not optimized. Use yescrypt-best.c instead unless you're testing (against) the reference implementation on purpose."
+
+Yes, it is printed. I mention it in document that it is just reference.
+
+which gets printed during build.  I think it's not the same kind of
+thing as other candidates' non-SIMD implementations.  -opt is more
+similar to those.
+
+If it makes sense, I'll just add the -opt variant there.
+(The former intention was to compare it produces as the same output
+as the optimized variant.)
+
+Milan
+

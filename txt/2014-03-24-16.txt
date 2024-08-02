@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <CAOLP8p58C4ozp=XQ7Ppw6gvePLym-1VJtbjuPtJ0B05iAzDoDw@mail.gmail.com>
+Date: Mon, 24 Mar 2014 12:39:49 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Mon, Mar 24, 2014 at 12:13 PM, Solar Designer <solar@...nwall.comwrote:
+Can we really go much higher than 4 KB while retaining bcrypt's access
+pattern (frequent, tiny accesses)?  Should we?  Why didn't we in 1990s -
+did no one think of it, were we trying to save RAM (yet UFC-crypt in
+glibc wasted 128 KB on expanded and doubled DES S-boxes, IIRC even
+before bcrypt was introduced), was it simply because Blowfish was
+designed that way and bcrypt built upon it, or did we not want to incur
+the slowdown and waste bandwidth(*) by exceeding L1 cache size while
+doing those tiny accesses?  I think it's some mix of these factors, and
+the last one is still relevant and very important now.
+
+Bcrypt's L1 resident access pattern sounds like a great way to
+compute-time harden a password hashing scheme, but when a company like
+Adapteva finally ships large die, rather than the tiny parts it makes
+through MPW runs today, wont Bcrypt be rather insecure?
+
+I like the idea we'd discussed before of a Bcrypt inner loop that
+repeats many times, doing mostly reads (because of write-through
+caches), and a then one write pass, and moving to the next block.
+That might let you tune it for just L1 cache, L1 + L2 cache, L1 + L3
+cache, or L1 + external DRAM.
+
+Bill
+

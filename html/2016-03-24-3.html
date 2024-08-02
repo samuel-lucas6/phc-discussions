@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] hash encryption</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20160324115748.GA9065&#64;openwall.com&gt;
+Date: Thu, 24 Mar 2016 14:57:48 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 02:27:01PM +0300, Solar Designer wrote:
+&gt; On Wed, Mar 23, 2016 at 09:18:41AM -0700, Andy Lutomirski wrote:
+&gt; &gt; Suppose we ignore the round count variability and further weaken the
+&gt; &gt; scheme by forcing either one or two rounds (obviously insecure).  Then
+&gt; &gt; imagine we have two related keys k1 and k2.  k2 = k1 || padding1 || a
+&gt; &gt; few more bits.  That is, k2 is what you get when you extend k1 by the
+&gt; &gt; Merkle-Damgard padding you'd have if you fed k1 into your cipher
+&gt; &gt; followed by some more bits.  (IOW this is a classic length-extension
+&gt; &gt; setup, assuming I did it right.)
+&gt; &gt; 
+&gt; &gt; Now an attacker can use the block cipher under k1 as an oracle to
+&gt; &gt; learn hash values under k1, which gives the attacker the entire
+&gt; &gt; internal state of the round function prior to hashing in the extra
+&gt; &gt; bits in k2.
+&gt; &gt; 
+&gt; &gt; This is obviously a useless attack as is (weird related key assumption
+&gt; &gt; and only works directly on one or two rounds), but I can imagine
+&gt; &gt; adaptive chosen plaintext/ciphertext variants extending to an extra
+&gt; &gt; round or two.
+&gt; &gt; 
+&gt; &gt; The possibility of this type of attack would go away completely if you
+&gt; &gt; used a wide-pipe hash or if you hashed in the key length.
+&gt; 
+&gt; Hashing the key length at a fixed offset (rather than only within the
+&gt; Merkle-Damgard padding, which is already happening) would remove the
+&gt; possibility of this type of attack because the longer k2 would then
+&gt; change the initial k1 length's worth of computation as well through the
+&gt; necessarily changing full k2 length embedded in that portion.  Going
+&gt; from that reasoning, here's another way to achieve the same effect:
+&gt; 
+&gt; Don't hash the key length, but instead hash in the round number after
+&gt; rather than before the key.  Since the round number is different for
+&gt; each round whereas the key is fixed across all rounds, the round numbers
+&gt; used for k1 can't (except for any one of them) be part of the longer k2.
+
+Thinking of it some more, the exception may actually be important, still
+allowing to attack the last 1 or 2 rounds.  So my proposed change isn't
+as complete a mitigation as hashing in the key length would be.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+phc-discussions - Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+Message-ID: <20140322233142.GA26682@openwall.com>
+Date: Sun, 23 Mar 2014 03:31:42 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+Thomas,
+
+I'm sorry for not replying to this message sooner.  My excuse is that it
+got a bit long (covering several topics at once), and I didn't have an
+e-mail moment long enough until now. ;-)
+
+On Sat, Mar 15, 2014 at 01:19:24AM +0100, Thomas Pornin wrote:
+On Fri, Mar 14, 2014 at 11:42:41PM +0400, Solar Designer wrote:
+As I mentioned before, I think a shortcut like this could be used for
+more effective memory cost upgrades than what e.g. Catena provides.
+
+I envision the "fast path" to be adequate to situations where there are,
+say, several login servers feeding on the same database of hashed
+passwords but offering different services, and one of them can be
+entrusted with a private key which allows for (much) faster password
+verification for some reason, e.g. because it has an HSM while other
+frontends do not. Or something like that.
+
+In any case, a fast path can be retrofitted to any password hashing
+function by the simple expedient of storing both the hash value AND an
+asymmetric encryption of the password (or of SHA-256(password) or
+anything similarly fast) with some public key; a system which has a copy
+of the private key can forget the hash and use decryption to recover the
+password (or its fast hash). Without the private key, the public-key
+encrypted password is useless (normal asymmetric encryption algorithms
+are randomized, so that cannot be used for enumerating passwords). Such
+a scheme implies a storage overhead which needs not be large (with
+EC-based ElGamal or ECIES, this could be done with, say, 50 bytes
+overhead per stored password).
+
+(I don't follow what you mean by memory cost upgrades in the context
+of a "fast path" so I fear we may not be speaking of the same thing.)
+
+Yes, I was speaking of a different thing:
+
+http://lists.randombit.net/pipermail/cryptography/2012-November/003451.html
+
+"A much trickier task: support upgrades to a higher memory cost for the
+already-computed iterations.  Sounds impossible at first?  Not quite.
+This would probably require initial use of some secret component
+(allowing for a lower-memory shortcut) and then dropping it at upgrade
+time."
+
+Anyway, both the ability to increase the cost parameter from the hash
+value alone (without access to the source password), and the "fast
+path", are straight from the PHC call for submissions:
+
+  | Ability to transform an existing hash to a different cost setting
+  | without knowledge of the password.
+
+Yeah.  I think it came from my 2012 slides.  (I don't know if it was
+listed among desired properties for password hashes before that time.)
+
+and:
+
+  | For example, one may design a scheme that is slow to evaluate
+  | except on a server given some server-specific shortcut.
+
+I think this was Jean-Philippe Aumasson's idea, unless he got it from
+somewhere else.
+
+Since these properties were listed as desirable, I kind of assumed that
+they were desired.
+
+Yes, at least the hash cost upgrades are desirable.  I'd say they're a
+must for new non-memory-hard hashes (although this is not a strict
+requirement for PHC submissions), because for those this is strictly
+beneficial.  For memory-hard hashes, upgrading works somewhat worse than
+computing a new hash, so the feature is somewhat less desirable.
+
+Or even more advanced features such as the ability to
+delegate computation to an external untrusted system.
+
+This is an interesting topic, which somehow we haven't touched on this
+list yet, although at least Jeremy Spilman and I thought of it before.
+
+Arguably, it falls in the same category as hash upgrades and client-side
+pre-hashing, because it can also be implemented on top of an existing
+password hashing scheme lacking this feature as a built-in one
+
+Now I am all ears.
+
+Background: my own candidate (which I submitted three weeks ago) offers
+cost parameter increase, a fast path, and delegation.
+
+Being on the panel for PHC, I am aware that you made this submission
+(thank you!), but I did not look at it closely yet because (1) I didn't
+have time for that yet, and (2) you didn't make it public yet, which
+might be deliberate, so I didn't want to be "exposed" to it yet (given
+my plans to possibly make a PHC submission too).  So I was unaware of
+what features it had.
+
+Delegation to an
+_untrusted_ external system seems quite non-trivial to me, and I found
+only one way to achieve it, which involves some maths.
+
+For the functionality you describe below, I'd be thinking along the
+lines of RSA blinding - and yes, it'd need to be part of the password
+hashing scheme.
+
+I do not see how
+it could be implemented "on top of an existing password hashing scheme".
+So if you have a method for that, I am VERY interested.
+
+I was thinking of the same use case that Jeremi described, where the
+salt (or at least one of the salts if there are several) could be kept
+private to the trusted authentication server.
+
+Your example with SRP requires a more complicated approach, yes.
+
+the output is 192 bits only,
+
+184, and that's more than enough.
+
+Technically, bcrypt is a custom 64-bit block cipher with a very long key
+schedule, which is then used to encrypt a 192-bit input (exactly three
+blocks). If it is limited to 184 bits, it is as an artefact of ulterior
+encoding (Base64, 31 _characters_ instead of 32, so you really get 186
+bits, not 184).
+
+184 instead of 192 is because of a bug.  Since the bug had no security
+impact, a decision was made in 1998 to keep things that way and cleanup
+the code, so that this (weird yet harmless) behavior is explicit:
+
+http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/crypt/bcrypt.c.diff?r1=1.11;r2=1.12
+
+If you need more than 128 bits, then that's for a KDF,
+and in that case there is no point in applying the Base64 encoding and
+its historical shortcomings at all, so you would get the full 192 bits.
+
+True, but until last year bcrypt was only defined for password hashing,
+with the encoding.  bcrypt-pbkdf was introduced last year (2013) and it
+differs in a few more ways than just not having the encoding:
+
+http://www.tedunangst.com/flak/post/bcrypt-pbkdf
+http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libutil/bcrypt_pbkdf.c
+
+The actual limit is 72 chars.  56 is an error in the bcrypt paper, and
+it's repeated in the scrypt paper and elsewhere.
+
+Well, the authors of bcrypt specified it as using 56 bytes, so I would
+say that the "error" is 72, not 56 -- by definition.
+
+This depends on whether the reference code (in OpenBSD since 1997) or
+the paper (USENIX 99) prevails.  In this case, it's clear that the code
+prevails, and the "errors" (not just this one) are in the paper.  Other
+implementations of bcrypt try to match OpenBSD's, not the paper.  The
+paper does not provide a complete spec anyway, not giving the exact hash
+encoding.  The code in OpenBSD is the spec.
+
+Although it can be
+argued that the algorithm "works" for longer inputs, one could say that
+the "official" bcrypt (with appropriate double quotes around "official")
+is the one which the paper defined, because that is the one which got
+theoretically reviewed by other cryptographers.
+
+One could argue, but upstream's (OpenBSD) position is that the code in
+OpenBSD is the spec (and I think they are right).  The paper is not.
+
+The "56" comes from the fact that bcrypt is derived from Blowfish, which
+uses keys of up to 56 bytes (and no more). However, a longer key would
+fit in Blowfish as well.
+
+Right.
+
+If we say that limiting bcrypt to 56 bytes is
+an error, then so is limiting Blowfish keys to 56 bytes.
+
+Not necessarily.
+
+practice more often 55 or 51 characters, depending on the implementation
+library),...
+
+Huh?!  I've never seen implementations of bcrypt like that.  Have you?
+Got any pointers?
+
+I'll have to dig a bit around; it is old memory. The "51" apparently
+comes from a faulty assumption in some usage somewhere of bcrypt that
+the "55 bytes" included a 4-byte salt (which may have been true in some
+variant). The "55 vs 56" is about the inclusion or not of a terminating
+0.
+
+OK, but the salt is 128-bit, is not included in the same input as the
+key (so does not reduce max key length), and the terminating NUL does
+not limit the key length (rather, in $2a$ and newer it's included in the
+expanded key so that e.g. "ab" and "abab" don't hash to the same thing).
+With a string of >= 72 chars, the terminating NUL does not get into the
+expanded key (there's no need).  That's how bcrypt has been defined
+since 1997, via the code in OpenBSD.
+
+I also don't think so, but I also don't think the portfolio should be
+large.
+
+Last I heard, some rumours talked about a dozen candidates or so, which
+is not much (but it is also rumoured that rumours occasionally turn out
+to be off by a long shot). This could yield a portfolio of, say, three
+or four schemes.
+
+OK.  I was hoping there'd be just two schemes in the portfolio: one for
+native code (and for VMs similar to actual CPUs) and one for scripting
+languages like PHP (where some native code crypto primitives might be
+available, but any other non-trivial processing would be slow).
+However, now it does sound like three or four could be appropriate,
+given the non-overlap of use cases and of feature sets between the
+schemes mentioned so far - e.g., it does sound like your scheme's
+delegation feature is unique.
+
+In any case, when considering the AES and SHA-3 competitions, I usually
+say that the greatest thing about them is not that they came up with a
+good final choice, but that it also exposed a lot of backup schemes.
+
+For PHC, I think the greatest thing is that it advances the field - by
+so much that I think we'd benefit from having an extra round in PHC to
+have an even greater chance to learn from each other and put that new
+knowledge into revised submissions.
+
+Alexander
+

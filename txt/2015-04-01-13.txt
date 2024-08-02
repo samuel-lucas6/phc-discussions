@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] OMG we have benchmarks
+
+Message-ID: <20150401100442.GA10424@openwall.com>
+Date: Wed, 1 Apr 2015 13:04:42 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] OMG we have benchmarks
+
+On Wed, Apr 01, 2015 at 12:24:34PM +0300, Dmitry Khovratovich wrote:
+Argon and Argon2 do not have other parameters that affect the
+performance crucially (apart from multithreading).  However, the other
+schemes do, and they must be listed (number of rounds in the internal
+function, specific flags, etc.). For fair benchmark comparison, the
+designers must choose some recommended set of parameters, explicitly
+claim its security, and yield it for measurement.
+
+I think Milan benchmarks these schemes via the PHS() interface, which
+has parameters other than t_cost and m_cost at values determined by the
+designers.
+
+The problem with this is that those parameter values chosen by the
+designers may achieve different security levels for the different
+schemes, in their different dimensions.  For example, as we discussed
+yesterday there may be substantial differences in lowest latency (e.g.,
+per memory byte processed) that an attacker might achieve, which may
+affect the time factor in the area-time product, even for e.g. two
+schemes that both reach 1 GB in 1 second on a defender's CPU.  Of
+course, there may also be differences in TMTO resistance and in many
+other dimensions (such as performance of GPU attacks).
+
+For example, the chart above shows Argon2d-SSE and yescrypt-SSE as being
+close, but yesterday we came up with a 5x+ difference in ASIC attacker's
+compute latency for these for PWXrounds=2.  (I'm not sure if you agreed,
+though.)  Milan's benchmarks are for PWXrounds=6 (the default), so the
+difference is 15x+.  (BTW, it is puzzling that Bill found PWXrounds=2
+achieving performance parity between Argon2d and yescrypt, whereas in
+Milan's benchmarks yescrypt's default PWXrounds=6 appears to work almost
+as well.  Are the machines so different?  Maybe there's some error here.)
+
+Thus, these schemes are not trivially comparable, although we should try
+to compare them at settings that achieve similar security, or normalize
+the results accordingly.
+
+Alexander
+

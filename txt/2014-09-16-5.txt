@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Schvrch is broken
+
+Message-ID: <5418C7C1.5090108@ciphershed.org>
+Date: Tue, 16 Sep 2014 19:29:05 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Schvrch is broken
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/16/2014 07:19 PM, Rade Vuckovac wrote:
+My err, lapsus ... apologies ... I keep forgetting that.
+
+No problem.  There is zero reason for you to apologize, while I have
+several.  Thanks for introducing me to Wolfram's Rule 30 :-)
+
+The solution is simple with reintroducing mixer with value
+010101... instead of 000000... (was there in the first place to
+nullify above mentioned xor properties) Mixer addition is actually
+the only difference between stir and revolve and it was dropped
+(long time ago) for the performance sake believing it was safe
+thing to do.
+
+I did my best to attack your stir function, and failed.  I believe it
+mixes securely, if slowly.
+
+On the positive side the 117 lines of code will shrink considerably
+(less chance for bugs) and the algorithm will become significantly
+simpler (will be posted in near future).
+
+I look forward to it.  My preference for implementing Wolfram's Rule
+30 is this loop:
+
+static uint128_t updateState(uint128_t a) {
+    uint128_t lsb = a & 1;
+    uint128_t msb = a >127;
+    return ((a << 1) | msb) ^ (a | (a >1) | (lsb << 127));
+}
+
+This would work well in our SIMD uints, and mixes reasonably fast.
+Keccak combined this with moving lot's of data around to get near and
+far data mixing, similar to what Blake2b seems to do.  This whole
+AND-XOR-ROTATE thing is cool, and not that I know much about this
+stuff, but I only learned about because I reviewed your code, and
+eventually read your paper.  It is very cool stuff.
+
+I do get the feeling that you are not a programmer by trade.  I happen
+to be an old code-monkey.  If you would like, I would be happy to work
+with you on a revised version so we can clean up some of the holes
+before letting Steve have a crack at it :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGMe9AAoJEAcQZQdOpZUZUQEP/2Vh7IbLqqNbaEdhsmJFXTkS
+KiQ99Ewt33Z0sN9LLAJirRRHev8nvUgJ+EEYKQ/j1MmKqKhPastGvIct70SwzopS
+BO0AzFT2p5t0Qdr246d9ygcg1eiby68/acTawzkdb3OpRZhMnrOdcd76LJZf4k6Q
+ZZlzWOkd48CryyG3FNIz3pt1yWC6AC/ZFtE+T/i97AXdaJCrokXd8H52nSihmpLH
+N8e6/asi0Ss0+IIicS7yLwa5ZGb3ALBbI8cflCe6g0wvPM/qoF6DAzc/0I/X/YnF
+GkGCC4v/4qSpuqG7yaL6Jemxa4w6vPRLkVffJ5d/esvU+a0+K+iN4FLj2X0fU+HJ
+/CsE2ux9yq6/cEv1RXF38jPJMDgab99Zvs8xOtsT4bGjj0rCAu9TF0ydpakIgdGI
+LNKVxuSqyPl5YZHc8xyf0aGWAA609AEZXF1yj5JA0kHwosQw4T5uvz/WtdZ1hNPG
+OtndPORpOkJZ3Fd8MXfCRtgYtrX34KF7abnC/EVn6Fu6MaCiHNMo/NLg1Ps6/wI/
+zIfo3NeV/AtVdb5M6eB0JEh0Y7pP5Q+ULDdhh6yUwBf8rOt3B5TtUAu1gNc3ouNX
+nm74fkk4yp6OSR/tukCMdoh3mqesn+dH36BswN59lirVIczr+M0eGVxccsdvaI0w
+k45vSKI4KQl5JJcwOj3/
+=F9Td
+-----END PGP SIGNATURE-----
+

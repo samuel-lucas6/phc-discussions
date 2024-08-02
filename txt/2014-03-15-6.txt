@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+Message-ID: <20140315130033.GA4422@bolet.org>
+Date: Sat, 15 Mar 2014 14:00:33 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+On Fri, Mar 14, 2014 at 09:56:29PM -0700, Jeremy Spilman wrote:
+I'm with you all the way to the point where you say salt 's' is
+assumed to be public.
+
+By that, I mean that in my security model, I don't assume that 's' is a
+secret value unavailable to the attacker (here, to the 'D' system). That
+does not mean that I necessarily give it away. Also, the salt is still
+user-specific.
+
+There are protocols where keeping the salt hidden is hard. For instance,
+consider TLS-SRP (RFC 5054): a cipher suite for SSL/TLS, where there is
+no certificate at all, and client and server authenticate each other
+with regards to a shared secret. Password hashing must first occur, and
+necessarily client-side, so in the first messages of the protocol the
+client sends his identity to the server, and the server sends back the
+stored salt (which is user-specific). This happens before any kind of
+encryption or authentication can take place, so the salt is as good as
+public: everybody can learn it.
+
+Indeed, TLS-SRP is one of the scenarios where delegation is most useful:
+the expensive hashing must be done client-side, so in contexts where the
+client is feeble (say, a small portable device), the client would like
+to offload the work to the server -- but, at that point, the client
+still has no idea if it is talking to the genuine server, so it cannot
+trust that server with secrets, not even derived secrets like hash
+values if these allow offline dictionary attacks. If delegation is
+possible, within the rules of my formal model, then the client can make
+the purported server compute the bulk of the password hashing without
+fearing leaking password hashes to an active impersonator.
+
+
+	--Thomas Pornin
+

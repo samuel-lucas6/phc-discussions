@@ -1,0 +1,83 @@
+phc-discussions - Re: [PHC] winner selection (Makwa)
+
+Message-ID: <1808531685.93761.1437134177281.JavaMail.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Fri, 17 Jul 2015 06:56:17 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] winner selection (Makwa)
+
+This is super embarrassing I can't find this email on the list, but I do have
+this draft from April. Just checked the gmane archive and it's not in there
+either... Oops.
+
+I remember why I never sent this. When I finished my analysis on delegation
+another two algorithms for delegation were announced. So I wanted to read those
+before I sent this, but I forgot I never sent this. Wow that PDF wasn't that
+hard to read. Back's scheme prevents this attack at a cost of 14 to 20 times
+more work. The optimized back's scheme is susceptible to this attack but it's
+easier to test for. I guess you can ignore "the only useful in these two cases"
+and requirements now that delegation isn't broken.
+
+
+On April 13, 2015 at 10:11 AM Solar Designer <solar@...nwall.comwrote:
+>
+Makwa - likely select as a winner, but may need more pairs of eyes
+first, who would confirm they have actually reviewed Makwa. I think
+Steve did? Anyone else?
+
+I dislike it because the author is unwilling to except that server shortcut and
+escrow are very bad properties and pre and post hashing are required. If we
+can't prevent him from saying it's good and it's OK to use then like I said
+before "Makwa is broken by design".
+
+Makwa's server shortcut (knowledge of P and Q) vs secret key:
+.                 | Makwa               | Secret key
+------------------+---------------------+-------------------
+Secret not leaked | Takes t_cost time   | Can't do anything
+Secret leaked     | Takes constant time | Takes t_cost time
+
+
+I didn't review it, and I think we have panel
+members who are more qualified to review it. Makwa is a likely winner
+because it provides a unique feature with specific use cases for it,
+it looks good at first glance (but indeed that's not a proper review),
+and it comes from a particularly careful submitter.
+>
+
+Delegation is the only useful part, but it is only useful in two specific cases
+(I'm pretty sure all other cases Makwa is unsafe):
+* An encryption key stretching service for low power clients (key is verified by
+the client [ie it opens/decrypts the volume/file/data])
+* PAKE for low power clients
+
+Requirements:
+The only safe way is to have the client generate the public/private key pair and
+the α's and their inverses. Then sign the α's and destroy the private key. Then
+they need to wait for the server to generate the β's for the (α,β) pairs (the
+work of 300 key stretches) before delegation can be used. The (α,β) pairs,
+public key, and signature of α's can be safely downloaded from the server if the
+client knows their public key, a hash of it, the α's, or a hash of the α's. Note
+compromising these stored values is beyond the scope of this.
+
+Attacking delegation:
+The server can craft α's that make delegation work but reveal a simple hash of
+the password (h(pw, salt) ** 2 mod P*Q). This is done by giving pairs
+(α0**i,β0**i) for i = 1 to 300. This is easy to detect but you could send
+(α0*α1**i,β0*β1**i) for i = 1 to 300. There are several ways to mask these
+values so it's hard to detect. The best general way to detect this is with
+birthday attack, but if N is 100,000,000 then the client would need to do 11,774
+tests just to get a 50% chance of detection. Personally I'd only use it if it's
+less than a 1 in 2**64 chance. This amount of work probably negates the savings
+of delegation. The good news is if you don't know if the public key is correct
+then you just do the key stretching yourself the first time. Then you can verify
+the signature of the α's.
+
+Anyways it comes down to the sever getting a few thousand or million (N = 45,150
+= (300+1)/2*300 and N < 13,545,000 = (300+1)/2*300*300 from above) possible
+hashes that it can guess passwords for and if there is a match in any of those
+then you got the password.
+
+I'm not sure if this attack is known because I'm too lazy to read the paper and
+I have a lot of emails from this list I haven't exactly gotten around to
+reading.
+

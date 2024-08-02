@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p7vqs-UtJRU14k7Etj+ctAvQvHBSp_+1Nm1bya0okxDFg@mail.gmail.com>
+Date: Thu, 13 Feb 2014 12:11:43 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 11:46 AM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 13, 2014 at 11:06:45AM -0500, Bill Cox wrote:
+>In general, I
+>don't think there's a way for the SIMD loop to be as fast as the
+>non-SIMD loop, and this difference will not be seen by an ASIC
+>attacker, so it comes right out of compute-time hardness.
+>
+This is about right, but there appear to be ways around it:
+>
+1. If we do 32x32->64, then non-SIMD latency is 4 to 5 cycles (for the
+upper 32 bits of result; the lower 32 bits may be ready in "eax" after 3
+cycles).  The PMULUDQ latency is 3 to 5 cycles - potentially even 1
+cycle better than best CPU's non-SIMD equivalent (for upper 32 bits of
+result).  See GenuineIntel0010676_Harpertown_InstLatX64.txt for where
+PMULUDQ wins over scalar (3 cycles vs. 5 cycles latency).
+
+Awesome.  I'll check out that paper.  I'm currently getting 3 cycle
+latency for 32x32->32 plus 1 cycle for the add on Ivy Bridge.  It's
+the other stuff, the OR, ADD, and memory I/O that seems to increase
+the SSE 4.1 latency.  The multiply is 5 cycles, I think.
+
+In the original NoelKDF that ran in .35 seconds with 2 threads hashing
+2GB, I found the generated code did everything with SSE *except* the
+multiply, with it did with an imulq in parallel.  That was pretty
+cool, and explains why that particular hash function was so fast.
+
+2. We may do a non-SIMD chain for latency hardening in parallel with a
+bunch of SIMD chains optimized for throughput (to use the multipliers'
+die area optimally and not leave room for attacker to share most of the
+multipliers between cores).  Then even PMULLD on Haswell will be fine
+(not on Avoton, though, where it's also much lower throughput, compared
+to e.g. PMULUDQ).  By having multiple chains work "in parallel" I mean
+use of interleaved instructions (ALU intermixed with SIMD).  Their
+results would need to be mixed together once in a while, such as after
+each block.
+>
+Also, accessing memory via SIMD instructions improves bandwidth, and
+this can only be done with no overhead if the computation is SIMD.
+>
+Alexander
+
+I don't know if it's worth it to worry about an attacker's die area,
+except for RAM if we force him to use cache.  For example, my
+hypothetical $3 chip with an awesome GDDR5 port likely will have
+100-ish pins.  Assuming a 50u pad pitch, a pad limited die will have a
+usable core area of 1.5mm^2.  Even at $0.20/mm^2, that's only $0.30
+for the core, and maybe $1.00 with pad ring, scribe line, test and
+cheap packaging.  $3 gives me a reasonable margin.  How much
+configurable ALU logic can I fit in 1.5mm^2?  Probably more than a
+single GDDR5 port can handle.  If area begins to be an issue, I can
+pipeline everything and increase the throughput.
+
+Put another way, an attacker will pay a ton more for his electricity
+than for his die area over time, except for area devoted to RAM.
+Maybe we can take power into account and make it expensive for him.
+
+Bill
+

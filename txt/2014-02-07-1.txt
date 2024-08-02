@@ -1,0 +1,63 @@
+phc-discussions - RE: [PHC] Halting Password Puzzle support
+
+Message-ID: <015d01cf23a2$ad80d790$088286b0$@acm.org>
+Date: Thu, 6 Feb 2014 17:19:40 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Cc: "'Bill Cox'" <waywardgeek@...il.com>
+Subject: RE: [PHC] Halting Password Puzzle support
+
+Bill Cox asks, "I just added Halting Password Puzzle support to my code.  There are no patent issues with it are there?"
+
+TLDR: Yes.
+
+Details
+
+The paper appeared in 2007: <http://ai.stanford.edu/~xb/security07/index.html>.  A related 2009 paper may also be valuable: <http://dl.acm.org/citation.cfm?doid=1533057.1533089  (available via <http://crypto.stanford.edu/~xb/asiaccs09/index.html>).
+
+Boyen does not list any patents on his Stanford CV.   
+
+I found the patent that appears to be for this technique here: <http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=4&f=G&l=50&co1=AND&d=PTXT&s1=Boyen.INNM.&OS=IN/Boyen&RS=IN/Boyen>.
+
+It is US Patent 8,254,571, filed December 21, 2007 and issued August 28, 2012.  There appear to be at least 14 security-related patents with a Boyen as an inventor <http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=0&f=S&l=50&TERM1=Boyen&FIELD1=INNM&co1=AND&TERM2=&FIELD2=&d=PTXT>.
+
+The Introduction to Security course, Part 2, being offered on Coursera for the first time starting February 17, is expected to include password security as a topic.  I would not be surprised if Boyen's work is mentioned by instructor Dan Boneh: <https://www.coursera.org/course/crypto2>.
+
+ - Dennis
+
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Thursday, February 6, 2014 14:20
+To: discussions@...sword-hashing.net
+Subject: [PHC] Halting Password Puzzle support
+
+I just added Halting Password Puzzle support to my code.  There are no
+patent issues with it are there?  Catena and other entries supporting
+garlic could use this as well.  I think it should be used in
+TrueCrypt, since it is critical there to have deniability, so we can't
+have any obvious parameters that look non-random.  The only two
+parameters we can store that I can see are:
+
+- salt
+- expected hash
+
+We just start with memory == small (1MiB), and iteratively increase
+garlic like we do with client-independent update, doubling memory each
+time.  When we get the expected hash, or reach a pre-set quitting
+level, we're done.  This really is how TrueCrypt should work.  It's
+password security for now is pretty weak against brute-force attacks.
+The code looks like:
+
+    resultHash = PasswordHash(password, salt)
+    for(garlic = 0; garlic < quitGarlic; garlic++) {
+        ApplyGarlic(resultHash, garlic)
+        if(resultHash == expectedHash) {
+            return true
+        }
+    }
+    return false
+
+Bill
+
+

@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Password hashing as a self-overwriting Turing machine
+
+Message-ID: <CAOLP8p7tT38LsAbUYMW2UG4V5Hg9jx0qLPK0489nGkpHwMKHrQ@mail.gmail.com>
+Date: Thu, 2 Jul 2015 07:46:03 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine
+
+On Wed, Jul 1, 2015 at 10:48 AM, Marsh Ray <maray@...rosoft.comwrote:
+
+ Perhaps I misread, thinking of your description of a Turing machine
+which uses data-dependent addressing. If memory addresses are fixed in
+advance only by the salt, is it so easy to prove the resulting system is
+Turing complete?
+>
+>
+>
+-           Marsh
+>
+
+Yes, it's Turing complete.  Given a data memory size, each location will be
+read or written at a known time, and the program can wait for those times
+to continue a computation sequence.   You have to embed those access times
+in the program, but it's polynomial in size relative to the data memory
+size.  There's the complication of needing a new program instruction on
+each data access, which is hard when executing the code in a random
+pattern, but you just make it large enough to achieve this.  The program
+memory should not have to be more than about O(n^2) for n data locations.
+Given the salt, we can always choose a program large enough to meet this
+restriction.  The instructions include addition, rotation, and XOR, and we
+know ARX is enough to be Turing complete.
+
+The BusyBeaver construction seems cryptographically secure to me, if run
+long enough, and once we fix a few things, like the entropy lost by the
+multiply operation, and make the computation non-reversible with some
+standard cryptographic hashes now and then.  I'd have to look more closely
+to be convinced there are no bugs, and since the code is the only
+documentation, I am not yet entirely convinced this algorithm is otherwise
+secure, but the framework looks reasonable.
+
+It would have been a nice entry.  However, in it's current form, I doubt it
+would have made it to the final round.  It lacks an m_cost parameter, which
+would be a killer to get into the second round, it has salt dependent
+branches, and runs somewhat slowly in it's reference form.   It would need
+a lot of upgrades to be competitive (an m_cost parameter, a cache-miss
+latency mitigation strategy, multi-threading, pluggable hash rather than
+hard-coded SHA-512, preferably a hybrid resistant/unpredictable
+architecture, maybe a t_cost parameter, cleaner hashing of initial
+parameters to create initial derived key, some security analysis).
+
+Still, there's something here.  Running a random set of machine
+instructions surely is difficult to do faster in an ASIC than on a CPU
+designed to run random machine code rapidly.  It would have been nice to
+see where this approach would evolve given good feedback.
+
+Bill
+
+
+

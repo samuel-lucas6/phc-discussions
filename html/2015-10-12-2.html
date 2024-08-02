@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] An API for Efficiently Obtaining t_cost</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALiR+uPVupbYsVyd0efSy12n3oyOqgLKj3xrNJUHbuAG3MHPRw&#64;mail.gmail.com&gt;
+Date: Mon, 12 Oct 2015 06:57:39 +0000
+From: Sascha Schmidt &lt;sascha&#64;...midt.is&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] An API for Efficiently Obtaining t_cost
+
+Hi.
+I'm not sure if the API you suggested shouldn't be simplified. In the end a
+search function mostly caters to developers that are unfamiliar with
+password hashing. Anyone else could easily do the search on their own.
+While the input and salt may slightly change the runtime for schemes with a
+data-dependent memory-access pattern, no one is going to search for the
+optimal parameters for every password. Exposing in, out and salt could give
+the false impression that they are relevant for the search process or may
+even lead to developers using their own passwords for testing.
+
+Sincerely
+Sascha Schmidt
+
+P.S.: We have implemented such a search application for Catena:
+<a href="https://github.com/medsec/catena-axungia" rel="nofollow">https://github.com/medsec/catena-axungia</a>
+It searches under supplied constraints for time, memory and memory-hardness.
+
+
+
+On Mon, Oct 12, 2015 at 2:08 AM Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+
+&gt; Some entries (I think including Yescrypt and TwoCats) do something
+&gt; similar, and provide estimated parameters to meet your time goal.  These
+&gt; tools take a max_memory and target_time parameters.  The more typical case
+&gt; is that we cannot fill as much memory as you would like for a given target
+&gt; time. so t_cost is set to the minimum value, and an m_cost parameter is
+&gt; suggested to target the desired runtime.  In rare cases, you want to fill
+&gt; memory and keep rehashing, in which case m_cost is set to max_mem and
+&gt; t_cost is adjusted accordingly.
+&gt;
+&gt; I have yet to see an actual deployment making use of more than the minimum
+&gt; t_cost parameter in any application, so I'm not a fan of that parameter,
+&gt; but it's there, and both m_cost and t_cost should be suggested for Argon2.
+&gt; I suspect their team already has something like this in the works.  They
+&gt; are welcome to look at my code in twocats-common.c to see what I did.
+&gt;
+&gt;
+&gt; Bill
+&gt;
+&gt; On Sun, Oct 11, 2015 at 1:52 PM, Taylor Hornby &lt;taylor&#64;....io&gt; wrote:
+&gt;
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; I'm not sure if it's the PHC's job to standardize on an API for the
+&gt;&gt; winning hash function, but I'm going to strongly argue that
+&gt;&gt; implementations MUST to provide an API similar to the following:
+&gt;&gt;
+&gt;&gt; int PHS_find_t_cost(
+&gt;&gt;         void *out,                 /* same */
+&gt;&gt;         size_t outlen,             /* same */
+&gt;&gt;         const void *in,            /* same */
+&gt;&gt;         size_t inlen,              /* same */
+&gt;&gt;         const void *salt,          /* same */
+&gt;&gt;         size_t saltlen,            /* same */
+&gt;&gt;         unsigned int target_msec,  /* target milliseconds */
+&gt;&gt;         unsigned int *t_cost,      /* output parameter */
+&gt;&gt;         unsigned int m_cost        /* same */
+&gt;&gt; );
+&gt;&gt;
+&gt;&gt; Calling this API should *efficiently* find the best t_cost for the
+&gt;&gt; given m_cost and target running time, on the current system under its
+&gt;&gt; current workload, while at the same time computing a hash. In other
+&gt;&gt; words, for a fixed m_cost, it should find the smallest valid t_cost
+&gt;&gt; such that the time taken is longer than target_msec milliseconds.
+&gt;&gt;
+&gt;&gt; The problem is that on memory-constrained devices, you might want to
+&gt;&gt; use as much memory you can, and then keep computing on that memory for
+&gt;&gt; a certain amount of time, say 5 seconds, when you don't know which
+&gt;&gt; t_cost to use for that amount of time, and you don't want to do trial-
+&gt;&gt; and-error or extrapolation from faster calls.
+&gt;&gt;
+&gt;&gt; I think this is an extremely important API to mandate, since if the
+&gt;&gt; developer needs it, and it isn't provided for them, they either have to
+&gt;&gt; do trial-and-error or heuristically guess-then-check t_cost which is
+&gt;&gt; not efficient, OR they have to modify or even re-implement the
+&gt;&gt; password-hashing library, likely losing important optimizations and
+&gt;&gt; thus giving the attacker an advantage in the process.
+&gt;&gt;
+&gt;&gt; It will also result higher t_cost being chosen in practice. Developers
+&gt;&gt; can hard-code the time cost in units of seconds, so that t_cost is
+&gt;&gt; always as high as it can be without impacting usability. Without this
+&gt;&gt; API, they'd have to run benchmarks on the system to select t_cost, or
+&gt;&gt; hard-code non-optimal costs, like the libsodium API [1,2,3] does.
+&gt;&gt;
+&gt;&gt; It's possible to efficiently provide this API for the iteration count
+&gt;&gt; in PBKDF2 as well as for 'p' in scrypt. I think it is also possible for
+&gt;&gt; Argon2.
+&gt;&gt;
+&gt;&gt; Even if we decide not to require this API, please consider adding it to
+&gt;&gt; your implementations.
+&gt;&gt;
+&gt;&gt; Thanks,
+&gt;&gt; -Taylor
+&gt;&gt;
+&gt;&gt; [1] <a href="http://doc.libsodium.org/password_hashing/index.html" rel="nofollow">http://doc.libsodium.org/password_hashing/index.html</a>
+&gt;&gt; [2] <a href="https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c" rel="nofollow">https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c</a>
+&gt;&gt; 46d4a1d37adc1e07/src/libsodium/include/sodium/crypto_pwhash_scryptsalsa
+&gt;&gt; 208sha256.h#L28
+&gt;&gt; &lt;<a href="https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c%0D46d4a1d37adc1e07/src/libsodium/include/sodium/crypto_pwhash_scryptsalsa%0D208sha256.h#L28" rel="nofollow">https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c%0D46d4a1d37adc1e07/src/libsodium/include/sodium/crypto_pwhash_scryptsalsa%0D208sha256.h#L28</a>&gt;
+&gt;&gt; [3] <a href="https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c" rel="nofollow">https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c</a>
+&gt;&gt; 46d4a1d37adc1e07/src/libsodium/crypto_pwhash/scryptsalsa208sha256/pwhas
+&gt;&gt; h_scryptsalsa208sha256.c#L18
+&gt;&gt; &lt;<a href="https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c%0D46d4a1d37adc1e07/src/libsodium/crypto_pwhash/scryptsalsa208sha256/pwhas%0Dh_scryptsalsa208sha256.c#L18" rel="nofollow">https://github.com/jedisct1/libsodium/blob/e326ef90301cf570a5e6691c%0D46d4a1d37adc1e07/src/libsodium/crypto_pwhash/scryptsalsa208sha256/pwhas%0Dh_scryptsalsa208sha256.c#L18</a>&gt;
+&gt;&gt;
+&gt;&gt; p.s. Apologies if this has been discussed before. There's a lot on this
+&gt;&gt; list I haven't read.
+&gt;&gt;
+&gt;
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Message-ID: <20140315224444.GA10560@openwall.com>
+Date: Sun, 16 Mar 2014 02:44:44 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+Steve,
+
+On Mon, Jan 20, 2014 at 06:14:15PM +0400, Solar Designer wrote:
+On Wed, Jan 15, 2014 at 09:27:06PM -0600, Steve Thomas wrote:
+You might want to change:
+        $v .= $x = hash('sha512', $x . substr($v, $j, $blocksize1), TRUE);
+and
+        $x = hash('sha512', $x . substr($v, $j, $blocksize2), TRUE);
+to:
+        $v .= $x = hash('sha512', substr($v, $j, $blocksize1) . $x, TRUE);
+and
+        $x = hash('sha512', substr($v, $j, $blocksize2) . $x, TRUE);
+
+This way the attacker can't do anything until you get the data from $v.
+
+Thanks!  I wanted to have this sequential on $x, but we achieve that via
+$j being dependent on $x anyway, so you're right - we can introduce the
+other sequential dependency here.
+
+Upon a closer look, I think your proposed change is problematic in that
+there are not that many different $j's, so some will repeat (the
+attacker may then benefit from having cached SHA-512 contexts) and/or so
+that speculative precomputation of the possible SHA-512's (to the point
+of finally needing $x) might be practical if an attacker can have lots
+of SHA-512 cores cheaply.  I doubt those attacks will be practical (the
+overhead is probably too high), but I can't rule that out.
+
+As to giving both defenders and attackers some time to fetch data from
+memory by processing $x first, I think this may be fine.  It might
+benefit some defenders' implementations more than attackers', because
+attackers can always bring in more parallelism to hide the latency.
+Yes, doing so costs those attackers memory, so it's not obvious who
+benefits more.
+
+Since $x is only half the size of a SHA-512 block, the amount of
+computation that can be performed while waiting for data from $v is
+limited to a portion of SHA-512's message scheduling and a few rounds.
+
+That said, a hybrid approach might work better, where a smaller portion
+of $x (but with more possible values than $j has) is processed first,
+followed by data read from $v, and optionally(?) followed by full $x.
+Since we have first 4 bytes of $x in $ja[1] anyway, maybe we can do:
+
+$v .= $x = hash('sha512', $ja[1] . substr($v, $j, $blocksize1) . $x, TRUE);
+
+and:
+
+$x = hash('sha512', $ja[1] . substr($v, $j, $blocksize2) . $x, TRUE);
+
+but is this worth the added PHP overhead?
+
+Alexander
+

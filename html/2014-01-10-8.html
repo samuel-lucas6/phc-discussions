@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] scripting memory (not so) high</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140110103050.GA29555&#64;openwall.com&gt;
+Date: Fri, 10 Jan 2014 14:30:50 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Cc: Anthony Ferrara &lt;ircmaxell&#64;...il.com&gt;
+Subject: Re: [PHC] scripting memory (not so) high
+
+On Fri, Jan 10, 2014 at 09:35:10AM +0000, Peter Maxwell wrote:
+&gt; There's also going to be an absolute limit to how much memory can be used.
+&gt;  In many of my own setups the php memory limit is sitting somewhere between
+&gt; 64Mb and 128Mb, although sometimes a fair bit higher, e.g. I think Magento
+&gt; tends to need nearer 512Mb irrc.
+&gt; 
+&gt; However, and this is the caveat, there's going to be a significant
+&gt; proportion of that already used.  So for a portable implementation of a
+&gt; memory-hard KDF we may be talking ~15Mb that can actually be used.
+
+Yes.  I wish we could get anywhere close to numbers like that in PHP,
+while retaining reasonable running time.
+
+&gt; In terms of performance, PHP will be not too bad
+
+It is not too bad in terms of performance for SHA-512, but it is in
+terms of limiting us to this primitive.  Specifically, bcrypt-like small
+random accesses to a smaller portion fitting in L1 cache are way too
+slow to do in PHP, yet would be needed for GPU resistance at small
+memory sizes like 1 MB or less.
+
+&gt; but there is always the
+&gt; option of coding the scheme as an extension, i.e. in C.
+
+If we stay with pure SHA-512 for the only required primitive, in order
+to be scripting language friendly, then such a native extension would
+provide only a ~2x to 3x speedup currently (with 3x only possible if we
+were careful to include sufficient parallelism, having considered the
+tradeoff that this involves).  Yet this may be done.
+
+&gt; I'm not sure what
+&gt; the score is going to be with other scripting languages or if people are
+&gt; intending on having things run on mobile devices.
+
+I think scripting language friendliness is primarily for servers and for
+JavaScript.
+
+In JavaScript, there's probably no advantage to using SHA-512 vs. the
+smaller random accesses I mentioned above, though.
+
+Anyhow, I am not happy with my current results from the smhkdf
+experiment, yet I don't think we'll have anything substantially better
+soon.  Currently, 1 MB with scrypt and thus almost certainly also with
+smhkdf is weaker than bcrypt's 4 KB as it relates to CPU-defense vs.
+GPU-attack performance.  For scrypt, these are on par somewhere at above
+4 MB (yes, it needs to get 3 orders of magnitude higher than bcrypt's),
+as known from YAC mining speeds.
+
+Thus, if native code bcrypt is an option (such as via PHP's
+CRYPT_BLOWFISH), I think it should remain preferable for a while longer.
+
+Something along the lines of smhkdf at &lt;= 1 MB may then be a fallback to
+be used on PHP 5.1.2 to 5.3.6, as well as when the use of these hashes
+is forced for portability to other scripting languages or/and to older
+PHP, or for compliance (SHA-512 being NIST-approved, unlike the Blowfish
+hack).  I guess e.g. Drupal might prefer having just the SHA-512 based
+algorithm for these reasons, even if it's a few times faster to crack
+than bcrypt with current GPUs at currently realistic settings.
+
+It is a better fallback than phpass' and Drupal's current iterated
+hashing that is not sequential memory-hard at all, but I'm afraid it's
+not yet suitable for becoming the new default for all (with bcrypt still
+being better as it relates to GPU attacks, which are still more likely
+than attacks with ASICs, FPGAs, or many-core CPUs).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

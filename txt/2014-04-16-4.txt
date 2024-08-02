@@ -1,0 +1,198 @@
+phc-discussions - Lyra2 initial review
+
+Message-ID: <CAOLP8p4tuDb_eTdk1mvp6=Ebk3DwsiZh1QcmfuSpkCZZnAFCgA@mail.gmail.com>
+Date: Wed, 16 Apr 2014 14:32:09 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Lyra2 initial review
+
+After reading some of the Lyra2 source code for pebbling, I got into it a
+bit.  Here's my initial thoughts.
+
+First of all, I am impressed.  If Lyra2 is chosen over Yescript and
+TwoCats, I will not be upset, because password hashing security will still
+have been significantly enhanced.  Lyra2, in my view, after fixing a few
+things, is good enough.  I consider it the only other strong generic
+high-memory hashing candidate besides Yescript and TwoCats, as the others
+are either much slower, or have no strategy for dealing with cache-miss
+penalties when hashing large amounts of external DRAM.  I call this the
+"Scrypt inspired" category in other posts.  I still feel that Yescript is a
+better platform for more advanced features such as ROM, Bcrypt-like GPU
+defense, and multi-threading with TMTO defense (forcing threads to run in
+parallel), and I think Alexander can do better than either me or the Lyra2
+team at getting several of these fine points right.  However, if we're
+mainly looking for an improvement over Script, I think Lyra2 delivers.
+ It's very good work.
+
+Here's some points I like.  Being a speed freak, I like it's speed!  It has
+the second highest memory hashing speed for 1 thread, not counting EARWORM,
+which is even faster, but a very different animal.  On my development
+machine (3.4GHz Core i7 Ivy Bridge running 64-bit Arch Linix) the Lyra2 SSE
+version does, with t_cost == 1, and m_cost == 100,000:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+4.41 GiB/s DRAM bandwidth
+
+It fills memory for the 1st half, and overwrites memory in the second half,
+so average memory usage is about 75% of peak for t_cost == 1, which is how
+I would normally run Lyra2.  For DRAM bandwidth, Lyra2 reads on average
+every location once, and writes it twice, for 3X the memory size of total
+data transfer.  For comparison, the fastest version of Script is
+Alexander's Yescript when run in Script compatibility mode.  On my machine,
+it does:
+
+0.74GiB/s of memory hashing (2GiB/2.71s) peak
+0.56GiB/s average
+1.5GiB/s DRAM bandwidth
+
+Yescript maxes out bandwidth with extra threads, so this is not the most
+critical benchmark.  However, Lyra2's speed looks good!  TwoCats, with a
+custom memory hashing function rather than reduced-round Blake2 or Salsa,
+is faster yet:
+
+3.85GiB/s of memory hashing (2GiB/.52s) peak
+1.92GiB/s average
+7.7GiB/s DRAM bandwidth
+
+There's more that I like about Lyra2.  It uses what I call a "hybrid:
+architecture, where the first loop is cache-timing resistant and does no
+password-dependent memory addressiong, and the second loop is unpredictable
+and does password dependent addressing.  This, in my opinion, is the
+sweet-spot where we retain the strong memory*time defense of unpredictable
+algorithms, while having some cache-timing defense.
+
+I also like the custom blake2-b based sponge.  This is quite a bit faster
+than the Keccak based sponges used in other entries, and is somewhat slower
+in hardware than Keccak, both of which help defenders.  The Lyra2 team got
+the PRK derivation right, and is a "Strongly secure" algorithm, in that it
+hashes all the inputs and their lengths, eliminating the input collisions I
+see in several other entries.
+
+Not only is the custom sponge cool, but the Lyra2 team is one of the few
+that bothered to do substantial SSE optimization up-front. When designing
+TwoCats, I found that separating the design of the inner hashing loop from
+SSE optimization was nearly impossible.  You just can't separate design and
+optimization.  The Lyra2 team did design and optimization at the same time,
+enabling them to achieve very high speeds, which is something many of the
+other entries will not be able to duplicate now that the design phase is
+mostly over.
+
+There are also things I didn't like about Lyra2, and places where I think
+Lyra2 needs improvement or fixing.
+
+First, Lyra2 uses a modified version of Blake2b that only uses ROUND(0) (I
+think - it may be a Lyra2-modified round).  For the main memory hashing,
+that's fine.  Someone should check that it is mixing well enough with just
+ROUND(0) - probably me!  So long as an attacker has to do the same
+computations, I don't care if the data written to memory is
+cryptographically indistinguishable from random data.  If it is, I believe
+you're spending far too much CPU time hashing data instead of filling
+memory.  However, as Alexander put it, there's no excuse for doing a
+billion-long chain  of non-cryptographically secure hashes.  I would like
+Lyra2 better if it called a full Blake2b round now and then to scramble the
+sponge state.  In between 6KiB blocks seems like a good place to me.  That
+would give me a warm fuzzy feeling about it's security without slowing it
+significantly.
+
+Lyra2 lacks compute-time hardening and Bcrypt-like GPU defense.  Blake2b
+computations can be sped up a great deal in ASIC attacks, even if it's
+better than Keccak.  External DRAM memory bandwidth is likely only the
+speed limiting factor, so I recommend Lyra2 be used with 30MiB of memory
+or more.  This works reasonably well against ASIC/GPU attacks limited by
+bandwidth, where maybe attackers have a 10X-ish advantage in
+bandwidth/dollar.  That's pretty good defense, IMO.  However,
+government-scale attackers may integrate Lyra2 cores directly on advanced
+high capacity DRAM die, greatly reducing the bandwidth bottleneck.  Also,
+the 6KiB block size is read sequentially, enabling very high speeds on-chip
+from the densest available RAM.  Lyra2 has a compile-time option to reduce
+the block size, which can be used to compile a version of Lyra2 more well
+suited for low-memory cache-bound hashing.  I would prefer to see that as a
+runtime option.  Also, Lyra2's second loop lacks the small random reads
+similar to what Bcrypt does.  This apparently can be used to harden against
+GPU attacks at smaller memory sizes.  To me, small memory hashing that fits
+in cache seems rather pathetic for a memory-hard algorithm, so requiring
+Lyra2 to bust into DRAM to get decent GPU defense is fine by me.
+
+Finally, I'm not a fan of the backwards incrementing addressing pattern for
+the other row to hash in the 1st loop for cache-timing resistance.
+ Depending on the XORs to provide defense bothers me since there are so
+many cases where XORs have failed us, even in PBKDF2.  Gambit, for example,
+showed very strong TMTO defense against my pebbling algorithm at the 1/8th
+memory mark even without modeling Gambit's XORs, so I believe it is TMTO
+secure.  Without the XORs, Lyra2's first loop is weak against pebbling
+attacks, so I need to be convinced that the XORs provide the needed
+defense.  Given how XORs have let us down before, that's a difficult bar to
+reach.  I would recommend doing a bit more than just an XOR, or changing
+the memory access pattern to one that is more secure.
+
+That's all I have for the overall negatives.  Most of this can be fixed, I
+think, in the tweak period.  Even with the negatives, Lyra2 is among my
+favorite algorithms.  I saw a number of potential goobers in the code.
+ These aren't really negatives, just places the authors should double check:
+
+
+I think there may be a bug in sse/Sponge.c.  If not, at a comment
+explaining how this works is in order.  Here's the Blake2b implementation:
+
+static inline void blake2bLyraSSE(__m128i *v){
+    __m128i t0, t1;
+
+    ROUND(0);
+    ROUND(1);
+    ROUND(2);
+    ROUND(3);
+    ROUND(4);
+    ROUND(5);
+    ROUND(6);
+    ROUND(7);
+    ROUND(8);
+    ROUND(9);
+    ROUND(10);
+    ROUND(11);
+}
+
+Here's the ROUND definition:
+
+#define ROUND(r) \
+  G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  DIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  UNDIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]);
+    ROUND_LYRA(11);
+}
+
+Macros can be really weird, but it looks to me like ROUND(r) is not a
+function of r.  This might cause the SSE version to have an insecure PRK.
+ However, it generates the same hash result as the reference version.  Is
+this macro really doing a proper Blake2b round, or is this some altered
+version?
+
+Here's another minor point  in the code:  Is this legal?
+
+    __m128i *wholeMatrix = malloc(nRows * rowLenBytes);
+
+I've seen code like this crash on some platforms.  Malloc only guarantees
+8-byte boundary alignment, and this requires 16-byte alignment.
+ Using posix_memalign or similar should fix it.
+
+There's a minor printf mistake in Main.c, line 214, memory size says
+'bits', but should be 'bytes'.  That's a factor of 8X in speed in 1 typo!
+
+Lyra2 allows t_cost == 0, with no wandering phase.  This seems a bit
+dangerous...
+
+On line 192 of non-sse Lyra2.c, why xor state[0] with prev?  Since state[0]
+is random, xoring with prev leaves it random but different.
+
+Both the reference and SSE optimized code only work for little-endian
+architectures.  I didn't see that acknowledged anywhere, but I didn't read
+the documentation carefully.  There's still work to be done to support
+big-endian machines.
+
+Bill
+
+
+

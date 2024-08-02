@@ -1,0 +1,30 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20151007223813.GA18621@openwall.com>
+Date: Thu, 8 Oct 2015 01:38:13 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sat, Sep 19, 2015 at 07:02:51PM +0200, Thomas Pornin wrote:
+The code includes some generic Base64 encoder/decoder (about 150 lines),
+then code specific to Argon2i (about 200 lines), and some test vectors.
+The Base64 code is constant-time with regards to the data contents (no
+data-dependent table lookups or branches); this is probably useless in
+most situations, but easy enough to achieve.
+
+It is in fact (at least theoretically) desirable to have salt decoding
+cache-timing-safe when (or just in case) the hashing scheme itself is
+not cache-timing-safe or/and the hash comparison is not timing-safe.
+
+This also means that en/decoding the salt, instead of using it verbatim,
+results in extra risk.  Yet we seem to have chosen to do that to provide
+a more generic interface to the underlying hashing scheme.  (I did post
+this sort of rationale in here.  I should have mentioned the above
+drawback in that same message.)
+
+While we probably can implement things safely ourselves, third-party
+implementations are a (bigger) concern.
+
+Alexander
+

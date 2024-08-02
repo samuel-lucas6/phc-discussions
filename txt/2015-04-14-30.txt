@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150414223935.GA8300@openwall.com>
+Date: Wed, 15 Apr 2015 01:39:35 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+On Wed, Apr 15, 2015 at 01:29:30AM +0300, Solar Designer wrote:
+Dmitry - you claim that "[...] it allows to reduce the memory by the
+factor of 12 or even higher while still reducing the area-time product."
+Since table 2.1 only goes to 1/11, for depth 32.8, and you say that "In
+concrete proposals, s can be 64, 128, 256 and even larger", I guess this
+"factor of 12" applies to the next column in the table (not shown),
+where depth would presumably be in the 32.8 to 64 range?  Do I interpret
+this correctly?
+
+Hmm, probably not correct interpretation.  I was thinking of needing to
+store occasional full blocks anyway, but then the attack doesn't make
+sense.  So this probably corresponds to storage of one sub-block per
+block (and then re-running the whole thing storing 2nd sub-block, etc.),
+and some column in the middle of the table.  Right?
+
+Doesn't appear to apply to yescrypt, because:
+
+However, the attack would appear to rely not only on the last
+sub-blocks, but also on occasional full blocks, so I don't see how it'd
+improve upon the higher-level TMTO attack alone.  The last sub-block of
+output of each BlockMix_pwxform depends on the entire input block, and
+if you never store entire blocks then you'd need to restart computation
+from block 0 in order to reach a block's last sub-block.
+
+Alexander
+

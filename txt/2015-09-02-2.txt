@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Comments on Argon2 v1.2.1
+
+Message-ID: <CALW8-7Lyt86XY8Pxx3nx3QNUCk1PxMVbsaWPk_qP3hRP9P9WfA@mail.gmail.com>
+Date: Wed, 2 Sep 2015 11:32:08 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Comments on Argon2 v1.2.1
+
+Hi Andrew,
+
+that's great! Thanks for an independent implementation. For your comments:
+
+On Wed, Sep 2, 2015 at 8:33 AM, Andrew Ekstedt <andrew.ekstedt@...il.com>
+wrote:
+
+>
+>
+When computing the initial hash H_0, the reference implementation calls
+blake2b_final twice, discarding the result of the first call. This
+is a problem because blake2b_final is not idempotent; the result of
+the second call is different from the result of the first.
+>
+It also makes things difficult for the Go implementation because the
+BLAKE2b library for Go is careful to make its Final method idempotent.
+>
+>
+https://github.com/khovratovich/Argon2/blob/d9304a5ecac9fc5b47befd25cbfce6ed026042fe/Source/Core/argon2-core.cpp#L339
+
+
+It is a bug! There should not be this 'tmp' variable and its blake2_final
+call.
+
+
+>
+>
+---
+>
+Section 3.2  of the spec states that when initializing the matrix,
+B[i][0] and B[i][1] are computed from the Argon2 block permutation G,
+but the reference implementation uses blake2b_long instead.
+>
+>
+https://github.com/khovratovich/Argon2/blob/d9304a5ecac9fc5b47befd25cbfce6ed026042fe/Source/Core/argon2-core.cpp#L268
+
+
+The specification is wrong here (the entire text for some weird reason
+comes from version 1.0).
+
+
+
+>
+>
+---
+>
+Section 3.3 describes how to obtain the final output of Argon2:
+>
+        The hash function is applied iteratively to B_m, each time
+        outputting the first 32 bytes of the 64-byte hash value, until
+        the total number of output bytes reaches τ.
+>
+The reference implementation defines a function blake2b_long to perform
+this, but deviates from the above description in the following ways:
+>
+* the input to the first hash is prefixed with
+  the output length τ (4 bytes, little-endian)
+>
+* if τ is less than or equal to 64 bytes, blake2b_long computes BLAKE2
+  with a digest size of τ and returns the entire result. Note that this
+  is not equal to the τ- truncated 64-byte hash because BLAKE2 includes
+  the digest size in the hash calculation.
+>
+* if τ is greater than 64 bytes, the first output blocks are computed as
+  specified, and the last 33- to 64- byte block is computed as above
+>
+>
+https://github.com/khovratovich/Argon2/blob/d9304a5ecac9fc5b47befd25cbfce6ed026042fe/Source/Blake2/blake2b-ref.cpp#L396
+>
+>
+>
+Again, the reference implementation is correct here, but specification must
+be changed.
+
+I will update the spec and change the reference implementation (remove the
+tmp variable and its Blake2 call). This will change the test vectors.
+
+Thank you again,
+-- 
+Dmitry
+
+
+

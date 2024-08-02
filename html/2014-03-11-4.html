@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply latency reduction via table lookups</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5PcZ14=LJfNTKETasi9O7E8=sWEouSXBWiE8O9QcrxZg&#64;mail.gmail.com&gt;
+Date: Tue, 11 Mar 2014 05:10:45 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply latency reduction via table lookups
+
+On Tue, Mar 11, 2014 at 1:05 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; Epiphany has single-cycle reads from the core's local memory (32 KB), at
+&gt; clock rates up to 800 MHz for 65nm and up to 1 GHz for 28nm (I'm not
+&gt; sure if this is limited by timings or rather by energy efficiency, which
+&gt; Epiphany focuses on, and even if by timings the bottleneck might be
+&gt; elsewhere).  Reads from nearby cores' local memory (thus, extra 128 KB)
+&gt; cost 3 cycles more.
+
+Could be size, too.  The RAM is the one thing that doesn't shrink, and
+if you want it to go 2X faster, it usually makes it a lot larger.  2X
+larger isn't the right number, but it's close enough to get a feel for
+it.  This is one reason small RAMs are so much more expensive then
+large block RAM, even on the same chip.
+
+&gt;&gt; The fastest small RAM timings I've read
+&gt;&gt; have been around 1ns, so there's no help there, but I have not read
+&gt;&gt; timing for 28nm RAMs.
+&gt;
+&gt; POWER7's 2 cycle latency at 3.55 GHz is 0.56ns.
+
+That's a pretty sweet cache RAM.
+
+&gt;&gt; At the very least, multiplication makes it much more challenging to
+&gt;&gt; make it go fast.
+&gt;
+&gt; It certainly appears so.
+&gt;
+&gt;&gt; I'm not sure if RAMs will help or not... I would
+&gt;&gt; have to try it out.  Are there any RAM designers we can ask?
+&gt;
+&gt; I'm not sure.  We could try asking Andreas about their experience with
+&gt; Epiphany's local memory and whether it'd go at much higher clock rates,
+&gt; as well as if it can be made larger while maintaining the latency.
+&gt;
+&gt; Alexander
+
+I'd bet he could tell us.  It's dumb, but the guys who sell IP like
+embedded RAMs wont tell you their performance until you get an NDA and
+convince them you are a potential buyer.  That just makes it hard to
+figure out if you would like to buy their product.  For example:
+
+<a href="http://www.businesswire.com/news/home/20131028006116/en/sureCore-Tapes-out-Power-SRAM-IP-Demonstrator-Chip#.Ux7O7_mwJcR" rel="nofollow">http://www.businesswire.com/news/home/20131028006116/en/sureCore-Tapes-out-Power-SRAM-IP-Demonstrator-Chip#.Ux7O7_mwJcR</a>
+
+The press release says they have a 28nm SRAM IP that cuts power in
+half.  Half from what?  How fast is it?  How big is it?  If you go to
+their web site, they don't even mention what IP they sell, just that
+they sell IP.  You have to send them an email to find out.  I read a
+Ph.D. thesis recently that covered advances in multiplier design, and
+they had a table comparing various architectures at 28nm.  All the
+units had been removed and the slowest speed had been replaced with
+1.0, and the rest were relative.
+
+It's the same way with mask costs.  No one will tell you they require
+$1M up front to make the reticles at 28nm.  Is it only $750K now days,
+or is it still &gt; $1M?  Who knows?  Maybe Andreas does.  He's the guy
+who makes super-tiny chips so he can build them in low volume at 28nm,
+right?  I like his 4096 core variant a lot more than his 64 core
+version.  The difference is most likely that huge up-front mask cost.
+
+However, someone is going to build that device or one like it with a
+full mask set and at least 1cm^2 of silicon at 28nm.  It's going to
+have a sick number of cores, and it will probably hash Bcrypt like
+nothing we've seen before.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

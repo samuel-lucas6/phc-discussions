@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <20150905124823.GA27458@openwall.com>
+Date: Sat, 5 Sep 2015 15:48:23 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+Bill,
+
+We're mostly in agreement, except:
+
+On Sat, Sep 05, 2015 at 05:07:39AM -0700, Bill Cox wrote:
+On Fri, Sep 4, 2015 at 5:11 PM, Solar Designer <solar@...nwall.comwrote:
+Can you tune Argon2d and TwoCats for same defensive throughput per CPU
+chip (with multiple independent concurrent instances), rather than for
+same defensive latency, for a comparison like this?
+
+This would be ideal, in that having only password hashing running on a CPU
+solves problems related to how these algorithms do not work and play well
+with other services on the same CPU.
+
+That's not what I meant.  While I suggest benchmarking per CPU chip,
+this doesn't mean that deployments will necessarily have to dedicate CPU
+chips to the task.  Sharing of CPUs with other authentication service
+functionality is fine, and is in fact preferable over introducing an
+extra network connection between authentication and hashing services.
+Sharing with unrelated services isn't great from a security standpoint,
+but is OK from resource usage standpoint.
+
+You seem to imply that sharing with other unrelated processing will
+result in a substantial efficiency drop for the hashing, but I doubt it
+will, not even when you tune for targeting L3 cache rather than RAM
+bandwidth.  Few other tasks are nearly as bandwidth demanding and have
+similar locality of reference.  So even if you see substantial
+efficiency drop when exceeding 3x 4 MiB concurrent hashes on your 12 MiB
+L3 cache CPU, this doesn't mean there would be as significant an
+efficiency drop for the hashing when running other unrelated tasks
+concurrently.  And for yescrypt's defaults, which assume that the memory
+is primarily RAM and not L3 cache, the impact of other tasks' cache
+thrashing would be even less.  And the hashing's impact on other tasks
+is small too.  We've been through this discussion in here already.
+
+Another aspect is that during a request rate spike such that password
+hashing becomes the primary bottleneck most of the CPU time would in
+fact be spent on the password hashing, by definition of it being the
+primary bottleneck.  And it's target request rate capacity in a scenario
+like this that will determine the password hashing scheme choice and
+cost settings.  1 vs. 2 milliseconds latency when using 1 CPU core is
+mostly irrelevant, regardless of whether the (multi-core) CPU is shared
+with other tasks or not.
+
+Alexander
+

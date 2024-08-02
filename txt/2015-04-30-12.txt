@@ -1,0 +1,120 @@
+phc-discussions - Re: [PHC] yescrypt AVX2
+
+Message-ID: <20150430141407.GA24989@openwall.com>
+Date: Thu, 30 Apr 2015 17:14:07 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt AVX2
+
+Just a status update for those interested, as well as some info on
+optimization for AVX2 and Haswell:
+
+On Sat, Apr 25, 2015 at 11:09:59AM +0300, Solar Designer wrote:
+So I thought that AVX2 could be of significant help even when pwxform is
+tuned for 128-bit gather lanes, like we want it to be for better
+bcrypt-like anti-GPU on the (currently widespread) machines that can
+only do 128-bit SIMD and not wider yet.
+
+It appears that I was mostly wrong, speaking of AVX2 as implemented in
+Haswell.  My expectation for AVX2 working reasonably well even when
+"misused" like that was based on my previous experiments (unreleased)
+with 64-bit bcrypt-like S-box lookups in 128-bit SIMD code, on SSE*/AVX
+where we have _mm_loadl_epi64() and _mm_loadh_pi() to efficiently load
+64-bit halves of a 128-bit register.  On SSE4.1, there are also
+instructions to extract 32- or 64-bit words from anywhere in a 128-bit
+register.  I thought it'd be similar for 128-bit loads to 256-bit
+registers.  However, it turns out there's a 3 cycle latency to access
+the upper 128-bit halves of 256-bit registers on Haswell, such as with
+_mm256_inserti128_si256() and _mm256_extracti128_si256() or
+_mm256_permute4x64_epi64(), and the word-extract instructions do not
+directly operate on the upper 128 bits.  So it's 3 cycles to extract
+would-be S-box indices from there, and it's another 3 cycles to load the
+S-box lookup result in there.  Oops.
+
+Now, there may be hacks around some of this, such as by doing a 256-bit
+load from 16 bytes below the desired offset (thereby loading the lower
+128 bits with garbage and the upper 128 bits with what's needed) and
+then loading the lower 128 bits with what's needed there.  I've tried
+this, and it works, but at least without a change to data layout to make
+those 256-bit loads always (rather than half of the time) 256-bit
+aligned the performance is no better than with
+_mm256_inserti128_si256().
+
+OK, that hack was unneeded: we have _mm256_broadcastsi128_si256(), which
+when translated into vbroadcasti128 directly accepts a 128-bit memory
+operand, so can load a 256-bit register's high 128 bits (and also low
+128 bits) from a 128-bit aligned offset without incurring an unaligned
+load.  It's also a 3 cycle latency instruction, but at least there's no
+further overhead above that.
+
+Also, when implementing at intrinsics level,
+I resorted to using a combination of _mm256_loadu_si256() and
+_mm256_blend_epi32(),
+
+It appears that blend is still needed.  With broadcast and blend, I get
+some speedup:
+
+Benchmarking 1 thread ...
+720 c/s real, 725 c/s virtual (1023 hashes in 1.42 seconds)
+Benchmarking 8 threads ...
+3653 c/s real, 471 c/s virtual (7161 hashes in 1.96 seconds)
+
+vs. AVX:
+
+Benchmarking 1 thread ...
+930 c/s real, 930 c/s virtual (1023 hashes in 1.10 seconds)
+Benchmarking 8 threads ...
+3410 c/s real, 433 c/s virtual (7161 hashes in 2.10 seconds)
+
+That's 7% faster at 8 threads (and 23% slower at 1 thread).
+
+since I guess _mm256_castsi128_si256() is not
+meant to be used on the left-hand side.  When implementing in assembly,
+I think it can be two loads (no need for a blend instruction), but I
+doubt it'd be any faster (same instruction count, and blend is fast).
+
+Yes, the cast macros are not usable on the left-hand side, at least not
+with gcc.  Trying to do it with inline asm:
+
+#define LOAD2X128(hi, lo) ({ \
+	register __m256i out asm("ymm0"); \
+	__asm__("\n\tvbroadcasti128 %1,%%ymm0" \
+		"\n\tmovdqa %2,%%xmm0" \
+		: "=xm" (out) \
+		: "xm" (hi), "xm" (lo)); \
+	out; \
+})
+
+I got ridiculous speeds - like 30 times lower.  The compiled code looks
+not _that_ bad (indeed, inline asm isn't good for gcc's instruction
+scheduling), so I guess Haswell itself imposes a huge penalty on such
+use.  Thus, my best AVX2 with 128-bit S-boxes code so far is:
+
+#define PWXFORM_X_T uint64_t
+#define PWXFORM_SIMD(X, M, x, y, s0, s1) \
+	M = _mm256_and_si256(X, _mm256_set1_epi64x(Smask2)); \
+	x = EXTRACT64(_mm256_castsi256_si128(M)); \
+	y = EXTRACT64(_mm256_extracti128_si256(M, 1)); \
+	s0 = _mm256_blend_epi32( \
+	    _mm256_broadcastsi128_si256(*(const __m128i *)(S0 + (uint32_t)y)), \
+	    _mm256_castsi128_si256(*(const __m128i *)(S0 + (uint32_t)x)), 0x0f); \
+	s1 = _mm256_blend_epi32( \
+	    _mm256_broadcastsi128_si256(*(const __m128i *)(S1 + (y >32))), \
+	    _mm256_castsi128_si256(*(const __m128i *)(S1 + (x >32))), 0x0f); \
+	X = _mm256_mul_epu32(_mm256_srli_epi64(X, 32), X); \
+	X = _mm256_add_epi64(X, s0); \
+	X = _mm256_xor_si256(X, s1);
+
+and it's still not consistently better than AVX.
+
+It's good news that attackers probably also can't use Haswell to attack
+yescrypt hashes tuned for older CPUs (with 128-bit S-box lookups) much
+faster.  It's bad news that defenders can't benefit from Haswell either.
+
+So the conclusion so far stays the same: need to specifically tune
+pwxform for 256-bit or wider S-boxes to have it run faster on Haswell,
+if desired.  (This is easy to do, and is within currently specified
+yescrypt, as I've already demonstrated by trying 512-bit.)
+
+Alexander
+

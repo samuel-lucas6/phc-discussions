@@ -1,0 +1,146 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140111192317.GA7038@openwall.com>
+Date: Sat, 11 Jan 2014 23:23:17 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Bill,
+
+On Sat, Jan 11, 2014 at 10:50:53PM +0400, Solar Designer wrote:
+I don't get why limiting the number of threads to what the code can
+actually use (with its p=8 setting) reduces performance on this test,
+
+Got it: I totally forgot that I had another 32-thread job running on the
+machine, at the lowest priority (nice +19).  So when I ran only 8 new
+threads, they shared cores with that other job, whereas when I ran all
+32 new threads, they almost fully replaced the other job (apparently,
+OpenMP's spinning threads were taking up less resources than that other
+job's actual computation threads).
+
+With that other job stopped, I get the following numbers for 1 Salsa20
+round, p=8, and only 8 running threads:
+
+real    0m1.483s
+user    0m11.398s
+sys     0m0.383s
+
+2*3*10*2^30/10^9/1.483 = 43.44 GB/s
+
+Ditto, 2 rounds:
+
+real    0m1.723s
+user    0m13.331s
+sys     0m0.370s
+
+2*3*10*2^30/10^9/1.723 = 37.39 GB/s
+
+4 rounds:
+
+real    0m2.485s
+user    0m19.404s
+sys     0m0.383s
+
+2*3*10*2^30/10^9/2.485 = 25.93 GB/s
+
+8 rounds:
+
+real    0m4.256s
+user    0m33.547s
+sys     0m0.367s
+
+2*3*10*2^30/10^9/4.293 = 15.01 GB/s
+
+So it appears that on the idle machine (as it should have been), 8
+threads are almost enough to use the 8 memory channels, but not enough
+to reach similar GB/s speeds when Salsa20 rounds count is increased.
+
+Roughly same speed as for p=8.  That's good.  But now we can go for 32
+threads for real:
+
+real    0m1.293s
+user    0m39.497s
+sys     0m1.141s
+
+New speed for 1 Salsa20 round and p=32, on idle machine:
+
+real    0m1.286s
+user    0m39.523s
+sys     0m1.183s
+
+Not much change here. :-)
+
+2*3*10*2^30/10^9/1.286 = 50.10 GB/s
+
+Back to 2 rounds of Salsa20:
+
+real    0m1.316s
+user    0m39.959s
+sys     0m1.353s
+
+2*3*10*2^30/10^9/1.316 = 48.95 GB/s
+
+real    0m1.305s
+user    0m40.109s
+sys     0m1.242s
+
+49.37 GB/s
+
+4 rounds:
+
+real    0m1.412s
+user    0m43.291s
+sys     0m1.130s
+
+2*3*10*2^30/10^9/1.412 = 45.63 GB/s
+
+real    0m1.404s
+user    0m43.245s
+sys     0m1.229s
+
+45.89 GB/s
+
+8 rounds:
+
+real    0m1.694s
+user    0m52.293s
+sys     0m1.068s
+
+2*3*10*2^30/10^9/1.694 = 38.03 GB/s
+
+real    0m1.684s
+user    0m52.329s
+sys     0m1.109s
+
+38.26 GB/s
+
+So the same conclusions still apply:
+
+If we stay with pure Salsa20, then maybe 8, 4, or 2 rounds is optimal.
+There's only a 2% speedup from going further to 1 round.
+
+In fact, if we were to regard only the Salsa20 rounds as computation
+that the attacker will need to perform, then even round counts higher
+than 8 could be more optimal in attack area*time terms, from defender's
+point of view.  Since GB/s is proportional to memory usage for fixed
+running time (or actually the other way around), we can estimate AT
+costs (in arbitrary units) as follows:
+
+48.95 GB/s * 2 rounds = 97.90
+45.63 GB/s * 4 rounds = 182.52
+38.03 GB/s * 8 rounds = 304.24
+30.43 GB/s * 12 rounds = 365.16
+19.93 GB/s * 20 rounds = 398.60
+
+... but these are with all cores in use.  With only 8 threads running,
+lower Salsa20 round counts are more beneficial.
+
+However, in practice the "overhead" XORs and ADDs are probably no less
+costly than those that are part of Salsa20 rounds, so 4 or 8 rounds may
+be good.  2 rounds does feel potentially worse in terms of significantly
+reduced computation (and thus potentially similarly reduced "time"
+factor for the attacker with a more suitable hardware architecture).
+
+Alexander
+

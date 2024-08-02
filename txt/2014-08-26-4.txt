@@ -1,0 +1,201 @@
+phc-discussions - Quick analysis of Argon
+
+Message-ID: <53FCA151.6060704@ciphershed.org>
+Date: Tue, 26 Aug 2014 11:01:37 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Quick analysis of Argon
+
+Argon has been on my list as a well written, well thought out PHC
+entry, and the author even invited me a while back to benchmark it,
+which I will do a bit here.
+
+First, it was developed with modern SIMD architectures in mind.  To
+me, this differentiates a lot of the candidates from the others.  It
+is simply not possible to make a great high performance password
+hashing function without understanding the impact of SIMD
+instructions.  The Argon author not only took SIMD into account, but
+also used the AES-NI instructions to good effect.  Because of the
+attention paid to efficiency, Argon is relatively fast compared to
+many submissions.  It is possible to use it for 1GiB hashes on modern
+PCs without a totally unreasonable delay (closer to 1 second rather
+than 1 minute is basically my threshold).  One of the best parts of
+Argon is it's simplicity.  Even the optimized code is easy to read,
+and I found no bugs.
+
+When run with t_cost = 1, as I would generally prefer, I would call
+this a "hybrid" design.  The first loop, SubGroups, does no password
+dependent addressing, and is cache-timing attack resistant during this
+pass.  In the second loop, ShuffleSlices, data derived from the
+password is used to pick pseudo-random locations for swapping.  This
+provides much stronger password defense against off-line brute-force
+attacks than a purely cache-timing resistant algorithm, while
+providing good defense against brute-force password guessing even if
+the attacker has cache-timing data.
+
+Minor nit picks:
+- Calling memset to clear the Input array does not work.  Check out
+Black2b's secure_zero function
+- Unindent the #ifdef on line 394 of the optimized linux code.
+- To compile on Ubuntu 14.04, I had to change -lpthread to -pthread
+
+The code does a clean job hashing all input parameters.  It was a bit
+tricky convincing myself that he did not leave any room for collisions
+with different input parameters, but I believe it now.
+
+Bigger concerns:
+
+- Fixed parallelism benefits attackers
+
+The built-in 32-way parallelism can rarely be fully used by users, but
+attackers can always use it.  This issue can be fixed by adding the
+number of threads to the Input array, and using only that number of
+"groups", rather than hard-coding it to 32.  The thread count *has* to
+be an input parameter that effects the output unless we want to give
+the attacker a free max parallelism bonus.
+
+- Lack of initial key derivation forces compute intensive memory
+operations, and leaves sensitive data scattered through memory for too
+long.
+
+The Input array is properly built.  However, the right thing to do at
+that point is to create a cryptographic hash summary of it, and zero
+it out.  This intermediate derived key should then be used to
+initialize memory.
+
+As it is, Argon copies sensitive data from the Input array to various
+places in state memory, making it far more likely to be written to
+disk on a hibernate, or if swapped.  The Input array is not cleared
+until memory is fully initialized.  The clear text Input data in state
+memory is not scrambled until the SubGroups operations in the next
+memory pass.  The entire memory is first zeroed by Linux, then written
+in the initialization, then read during SubGroups while doing compute
+intensive AES rounds, and finally memory is over-written.
+
+The right place to clear the input data is after deriving the
+intermediate key, and before allocating state memory.
+
+Because there is highly sensitive data in memory, Argon *must*
+scramble all of memory with cryptographically strong hashing or risk
+revealing the password.  This excessive hashing is primarily what
+makes Argon run slow.
+
+- Memory access pattern benefits attackers with custom cache memories
+
+An attacker with a custom cache architecture could benefit from the
+32x parallelism in ShuffleSlices.  Because of the memory interleaved
+access pattern, users will see these operations running mostly
+sequentially, regardless of the number of threads.
+
+The ShuffleSlices algorithm defines a "slice" as memory locations
+separated by 32.  There are 32 such slices in the "state".  First,
+multi-threading performance for is terrible when the threads access
+the same memory in an interleaved pattern.  Second, these accesses
+will be done mostly sequentially, even though there is room for 32X
+parallelism.  An attacker with a custom cache architecture can add an
+extra read/write port to the cache and organize memory into 32 smaller
+caches containing only data at multiples of 32 apart.  The attacker
+with a custom cache will make full use of the 32x parallelism.  This
+parallelism can be applied to password hashing whether doing a 16MiB
+cache-bound hash, or a 1GiB hash of external memory.
+
+- The memory hashing is too slow
+
+Every even memory location has it's data scrambled with the next
+higher location.  A clever scheme reduces the latency to 5 AES rounds
+rather than 10, likely without sacrificing security.  However, what
+exactly is the point of securely hashing memory?  In Argon's case,
+sensitive data was stored there such as the password in plain text, so
+memory has to be cryptographically hashed.  Had only data created from
+the derived key been written to memory, a much faster 1-round of AES
+could have been used.
+
+- Intel specific AES-NI instructions are used
+
+These instructions are awesome, but limit the applicability of Argon.
+ For large password server based authentication, the server can be
+required to support AES-NI.  However, for an application such as
+full-disk-encryption, there are lots of users who will not have access
+to these instructions.  As a result, Argon would be far slower than
+Script for these users.
+
+Benchmarks
+----------
+
+I ran this on my 3.4GiH quad-core Ivy Bridge Core i7 processor, with
+8GiB CORSAIR Vengence 1600MHz DDR3 memory.  I tweaked the number of
+threads to minimize delay.
+
+16MiB run:
+
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 14 -tcost 1
+-pwdlen 64 -saltlen 16 -threads 5
+Memory allocated: 16 MBytes, 5 threads
+Argon:  5.57 cpb 86.99 Mcycles 0.0614 seconds
+
+real	0m0.028s
+user	0m0.059s
+sys	0m0.003s
+
+1GiB run:
+
+Linux-AES-NItime Argon-Optimized -taglength 32 -logmcost 20 -tcost 1
+-pwdlen 64 -saltlen 16 -threads 6
+Memory allocated: 1024 MBytes, 6 threads
+Argon:  6.58 cpb 6580.35 Mcycles 7.4787 seconds
+
+real	0m2.035s
+user	0m7.383s
+sys	0m0.097s
+
+This isn't too bad.  The 1GiB runtime is a bit slower than Script with
+1 thread, though, so I do not consider this an improvement over Script
+performance.  The 32X built-in parallelism I believe will make Argon
+more susceptible to GPU attacks than Script as well, at least for the
+SubGroup portion.  The pseudo-random 16-byte accesses in ShuffleSlices
+should provide some GPU defense, but because they are over the whole
+memory, users will also be slowed down considerably by these accesses.
+
+While the code is well written, I do not feel Argon currently provides
+better security than Script.
+
+For comparison, here's TwoCat's benchmarks run in the same way:
+
+16MiB run:
+
+twocatstime ./twocats -m 14 -P1
+hash:blake2s memCost:14 timeCost:0 multiplies:2 lanes:8 parallelism:1
+algorithm:twocats-extended password:password salt:salt blockSize:16384
+subBlockSize:64
+
+97 95 79 57 81 2d 77 40
+a5 b5 db 98 b7 ea 26 f9
+ad fc 7f ea 14 c4 40 8e
+66 7f 34 ff 0e 3c 39 69      32 (octets)
+
+
+real	0m0.007s
+user	0m0.005s
+sys	0m0.003s
+
+1GiB run:
+
+twocatstime ./twocats -m 20 -P2
+hash:blake2s memCost:20 timeCost:0 multiplies:2 lanes:8 parallelism:2
+algorithm:twocats-extended password:password salt:salt blockSize:16384
+subBlockSize:64
+
+3b f7 f6 60 e2 44 96 9c
+4c a9 b2 ed 87 27 0b 58
+23 0c 5f 58 35 07 2b 82
+24 c8 9f dc f9 d5 c2 b8      32 (octets)
+
+
+real	0m0.171s
+user	0m0.252s
+sys	0m0.084s
+
+Every factor of 10 counts :-)
+
+Bill
+

@@ -1,0 +1,67 @@
+phc-discussions - Fwd: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+
+Message-ID: <CAOLP8p7Qy6mWdRaUwNp3PYzNgADiXeAJunt0h0XANpDOOZJBjw@mail.gmail.com>
+Date: Sun, 9 Feb 2014 09:04:53 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Fwd: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Gary thought a reply to the list might make sense... I don't know how
+many readers we have that would benefit, but in any case, here's my
+response to Gary's request for an explanation of the multiply by a
+constant stuff I wrote:
+
+---------- Forwarded message ----------
+From: Bill Cox <waywardgeek@...il.com>
+Date: Sun, Feb 9, 2014 at 8:59 AM
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+To: "Gary W. Hvizdak" <gary.hvizdak@....rr.com>
+
+
+That last part is about the complexity of multiplication with a
+constant as one operand vs two variables.  We build multipliers in
+silicon much the way you do it by hand, with rows of partial products
+that we then add together to get a result.  The partial products are
+either 0 or the upper value shifted left some distance, since we only
+multiply by 0 or 1.  Adding the partial products together is easily
+done with "carry save adders", which are just adders with and AND gate
+on one input, so that we either add 0 or the value shifted by some
+distance.  This would normally take 32 32-bit carry-save adders to do
+a 32x32 multiply.
+
+Some genius figured out that you can build a subtractor just as easily
+as an adder, and that with an XOR gate on the input, you can build an
+adder/subtractor that can do either.  With clever encoding of one
+operand, called "Booth encoding", you can do a 32x32 multiply with
+only 16 adder/subtractors, cutting the area almost in half while
+making it faster.
+
+With one operand as a constant, we can pre-compute the optimal way to
+have the non-constant operand shifted and added/subtracted.  For
+example, any multiply by a constant with only 2 bits set to 1 can be
+implemented with a single adder.  For example 12*a = (8 + 4)*a = 8*a +
+4*a = (a << 3) + (a << 2).  If I want to compute 15*a, I can do it as
+15*a = (16 - 1)*a = 16*a - a = (a << 4) - a.  Shifting in hardware is
+free.  You just move the wires.  So, multiplication by 15 takes one
+subtractor.
+
+You don't have to do power-of-two decomposition of a constant.  We do
+that because shifting is free.  For example, to compute 13*a we can
+first compute 3*a = (a << 1) + a.  We then can compute (16-3)*a = (a
+<< 4) - 3*a.  This requires an adder and a subtractor.
+
+In general, if we can find a way to add and subtract and shift numbers
+starting with 1 that add up to a constant, we only need the number of
+adder/subtractors used to build a multiplier by that constant.  That's
+why it's an interesting problem to find the minimum number required
+for any given constant.  I wrote a quick inefficient hack to do it.
+Samual pointed out a standard program used to do it that runs much
+faster.
+
+In any case, multiplication by a constant is too fast in custom
+hardware compared to multiplying two variables, so I'm not switching
+to the hash function Alexander suggested.
+
+Bill
+

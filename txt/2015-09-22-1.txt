@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <CAGiyFdepbABQuVJrBASLk1jBbbKx=9Z=SodwCZmO1LA1XLHx1g@mail.gmail.com>
+Date: Tue, 22 Sep 2015 14:32:47 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+At the moment the specs doesn't coincide with the sample implementation
+(parameters order, keyid/data). Should we..
+
+*  Authorize parameters in arbitrary order, or in a predefined order?
+
+* Freeze the specification of "keyid" and "data"? (is the keyid mandatory
+for Argon2, compared to a mere "key=.."?)
+
+Here's the link to the specs with edit rights:
+https://docs.google.com/document/d/1QJva4xsY3eHNm2YiT0yPS9spRqd-N8NamYRpF5lkIzM/edit?usp=sharing
+(please
+report any change)
+
+For a preliminary check of Thomas' code, tweeted this:
+https://twitter.com/veorq/status/646326661491879937
+
+Thanks!
+
+On Sun, Sep 20, 2015 at 7:18 PM Jean-Philippe Aumasson <
+jeanphilippe.aumasson@...il.comwrote:
+
+Great, thanks Thomas, will review.
+>
+If the code turns out to be a formal reference it'll need to mention your
+copyright and any public domain-like license you like (CC0, WTFPL, etc.).
+>
+>
+>
+On Sat, Sep 19, 2015 at 7:03 PM Thomas Pornin <pornin@...et.orgwrote:
+>
+>Hello,
+>>
+>here is some example C code that implements encoding and decoding of
+>hash strings for Argon2i.
+>>
+>According to the remarks made here, I followed rules that differ from my
+>earlier draft in the following respects:
+>>
+> -- The decoder does not validate input strings; it may accept strings
+> that do not comply with the specification (e.g. "p=01" instead of
+> "p=1").
+>>
+> -- I am using "normal" Base64 (not the crypt variant), although I do
+> not include the '=' padding signs.
+>>
+> -- I added two optional parameters "keyid" and "data", that correspond
+> to an identifier for the key (if any), and associated data. Both are
+> binary (encoded in Base64); the key ID is up to 8 bytes, while the
+> associated data is up to 32 bytes. When they are empty, they are omitted
+> (i.e. there is no difference in encoding between "no associated data"
+> and "associated data has length 0").
+>>
+> -- I set the parameter order to "m, t, p, keyid, data".
+>>
+>The code includes some generic Base64 encoder/decoder (about 150 lines),
+>then code specific to Argon2i (about 200 lines), and some test vectors.
+>The Base64 code is constant-time with regards to the data contents (no
+>data-dependent table lookups or branches); this is probably useless in
+>most situations, but easy enough to achieve.
+>>
+>>
+>This sample code is meant to give some discussion basis about
+>implementation complexity. Feel free to reuse under "public domain"
+>rules (i.e. do everything you want except blame me).
+>>
+>>
+>        --Thomas Pornin
+>>
+>
+
+
+

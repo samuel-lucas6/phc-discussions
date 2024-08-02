@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160323170231.GA6565@openwall.com>
+Date: Wed, 23 Mar 2016 20:02:31 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+Thank you all for the suggestions and criticism!
+
+On Wed, Mar 23, 2016 at 02:47:13PM +0100, Dmitry Chestnykh wrote:
+You can use it in SIV-like deterministic encryption mode to avoid nonce collisions and add authentication:
+
+iv = HMAC(Key, "yescrypt-encryption-IV" || passwordHash || salt)
+encryptedPasswordHash = iv || (PBKDF2(Key, iv) XOR passwordHash)
+
+To decrypt, generate PBKDF2 stream using the prepended IV, then XOR it with encryptedPasswordHash, generate IV with result and compare it with the attached IV.
+
+A major drawback is that this would require storage of the IVs along
+with the hashes.  That's a significant increase in storage requirements.
+
+On 23 Mar 2016, at 10:47, Dmitry Khovratovich <khovratovich@...il.comwrote:
+Simplest scheme would be SHA-256 in the counter mode.
+
+Just XOR SHA-256(Key||Nonce||0..0)||SHA-256(Key||Nonce||0..01) to the block[4], that's it.
+
+This relies on having a nonce, which is something I am trying to avoid.
+
+We do already have salts, which are preferably unique and could be
+reused, but as I mentioned before I'd like not to increase reliance on
+them being unique.
+
+Alexander
+

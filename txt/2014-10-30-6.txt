@@ -1,0 +1,135 @@
+phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Message-ID: <54526F6C.5040806@uni-weimar.de>
+Date: Thu, 30 Oct 2014 18:03:40 +0100
+From: Jakob Wenzel <jakob.wenzel@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 30.10.2014 17:39, Bill Cox wrote:
+
+
+On Thu, Oct 30, 2014 at 11:45 AM, Jakob Wenzel 
+<jakob.wenzel@...-weimar.de <mailto:jakob.wenzel@...-weimar.de>>
+wrote:
+
+On 30.10.2014 10:55, Bill Cox wrote:
+>Hi, Jacob.  This is a nice analysis.
+
+Hi Bill,
+
+Thank you!
+
+>You misread TwoCats.  It is easy to do, which is one reason I
+>wrote SkinnyCat, which indeed is vulnerable to both GC and WGC
+>attacks. However, TwoCats has strong defense against both.  I
+>would argue that TwoCats has the strongest GC and WGC defense of
+>all the entries.
+
+The attacks for skinnycat are clear. For twocats, we totally agree
+that it is strong against GC attacks (we just misread that the
+early memory within twocats is always overwritten). But, regarding
+WGC attacks, we still see the attack as described in the paper.
+According to our definition of a Weak Garbage-Collector Attack an
+algorithm is vulnerable, if it maintains a function $F$ with $y =
+F(pwd)$, where the value $y$ is later used in the hashing process.
+Thus, $y$ has to remain in memory during the time until it is used
+again at the end.
+
+For twocats (and skinnycat), the value $y$ is given by PRK, which
+is initialized with the password. PRK is later used in the
+function addIntoHash(PRK, state). Thus, it has to remain in memory
+and can be used by a WGC adversary to filter password candidates as
+described in the paper.
+
+Did we misunderstood something?
+
+
+Yes, I think so.  addIntoHash mixes state into PRK, not the other
+way around, overwriting the PRK.  This inside the garlic
+application loop. The PRK is overwritten much faster than in
+Catena, for instance.
+
+
+OK. I just had a close look to your code and now I am convinced. I
+just overlooked that PRK is overwritten for each increment of the
+garlic factor, which, when starting with MinGarlic = 0, is indeed at
+an early stage of the hash generation, rendering WGC attacks not
+applicable. Nevertheless, if I understood your code and explainations
+right, skinnycat does not support the parameters startMemCost and
+stopMemCost and thus, the proposed WGC attacks on the value PRK seems
+to work.
+
+
+>By default, Catena runs with minGarlic == maxGarlic == 18.  In
+>this mode, Catena does not begin to overwrite memory derived from
+>the password until it has finished filling memory.  During this
+>entire time, H(H(key material)) is present in memory.  If Catena
+>tries to use too much memory, this memory might get swapped to
+>disk.  If Catena is running continuously, as it might on an
+>authentication server, with lambda == 3, there is about a 1 in 4
+>chance that a cold-boot attack, DMA attack, or forced
+>hibernation, will reveal H(H(key material)).
+>
+
+For Catena-BRG, this is indeed an attack which succeeds with a
+chance of $1/(lambda+1)$. Thanks for pointing this out! We will
+recommend to use Catena-BRG with MinGarlic = 1 in the next version
+of our submission paper to thwart this attack.
+
+
+That would slow you down 2X, meaning you would lose another 2X in 
+memory*time defense against brute-force password guessing attacks.
+ Instead, please consider doing what TwoCats does, and apply
+Garlic starting at 0, but when you get close to the m_cost, just
+skip ahead and to the last level of garlic.  This enables your
+algorithm to trade-off defense against brute-force guessing attacks
+vs memory-leak attacks.
+
+I certainly have copied many good ideas from Catena.  It would be
+nice to contribute back something :-)
+
+
+We will indeed consider this idea! Thanks!
+
+Best regards,
+Jakob
+
+
+
+When considering Catena-DBG (our new instance using a
+double-butterfly graph), such an attack succeeds only with
+probability of 1/((lambda*2(logn-2))+2logn-1), which leads to a
+much stronger resistance in this case. Therefore, we plan to
+recommend MinGarlic = 1 for Catena-BRG and MinGarlic=MaxGarlic for
+Catena-DBG. What do you think?
+
+
+I'll read through it and get back to you.  Thanks for bringing
+this issue up.  I do think it is one of the more important things
+for defense.  OTOH, it does complicate algorithms...
+
+Bill
+
+
+- -- 
+Jakob Wenzel
+Research Assistant
+Chair of Media Security (Prof. Lucks)
+Bauhausstraße 11 (Room 217)
+99423 Weimar
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJUUm9sAAoJEDFlRQsgEDnD+VkIAIi3uiWrj36Mr9dfli9vcUcs
+cDGYmu44MDf3mgzcCIQ7JXWGhTCUwBNiAIxyRbLKKG6FeODGFLd/3rQJX2W4SFld
+bnQUK1AH1C6KBikkCKmeiSmFKR3lMVtybn/FOJeY2kObMYz4SteHKuL3Bgm9WBYS
+20kqMdbwlceOf7WgjZWGQmOLQOS+YfzW4Rcz76lAa+jo6h2PBMVcMbt8iBRk4UNd
+CdY65T1/jsNZY1REy0VDRbq5CkZpDr9JqiGNjeV7GSrOCx29yXd9iYqTw2KMHesB
+rBVpHHpK1/4hTGELaSRMdnr77aln/uaVGNMdMOiiFTcZpBailfX7ZBMXXUWOyQc=
+=6+p6
+-----END PGP SIGNATURE-----
+

@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] cost upgrades (Re: [PHC] Scripting memory (not so) high vs
+ Catena in PHP (with optimizations))
+
+Message-ID: <CAOLP8p6DWTWsN1M1MPqW1iC4BRMf-jjesgNesXg64QG0PcvRhQ@mail.gmail.com>
+Date: Sat, 18 Jan 2014 11:27:32 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cost upgrades (Re: [PHC] Scripting memory (not so) high vs
+ Catena in PHP (with optimizations))
+
+On Sat, Jan 18, 2014 at 9:38 AM, Solar Designer <solar@...nwall.comwrote:
+So I guess I need to read up on Catena.  Maybe it does these upgrades
+better than I had thought, avoiding or improving upon the tradeoffs I
+mentioned in the previous message in this thread.
+
+I totally stole Catena's update scheme.  All we have to do is add an
+outer loop that iterates "garlic" number of times, computing the hash
+with the user's password.  Inside the loop, at the end, we double the
+memory.  This makes the scheme take 2X longer for the same memory
+usage (for garlic == 3, it does 8*m_cost + 4*m_cost + 2*m_cost +
+m_cost), so it's not ideal, but it is trivial to take the hash for
+garlic = g, and compute the hash for garlic = g+1.  The input to each
+loop iteration is just the output from the previous.
+
+So, for brand spanking new hashes, set garlic = 0, so the user has no
+penalty at all.  As the password hash ages, incrementing the garlic
+can help.  If the user ever does log in again, maybe the server can
+recompute a hash for a higher m_cost, and set garlic back to 0.
+
+I've shamelessly stolen other good ideas, too, such as Blakerypt's use
+of a session key when available, and a few of your ideas.  Maybe if,
+in the very unlikely even that NoelKDF is chosen, I can add those who
+contributed ideas as official-ish authors if they allow?  This sharing
+of ideas in a competition is super cool, but also very unusual.  My
+13-year-old daughter says we must all be terrible competitors.
+
+By the way, I'm quite interested in access to your high-end machines,
+but I have enough on my plate now that I'm back to my real job that I
+wont need access for some time.  I'll email you when I need it, and
+thank you for the offer!
+
+Bill
+

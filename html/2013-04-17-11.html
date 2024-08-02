@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] Let's not degenerate when if the PRF is too narrow for desired output</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;003d01ce3b8b$6db6ea00$4924be00$&#64;acm.org&gt;
+Date: Wed, 17 Apr 2013 09:48:45 -0700
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;,
+	"'Jeffrey Goldberg'" &lt;jeffrey&#64;...dmark.org&gt;
+Subject: RE: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Funny, Marsh Ray and I were discussing the problems with PBKDF2 last month.  Here are my latest thoughts:
+
+There are two problems.  First, asking for more key from PBKDF2 does not increase the work factor if parallel execution is possible.  Secondly, parallel execution allows PBKDF2 to be used selectively to attack parts of the key, as discussed on this thread.
+
+The requirement should be that all of the key needs to be generated to know what any of its bits are.  That usually means that it can't be parallelized either and/or there is an end-game on the results that effectively makes every output block produced from the key dependent on having produced all of them.  
+
+ 1. The first (and probably best) solution is to use a PBKDF2 PRF whose output block (the tag) size is at least as large as the desired derived key.
+
+ 2. Another is to wait for Keccak with acceptable variable-output block size for use in an iterated MAC.
+
+ 3. Finally, make a PBKDF2x that satisfies these requirements.  That would appear to be better than complex multiple-primitive alternatives.
+
+3.1 If serialization is acceptable, each block generated by PBKDF2 can be made dependent on its predecessor by using the salt for the first block but using the previous block's final round contribution (U[block-1,count]) as the salt for the succeeding block. (The block result is the xor of its U[block,i] values so U[block,
+count] values are not easily extractable and a block's salt is not present in that block's xor-ing.)  
+
+3.2 In this case, every block but the initial block depends on all of its predecessors.  Making each block also dependent on all of its successors is trickier.  Here this is the same as making every block but the last depend on the final block, but they can't all depend on the final block in a trivial way.  The approach I favor, off the top of my head, is to produce additional HMAC rounds following the production of the last block to generate a series of hashes that are xor-ed back, one each, to the predecessors.  This is tantamount to generating (abbreviated) additional blocks that are then discarded but for their sealing together of the block values that are delivered.
+
+3.3 There are variations that still allow parallel generation, but that seems undesirable considering that the big deal for PBKDF2 is increased work factor.
+
+ - Dennis
+
+
+
+-----Original Message-----
+From: Simon Josefsson [mailto:simon&#64;...efsson.org] 
+Sent: Wednesday, April 17, 2013 02:26
+To: Jeffrey Goldberg
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Jeffrey Goldberg &lt;jeffrey&#64;...dmark.org&gt; writes:
+
+&gt; This is mostly me whining. I just got bitten by the fact that PBKDF2
+&gt; does weird stuff if you ask for more derived data than is natural for
+&gt; the PRF you give it.
+
+Perhaps this can be converted into a requirement for a nicer KDF: the
+cost to compute one bit of the output should be as high as computing the
+entire output?
+
+/Simon
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

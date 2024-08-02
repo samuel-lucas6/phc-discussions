@@ -1,0 +1,42 @@
+phc-discussions - Initial AVX2 benchmarking
+
+
+Message-ID: <CAOLP8p5+3Uj5AVinYhs8z99uFtQ3Z7gJKNF5QONcbEutgPmBnA@mail.gmail.com>
+Date: Sun, 23 Feb 2014 15:00:36 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Initial AVX2 benchmarking
+
+Solar Designer has generously allowed me to do a bit of development
+and benchmarking on his Haswell machine, which supports Intel's latest
+and greatest vector processing extensions, AVX2.  This expands the
+vector instructions from 4 32-bit words in parallel to 8 32-bit words,
+at least in the way I'm using it.  Here's the benchmark that blows my
+mind.  This,
+
+tigerkdftime ./tigerkdf -m256 -M0 -r$((1024*1024)) -t12 -b4096 -B0
+garlic:0 memorySize:256 multipliesPerKB:0 repetitions:1048576
+numThreads:12 blockSize:4096 subBlockSize:0
+Password:password Salt:salt
+
+01 0d 55 38 e3 ef ca d8
+57 9a dd 92 53 1b 2a 99
+cc 30 cc ed 77 87 ea 74
+a7 16 bb 66 9e e7 74 1d      32 (octets)
+
+
+real    0m0.602s
+user    0m4.464s
+sys     0m0.008s
+
+This is 12 threads hammering L1 cache in a hashing loop over and over.
+ It's reading 0.25TiB twice, or 0.5TiB total, in .602 seconds, with a
+total bandwidth of 830 GiB/s to all the L1 caches in parallel.  With
+SSE 128-bit instructions, the same code takes 1.084 seconds.
+
+Unfortunately, when hashing 2GiB of external DRAM, there's not any
+significant improvement in my code using AVX2 vs SSE.  It seems I'm
+memory bandwidth limited either way.
+
+Bill
+

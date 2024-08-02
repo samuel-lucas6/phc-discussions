@@ -1,0 +1,135 @@
+phc-discussions - Is this really safe ...
+
+Message-ID: <a677571275935b5dedea033dc8c0a950@meuh.org>
+Date: Tue, 09 Apr 2013 10:41:19 +0200
+From: Yann Droneaud <ydroneaud@...eya.com>
+To: <discussions@...sword-hashing.net>
+Subject: Is this really safe ...
+
+Hi,
+
+Is it really safe to use GitHub to store a secret key ring ?
+
+Someone point me to this:
+
+https://github.com/skeeto/dotfiles#readme
+
+     You may have noticed, yes, I have my private PGP key in here! 
+Dangerous?!
+     Maybe, it's an experiment. It's got a strong passphrase on it and 
+I've
+     pumped up the key strengthening settings in GPG, like so,
+
+     gpg --s2k-cipher-algo AES256 --s2k-digest-algo SHA512 --s2k-mode 3 
+\
+         --s2k-count 10000000 --edit-key <key id>
+
+     Then run passwd in the key editor. That's over 10 million rounds of
+     SHA-512 which takes a half-second to compute on my laptop. 
+Brute-forcing
+     my passphrase should be completely impractical. I invite anyone to 
+prove
+     me wrong
+
+The file is available here:
+
+https://github.com/skeeto/dotfiles/blob/master/gnupg/secring.gpg
+
+Fingerprints:
+
+66D1 2CF3 F6D0 5FD4 BA2A  8F69 6133 82C5 48B2 B841
+424F 2EDC 295A FEC7 1547  53AA 0D65 65A4 A540 67E2
+
+
+Armored key 48B2B841 and fed to http://www.pgpdump.net/cgi-bin/pgpdump, 
+you may read:
+
+PGPdump Results
+
+Old: Secret Key Packet(tag 5)(966 bytes)
+     Ver 4 - new
+     Public key creation time - Sat Feb 26 15:35:47 UTC 2011
+     Pub alg - RSA Encrypt or Sign(pub 1)
+     RSA n(2048 bits) - ...
+     RSA e(17 bits) - ...
+     Sym alg - AES with 256-bit key(sym 9)
+     Iterated and salted string-to-key(s2k 3):
+         Hash alg - SHA512(hash 10)
+         Salt - f7 5a 1b fe 8c 73 5a 9f
+         Count - 10485760(coded count 212)
+     IV - a6 61 4a 95 44 1e 7e 90 88 c3 01 70 8d 56 2e 11
+     Encrypted RSA d
+     Encrypted RSA p
+     Encrypted RSA q
+     Encrypted RSA u
+     Encrypted SHA1 hash
+
+Additionally, there's a subkey:
+
+Old: Secret Subkey Packet(tag 7)(966 bytes)
+     Ver 4 - new
+     Public key creation time - Sat Feb 26 15:35:47 UTC 2011
+     Pub alg - RSA Encrypt or Sign(pub 1)
+     RSA n(2048 bits) - ...
+     RSA e(17 bits) - ...
+     Sym alg - AES with 256-bit key(sym 9)
+     Iterated and salted string-to-key(s2k 3):
+         Hash alg - SHA512(hash 10)
+         Salt - f7 5a 1b fe 8c 73 5a 9f
+         Count - 10485760(coded count 212)
+     IV - e5 22 39 0c 29 73 ce fe 5b be 8d 2f 6c f5 d5 42
+     Encrypted RSA d
+     Encrypted RSA p
+     Encrypted RSA q
+     Encrypted RSA u
+     Encrypted SHA1 hash
+
+And it uses the same salt.
+
+Using gpg --dump secring.gpg and looking for key A54067E2
+
+:secret key packet:
+         version 4, algo 1, created 1320238566, expires 0
+         skey[0]: [2048 bits]
+         skey[1]: [17 bits]
+         iter+salt S2K, algo: 9, SHA1 protection, hash: 10, salt: 
+bce919fc9921bc5d
+         protect count: 212
+         protect IV:  af 2d cf d2 6e dc 35 87 8c a4 27 af cc c7 25 70
+
+:secret sub key packet:
+         version 4, algo 1, created 1320238566, expires 0
+         skey[0]: [2048 bits]
+         skey[1]: [17 bits]
+         iter+salt S2K, algo: 9, SHA1 protection, hash: 10, salt: 
+bce919fc9921bc5d
+         protect count: 212
+         protect IV:  1e 72 83 b6 c6 c6 7a 50 53 81 b8 c6 9f 24 c0 50
+
+
+According RFC 4880 http://tools.ietf.org/html/rfc4880#section-3.7.1.3
+"Count" is not the iteration count, but the count of byte to be hashed:
+
+    Iterated-Salted S2K hashes the passphrase and salt data multiple
+    times.  The total number of octets to be hashed is specified in the
+    encoded count in the S2K specifier.  Note that the resulting count
+    value is an octet count of how many octets will be hashed, not an
+    iteration count.
+
+So if I understand, the iteration count will be equal to "Count / Hash 
+output size",
+eg 163840 rounds.
+
+I haven't read any implementation of the Iterated-Salted S2K algorithm, 
+but it seems, well,
+worst than PBKDF. I tought PGP would use such algorithm to protect 
+secret keys.
+
+
+Regards.
+
+-- 
+Yann Droneaud
+OPTEYA
+
+

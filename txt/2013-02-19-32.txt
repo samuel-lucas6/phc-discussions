@@ -1,0 +1,107 @@
+phc-discussions - RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Message-ID: <000201ce0eca$3b21b310$b1651930$@acm.org>
+Date: Tue, 19 Feb 2013 09:54:54 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Cc: <maray@...rosoft.com>
+Subject: RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Marsh,
+
+An afterthought.
+
+The great value of providing a clean, binary interface for PHS is for the
+security model.  One can assume cryptographically random passwords and salts
+and also control other variables, especially in a production implementation
+(to the extent that timing attacks and other factors are of concern,
+depending on the use case).  That's the best-case security model.
+
+One can then look at application profiles and use cases to determine their
+impact on the security model.  Since plaintext passwords are generally not
+indistinguishable from random and it is known what failure to keep the hash
+secret makes possible, for example, one can consider the threat model and
+exposure of given application scenarios.  But to have a foundation for this,
+I think one wants a very clean, understood security model at the PHS
+function.
+
+My intuition is that all of the issues are going to be in the application
+profiles, their threat models, and how vulnerable those are to inept
+implementation, insider failures, etc.
+
+ - Dennis
+
+-----Original Message-----
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org] 
+Sent: Monday, February 18, 2013 22:03
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Thanks Marsh,
+
+I would define PHS to work on arbitrary octet strings in the in[inlen]
+array.  This is at the binary level.
+
+Then I would treat the use of particular text encodings in an interoperable
+use case, or application profile.  
+
+There are also application profiles where pure binary is desired (e.g., as
+in extending a weak use of a hash to one with much stronger protection of
+the same password that creates the weak hash).
+
+[I'm assuming there's a desire that PHS be usable underneath many use
+cases.]
+
+ - Dennis
+
+-----Original Message-----
+From: Marsh Ray [mailto:maray@...rosoft.com] 
+Sent: Monday, February 18, 2013 19:22
+To: discussions@...sword-hashing.net
+Cc: Dennis E. Hamilton 
+Subject: RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org]
+
+I am going to risk over-stating the obvious just to make certain that I,
+as a
+newcomer, am on the same page about what the tacit understanding is
+concerning what PHS( ) effectively operates on.
+
+Thank you :-)
+
+This is definitely something that needs to be addressed by the final stage
+of the PHC. But it's probably not urgent to finalize it now.
+
+We might look at the history of the RADIUS authentication protocol. It
+handles username and password data for a variety of clients and servers.
+
+RFC 2058 https://tools.ietf.org/html/rfc2058#page-21 didn't define or
+recommend an encoding for strings.
+RFC 2865 https://tools.ietf.org/html/rfc2865#section-9 defined distinct
+'text' and 'string' types "Text contains UTF-8 encoded 10646 characters and
+String contains 8-bit binary data." Presumably this change was made to
+encourage interoperability, the IETF tends not to invoke ISO 10646 or
+Unicode lightly.
+
+How about this wording:
+
+"The function must be well-defined for all sequences of octets supplied to
+the password input. Length constraints should be clearly defined parameters
+of the algorithm and should generate an error result if violated. Password
+inputs with embedded NUL (0x00) byte values are allowed and are treated as
+significant (even trailing NULs).
+
+However, to promote interoperability callers are strongly encouraged to
+supply character data in the form of a sequence of minimal-length UTF-8
+encoded ISO 10646 characters (not including any NULs trailing or otherwise)
+whenever practical. Note that this specification declines to recommend a
+specific Unicode normalization form in the hope that implementers will do
+the right thing.
+
+Case-folding of password inputs is strongly discouraged, i.e., passwords
+should always be treated case-sensitively."
+
+- Marsh
+
+

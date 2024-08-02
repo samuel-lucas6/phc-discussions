@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Argon Indexing Function
+
+Message-ID: <CAOLP8p79aGAwNhvZCC+1Yqx4AC22aHT3dR-4yrz20bM2ORvikw@mail.gmail.com>
+Date: Tue, 28 Jul 2015 17:17:41 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon Indexing Function
+
+Here's the code I used to compute the distance-cubed value in TwoCats.  It
+works fine:
+
+        uint64_t v = i;
+        uint64_t v2 = v*v >32;
+        uint64_t v3 = v*v2 >32;
+        uint32_t distance = ((1llu << 22)-1)*v3 >32;
+
+I verified that it generates a very smooth histogram for memory hash sizes
+up to 64 GiB.
+
+The important thing here is to use a full 32-bit random number, and to use
+64-bit arithmetic.  A 64-GiB Argon2 hash will have 2^26 blocks.  You index
+these with a 32-bit number, so that gives you 6 fractional bits.
+
+I've attached code you can run to verify the histogram.  The Argon2 team is
+welcome to copy/modify it.
+
+Bill
+
+
+
+View attachment "foo.c" of type "text/x-csrc" (716 bytes)
+

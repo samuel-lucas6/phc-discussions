@@ -1,0 +1,64 @@
+phc-discussions - Best RNG for filling memory?
+
+Message-ID: <CAOLP8p5juhn6JJjf99n+iHZ4bUYSDS3pzWFcdnk6zajFayuZ5w@mail.gmail.com>
+Date: Tue, 24 Dec 2013 10:09:09 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Best RNG for filling memory?
+
+For the random number generator to fill memory, I found "modified" ARC4, by
+Jianliang Zheng and Jie Li:
+
+http://conferences.telecom-bretagne.eu/fps2012/program/slides/59.pdf
+
+I just benchmarked it, and it's faster on my core i7 than the SSE version
+of blake2s, and slightly slower than blake2b.  Not that my opinion counts,
+but I'm a fan of blake2 as a stream cipher since it's very fast and ARC4
+has known long-term correlations in it's output.  I'm not sure there is any
+future for MARC as a stream cipher.  However, for memory-hard key
+stretching, MARC is very simple, and extremely fast.  It is slightly faster
+than blake2b-ref (64-bit reference version without SSE extensions), and
+slightly slower than blake2b (with SSE).  It's faster than both versions of
+blake2s (32 bit version).  No other cryto-strength RNG I know of is
+anywhere near as fast as MARC and blake2.  Since we only generate a 256 bit
+hash in the end, I don't think long-term correlations of 1-bit per 10MB is
+an issue, so I'm leaning towards MARC for it's simplicity and CPU
+architecture independence.
+
+I was wrong that DDR memory bandwidth would be the limiting factor.  Modern
+dual-channel DDR has something like 10GB/s per channel, for 20GB/s total.
+ On my quad-core 3GHz Intel Core i7, MARC generated 1GB/s.  With 4
+processes at the same time, it generated 0.9GB/s per process.  Clearly
+memory bandwidth is not the main bottleneck for filling memory.  I'll need
+to test even more efficient reading/hashing to see if 4 threads can make
+use of the full memory bandwidth.  I think maximizing data transfer from
+memory is the best way to make ASIC implementations more costly.  I'm
+tempted to make use of integer multiplication and maybe even the FPU to
+make the ASIC version more expensive, but why?  An ASIC will be pad-limited
+just by the DRAM interface, so I won't make the ASIC any more expensive by
+trying to use the CPU's integer pipelines.  If you do IBM's distributed pad
+flip-chip thing, you add something like $100 per chip, totally blowing out
+the ASIC cost.  Wire bond is the only cheap solution, and these ASICs will
+clearly be pad limited.  Making use of the FPU adds risk that an FPU bug
+would cause the hash to be wrong, and the integer pipeline, even with
+barrel shifter and multiplier, are tiny dots on a die.
+
+I somewhat disagree with a statement from the FAQ.  With N cores, we can
+compute the hash in 1/N-th the time only if memory bandwidth is not the
+bottleneck.  Our challenge is to fill up that memory bandwidth with page
+transfers, and that is the only reason to use multiple threads.  If 4
+threads on an 8-core processor fill up memory bandwidth, there is no reason
+to get the other 4 cores involved.  An ASIC version will shrink those cores
+to tiny state machines in any case, and using all 8 cores does very little
+to increase the cost of an the ASIC, which naturally will be memory
+bandwidth limited.  I think we should use the simplest hashing algorithm
+possible on the random page reads to minimize the number of threads
+required to fill the memory pipe.  There's no reason to bring a machine to
+it's knees while we do the hashing if it provides no security benefit.
+ Leaving a core or two available for other tasks would be good, IMO.
+
+Thoughts?  I'm on my own here, and not being a crypto guy by trade, any
+random thoughts are appreciated.
+
+
+

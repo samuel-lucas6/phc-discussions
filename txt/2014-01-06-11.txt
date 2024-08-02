@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Security concern for Catena
+
+Message-ID: <CAOLP8p4s3JGCZCGwDD_S9MoQJwp5ef1-8aw9HnAxcRjs36VY8g@mail.gmail.com>
+Date: Mon, 6 Jan 2014 06:54:33 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Security concern for Catena
+
+I don't think my attack works with Catena 2, does it?  I hope not, because
+I just switched NoelKDF to use something very similar to Catena 2 to
+eliminate timing attacks.  If Catena 2 has a weakness, I would appreciate
+hearing about it.
+
+I also implemented Alexander's idea for having more even memory access
+distribution, picking a random-ish previous page to hash that is within the
+largest power of 2 less than the current page being generated, along with
+his idea about user-selectable parallelism.
+
+I don't understand why, and I am concerned I wont like the answer when I
+do, but NoelKDF now runs even faster, when it really should be slower.  I
+cherry picked this run out of about 10... most take more like .22 seconds.
+ I couldn't help showing the best one:
+
+noelkdf!time
+time ./memorycpy
+0
+
+real    0m0.188s
+user    0m0.140s
+sys     0m0.220s
+noelkdf!.
+./run_noelkdf
+BC60430CD122BD2E6CA644F909AE6860E0C7B2AACCB9ED7A570711BD65D48C03
+
+real    0m0.197s
+user    0m0.360s
+sys     0m0.200s
+
+The first run is memmove, moving 2GB right by 8 bytes, using 2 threads.
+ The second run is NoelKDF hashing 2GB of data with Catena inspired
+random-ish previous page selection that does not depend on the password,
+running with 3 threads.  This run is about 20% away from my memory
+bandwidth limit.  It doesn't run this fast for some reason on most
+processors, including my Core i7 dual-core laptop, where it takes .62s with
+2 threads.  On my work's AMD FX 8 processor it's taking from .4 to .5
+seconds with 8 threads, and 1.5 seconds on one thread.
+
+With Catena's client/server splitting of hashing responsibility, you really
+could hash a lot more than 8MB.
+
+Bill
+
+
+

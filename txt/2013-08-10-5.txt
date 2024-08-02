@@ -1,0 +1,70 @@
+phc-discussions - RE: [PHC] C99 in reference implementations
+
+Message-ID: <001001ce961f$e77a2f20$b66e8d60$@acm.org>
+Date: Sat, 10 Aug 2013 16:18:19 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] C99 in reference implementations
+
+<stdint.his implemented in Visual Studio 2010.  (There is also <cstdint>) as a counterpart in C++ which uses a proper namespace, etc.)
+
+For older versions of Microsoft Visual Studio, you can find third-party versions on google code, github, and elsewhere.  Just search for "stdint.h visual studio".
+
+My recommendation would be to use Clean C (C Language that is C++ compatible) and also limit the solution to the free-standing subset of C.  That means the most standard headers to use are any of float.h, iso646.h, limits.h, stdarg.h, stdbool.h, stddef.h, and stdint.h, so long Clean C is also achieved.  (I suspect that rules out stdbool.h.)
+
+ - Dennis
+
+-----Original Message-----
+From: Rich Felker [mailto:dalias@...ifal.cx] 
+Sent: Saturday, August 10, 2013 12:02 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On Sat, Aug 10, 2013 at 01:45:01PM -0400, Daniel Franke wrote:
+I have a reference implementation of a prospective PHC entry written in
+"portable" C99. By "portable", I mean that it uses only standard C99
+language features, has no external library dependencies, and should
+produce identical output regardless of host CPU architecture. However,
+it makes extensive use of C99 language features, including
+<stdint.h>/<stdbool.h>, mixed declarations and code, and variable-length
+arrays. Taking advantage of these features significantly improves
+readability, but will prevent the code from compiling on MSVC and any
+other compilers with poor C99 support. Does/should this pass muster for
+PHC submission requirements?
+
+Personally, I think the fact that C99 is nearly 15 years old and not
+even the current version of the standard anymore is sufficient
+justification to say "C" means a language which includes all C99
+features (except perhaps those which C11 made optional).
+
+With that said, some practical considerations:
+
+- Use of VLA objects is usually a security bug, unless the size is
+  highly bounded, in which case a plain non-VL array would work just
+  fine. The only place VLA should be used in secure code is for
+  pointer-to-VLA types (e.g. int (*mat)[n] = calloc(n, sizeof *mat);)
+  which are very useful in certain mathematical applications.
+
+- If you want to support a wide range of compilers, including badly
+  outdated ones, mixed declarations and code and stdbool.h are just
+  gratuitous non-portability. You can always reorder your
+  declarations, and bool offers no functional advantages over int with
+  "the !! operator". These features should only be used if you really
+  don't care about bad compilers and you think the readability
+  advantages are worthwhile. Personally, I don't find the bool type
+  idiomatic in C; I find its semantics are confusing to C programmers
+  not used to it.
+
+- Even code targetting pre-C99 compilers should always use stdint.h
+  for fixed-size types. If the compiler lacks stdint.h, all you have
+  to do to fix the problem is drop in an appropriate stdint.h file in
+  your source tree. Since there's roughly one relevant platform
+  (MSVC/Windows) affected by this, you don't even need to bother with
+  multiple versions of the drop-in file; just hard-coding it to MSVC
+  should be fine. Rejecting stdint.h and using your own system of
+  finding proper exact-sized types tends to make your code a lot less
+  portable.
+
+Rich
+
+

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Response to recent comments on Rig</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2014/09/01/1">[&lt;thread-prev]</a> <a href="../../../2014/09/06/5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOqphBeCXVt70FS+Kq9oLhDorSxJX+G=XU2dX6=wXxuFcUogPw&#64;mail.gmail.com&gt;
+Date: Tue, 2 Sep 2014 11:48:38 +0530
+From: Sweta Mishra &lt;swetam&#64;...td.ac.in&gt;
+To: discussions &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Response to recent comments on Rig
+
+The internal collisions being reported were known to us at the time of the
+design of Rig, and were already handled as explained below. They are NOT a
+threat to the security of Rig. We allow inputs to be of arbitrary lengths
+in Rig. The first hash input contains the concatenation of password (pwd),
+salt (s), 64-bit representation of number of iterations (n) and 64-bit
+representation of output length. However, the number of iterations and
+output length will be fixed for a specific implementation. We will still
+allow variable length password and salt by design. The concern expressed
+was for the situation when Rig(pwd_1, salt_1) = Rig(pwd_2, salt_2). To
+ensure that such internal collisions do not become a concern, we take the
+last hash input as the concatenation of the chaining value and counter along
+with the salt and the value m=2^m_cost. On page 14 of our report, it is
+mentioned that, "Even if one can find collisions in the first hash
+calculations, the attacker can not use it unless the salt is also same."
+This design choice will not allow the final outputs of Rig to collide with
+effort better than birthday bound. There are few other points that are
+raised in another mail and we will address them in couple of few days. We
+wish to send a detailed report (along with a revised version of the doc and
+code, containing more references as discussed in the mailing list, removal
+of the typo etc.). This week, the Rig team members are preoccupied in some
+other work and hence please expect the detailed answer by early next week.
+
+
+Thanks &amp; Regards
+Sweta Mishra
+
+
+On Mon, Sep 1, 2014 at 4:40 PM, Bill Cox &lt;waywardgeek&#64;...hershed.org&gt; wrote:
+
+&gt; -----BEGIN PGP SIGNED MESSAGE-----
+&gt; Hash: SHA1
+&gt;
+&gt; On 08/31/2014 05:30 PM, Somitra Sanadhya wrote:
+&gt; &gt; 4. Another comment by Mr Cox is: "the memory swapping algorithm
+&gt; &gt; that the Catena guys invented fairly recently is there..."
+&gt; &gt;
+&gt; &gt; We would like to know which memory swapping algorithm is being
+&gt; &gt; referred to in the above statement ? Catena takes two inputs,
+&gt; &gt; hashes the concatenation of these two, and writes the result in
+&gt; &gt; some location in the array. On the other hand, Rig does two
+&gt; &gt; different memory overwrite operations. In the first one, we use
+&gt; &gt; sequential XOR of the chaining variable with the value of the same
+&gt; &gt; variable from the previous round at the same location. In the
+&gt; &gt; second one, we XOR the chaining variable with the input variable
+&gt; &gt; indexed by the bit-reversal permutation from the previous round.
+&gt;
+&gt; I was wrong here, because I had not noticed your bug yet.  Your
+&gt; suggested fix will not work.  To get it to work, you will need to do
+&gt; what I though you were doing, and use Catena's trick to use one array
+&gt; for KeySet instead of two.
+&gt;
+&gt; Your suggested fix is to replace:
+&gt;
+&gt;     k[br(j)] = k[br(j)] XOR truncate(ChainingValue)
+&gt;
+&gt; with
+&gt;
+&gt;     k[j] = k[br(j)] XOR truncate(ChainingValue)
+&gt;
+&gt; This will overwrite the value in position j.  Later, for all values of
+&gt; j where br(j) &gt; j, when you read from k[j] to compute k[br(j)], you
+&gt; will read the value from the current row, when you meant to read the
+&gt; value from the previous row.
+&gt;
+&gt; Catena's trick is to realize that once you read from k[br(j)], you no
+&gt; longer need to remember the value stored in k[br(j)].  Instead of
+&gt; writing to k[j], write to k[br(j)], just like your submission does,
+&gt; which is why I thought you were using this trick.
+&gt;
+&gt; On the next row, instead of reading from k[br(j)], you need to read
+&gt; from k[j], because the data is already stored in bit-reversal order.
+&gt; You will also need to write to k[j], since that is the location no
+&gt; longer needed.  You will need different code for the even vs odd row
+&gt; updates, but it saves you from having to have two k arrays.
+&gt;
+&gt; I recommend you use this trick and simply acknowledge it the code
+&gt; and/or paper.
+&gt;
+&gt; I think you have an error in your security proof.
+&gt;
+&gt; Look at the proof starting on page 16.  In the first line "E1", you
+&gt; convert the probability that a value is stored from Pr(value at Pj is
+&gt; stored) to i/m.  You simply assume that the probability of the value
+&gt; being stored is proportional to the ration of values stored divided by
+&gt; the total values, independent of any property of Pr.
+&gt;
+&gt; If Pr were the identity permutation, an attacker simply needs one
+&gt; memory location, and he can compute the entire row sequentially, with
+&gt; no recomputations at all.  Clearly there needs to be some mathematical
+&gt; property of Pr that we can depend on to avoid this.  A pebbling proof
+&gt; like Catena's is needed here.
+&gt;
+&gt; Bill
+&gt; -----BEGIN PGP SIGNATURE-----
+&gt; Version: GnuPG v1
+&gt;
+&gt; iQIcBAEBAgAGBQJUBFQTAAoJEAcQZQdOpZUZRmIQAKZYIOMvATsHn42V+XGv3fNa
+&gt; 9KJ9YvMnVtMZY8JMVhaRoFKoHWlWHL3fhOvh1AOOZampWTCKy6DsIqXmjdX6oWqT
+&gt; jQLTLbxN6knczRKp8TN5sUO/HCuja71utjOd/wS7qyFLgl9z7gOdWgemmosH5Uyz
+&gt; U8O+7SSfsGWKGZQxQwvkfe4fpqy0Kjyct3IjhhY4Os2tOrSqPmPPYNNEL+46gr8E
+&gt; bzGcB4KVNVz9jXv2qBdqg0nsoBZWsDonYIa+L6H4nsFSm+EaZNWKy5ocFKbH3y5I
+&gt; KLTona7FKsOFFXDlmvoAq2OetoTa6ciXKXls1o9HF0DrwBQ2EYhz9tVKdlqjL2iW
+&gt; U6qDgnQP1oWIXECb1CO9DhIyL4Hlpd2hCP3UJH/a7lK+3w/MXP+xuBViPtI/qyrW
+&gt; GqnRo/KazwqRvf0dm72+ztD1E9wsSqQYPfnGIWgTXoPrCqOHJuRftUxd55pVKvrt
+&gt; RDVA2vcUHpBNcZflQf0WvzRWjRJSzfovx3wHQg/YHFWmJuCMyoP/7amc5HCgvw2G
+&gt; 2QBUHMf2ei/aNVzTQFTwvE1Tv8LQCbWNvR5XRkIPQihJL+40RJDkl1/uo6ZLOwof
+&gt; 7oLQA7LQeept1YbQj66oXE5t+lljoMFouI4LskM2Y1lWkmGpyvGK6yuBwlXQswhH
+&gt; UmMTKHsdgvJZBj8hN1Mg
+&gt; =SXWf
+&gt; -----END PGP SIGNATURE-----
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

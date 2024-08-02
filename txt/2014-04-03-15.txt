@@ -1,0 +1,42 @@
+phc-discussions - Yarn issues
+
+Message-ID: <CAOLP8p7XFFf1jzqBP43CJbdkEs1d5BbdnTniaCovXD8+KP9fog@mail.gmail.com>
+Date: Thu, 3 Apr 2014 02:17:45 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Yarn issues
+
+Just kidding.  Evgeny, did the title scare you at all?
+
+The last PHS submission I read (because of it's position in the
+alphabet) was Yarn.  He didn't submit his code with the PHS prototype,
+which annoyed me, because I'm trying to compile it.  There's no
+Makefile, no main function, indentation by tab (one keystroke) and
+there's not one freaking comment in his code.  Grr...
+
+I could see from the code we've got another super-genius involved, so
+I Googled him, and sure enough he's the winner of some programming
+contest I never heard of.  There may be huge issues with it, but I
+didn't see any in a quick read of the code.  He's basically using AES
+instructions to build a fast memory-hard PHS, similar to some others.
+His 280-ish lines of code is impressively small, but when you see that
+it includes a full-up copy of both Blake2b and AES in that file...
+nice.
+
+What are the odds that he messed up on his Blake2b or AES
+implementations, which seem to be written in his style, so I'm
+guessing he wrote them from scratch?  I'm not going to take that
+bet...  I did check his initial key derivation.  I'd say at least
+1/3rd of the entries have obvious input collisions, mostly from doing
+H(password || salt), which allows trivial collisions by moving the
+boundary between password and salt.
+
+If I am not mistaken, he has input collisions on both salt, and a
+parameter called "pers".  Both are padded with 0's to 8 bytes, and
+XOR-ed onto Blake2b state, so adding additional 0's up to a total
+length of 8 doesn't change the output.  The password is free of such
+collisions, so this isn't a critical issue.  He also has a spelling
+error on the last line of his README :-)
+
+Bill
+

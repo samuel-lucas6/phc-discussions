@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] Added "lanes" and 3 hash functions as inputs
+
+Message-ID: <20140319094547.GA6309@openwall.com>
+Date: Wed, 19 Mar 2014 13:45:47 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Added "lanes" and 3 hash functions as inputs
+
+On Tue, Mar 18, 2014 at 07:46:29PM -0400, Bill Cox wrote:
+I'm still making last-minute upgrades.  I added a "lanes" parameter to
+the "extended" interface which normally is set to the number of 32-bit
+ints in the hash function in use.  For SHA256 and Blake2s, it is 8,
+and for SHA512 and Blake2b, it's16.  This was meant to match the SIMD
+units on high-end CPUs, but it works against low-end CPUs.  Instead of
+calculating 8 or 16 lanes in parallel, a low-end CPU can now do just
+one, if it has no SIMD unit.
+
+The architecture had a pluggable hash function architecture before,
+but Blake2s was the only option.  I've added three more: Blake2s,
+SHA256, and SHA512.  Naturally it took some work to make it really
+easy to add new ones.
+
+Having the number of lanes tunable is great.  Having it depend on the
+chosen underlying crypto primitive is not great.
+
+I still feel like a pluggable large memory block hash function would
+be a good thing, but if mine's the only one to do such a thing,
+there's not really much point.
+
+Doesn't escrypt have a large block multi-lane hash function like this?
+It's not pluggable, but I'm not sure it needs to be.  For now, it can be
+part of a password hashing scheme.  And yes, I'm still working on
+improving this component in escrypt, and it still needs a name...
+although most likely I'll call it pwxform, for "parallel wide
+transformation", even though it may be scaled down to one 64-bit lane.
+
+Alexander
+

@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <20150706205647.GA2588@openwall.com>
+Date: Mon, 6 Jul 2015 23:56:47 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+On Mon, Jul 06, 2015 at 08:25:48PM +0000, Zooko Wilcox-O'Hearn wrote:
+Forgive me if this is a naive question, but if you wanted a
+Proof-of-RAM for a cryptocurrency to be ASIC-resistant and (maybe)
+GPU-resistant (and I do want that!), then what's wrong with Argon2d
+with memory size = 1 GiB?
+
+I guess Bill meant the "fast verification" bit in the Subject.  Filling
+1 GiB isn't as fast as Bill would like verification to be.
+
+However, Argon team recently described what may be a solution to that,
+in Section 8 of:
+
+"Research paper "Fast and Tradeoff-Resilient Memory-Hard Functions for
+Cryptocurrencies and Password Hashing". Introduces Argon2 and its
+fast-verification feature."
+
+as available here:
+
+https://www.cryptolux.org/index.php/Argon2
+
+I haven't looked into this myself yet.  I guess Bill should.  And I
+guess you did, Zooko?
+
+In other words, what's the point of the proposed ROM-hardness feature?
+
+I originally proposed it for authentication servers, and it's similar:
+need to support request rates in thousands per second, so can't fill a
+lot of RAM within the allotted time.  This is compensated for by also
+having a large ROM.  And yes, this is a different type of defense, with
+its different properties, so no exact "compensation" - it can be worse
+or better than simply filling more RAM each time, but usually filling as
+much RAM as we'd use for a ROM is simply not an option (would be taking
+too long for the use case where we'd also use a ROM).  Quite often, we
+don't even get close - e.g., 1.75 MiB RAM + 112 GiB ROM for one of my
+authentication server examples, for 10k requests/s on 16-core server.
+
+Alexander
+

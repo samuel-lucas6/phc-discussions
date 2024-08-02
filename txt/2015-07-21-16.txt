@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150721195251.GA4479@openwall.com>
+Date: Tue, 21 Jul 2015 21:52:51 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Tue, Jul 21, 2015 at 12:44:17PM -0700, Bill Cox wrote:
+I also think we should pass a boolean telling Argon2 if it's OK to
+scrub the password buffer passed in once the initial derived key is
+computed.  We talk a lot about garbage-collection attack resistance, and
+then we just leave the password sitting there in it's buffer.  This is
+pretty sad, IMO.
+
+I propose passing two pointers instead, one "const char *" and the other
+non-const.  If the non-const pointer is not NULL, then this one will be
+used for scrubbing.
+
+Rationale: some reasonable higher-level APIs may already have the const
+(or will have), so we'd have to cast it away for the scrubbing if we
+used the Boolean parameter approach.
+
+I welcome other thoughts on this, though.  My preference might change.
+
+Also, have Alexander's concerns about excessive parallelism in Argon2 been
+addressed?  I missed the resolution of this issue.
+
+Not yet.
+
+Would his suggested MAXFORM (whatever that is) fix it?
+
+Yes, and it'd achieve more than that.
+
+Alexander
+

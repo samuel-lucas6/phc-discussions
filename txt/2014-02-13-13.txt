@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213164601.GA6405@openwall.com>
+Date: Thu, 13 Feb 2014 20:46:02 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 11:06:45AM -0500, Bill Cox wrote:
+In general, I
+don't think there's a way for the SIMD loop to be as fast as the
+non-SIMD loop, and this difference will not be seen by an ASIC
+attacker, so it comes right out of compute-time hardness.
+
+This is about right, but there appear to be ways around it:
+
+1. If we do 32x32->64, then non-SIMD latency is 4 to 5 cycles (for the
+upper 32 bits of result; the lower 32 bits may be ready in "eax" after 3
+cycles).  The PMULUDQ latency is 3 to 5 cycles - potentially even 1
+cycle better than best CPU's non-SIMD equivalent (for upper 32 bits of
+result).  See GenuineIntel0010676_Harpertown_InstLatX64.txt for where
+PMULUDQ wins over scalar (3 cycles vs. 5 cycles latency).
+
+2. We may do a non-SIMD chain for latency hardening in parallel with a
+bunch of SIMD chains optimized for throughput (to use the multipliers'
+die area optimally and not leave room for attacker to share most of the
+multipliers between cores).  Then even PMULLD on Haswell will be fine
+(not on Avoton, though, where it's also much lower throughput, compared
+to e.g. PMULUDQ).  By having multiple chains work "in parallel" I mean
+use of interleaved instructions (ALU intermixed with SIMD).  Their
+results would need to be mixed together once in a while, such as after
+each block.
+
+Also, accessing memory via SIMD instructions improves bandwidth, and
+this can only be done with no overhead if the computation is SIMD.
+
+Alexander
+

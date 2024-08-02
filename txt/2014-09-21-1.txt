@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <20140921063952.56fc209d@lambda>
+Date: Sun, 21 Sep 2014 06:39:52 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: Steve Thomas <steve@...tu.com>
+Cc: discussions@...sword-hashing.net, bmenrigh@...ndonenright.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Wed, 17 Sep 2014 15:35:45 -0500 (CDT)
+Steve Thomas <steve@...tu.comwrote:
+
+No, I'm saying that a GPU will waste clock cycles while not
+calculating the wrong data paths. This is do to it's conditional
+execution of instructions. If a thread is not suppose to run an
+instruction it will do a nop (no operation) instead.  
+>
+Interesting. So let me make sure I understand what this attack would
+look like.
+>
+You'd N instances of OmegaCrypt on the GPU by allocating N ChaCha
+states and N large regions of memory.[...]
+ 
+
+Ah, I get what the misunderstanding is. Each thread is running a
+different password guess and there are several threads running at the
+same time. They all have their own ChaCha state and memory. When they
+hit a branch some threads are set to not do anything while the other
+ones run.
+
+My apologies for a delayed response, this attack gave me a lot to think
+about.
+
+As currently designed, each round OmegaCrypt picks 1 of 4 branches to
+run.  As you describe in your proposed attack, with a GPU capable of
+data-dependently NOPing out instructions you could simply run the
+branches in order and NOP out the three wrong ones.  In this way you
+could keep all parallel instances of OmegaCrypt in sync with each
+other.  Even though they'd be less efficient, it would defeat intended
+GPU resistance of the branching.
+
+This attack works because the worst case (running all 4 beaches) is
+bounded and isn't *that* much worse that just running the correct
+branch.  If the worst case wasn't known or if the worst case was
+totally unbounded it would no longer be possible to run all parallel
+instances through the worst case having them selectively NOP out
+useless instructions.
+
+Instead of having 4 (or N) fixed branch paths each with a fixed number
+of instructions for each path, I suggest the following logic would
+defeat the selective NOPing ability by making the worst case too bad:
+
+while (coinflip()) {
+   do_some_work();
+
+   while (coinflip()) {
+      do_some_more_work() {
+
+       [...]
+          [...]
+
+Using a structure like this ends up being even simpler than N different
+fixed branches and the worst case needed to keep threads in sync is
+unbounded.  Even if an implementer were to cap each while (coinflip())
+loop to 20 iterations (for example) 20 * 20 * [...] is far, far more
+costly than the average case actually taken by the code.
+
+I will explore this area of branching more and if OmegaCrypt makes it
+to the next round I will replace the current 4 branches with something
+more robust like above.
+
+Of course, I'd love to hear any thoughts / analysis on this idea.
+
+Regards,
+
+Brandon
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlQecr4ACgkQqaGPzAsl94J6DwCfQJYkYNo4GGKtpKECRbm1/Cu2
+mM4An3Ps/rPIyNqxVrtGHj/DBZUjtIdy
+=9at8
+-----END PGP SIGNATURE-----
+

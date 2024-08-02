@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <1801374305.20150422184831@gmail.com>
+Date: Wed, 22 Apr 2015 18:48:31 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 modulo division
+
+
+Bill Cox (at Wednesday, April 22, 2015, 6:13:21 PM):
+
+            A.block_absorb(pwd, 16, pwd_len);
+
+This code runs in time directly proportional to the password
+length. 
+
+it is the same for all password hashing schemes, and not hard to fix.
+in fact, i already hinted at the fix in one of my emails here, in
+which i called for the practice of not allocating any memory, and not
+keeping secrets in the stack either, if at all possible. for example
+gambit could look like
+
+void gambit_128(char* entropy, char* mem, int t_cost, int m_cost,
+  char* dkid, char* key, int keylength)
+
+entropy would be the pre-assembled password-salt-pad101 buffer with
+the size of a full keccak state (200), and the actual keccak algorithm
+would work on that, not a local copy. presumably in place. mem would
+be the memory buffer of size m_cost*8. so we avoid allocating heap
+inside.
+
+obviously, this just shifts the responsibility to the caller. but the
+caller has responsibility anyway, since the password probably gets
+copied multiple times between buffers on its way from the GUI to the
+hash function. i have no clue how to fix that.
+
+in fact, i feel i need to go and change the implementation this way.
+gambit might not be in this competition anymore, but it is still in
+the bigger PHC, aka life.
+
+this is absolutely not an excuse for having other side channel
+vulnerabilities.
+
+
+By the way, looking back at the Gambit code just now was a
+pleasure.  As much as we differ on defense philosophy, I have to
+credit you for writing clean code.  It's very nice work.
+
+thank you.
+
+
+

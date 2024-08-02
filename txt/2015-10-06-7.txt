@@ -1,0 +1,113 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <CALWCaoaDE=1gW3L_gxVKomYS4mZJ9+chT84Vf2zYREPmeqm9Dw@mail.gmail.com>
+Date: Tue, 6 Oct 2015 11:04:24 +0200
+From: Massimo Del Zotto <massimodz8@...il.com>
+To: Solar Designer <solar@...nwall.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+Hello Alexander, hello all.
+
+For the purpose of the discussion, let's call 'X' (from pwxform) a 'chunk'
+of {PWXSimple|S_SIMD} consecutive ulongs.
+I assume someone isn't proficient to OpenCL nomenclature so:
+- Work Item (WI): element of a SIMD unit. Very often referred as 'thread'
+(even though it really isn't).
+
+The rationale is very simple: I have 64 WIs and I have to load (2+2)*4
+ulongs ({PWXRounds|S_ROUNDS}=6 consecutive times).
+Therefore, loading in two steps as I do gives me 8 ulongs from s0 across
+the different chunks, then s1.
+As the chunks are independently processed, the fact they are scattered
+isn't very relevant in this context. I have those 64 work items and 64
+bytes to load so there's no much choice in how much memory a WI can load:
+they just map right.
+
+As a side note, I was surprised to see unaligned loads as I understand they
+have (had?) considerable performance implications on some CPUs... when
+they're legal operations in the first place.
+
+I might try loading ushorts and I have tried loading uints but the OpenCL
+compiler emitted something... not very pretty. Loading uints was
+considerably slower to me - what should I load instead? Those operations
+get dispatched anyway.
+
+I considered doing vload or even async load (meh)... but why would I do
+that? Those tests are better performed by people with hardware to test such
+as the cryptocurrency mining superstars. Sometimes my users send me perf
+data but I'm not all that eager to test under arbitrary non-controllable
+conditions.
+
+There is indeed quite some repetition/waste. That's why AMD put a scalar
+unit in their compute cluster. It was very typical for graphics, we used to
+trash ALU power with no regret. There was a previous formulation where I
+had all WIs loop with the same data but apparently the AMD compiler
+couldn't figure it out. SALUBusy is around 2%, VALU Busy is up to 80% (I
+speculate mostly filled with garbage). I expected something like 10%. We
+gotta love those guys, they cannot even SALU the Salsa operations years
+after GCN launch!
+
+On coalescing: that's a good question. AMD claims GCN to have no coalescing
+but they also claim the best access pattern is to have "stride 1 [bytes]"
+across WIs so they probably mean they don't have 'coalescing' in a "VLIW
+sense" as they likely required much more complicated machinery to figure
+out. The memory usage I got out of the profiler looks odd to me even though
+it seems to agree memory usage is sort of ok-ish. In case someone wants to
+take a look, I might push everything to CSV.
+I think it turned out a to be an interesting case.
+
+
+Massimo
+
+2015-10-05 21:18 GMT+02:00 Solar Designer <solar@...nwall.com>:
+
+On Thu, May 07, 2015 at 09:02:41PM +0300, Solar Designer wrote:
+On Sat, May 02, 2015 at 05:34:27AM +0300, Solar Designer wrote:
+The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+(with tiny bits of inline PTX assembly, even - for things such as the
+pwxform MULs):
+>
+https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741
+>
+The code is still very dirty.  I expect it won't build or work for most
+people as-is, yet.  However, it looks reasonably well optimized, and
+specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+are precomputed and hard-coded, etc.)
+>
+Further in that thread, djm34 mentions getting 1.5 kh/s on GTX 980.  The
+best speed another person reported so far is 980 h/s on GTX 750 Ti.
+>
+For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+>
+There's a new BSTY miner for GPUs:
+>
+https://github.com/MaxDZ8/M8M/releases/tag/929
+>
+https://github.com/MaxDZ8/M8M/commit/a500d4af0c96ee64344dd37797a176bf4cc2d370
+>
+The author reports 372 h/s on "Radeon 7750 1 GiB GDDR5 core/mem 850/1200."
+>
+The code looks moderately weird to me - there's an optimization(?) in
+M8M/kernels/yescrypt_difficultSmixes.cl: Block_pwxform() that I don't
+understand the rationale for: the 16-byte S-box lookups from global
+memory are split across 16 work-items, loading into local memory and
+followed with a local memory fence, before the values are finally used
+as pairs of ulong's.  I would sort of understand if these were uint's
+(fits the SIMT model and the local memory port width on GCN, so might
+help maximize global memory bandwidth usage, assuming these get
+coalesced for up to 16 bytes anyway), but why individual bytes?  And
+does the code that follows do 16x duplicate work then (this may be fine
+since we have that bottleneck anyway)?
+>
+Massimo, did I possibly confuse you into doing that with the indices
+being byte-granular right after applying the mask?  The byte-granular
+offsets don't imply byte-granular loads - you can compute the address at
+byte granularity, yet perform wider loads, like my C code does.
+>
+Alexander
+>
+
+
+

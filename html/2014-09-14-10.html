@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] PolyPassHash is broken</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAMVss_rQG9f-FboZAzhh4E0Y9OoBPeN-c3yMkaA_aXEf5y7dJQ&#64;mail.gmail.com&gt;
+Date: Sun, 14 Sep 2014 15:45:41 -0400
+From: Justin Cappos &lt;jcappos&#64;....edu&gt;
+To: discussions &lt;discussions&#64;...sword-hashing.net&gt;
+Cc: polypasswordhasher-dev &lt;polypasswordhasher-dev&#64;...glegroups.com&gt;
+Subject: Re: [PHC] PolyPassHash is broken
+
+We have some discussion about the points list in our paper (Sections 5.2.3
+and 6 for example). However, I'll be more explicit and direct here.
+
+Method 1
+&gt;  * get partial hash from DB
+&gt;  * find partial hash collision
+&gt;  * crash/restart server
+&gt;  * login
+&gt;
+
+Sure you can do this.  Once a threshold is reached, the attack will be
+detected because the full password hashes will not match.  That is, unless
+the attacker is fortunate enough so that the partial hash collision is the
+actual full hash / password.
+
+Method 1.5 (for large partial hash [like ~48 bits])
+&gt;  * get partial hash from DB
+&gt;  * find partial hash collision
+&gt;  * try password
+&gt;  * repeat steps until password is found
+&gt;   - note you probably won't hit a password rate limit
+&gt;
+
+I think there is some confusion in either what you propose or what I
+understand you proposing.  If the system has bootstrapped, an incorrect
+password will be detected and rejected because the full password will not
+be matched.
+
+If partial bytes matches but the rest does not, the administrator gets
+notified.  (Or at least, this is what the Django implementation of PPH
+does:
+<a href="https://github.com/PolyPasswordHasher/PolyPasswordHasher-Django/wiki/Installing-PolyPasswordHasher-for-Django" rel="nofollow">https://github.com/PolyPasswordHasher/PolyPasswordHasher-Django/wiki/Installing-PolyPasswordHasher-for-Django</a>
+)
+
+
+Method 2
+&gt;  * crash/restart server
+&gt;  * quickly login several times
+&gt;  * repeat steps until partial hash collision is found
+&gt;
+
+Yes, but if partial bytes is a reasonable value (let's say 32 bits) even if
+you can make 100 requests per second, you would need an average of &gt;8
+months of "bootstrapping" time to get your first login.  So you'd not only
+need to wait a very long time, but also be sure that a threshold of users
+didn't log in then either...
+
+
+&gt; If there are no partial hashes in the DB, then this is equivalent to HMAC
+&gt; with
+&gt; secret key.
+
+
+Where would the key come from in this case?
+
+
+&gt; Anyways this has a placeholder for a password hashing algo (ie the
+&gt; winner of PHC). So even if it didn't have these problems then it could
+&gt; only be
+&gt; mentioned in tandem with another entry.
+&gt;
+
+Sure, this is something we've mentioned several times.  I also said before
+that I don't think we fit with what other submissions are trying to do.
+ We're orthogonal to them since we're a way to store password hashes
+securely, more so than a better way to hash them.
+
+We'd be happy to collaborate with the eventual winner, but don't expect to
+be seriously considered because we don't fit the contest API, goals, etc.
+
+Currently the hashing algorithm is "encrypt(SHA256(salt || password))"
+&gt;
+
+As you mention, this is not inherent to the design.  This is a
+implementation detail of the C version which was written specifically for
+this contest.  Our Django version, which is being rolled out on a few
+servers at NYU, may be better to poke holes in, if you are curious...
+
+Justin
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+phc-discussions - Re: Security of these two hash functions?
+
+Message-ID: <CAOLP8p4UBrO+6j7LKi19u4g8fo=EWd3PqyvfmPD1QKHiL39yug@mail.gmail.com>
+Date: Sat, 22 Feb 2014 09:00:21 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Security of these two hash functions?
+
+On Fri, Feb 21, 2014 at 5:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+TigerKDF, as I'm calling the successor to NoelKDF, uses two hash
+functions.  The first is a multiplication intensive compute-hardened
+loop that is hard to speed up even in custom hardware.  It hashes 256
+bits of state in a long permutation, with applications of Blake2s
+after every "block", which is typically 4000 iterations long:
+>
+// Do low memory-bandwidth multiplication hashing.
+static void multHash(uint32_t hash[8], uint32_t numblocks, uint32_t repetitions,
+        uint32_t *multHashes, uint32_t multipliesPerBlock, uint32_t
+parallelism) {
+    uint32_t state[8];
+    hashWithSalt(state, hash, parallelism);
+    for(uint32_t i = 0; i < numblocks*2; i++) {
+        for(uint32_t j = 0; j < multipliesPerBlock * repetitions; j++) {
+            // This is reversible, and will not lose entropy
+            state[j&7] = (state[j&7]*(state[(j+1)&7] | 1)) ^
+(state[(j+2)&7] >1);
+        }
+        // Apply a crypt-strength hash to the state and broadcast the result
+        hashStateWithSalt(state, i);
+        memcpy(multHashes + 8*i, state, 32);
+    }
+}
+
+I'm having to rewrite this function, so please don't waste time
+analyzing it.  I messed up the data dependencies, and it is 8-way
+parallelizable when I intended for there to be a single multiplication
+chain.
+
+Bill
+

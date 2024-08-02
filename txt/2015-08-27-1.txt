@@ -1,0 +1,24 @@
+phc-discussions - Argon2 using memset still
+
+Message-ID: <CAOLP8p6hbm87gvLG5c2uSmb07WjHkFFYcmSdK6apvUt2teeP3g@mail.gmail.com>
+Date: Thu, 27 Aug 2015 09:33:35 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Argon2 using memset still
+
+g++ has a habit of optimizing calls to memset away.  I doubt that Argon2
+succeed in it's attempts to clear memory.  I copied this function from
+Blake2:
+
+/* prevents compiler optimizing out memset() */
+static inline void secure_zero_memory( void *v, size_t n )
+{
+  volatile uint8_t *p = ( volatile uint8_t * )v;
+  while( n-- ) *p++ = 0;
+}
+
+
+Bill
+
+
+

@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] attacking and hardening escrypt
+
+Message-ID: <20140310072900.GA8842@openwall.com>
+Date: Mon, 10 Mar 2014 11:29:01 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] attacking and hardening escrypt
+
+On Sun, Mar 09, 2014 at 07:04:29AM +0400, Solar Designer wrote:
+Somehow I am especially interested in comments from Steve Thomas
+(@Sc00bzT) and Christian Winnerlein (@CodesInChaos), please. ;-)
+Indeed, I'd appreciate anyone else's comments as well.
+
+This is still true. ;-)
+
+Now, this attack appears to be defeated by moving away from XORs to a
+_suitable_ non-associative operation (e.g., subtraction is _not_ suitable,
+still allowing for a similar attack, so non-associativity alone is not
+sufficient), or to alternating sufficiently different operations.  Would
+it be sufficient to alternate XORs and ADDs for even and odd sub-blocks?
+(I think so.)  Is this change worth making (drawback: adds complexity),
+or is it best to stipulate that S_ROUNDS is at least 1 and define the
+sub-block transformation such that it can't be precomputed out of order
+with the sub-block XORs (or in other words without having the actual
+input values to it yet), or is it best to do both of these things (harden
+for the case of S_ROUNDS = 0, yet require S_ROUNDS 0)?  I think the way
+the sub-block transformation is currently defined satisfies this property
+(for S_ROUNDS 0).
+
+This gives us a requirement for the sub-block transformation function.
+Further requirements are that it must not significantly reduce entropy,
+nor introduce significant biases - although these appear to be less
+important.  Are there any other requirements?
+
+More required properties:
+
+If the sub-block transformation uses multiple rounds per sub-block
+(S_ROUNDS 1), there shouldn't exist a practical way to compute
+multiple rounds with significantly less effort or significantly quicker
+(in terms of latency) than with sequential computation of the individual
+rounds given a particular input to the first round.
+
+Both individual and multiple rounds at once may be computable faster
+with a lookup table.  To thwart this, the lane width should be large
+enough that the table would need to be unrealistically big, or/and extra
+variable inputs to the round function may be used.  In escrypt, the lane
+width is 64-bit, and the extra inputs are the S-boxes, which depend on
+the password and salt.  So both the table would need to be
+unrealistically big and it'd need to be recomputed for each password and
+salt combination.
+
+Can smaller lookup table(s) be used efficiently (along with some
+computation), such as applied to a portion of the lane width only?  This
+depends on how the round function is defined.  For example, could our
+64-bit lane width be decomposed into 4 16-bit lanes, with only trivial
+enough mixing between them that 4 16-bit lookup tables could be used
+efficiently?  (The 4x 16-bit split is arbitrary, used for the sake of
+providing a specific example with lookup tables that are small enough to
+be practical.)  I think not, but this is a concern to keep in mind when
+revising the round function.
+
+Also, I've been seriously considering using 32-bit lanes.  (This has
+some pros and cons.  Among the pros is better compatibility with Salsa20,
+where it'd let us ignore SIMD shuffling of 32-bit words.  escrypt
+currently has some extra complexity because of this shuffling, yet
+having its new sub-block mixing work on 64-bit lanes.)  I think that
+with careful design and with use of the variable S-boxes, 32-bit lanes
+would be OK in terms of issues described above, but they'd provide a
+smaller safety margin.  (Luckily, we're not talking cryptographic
+security here, but just attacks that would allow for computation of the
+hash with somewhat less resources than intended.)
+
+BTW, this is similar to the question Bill Cox asked a few months ago,
+and got no real answers to.  My answer was: depends on context.  I do
+provide the context to my question now (it's escrypt 0.3.1 that I posted
+the other day, or/and the explanation above for those too busy to read
+the code), and my opinion on required properties - and I'd appreciate
+comments from others in this community.  Thanks!
+
+Alexander
+

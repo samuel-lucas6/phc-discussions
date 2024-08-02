@@ -1,0 +1,127 @@
+phc-discussions - A review per day - Battcrypt
+
+Message-ID: <54148FD4.2050607@ciphershed.org>
+Date: Sat, 13 Sep 2014 14:41:24 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A review per day - Battcrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Battcrypt is interesting.  It's most similar entry is PufferFish,
+which is also an extension of Bcrypt to use more memory.  It was
+written by Steve Thomas, who not only is quite good at finding
+weakness, he's also great at writing code that clearly has none.  It
+took me very little time to review his code.  I have zero negative
+comments to report.  I see zero mistakes that result in weaknesses.
+
+As an algorithm, Battcrypt inherits the Blowfish encryption from
+bcrypt, but extends it to use more memory.  It has a 2KiB window it
+moves around memory unpredictably, doing Blowfish encryptions.  Like
+PufferFish, I expect it to have excellent GPU defense.  I was hoping
+that Battcrypt, with it's 2KiB window it moves around, would run
+efficiently when busting out of cache memory into DRAM, making it a
+possible Scrypt replacement.  However, in it's current form, it's too
+slow.  Here's my benchmarks.
+
+4MiB benchmark:
+
+PHCtime ./phs-battcrypt 0 9
+Allocated 4194304 memory
+
+47 b1 c0 b0 71 9c 87 f1
+9c 3c 6e 2d b1 c3 95 39
+a3 9c 22 38 9d a5 41 29
+06 eb cb 9b 7d 62 14 06      32 (octets)
+
+
+real	0m0.089s
+user	0m0.089s
+sys	0m0.000s
+
+
+1GiB benchmark:
+
+PHCtime ./phs-battcrypt 0 17
+Allocated 1073741824 memory
+
+17 2b e5 77 32 76 4a 97
+39 a4 fe 1c f6 32 fe c4
+74 80 24 39 ec fb 71 08
+db 70 c1 0e a7 24 e3 76      32 (octets)
+
+
+real	0m20.192s
+user	0m20.122s
+sys	0m0.076s
+
+
+These numbers are *way* too high for competing with Scrypt in large
+memory hashing.  However, for strong GPU defense in small memory,
+Battcrypt is great, just like PufferFish and bcrypt.  I tried to see
+if I could tweak the code to get it to be speed competitive with the 3
+potential Scrypt replacements, but I failed.  I reduced the encryption
+rounds from 16 to 1, and that helped a lot, and I got rid of the early
+garlic rounds and only computed the last one, but it was still too
+slow.  Here's my benchmarks with these two tweaks:
+
+
+Reduced round version with minGarlic == maxGarlic:
+
+PHCtime ./phs-battcrypt 0 9
+Allocated 4194304 memory
+
+56 c5 19 9a f6 08 1f 6e
+39 c0 c1 05 11 4d 98 87
+bd 62 10 c5 00 27 02 61
+4b 8c 0e f5 a6 bd d8 2b      32 (octets)
+
+
+real	0m0.014s
+user	0m0.009s
+sys	0m0.005s
+
+PHCtime ./phs-battcrypt 0 17
+Allocated 1073741824 memory
+
+18 fd d1 02 33 32 49 89
+bd 48 86 70 64 10 78 e2
+aa ae 02 4d 32 4e ac c5
+03 83 be c8 06 b7 d7 62      32 (octets)
+
+
+real	0m2.232s
+user	0m2.168s
+sys	0m0.064s
+
+Lyra2 does the 1GiB benchmark in something like 0.34 seconds.  2
+seconds is a non-starter for Scrypt replacement.  I am not sure
+exactly what is keeping it from running faster, but Steve can figure
+it out.  As it is, I see Battcrypt and PufferFish as essentially on
+equal footing as a pure Bcrypt replacement.  Only Yescrypt also
+competes in this category at this level with these two, though both
+PufferFish and Battcrypt have that bcrypt KISS simplicity, while
+Yescrypt does not.
+
+Assuming we may want to have a Bcrypt replacement winner, I have a
+hard time recommending that either PufferFish or Battcrypt be dropped
+from the second round.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFI/QAAoJEAcQZQdOpZUZ/M4P+QHU6AgqmwWUfbz7Hv7zmpdh
+TiXA/JmccpXP+jpUG5rH8ZOiTHUbD8PPCTVS+CfAt8695c4WquggJ1eXpW1Bujas
+hxZeyDtrVCdGUlrsbB0eryvFwrLfZK8JKAn0lgvXuTGKv6VjSrrJF4CMnjCj0VyH
+ZawfRXAe9C94p2CANQYKPwx4O/D0Ik3B+FTBYKGgYWYIHhJx2thj3DhZXidiauzF
+UHRtx2MjjuDdhq6wCtLKWD8mVop76MhepNS6ozaPqTux3KuAS5AMyZyXWtVW2Nnl
+EEvNnsknp/iw6kUGPK3qBhJpOXmg7bmbnN+HQvnh8hT/IPVe2fMFZrtpU12gvEFp
+4i0a+pIhC9MipklPSy1VUVlIT5oqexvsaDtULqnnh0VXxn9U/8fg6wgBmXt723h3
+R3IeLhh4xtx5TK0bl4SqU11FbT3lIADZqBJR1uBCrjOSmrOEugZCWqaOMn/4Nhe2
+AKzofgROHhdYCnCcFz+OeWY2OxzVCcYb+P4t/ULxLyNijrlXNBdWvpRc2kQTZgx3
+f4Z8bW3YF/kEL8VAZjViL4q17X3fWeCEcmQbXWX6ilnhmPSjIZtyKMA+7AOiXmMT
+9xKNLlB2c2k8Qp/BI6NAeElUTQWxkKAqw/ZA5nWuKCX5oO/R5I8IFECb0ZfwbK5v
+rQepNrSF496iboGy0reN
+=u8SX
+-----END PGP SIGNATURE-----
+

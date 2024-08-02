@@ -1,0 +1,38 @@
+phc-discussions - scrypt like hash, but with AES and HMAC-SHA-2
+
+Message-ID: <CAK9dnSw7UTx5bVE=OZj5riW1UE2W=DnubJe5xmZ_a5LBE0xSDQ@mail.gmail.com>
+Date: Wed, 7 Aug 2013 13:07:54 +0200
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: scrypt like hash, but with AES and HMAC-SHA-2
+
+An hash I designed a couple of months ago:
+
+* Time/memory trade-offs are harmless as long as Time*Memory can't be
+decreased
+* Time/parallelism trade-offs are bad once parallelism exceeds defender's
+maximum parallelism
+* The basic construction is similar to scrypt, but the primitives are
+different
+* Reuse existing schemes, like AES-CBC, SHA-256, HMAC and HKDF
+* AES is fast is software when AES-NI is present
+* ~128 bit security is enough, you typically only apply stretching to low
+entropy inputs like passwords. But hashing the original key together with
+the output of the strengthening operation avoids reducing entropy to 128
+bits for strong passwords.
+* Well defined character encoding: UTF-8
+* When used as a KDF large outputs doesn't cause multiple invocations of
+the expensive part (unlike PBKDF2)
+* Like in scrypt, only the query phase is supposed to be memory-hard. The
+expansion phase suffers from the same attacks as scrypt's expansion
+* Random access to elements could enable cache timing attacks, but I don't
+think those are a big issue in practice, especially with unknown salts. But
+all schemes with predictable memory access I know are much weaker than
+scrypt.
+* I'm not happy with how it treats parallelism and the attackable first
+phase isn't nice either. I hope to improve on those in a future version.
+
+https://gist.github.com/CodesInChaos/6173041
+
+
+

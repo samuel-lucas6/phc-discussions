@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Interleaved attack on cache-timeing-resistant KDFs</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="../../../2014/02/12/8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p6qDfMhpjy2FAhfSSTnUnAeZ2iUP1NfBiRTCJUMoQ_eLA&#64;mail.gmail.com&gt;
+Date: Tue, 11 Feb 2014 17:13:20 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Interleaved attack on cache-timeing-resistant KDFs
+
+It turns out that what matters most for a cache-timing-attack immune
+KDF (like Catena) is memory bandwidth.  Everything else can be
+accelerated by an attack in an FPGA.  There is no significant gain in
+defense for running out of expensive on-chip cache, and there is no
+significant gain for having a difficult to compute hash function (like
+my multiplication compute-time hardened hash function).  It is far
+more important to hammer the memory bandwidth, so a fast hash
+function, and running hash functions in parallel are the important
+things, as these increase memory bandwidth.
+
+Consider the case of a KDF that has a slow but cryptographically
+secure hashing function in its inner loop, which generally runs in
+cache rather than out of external DRAM.  The thinking is that
+read/writes of small 64-byte hashes randomly is inefficient for
+external cheap DRAM, but quite efficient for cache.  Instead of having
+several MiB of expensive on-chip cache for every guessing core, an
+attacker simply interleaves the memory for many guesses in parallel.
+For example, if the KDF does 64 bytes of memory read/write at a time
+to 10MiB of on-chip cache, then an attacker can instead interleave
+memory for 256 guesses in parallel into 16KiB blocks of memory and
+store them in cheap external DRAM.  There would be 16KiB read from
+external DRAM every time the KDF would normally read a 64-byte hash
+from cache, so we stream memory in/out efficiently at near max speed.
+
+Even a small slow FPGA can compute the 256 hashes in parallel easily
+in the time it takes to load 16KiB of memory, so the memory bandwidth
+becomes the main bottleneck.  Any time spent hashing data rather than
+hammering the memory interface is time an attacker can simply subtract
+from his password cracking time.  The hashing cores wouldn't even have
+to wait for all 16KiB of memory to load, because the first core could
+start it's hashing after the first 64 bytes are loaded.  This is a job
+for an FPGA, and a custom ASIC isn't even particularly helpful.  An
+Altera Stratix V FPGA can sustain 40GiB/s data rates to external DRAM
+over 4 DDR3 lanes.  If a KDF read/writes 10MiB 6 times, that's 60MiB
+of memory transfer.  That FPGA could do about 680 guesses per second
+with just 4GiB of external DRAM.  If instead, that KDF did 1 GiB of
+hashing, for 6GiB/sec of memory bandwidth, the FPGA could only do 6 to
+7 guesses per second.
+
+This means cache-timing-attach immune KDFs need as simple a hash
+function as possible, and maybe they should do some hashing in
+parallel, with SIMD and/or multiple threads to get their memory
+bandwidth higher.  This is the best way to defend against brute-force
+guessing attacks.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

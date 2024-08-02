@@ -1,0 +1,26 @@
+phc-discussions - Re: [PHC] Re: Updated tests document (version 2)
+
+Message-ID: <553F1E7E.9010807@dei.uc.pt>
+Date: Tue, 28 Apr 2015 06:45:34 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Updated tests document (version 2)
+
+On 04/28/2015 12:55 AM, Bill Cox wrote:
+I think there are just 3 candidates now supporting multiple threads.  It is
+surprisingly hard to guestimate parallel thread performance from parallel
+process performance.  The reasons remain mysterious to me, but the short
+version is that each thread seems to want sole access to it's own page.
+Mixing nearby read/writes between threads thrashes something, maybe the
+translation lookaside buffer?
+
+The more common (and costly) stall when reading and writing nearby memory accesses is false sharing: Core 0 writes to
+cache line X, while Core 1 reads from the same cache line X. Since our chips are cache-coherent, this forces X to be
+constantly flushed to main memory, even if Core 0 and 1 never actually accessed the same memory address.
+
+Cores may also be fighting for control of the outermost cache layer (L3 these days). Each core has its own TLB, and
+presumably every page is setup ahead of time, so I'm not sure that's the main factor in such slowdowns. But as always,
+measuring these performance events is the only way to be sure.
+
+
+

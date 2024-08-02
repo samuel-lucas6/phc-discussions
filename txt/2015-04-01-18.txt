@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] OMG we have benchmarks
+
+Message-ID: <551BC78C.2090501@gmail.com>
+Date: Wed, 01 Apr 2015 12:25:16 +0200
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] OMG we have benchmarks
+
+On 04/01/2015 11:40 AM, Solar Designer wrote:
+On Wed, Apr 01, 2015 at 11:01:36AM +0200, Milan Broz wrote:
+>Graph for t_min is here (but is somehow strange)
+>https://raw.githubusercontent.com/mbroz/PHCtest/master/output/round2_Lenovo_X230_i5_16G/m_cost/memory_time.png
+
+This the more useful one, and it doesn't look strange to me.  There's
+some noise, but if the number of samples was small that's to be
+expected.  Thank you!
+
+It's puzzling that the Lyra2 lines don't reach 512 MB and that several
+others don't have a final point at 1 GB, though.
+
+It need some tweaking probably yet. Also test is run in single user mode,
+I tried to kill all other processes and despite that there is still a lot
+of noise when measuring time. 
+ 
+When you benchmark -SSE versions, what exactly are those built for?
+SSE2, SSSE3, SSE4.1, AVX, AVX2?
+
+For reference versions, I removed sse/avx/-mnative flags to be able to
+compile it on other architectures.
+
+For SSE versions I tried to keep the same compile parameters as
+in original makefile for the optimized version.
+Everything is in hash_lib directory so you can check it.
+
+(FWIW, yescrypt's pwxform is such that it can be as optimal with SSE2 as
+with AVX, but compilers tend to produce better code for it when SSE4.1
+or AVX is enabled.  We may introduce a hand-written assembly version in
+plain SSE2 eventually, which I expect to be same speed as AVX.  Luckily,
+the performance difference between these different SIMD builds of
+yescrypt is small, though.  Only AVX2 and beyond should differ more,
+once such intrinsics are added to yescrypt-simd.c.)
+
+For yescrypt-sse it uses yescrypt-simd.c and CPU is capable of SSE4.1.
+
+Milan
+

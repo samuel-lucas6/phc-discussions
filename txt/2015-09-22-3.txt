@@ -1,0 +1,105 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <CAGiyFdei91KFndFauxkUAZEX=zaPndzV0JvDFUiAUn0FkG1uNg@mail.gmail.com>
+Date: Tue, 22 Sep 2015 19:05:38 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+Thanks Alex.
+
+Re ordering: I also meant the fixed order that makes the most sense for the
+primitive, rather than lex order. The order should just be well-defined and
+unambiguous.
+
+I'd also encourage a non-bloated syntax, since there's no benefit of having
+a better human-readable encoding. Also important is the consistency with
+the current standard.
+
+
+
+On Tue, Sep 22, 2015 at 6:10 PM Solar Designer <solar@...nwall.comwrote:
+
+Hi Thomas and all,
+>
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+here is my take at specifying a string format for the output of a
+password hashing function; this aims at supporting password verification
+in a way compatible, in particular, with the Unix crypt() API and the
+/etc/shadow files. This is not for use of a function as a KDF. I tried
+to remain as generic as possible, although of course the primary target
+is Argon2.
+>
+First of all, thank you for working on this!
+>
+Then, I'm sorry for being a bit late with my feedback.  Yet maybe better
+late than never, so here goes:
+>
+I dislike use of <param>=<value>, as opposed to just listing the values.
+>
+I also find it inconsistent that the proposed syntax mixes bloated
+constructions such as long identifier names, use of <param>=<value>, and
+use of decimal with the more compact choice of crypt(3) base64 encoding
+rather than RFC Base64.  I think we should consistently opt for a
+compact or a bloated encoding, and I'd prefer compact, but if you do
+bloated, then do it to the fullest extent (and we'll have a compact
+alternative then).
+>
+I do see value in listing of the parameters in a fixed order (and in
+having no defaults and in listing all parameters all the time as well,
+despite of the drawbacks).  However, when that fixed order comes from
+lexicographic order of parameter names it may end up being otherwise
+weird, and inconsistent with what we already have for scrypt.  Given
+that yescrypt builds upon scrypt and supports scrypt compatible mode,
+I'd like to have its parameters common with scrypt listed first and in
+the same order as is commonly used with scrypt.  This is N, r, p, but
+lexicographic order would result in N, p, r.  I find having to introduce
+this inconsistency, if we adopt your proposal as currently specified,
+unfortunate.
+>
+It could also be nice to be able to omit yescrypt's additional
+parameters that are not in scrypt - in other words, use this opportunity
+to introduce a syntax for scrypt that would address some limitations of
+what we previously defined for scrypt, without having to list yescrypt's
+parameters.  Well, I guess we can do that within your specification by
+allocating a separate identifier string for scrypt.
+>
+The use of crypt(3) base64 could help encode the parameters in a more
+compact way, e.g. use just one char (and no separator before/after it)
+for (ye)scrypt's log2(N).  I find it suboptimal to go for crypt(3)
+base64 yet not take full advantage of it.
+>
+Overall, I think this verbose syntax might hamper adoption by some
+projects.  I also think that if we go for a verbose and human and
+scripting friendly syntax for the parameters anyway, we should as well
+bite the bullet of RFC Base64 with its extra padding characters.  Having
+3 extra characters is negligible compared to the bloat we already have
+in the proposed long identifiers and the encoding of parameters.
+I actually prefer crypt(3) base64, but I dislike the bloat already
+proposed enough that going for RFC Base64 just doesn't make it all that
+much worse for me, while making it better for others.  I'll probably
+come up with an alternative compact encoding anyway, and this one may be
+bloated to the fullest extent then.  OTOH, it's nice to have a common
+encoding type (and common code) between the compact and bloated forms,
+so maybe your choice is right from that point of view.
+>
+Also, if we go for a bloated syntax anyway, we probably should use the
+opportunity to allow for encoding of arbitrarily small or large salts,
+and arbitrary hash sizes.  So that e.g. if crypt() is available via
+pgcrypto or something, thus via SQL queries in this example, its support
+for a PHC scheme could then be reused to compute that scheme with
+arbitrary inputs with no artificial restrictions.  e.g. to derive
+multiple keys at once (where 256 bits could be too little).  I don't
+feel about this strongly, but overall I feel that we should either avoid
+bloat or use the potential advantages of the bloat to the fullest,
+whereas the proposed encoding does neither.
+>
+Sorry for the criticism.  Again, I appreciate the effort.
+>
+Thanks,
+>
+Alexander
+>
+
+
+

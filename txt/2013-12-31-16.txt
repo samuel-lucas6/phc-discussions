@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] optimizing memory access speed
+
+Message-ID: <CAOLP8p6Dme8A2OSRig+3roSipzF098ZOTSck5WpeGL7+Q-XhVQ@mail.gmail.com>
+Date: Tue, 31 Dec 2013 16:49:10 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] optimizing memory access speed
+
+That was it!  That's some serious out-of-order execution!  CPUs have gotten
+a lot better at this since the 90's.  Thanks for the tip.
+
+
+On Tue, Dec 31, 2013 at 4:12 PM, Samuel Neves <sneves@....uc.ptwrote:
+
+On 31-12-2013 20:34, Bill Cox wrote:
+>
+        for(j = 0; j < BLOCK_LENGTH; j++) {
+            hash ^= sourceBlock[hash & BLOCK_MASK] * 0xdeadbeef + 12345;
+            //hash ^= sourceBlock[j & BLOCK_MASK] * 0xdeadbeef + 12345;
+            destBlock[j] = hash;
+        }
+>
+>
+It may have little to do with caching. Consider the instruction
+dependencies across the loop in either case: each sourceBlock memory
+load must wait for the hash value to be computed to know its next
+address, while in the commented line every memory load can be done
+independently of the value of hash.
+>
+
+
+

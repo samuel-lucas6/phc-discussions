@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Re: Proposed changes to author's code</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="28">[&lt;prev]</a> <a href="30">[next&gt;]</a> <a href="28">[&lt;thread-prev]</a> <a href="31">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140406215311.GA18688&#64;bolet.org&gt;
+Date: Sun, 6 Apr 2014 23:53:11 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Re: Proposed changes to author's code
+
+On Sun, Apr 06, 2014 at 03:31:59PM -0400, Bill Cox wrote:
+&gt; Also, I want to start recording some data for each entry that will
+&gt; help in automated testing.  In particular the legal input ranges for
+&gt; t_cost and m_cost.  It would also be great if the authors could let me
+&gt; know their prefered t_cost and m_cost settings for the different modes
+&gt; they support, for example L1 cache such as Blowfish, L1 or L2/L3 cache
+&gt; such as Catena, L1 or L2/L3 or main memory such as Yescript.
+
+For Makwa:
+
+ -- Input length is arbitrary, including empty (length = 0)
+ -- Salt length is arbitrary, including empty, which is of course not
+    recommended. Normal salt length is 16 bytes, but that's just a
+    convention.
+ -- t_cost is the unique cost parameter. Computation time is proportional
+    to that parameter; on my 2.7 GHz i7, computation time is about 1
+    second when t_cost is close to 600000.
+ -- m_cost is completely ignored.
+
+Internally, the code will allocate a buffer in which both the input and
+the salt are copied, so don't call the function with a salt or input
+in the gigabyte range -- which would hardly make sense anyway. Salt
+and input length do not noticeably impact computing time. The whole
+processing remains in CPU L1 cache; Makwa is not memory-hard.
+
+
+Mind the comments in makwa.h about the PHS() function, though.
+Basically, this function is good only for tests. Makwa uses a RSA
+modulus as parameter; for PHS(), this is a hardcoded modulus (in phc.c).
+Since the factors for that modulus are not known, this misses out on
+some of Makwa functionalities, such as the "fast path" and the escrow
+system. More importantly, you would have to trust me for not having
+saved these factors somewhere. I cannot logically prove that I did not
+do exactly that.
+
+Moreover, PHS() is hardcoded to use both pre- and post-hashing, which
+is fine for what you intend to do (run statistical tests) but, again,
+disables some other features (e.g. offline work factor increase).
+
+
+Performance relies quite heavily on that of OpenSSL. On MacOS X machines,
+the system-provided OpenSSL is old and slow; compiling a fresh one from
+recent sources is highly recommended (we are talking about a factor of 5
+or so here, which is not negligible at all).
+
+
+&gt; For testing, I have access to my own machine, which is biased towards
+&gt; my own TwoCats entry since that's where I tuned it, and probably also
+&gt; Alexander's two machines he gave me accounts on, one a Haswell
+&gt; processor, and the other a nice high-memory-bandwidth Sandybridge
+&gt; server.  I don't know where else to test.
+
+You may want to ask for an account on the GCC compile farm:
+<a href="http://gcc.gnu.org/wiki/CompileFarm" rel="nofollow">http://gcc.gnu.org/wiki/CompileFarm</a>
+
+As long as the project is free software, this should not be problematic.
+Since these machines are shared, you have to exercise some care when
+running performance tests (i.e. check whether the machine is presently
+idle, otherwise you may get skewed results).
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

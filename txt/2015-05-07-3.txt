@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Message-ID: <20150507174617.GA14505@openwall.com>
+Date: Thu, 7 May 2015 20:46:17 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Marcos,
+
+On Thu, May 07, 2015 at 08:32:47PM +0300, Solar Designer wrote:
+In a similar spirit, I think we should lock p=1 for these tests, and add
+the maximum amount of parallelism externally - much like it'd happen on
+an authentication server or in an attack.  So e.g. on a quad-core Intel
+CPU with HT, we should run 8 threads externally to both yescrypt and
+Lyra2, both at p=1.  And keep the memory (de)allocation out of the loop,
+if we can - or maybe report both kinds of benchmarks (with this overhead
+included or excluded, as it can be either depending on how well a given
+software integration or server deployment has been performed).
+[...]
+For yescrypt t=0, 2 MB, you report latency from 1750 us to 2700 us for
+p=1 to p=4.  However, I know that e.g. on i7-4770K, it performs 3400
+hashes/s (without use of AVX2) at 2 MB per thread.  Luckily, for the
+purpose of this comparison, it's around 3400 for 4 or 8 threads -
+doesn't matter.  (I think this is in part due to 2 MB being exactly the
+L3 cache size per core, as well as due to yescrypt including slightly
+excessive parallelism when run with 128-bit SIMD.)  That's for 8 MB or
+16 MB total.  1750 us could suggest a throughput of only 570 per second,
+which is 6 times lower than actual (and IIUC yours is for 2 MB total,
+vs. 8 MB or 16 MB total for my 3400 figure).  But things don't really
+work like that, which highlights the problem with the methodology.
+
+I realized I need to clarify.  I think the memory range in these
+benchmarks (e.g., 128 KB to 2 MB as it is currently in yours) should be
+per-independent-thread (or independent process, doesn't matter).
+So e.g. if we're comparing against a quad-core 8-thread CPU, it should
+be running e.g. from 8 * 128 KB threads to 8 * 2 MB threads (or even
+independent processes).
+
+If you're still using your 6-core / 12-thread (IIRC?) system for these,
+then similarly make it 12 independent threads or processes.
+
+Thanks,
+
+Alexander
+

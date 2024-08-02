@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] simplifying yescrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5445DD52.2050106&#64;ciphershed.org&gt;
+Date: Tue, 21 Oct 2014 00:13:06 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 10/20/2014 10:04 PM, Solar Designer wrote:
+&gt; More detail on one of the possible changes:
+&gt; 
+&gt; On Tue, Oct 21, 2014 at 05:58:37AM +0400, Solar Designer wrote:
+&gt;&gt; - Drop support for ROM access frequency mask.  In practice, this 
+&gt;&gt; will mean no ROM-on-SSD support (only ROM-in-RAM will be 
+&gt;&gt; supported).  The reason why I am considering dropping this is 
+&gt;&gt; that in most cases where I would have recommended use of 
+&gt;&gt; ROM-on-SSD I would _also_ recommend simultaneous use of 
+&gt;&gt; ROM-in-RAM, and then it would need to be two ROMs, with
+&gt;&gt; different access frequency, resulting in even greater complexity.
+&gt;&gt; Perhaps just one mask (only for the ROM-on-SSD) would be enough
+&gt;&gt; even in that two-ROMs case, though.
+&gt; 
+&gt; My options are:
+&gt; 
+&gt; 1. Leave things as-is, meaning that "large" yescrypt users (on 
+&gt; dedicated authentication servers) will have to choose either 
+&gt; ROM-in-RAM or ROM-on-SSD, but not both at once (well, except 
+&gt; possibly by chaining two invocations of yescrypt, which is a 
+&gt; suboptimal hack).
+&gt; 
+&gt; 2. Add support for two ROMs at once.
+&gt; 
+&gt; 3. Drop support for controlling ROM access frequency (and thus for
+&gt;  ROM-on-SSD).
+&gt; 
+&gt; Obviously, only #3 fits the topic of this posting, but I'd like 
+&gt; this community's opinions on which option is best.  Technically, 
+&gt; I'd be able to introduce #1 or #2 in a superset of yescrypt later 
+&gt; even if I go with #3 now, so the question may be whether we want 
+&gt; ROM-on-SSD considered a supported feature in PHC context (in the 
+&gt; PHC candidate or in a currently existing superset of it).
+&gt; 
+&gt; For ROM-in-RAM, there's normally no reason to use a mask other
+&gt; than 1, which means that 1/2 of reads (and obviously none of the
+&gt; writes) are from ROM.
+
+Hypothetically, I can imaging going to work for some huge
+corporation... like Google for instance, maybe even in their
+authentication group.  In that case, if I were going to internally
+promote Yescrypt based password authentication servers, it might be
+the case that many of my peers know even less about password hashing
+than me.
+
+I think my first challenge would be to convince people of the value of
+ROM in the first place.  That's easy - it eliminates botnet attacks.
+After that, explaining why we need *two* forms of ROM, and how that
+makes password hashes more secure is actually beyond my skill level
+right now.
+
+Somehow I feel we need to be able to delegate a proper password hash
+with the security of Makwa, while using a 1TiB ROM to defeat botnets,
+and only store a user's public key in the user database.  I was told
+about the idea of only storing user public keys rather than password
+hashes recently, and I think the idea has merit.  However, that means
+there is a private key sitting on an average user's cell phone, and
+that key needs proper pin/password protection with a good password
+hashing algorithm.  I certainly hope we can use a PHC winner for that :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJURd1PAAoJEAcQZQdOpZUZSEoP+wWySQSd+lAp7U1hR91qD1qJ
+I8Gh9PlFfbZVxLebawybZy2FBTAyQonsLvDEWt6BIHw3i6u+1lPgpNJ8xbILZK/5
+uVyG9vEMbMPl/6/ohUZM/YUH4Xe1JipudD/j95Z2Gl1iBOPQky3g03K6NLcuRH3i
+W9/Q+XwN4MsDebaOy0+6p2rrQP1MAt2zW7+Wpcj+bggCI2fgLXPNAJvJZIezh7Ww
+yhg+9A+CIFbDLG9neYxG4RSASZ41o66oSddnSRiYVx9G7fzZEn7Gx264toj7a3Sc
+P3TbqHxIQbW/YWcBGtofbhav0SyG5NwJCb/pdyr8ctSEH8Ef8iyKSuGbeZBS/pOV
+phz1yNmBurA+yjPpCQbgNxdeE2bQhWgS5ATkHYj9Z8KVQ9kg73rmRN15uXzbhgIZ
+/AzueyU/oR1q48KVMSX1nYOke85SVFeRgn72qb7Oq7Y1aT9aITPe+R7iHyoLJ6oB
+PL6LOpFZfyd7CqulgSw6zy+OCR1o9EqB87DzsFKMVsl8fyauoojZppcfEBUwzgbW
+Ald19NczdpFuHfjB0lOBDtzklaCaDqb8Z0tc8DS4XRmufJClrAa/T1UTq9KjmAdZ
+BKp4A2jYDBtWJLfdylsCjHhgDilUVGDVbLUhGyUgqGl9HZEG3n+UwPXQ3RNRI/Cf
+4m+6719qjsy7Pyat0KSL
+=Mbx8
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

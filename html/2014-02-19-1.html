@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - avoiding cache thrashing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/02/18/3">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140219142524.GA31253&#64;openwall.com&gt;
+Date: Wed, 19 Feb 2014 18:25:24 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: avoiding cache thrashing
+
+Hi,
+
+Here's another idea I'd like to share with this community.
+
+When trying to access multiple layers in the memory subsystem at once -
+e.g., L1 cache and L2 cache, or a cache and RAM - a problem is that our
+accesses to the larger cache throw data out of the smaller cache, yet we
+know we're going to need that data in the smaller cache again very soon.
+
+For convenience, I'll be calling the smaller cache L1 and the larger
+cache (or RAM) L2.
+
+We wish we had some local memory instead of (or in addition to) L1
+cache, but on general-purpose CPUs we don't.  We can't do anything about
+this, or can we?
+
+Yes, we can.  Cache thrashing occurs only when the L1 cache tag of a L2
+access matches that of a possible L1 cache access.  So the workaround is
+to avoid such L1 cache tag matches between the two types of accesses.
+We can do that e.g. by resetting an address bit (in the range that is
+part of L1 cache tags) in all L1 accesses, and forcing the same address
+bit to 1 in all L2 accesses. (*)
+
+A drawback of this workaround is that it effectively halves our usable
+sizes of both caches.  What can we do about that?  Another workaround:
+once in a while, alter our choice of address bit that we split the two
+types of accesses on.  Each time we do this, we effectively swap a half
+of the active and inactive cache halves (for both caches at once).  Of
+course, when a previously inactive L1 cache half becomes half-active, it
+has only a subset of its original L1'ish data (with the rest having been
+thrashed with L2 accesses that we made while that half was inactive).
+Thus, we shouldn't do such swapping very often, but we may nevertheless
+occasionally do it to make some use of the other halves (and of the data
+contained there).
+
+A concern is what happens when multiple threads are running.  When each
+thread has its own L1 cache, there's no problem.  However, when some
+threads share a L1 cache - perhaps on a CPU with 2+ hardware threads per
+core - we have a potential problem: L1 access tags of one thread may
+happen to match L2 access tags (for L1 cache) of another thread sharing
+the L1 cache.  Then we have L1 cache thrashing again.  To avoid it, we
+need to keep the threads' use of categories of L1 cache tags in sync.
+If we accept only using one half of each cache's capacity (total for all
+threads sharing a L1 cache - thus, at most 1/4 of L1 cache size per
+thread instead of at most 1/2 per thread, which would be full use), then
+all we need to do is align all threads' memory allocations to cache set
+boundary (which is typically achieved along with aligning to page
+boundary) and refrain from altering our choice of the selector bit (just
+hardcode it).
+
+If we do insist on altering the choice (to more fully use caches'
+capacity and the data contained at those other addresses), then we'd
+need explicit thread synchronization, which is not always possible:
+the multiple threads might not be part of one instance of our hash
+computation - instead, they may be the caller's, or they may be part of
+different processes or even different VMs happening to run multiple
+instances of our software on the same machine.
+
+Thus, there's a tradeoff: either we use half the caches' capacity only
+or we likely incur L1 cache thrashing when multiple instances (beyond
+the number of physical CPU cores) are run on a machine with multiple
+hardware threads sharing a L1 cache.
+
+(*) Since our L1 accesses are likely more frequent than L2 ones and since
+we probably use an AND instruction anyway - to extract the index - it
+is cheaper to reset the bit for L1 accesses and set it for L2 accesses,
+rather than the other way around.  In fact, this same one AND instruction
+may also be used to mask multiple indices at once, matching the S-box
+count, if that's what we're using.  Thus, larger S-box count helps
+amortize the cost of this AND in software, which is desirable since this
+cost is fully avoided in ASIC.  The L1 index mask might be e.g.
+0x0ef00ef00ef00ef0ULL for indexing 4 S-boxes with 128-bit elements, with
+the e's instead of f's showing where our selector bit currently is.  The
+lower bits are zero so that we obtain byte offsets right after applying
+the mask, saving on the need for shifts or addressing modes with index
+scaling.  16-bit (like in this example) or 32-bit sub-fields may be used
+for easier extraction of the individual indices on some archs, in some
+cases helping avoid shifts too.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

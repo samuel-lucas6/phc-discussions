@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p6h5DCLiTdBMBDHZ=zzo3eNxWyGfTz10J2uMkWFQpDzmg@mail.gmail.com>
+Date: Fri, 14 Feb 2014 09:39:13 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 9:00 AM, Bill Cox <waywardgeek@...il.comwrote:
+This small random read runtime penalty is driving me crazy.  If it
+were just my Ivy Bridge processor, I could maybe explain it as a weird
+Intel/gcc quirk.  I just don't see how to explain this happening on
+both Intel and AMD processors while the assembly code looks about
+right.
+>
+Bill
+
+It looks like there's something goofy going on with L1 cache.  When I
+manually call memcpy on the 'from' block to a local buffer on the
+stack, it runs much faster.  Some prefetch intrinsic might help here.
+It also helps a lot if I have an inner loop over 8 32-bit sequential
+values, which is probably good for AVX2, and it matches the bit width
+of SHA-256.
+
+I'll play around with it some more.
+
+Bill
+

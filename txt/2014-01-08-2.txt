@@ -1,0 +1,62 @@
+phc-discussions - A final cheat killer pass with smoke
+
+Message-ID: <CAOLP8p4E=UYXEkDFFAEWiOgFKUN0xQ1BjRSh+8n5ApsxN4K6aQ@mail.gmail.com>
+Date: Wed, 8 Jan 2014 09:56:25 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: A final cheat killer pass with smoke
+
+Sorry... I wake up with dumb ideas most mornings, and this group is the
+current victim.
+
+Two problems have been bothering me about NoelKDF.  First, for users
+enabling multiple threads, each thread can run serially or in parallel and
+you get the same answer, giving the attacker his choice of TMTO.  Alexander
+eliminates this with random reads (and writes?) from all of memory after
+the threads have finished filling memory.  The second problem is that using
+Catena's style of accessing memory in a predictable way independent of the
+password gives an attacker an advantage.
+
+So, after my threads finish filling memory with their hashed data, I could
+run a "cheat killer" pass that randomly accesses all of the hash data in a
+pattern that depends on the password, making it impossible to pre-compute.
+ Catena cheaters, if I'm not mistaken, suffer an exponential penalty in
+this round.  I am likely wrong about that, so don't worry about it for now.
+ I'll have to prove it, but I think it's that devastating to Catena
+cheaters.
+
+If we ran this round on say 1% of all memory, it would not slow down the
+KDF significantly, but the addition protection is large.
+
+Because it only comes at the end, an attacker looking for a specific cache
+miss pattern would not gain a significant advantage in password guessing
+speed, so the major complaint against password based memory accesses goes
+away.  However, some information still leaks.  In particular, while the
+cache timing is useless for password guessing, it does provide a detectable
+timing signature that proves a particular user has just authenticated his
+password.  This seems a bit silly to worry about.  For example, I can just
+run the "who" command to see who's logged in, or ps to see what processes
+they are running.  Also, the server is very likely going to so something
+very user specific, like generating an HTML page that is unique to the
+user, providing lots of opportunities for detecting a timing signature.
+ Our memory hard KDFs are meant to protect the user's password, not cover
+his tracks.
+
+Still, we could eliminate this slight leak with "smoke".  This would be a
+random value generated just for this run of the KDF.  The final round would
+first fill an array of addresses that it needs to access based on data
+derived from the password, and then the smoke would be used to shuffle the
+values in the array.  The cheat killer pass would read all those locations
+in the randomized order, adding together the values at those memory
+locations.  The result is independent of the order, but the cache miss
+timing is scrambled, and I think there is not enough timing information
+leaked to be useful in any way.  After randomization, even the number of
+cache misses changes.
+
+I'm going to add a short cheat killer round to NoelKDF.  Is the smoke worth
+implementing?
+
+Bill
+
+
+

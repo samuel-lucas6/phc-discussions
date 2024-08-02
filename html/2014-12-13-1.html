@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] How important is salting really?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/12/12/39">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/12/12/38">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAMtf1HtKjwdonR+f6L7En7qg=QWZFhX8psWbriWma1zrR2dS0g&#64;mail.gmail.com&gt;
+Date: Sat, 13 Dec 2014 08:07:17 +0800
+From: Ben Harris &lt;ben&#64;...rr.is&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On 13/12/2014 3:11 am, "Brandon Enright"
+&gt; Your description ignores an important optimization in the case where
+&gt; some hashes share a salt.  If you have N unique hashes and M unique
+&gt; salts then the work per candidate password is O(M) rather than O(N).
+&gt;
+&gt; All cracking tools use a unique salts table because in many realistic
+&gt; scenarios M &lt; N so what matters is not eliminating hashes from the hash
+&gt; table, it's eliminating unique salts from the salt table.
+
+I think unfortunately the status-quo has resulted in two different
+definitions for salt that depend on your personal context.
+
+Today's situation - salt is missing, constant or underspecified (12-bit
+salt was probably fine for my 20 account passwd file twenty years ago,
+practically needs to be globally unique now so 64bit +).
+
+PHC context - what the recommendation should be going forward. Salt is a
+properly implemented salt so M=N above. A 12bit "salt" doesn't provide much
+defence against anything today.
+
+Underlying this is the fact that most users would chose from a list of the
+top million passwords (as an example - provides for a nice 2^20 number).
+
+So the initial question was - if people are going to choose a weak password
+anyway, why bother with the salt. And the two answers were:
+The salt prevents precomputation attacks against good passwords (when using
+a real salt).
+The salt just provides an N times (M times with weak salt) slowdown when
+attacking weak passwords.
+
+If 2^48 hashes cost a dollar. In the case of the million weak passwords and
+a weak 12bit salt, the PHC winner needs to increase the work factor by much
+more than 2^16 to make attacking the whole database uneconomic.
+If we use no salt the cost is 2^12 lower.
+If we use a real salt, the PHC winner needs to increase the work factor by
+more than 2^28 to make attacking *one hash* uneconomic.
+If everyone started using strong passwords (even just 40 bit entropy), the
+2^28 drops to a more manageable 2^8.
+
+The ranty/not so ranty side - it is great when we all contribute to the
+pool of understanding in a conversation. And not so great when we just
+reply with "you are wrong, it should be obvious to anyone who has actually
+done X". I'm pretty good at inferring someone's context, but if you are
+going to reply to each and every of my messages in a thread and tell me I'm
+wrong without actually adding anything to the pool of understanding I'm
+liable to start poking back.
+
+Epixoip: I clearly hit a nerve for you to respond so strongly. Given that
+we know next to nothing about one another I'm sure you can see it was a
+lucky hit. I am sorry to have caused you so much distress.
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

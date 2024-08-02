@@ -1,0 +1,102 @@
+phc-discussions - RE: [PHC] Pufferfish
+
+Message-ID: <10f801d07442$a06017a0$e12046e0$@bindshell.nl>
+Date: Sat, 11 Apr 2015 03:31:09 -0700
+From: <epixoip@...dshell.nl>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Pufferfish
+
+Hey Alexander,
+
+-----Original Message-----
+From: Solar Designer
+Sent: Friday, April 10, 2015 23:43
+
+The Pufferfish specification document says "a catastrophic failure of
+Pufferfish's dynamic S-boxes or modified F function would not affect
+Pufferfish's cryptographic properties so long as HMAC-SHA512 remains
+unbroken."  That's great, but I failed to confirm it.  Looking at both
+the pseudocode and the actual C code, I see that only the salt input is
+bypassed over the bcrypt-alike construction, whereas the password input
+appears to only pass through that construction.  Am I missing something?
+
+Both the salt and the password are hashed with HMAC-SHA512 before doing anything blowfish-esque. Both the password and the salt are used in constructing both the s-boxes and the key. The salt is hashed, then the password is hashed with the salt to initialize the state, then the state is iterated depending on m_cost, and then the password is hashed again with the resulting state to generate the key.
+
+salt_hash = hmac_sha512 (P[0], salt)
+state = hmac_sha512 (salt_hash, password)
+iterate over the state with hmac_sha512 4 * (2^(m_cost + 5) / 64) times
+key_hash = hmac_sha512 (state, password)
+expandkey (salt_hash, key_hash)   // this is where the blowfishy stuff starts
+
+So initializing the key with an m_cost of 8 results in hashing the password with 514 rounds of hmac_sha512, which is /roughly/ equivalent to the security provided by sha512crypt with 1028 rounds. Not exactly an apples-to-apples comparison here, but that's the closest comparison I can think of. 
+ 
+
+Another deviation from that claim is in how Pufferfish produces longer
+than 64 bytes KDF output (when requested to do so).  You rely on your
+modified Blowfish actually working reasonably for that.  Post-processing
+of the output sub-blocks with HMAC-SHA512 wouldn't help if your modified
+Blowfish e.g. leaves ctext unchanged between iterations of the
+"for ( i = 0; i < blockcnt; i++ )" loop (e.g., because the S-boxes are
+all-zero by that time).
+
+I'm not sure I follow. I'll have to re-read this portion in the morning, but perhaps in the meantime you can elaborate on this. For example, I'm not sure why ctext would be unchanged between iterations, nor why the S-boxes would be all zeros. I agree this would be very bad, but I'm not sure how this scenario arises. 
+
+
+Of course, I don't expect failures like that to actually occur, since
+your modified Blowfish looks reasonable, but my point is that Pufferfish
+does rely on it for its cryptographic properties.  I'm afraid you'll
+have to remove that claim from the spec, unless/until further tweaks are
+possibly allowed (which, as you're aware, is currently not planned).
+
+This statement can be revised in the spec.
+
+
+In Pufferfish, the S-boxes can be made arbitrarily large.  [...]
+Thus, asymptotically the running time is
+reduced to 2/3 of what was intended. [...]
+The pseudocode for this attack is something like this:
+
+You've already addressed this in your follow-up, so I'll skip it.
+
+ 
+I thought that Pufferfish supported arbitrarily large S-boxes, but upon
+a closer look I doubt it.
+
+What's Pufferfish's maximum supported m_cost?  This suggests it's 11:
+[...]
+and I think it corresponds to only 2 MiB.  Is this right?
+[...]
+Somehow Milan benchmarked it to much larger sizes, likely invoking
+undefined behavior.
+[...]
+(or do you intentionally limit to 2 MB?)
+
+... Wow, you're right. I certainly never intended to limit it to 11, but it is indeed limited to 11! I actually thought that m_cost = 12 would result in x >-1 which I thought was equal to x << 1. While this does seem consistent on the systems I've tested on, you're right, it is indeed undefined:
+
+"If the value of the right operand is negative or is greater than or equal to the width of the promoted left operand, the behavior is undefined."
+
+While a 2MiB limit isn't necessarily tragic -- that is actually quite a bit of memory for Pufferfish -- it's certainly not what I had intended, and I definitely don't like it. I wish it would have been caught sooner :(
+
+
+Maybe use:
+
+static uint64_t pf_f ( puf_ctx *ctx, uint64_t x )
+{
+    return (( ctx->S[0][( x >( 64 - ctx->log2_sbox_words ) )] ^
+              ctx->S[1][( x >35 ) & ( ctx->sbox_words - 1 )]) +
+              ctx->S[2][( x >19 ) & ( ctx->sbox_words - 1 )]) ^
+              ctx->S[3][( x >3 ) & ( ctx->sbox_words - 1 )];
+}
+
+I like this, but it might be too late to change. I guess it depends on if it is viewed as a bug fix, or as a tweak. I personally view it as a bug fix, but others may disagree. If it is too late to change, it could likely still be tweaked after the competition if it is selected as a winner.
+
+
+I'm sorry I haven't looked at Pufferfish closely enough before the
+tweaks period ended.
+
+No need to apologize!
+
+Jeremi
+
+
+

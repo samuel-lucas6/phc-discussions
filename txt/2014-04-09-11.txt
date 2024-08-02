@@ -1,0 +1,63 @@
+phc-discussions - RE: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <469160bae77949f2b1e551fed65f068f@BY2PR03MB523.namprd03.prod.outlook.com>
+Date: Wed, 9 Apr 2014 22:46:10 +0000
+From: Greg Zaverucha <gregz@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+-----Original Message-----
+From: Christian Forler [mailto:christian.forler@...-weimar.de]
+Sent: Wednesday, April 9, 2014 10:30 AM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+On 09.04.2014 13:32, Dmitry Khovratovich wrote:
+Hi Christian,
+>
+>>Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+considered to be independent?
+>
+The independency is a not a well-defined notion here. Consider, for
+instance, distinct bytes of K1. Are they independent?
+>
+If we think about it for a while, it becomes clear that a single key
+can be splitted into as many keys as its length without any security loss.
+>
+>>y= H(PWD || salt)
+K1' =   F(y, 1)
+K2' =   F(y, 2)
+>
+This method is clearly equivalent to the first one. Indeed, consider
+H'(x) = F(H(x)||1)||F(H(x)||2). Then the second method turns into the
+first one with H = H'.
+
+
+Your observations are fine if H is a secure KDF. But it is easy to construct an
+insecure KDF out of a (preimage) secure password scrambler.
+
+Let G be a slow and memory-consuming cryptographic hash function and let
+F be a cryptographic hash function. Suppose H is a password scrambler and
+we have
+
+y = H(x) := G(x) || F(G(x)).
+
+H can be considered to be s secure password scrambler  since it is hard to
+recover x from y. Nevertheless, it is a bad idea to use y = y1||y2 directly as a
+key since you can derive y2 from y1 by just computing F(y1).
+
+Therefore, it might be a good idea to output
+
+F(y, 1) || F(y, 2) instead of y.
+
+Best regards,
+Christian
+
+This is basically how Catena-KG works, right? (y is computed as the output of Catena(pwd, salt, ...) and then the counter KDF is applied to y.) How would I use Catena-KG to generate multiple keys? Suppose it was instantiated with SHA-256 and in case (a) I need two 256-bit keys and in case (b) I need two 192-bit keys.  Could I use a single call to Catena-KG in both cases (with 512 and 384 as the length input respectively)?  Do you think your Theorem 7.1 generalizes to other password scramblers (so that the construction of Algorithm 5 could be used with the entries which aren't a KDF)
+
+I'll also comment that the counter construction used in Catena-KG is very similar to the one section 5.8.1 of [http://csrc.nist.gov/publications/nistpubs/800-56A/SP800-56A_Revision1_Mar08-2007.pdf] which *does* allow multiple keys to be derived with one call to the KDF (if I interpreted the text at the beginning of section 5.8 correctly).
+
+Thanks
+Greg
+
+

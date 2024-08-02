@@ -1,0 +1,56 @@
+phc-discussions - Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <6e657535a2294c0f8a843be6349d7688@BY2PR03MB523.namprd03.prod.outlook.com>
+Date: Tue, 8 Apr 2014 22:10:13 +0000
+From: Greg Zaverucha <gregz@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Deriving multiple keys (was RE: Mechanical tests)
+
+Christian, can you clarify/justify your recommendation?  Its common practice to call a KDF with an input parameter for the required number of output bytes then divide the output into two or more keys.  For instance, you might derive separate encryption authentication keys from a DH secret with one call to the KDF.
+
+One example standard that does this is in Section 7.3 of: 
+http://csrc.nist.gov/publications/nistpubs/800-108/sp800-108.pdf
+
+Another example is the scrypt encryption utility (http://www.tarsnap.com/scrypt.html)
+Quoting the FORMAT file:
+"AES256-CTR is computed with a 256-bit AES key key_enc, and HMAC-SHA256 is
+computed with a 256-bit key key_hmac, where
+  scrypt(password, salt, N, r, p, 64) == [key_enc][key_hmac]"
+
+The reference code for all PHC submissions to accept an output length.  It should be a requirement that any subset of the output bytes be suitable for use as keying material.  Is this not the case?
+
+Greg
+
+-----Original Message-----
+From: Christian Forler [mailto:christian.forler@...-weimar.de]
+Sent: Monday, April 7, 2014 5:41 AM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Mechanical tests
+
+On 05.04.2014 19:24, Daniel Franke wrote:
+[...]
+The definition of weakly-secure KDF, given in 
+http://palms.ee.princeton.edu/PALMSopen/yao05design.pdf requires the 
+adversary to distinguish the output of the KDF from uniformly-random 
+output of equal length. In the case where the KDF's output is 1000 
+bits long with each bit carrying 1/10th bit of entropy, the adversary 
+can, with high probability, win this game in a single query just by 
+counting Hamming weight.
+
+In terms of practical rather than mathematical security, "assuming the
+*full* output is being used" is unreasonable. If a function is sold to 
+me as a KDF, I expect to safely be able to destructure its output in 
+order to derive multiple keys from a single invocation.
+
+I would not recommend to derive multiple keys by splitting up a KDF output. You should either use a KDF which supports the derivation of multiple key from a single password (e.g. Catena-KG. :-)) or use different passwords for each key.
+
+Best regards,
+Christian
+
+
+
+
+
+
+
+

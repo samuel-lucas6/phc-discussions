@@ -1,0 +1,57 @@
+phc-discussions - memory bandwidth usage for hashing vs. other server tasks
+
+
+Message-ID: <20151009025227.GA29160@openwall.com>
+Date: Fri, 9 Oct 2015 05:52:27 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: memory bandwidth usage for hashing vs. other server tasks
+
+Hi,
+
+Here's a recent blog post and paper related to a topic that kept coming
+up in here once in a while - can we use a lot of memory bandwidth for
+password hashing yet not impact other server usage too badly (if the
+server isn't dedicated to just password hashing)?
+
+http://danluu.com/intel-cat/
+http://csl.stanford.edu/~christos/publications/2015.heracles.isca.pdf
+
+"LLCs for high-end server chips are between 12MB and 30MB, even though
+we only need 4MB to get 90% of the performance, and the 90%-ile
+utilization of bandwidth is 31%.  This seems like a waste of resources.
+We have a lot of resources sitting idle, or not being used effectively.
+The good news is that, since we get such low utilization out of the
+shared resources on our chips, we should be able to schedule multiple
+tasks on one machine without degrading performance.
+
+Great!  What happens when we schedule multiple tasks on one machine?"
+
+A lot of stuff happens, and it takes more than just a quick glance at
+the blog post to start to understand it.
+
+Here's my take at it, as it relates to our question above: there's
+plenty of idle memory bandwidth on servers even under full load by
+memory latency bound tasks, which is typical, however trying to use
+this idle memory bandwidth for an extra task (such as password hashing)
+might push the other tasks above their latency SLA, even though their
+throughput isn't impacted as much.  The paper presents ways to avoid
+unacceptable latency impact, but doing so takes effort in a given
+deployment (it isn't something that will just happen by default), and
+besides password hashing is usually not a best effort task, but is also
+an on-demand task.
+
+My opinion remains that we should use computation and memory bandwidth
+in a balanced manner, maximizing both at full server load by the
+password hashing, yet expecting that in actual usage the server's load
+may come from some mix of password hashing and other tasks.  It's
+unrealistic to expect that password hashing, whether computation or/and
+memory bound, won't have significant impact on other tasks, but it is
+realistic to make it such that it degrades other tasks' performance
+(both latency and throughput) gracefully as the password hashing request
+rate increases.  For example, 50% usage of a server's password hashing
+request rate capacity may actually leave 50% of the server's capacity at
+other tasks for use by those tasks.
+
+Alexander
+

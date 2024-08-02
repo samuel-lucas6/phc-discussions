@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TigerKDF paper and code ready for review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140307031448.GA21199&#64;openwall.com&gt;
+Date: Fri, 7 Mar 2014 07:14:48 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+Bill,
+
+Some additions to what I wrote, for correctness:
+
+On Fri, Mar 07, 2014 at 06:45:52AM +0400, Solar Designer wrote:
+&gt; Now, I understand that it's wasteful to do lookups smaller than 16 bytes
+&gt; e.g. on Sandy Bridge and better (where we can do two 16-byte lookups
+&gt; from L1 cache per cycle, or only the same number of smaller lookups).
+&gt; Good news: to be as GPU-resistant as bcrypt, you don't need your lookups
+&gt; to be as small as bcrypt's.  Rather, you need them to be as rapid as
+&gt; bcrypt's, with results required as soon as bcrypt does, and with no more
+&gt; parallelism than bcrypt has.  (These last two conditions are actually
+&gt; one.)  It is not a problem per se if an implementation turns out to be
+&gt; more efficient using global rather than local memory, as long as the
+&gt; accesses are as rapid as bcrypt's.  Those conditions imply that it won't
+&gt; run faster than bcrypt, using either type of memory.
+
+There's an additional (implied) condition: the random lookups arena no
+smaller than bcrypt's 4 KiB.  (Otherwise more instances will fit in
+local memory.)
+
+&gt; So your comparison
+&gt; of GPU resistance vs. bcrypt's compares the wrong thing.  Now, if your
+&gt; random lookup results are not required as soon as bcrypt does require
+&gt; them (meaning you have more parallelism in one instance), you may in
+&gt; fact compensate for that by making the random lookups arena larger.
+&gt; 
+&gt; BTW, why do you mention 32 KiB there?  Your random lookups arena is
+&gt; only 16 KiB, and you can't make it larger than that on current CPUs with
+&gt; 32 KiB L1d cache and 2 hardware threads/core, without incurring much
+&gt; extra L1 cache thrashing.  TigerKDF's total memory usage is irrelevant.
+&gt; In other words, you may compensate for up to 4x more latency tolerance or
+&gt; parallelism than bcrypt has.  But you can't necessarily compensate for
+&gt; less frequent lookups (make them 2x+ less frequent than bcrypt's, and
+&gt; use of global memory becomes beneficial on HD 7970, regardless of lookup
+&gt; size).  I am fighting with the same problem in escrypt.  It's tough,
+&gt; especially when we consider running on smaller SIMD-less CPUs with
+&gt; settings that are also good for SIMD-enabled CPUs.  I'm afraid this
+&gt; combination of desirable properties - common settings for SIMD-less and
+&gt; SIMD-enabled (up to certain sane vector width), yet GPU resistance no
+&gt; worse than bcrypt's - is just not possible.  Have to tune for SIMD-less
+&gt; and SIMD-enabled separately if we don't accept giving up on having GPU
+&gt; resistance no worse than bcrypt's.
+
+My "not possible" applies in the context of this approach.  It is
+possible that another approach achieves similar GPU resistance, e.g.
+through rapid use of a CPU instruction that has no equivalent on GPUs
+and requires some local memory to emulate with acceptable efficiency
+(thus, limits the number of concurrent instances even if they otherwise
+use global memory).  Unfortunately, the most suitable such instructions
+(e.g. AES-NI) only exist on CPUs that are SIMD-enabled, so are of no
+help for SIMD-less CPUs.  Some x86 FPU peculiarity could work (no 80-bit
+floating-point in GPU hardware), but is not great to use.  Maybe some
+kinds of integer multiplication do the trick (e.g. 64x64-&gt;128 would
+probably require 4 multiply instructions even if 64x64-&gt;64 is available,
+and many more otherwise, although most of those 4 are independent, so
+could be issued without stalling).
+
+Yet I mostly focus on the bcrypt-like approach.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

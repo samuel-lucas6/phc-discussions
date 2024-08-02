@@ -1,0 +1,60 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20140105031352.GA6394@openwall.com>
+Date: Sun, 5 Jan 2014 07:13:52 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Wed, Jan 01, 2014 at 01:40:26AM +0000, Peter Gutmann wrote:
+Bill Cox <waywardgeek@...il.comwrites:
+
+>I think it depends on whether or not I want to be able to do the KDF on
+>devices that don't have SSE or multiple cores.  I think filling the available
+>memory bandwidth should be goal #1, and to meet that goal on mobile devices,
+>we should have as simple a hashing function as possible.
+
+A general-purpose KDF will have to run on a lot more than that.  How will this
+work on embedded devices like routers, firewalls, print controllers, and
+similar, which will have something like a MIPS or several-generations-old ARM
+core and maybe 2-8MB of RAM?  Multi-core memory-hard functions seem like an
+interesting gedanken experiment, but it's creating something with such a
+specialised field of application (newer PCs and recent smart phones and
+tablets) that you're seriously limiting its applicability.
+
+I see no reason why Bill's NOELKDF would not run on such systems.
+My concern is that at low memory usage like you mention above and
+without further changes, it would be weaker than bcrypt as it relates to
+attacks with GPUs.  This is something I intend to address in escrypt.
+
+For scrypt, the threshold for reaching bcrypt's GPU unfriendliness
+appears to be no less than 4 MB:
+
+http://www.openwall.com/lists/crypt-dev/2013/12/31/1
+
+If you're going to do memory-hard, or more accurately ASIC-hard stuff, then
+you don't need to go to multi-threaded implementations.
+
+It takes multiple threads to fully use the memory bandwidth on current
+desktop systems, and we want to get rather close to fully using it for
+at least two reasons (to fill more memory during the limited running
+time, and to require that attackers provide memory that is at least as
+fast in order to run the attack at the same speed, or run slower).
+
+Do something with a
+largeish dynamic memory structure like an AVL tree (just taking the first
+thing that popped into my head), which randomly touches memory all over the
+place and would be near-impossible to do in hardware because you need a
+general-purpose CPU for the update operations.
+
+(What I mean is something like run a hash PRF to get 1MB of output, stuff it
+all into an AVL tree, do a tree-walk to get the input to the next lot of
+hashing, and repeat.  The AVL step is the killer for both caches and custom
+hardware).
+
+The downside is that this rapidly gets very Rube Goldberg-y.
+
+Does this added complexity bring any advantage over scrypt?  I think not.
+
+Alexander
+

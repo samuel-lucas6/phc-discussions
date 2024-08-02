@@ -1,0 +1,50 @@
+phc-discussions - tunable low-level parallelism
+
+
+Message-ID: <20150414204029.GA6605@openwall.com>
+Date: Tue, 14 Apr 2015 23:40:29 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: tunable low-level parallelism
+
+On the panel list, I was asked "what is a reasonable default, and how
+often do we have to update it?" referring to tunable instruction-level
+parallelism, such as yescrypt pwxform's settings.  Here's my answer:
+
+The default may be provided by something like a yescrypt_default_flags()
+function, which may differ between implementations (but will try not to
+use too many different settings) - e.g., yescrypt-opt (scalar) may
+currently use a single 64-bit lane (to achieve bcrypt-like anti-GPU even
+on 32-bit systems), and yescrypt-simd use the current default of 512-bit
+as 4x 128-bit SIMD lanes.  AVX2 should run this reasonably, merging
+pairs of 128-bit S-box lookups.  (BTW, I previously experimented with
+such merging of 64-bit S-box lookups on SSE*/AVX, with good results, but
+opted to make 128-bit lookups the default.)  MIC and AVX-512 will have
+to merge four 128-bit S-box lookups, which is significantly suboptimal
+yet isn't that bad, along with other fully 512-bit processing (for the
+MUL, ADD, XOR sequences).  A 512-bit optimized setting (using 512-bit
+S-box lookups as well) may be introduced (obviously, it'd hurt anti-GPU
+on pre-Haswell CPUs significantly, which is why I don't do it yet).
+As to needing more than 512-bit parallelism on currently anticipated
+CPUs, I am not sure - with 4-way SMT, perhaps 512-bit will remain
+sufficient.  Another factor is L1 data cache size, which is currently
+expected to remain at 32 KB, so only accommodating 4 threads * 8 KB
+S-boxes anyway.  This will take some testing.
+
+To summarize: two parallelism settings right now (64-bit, and 512-bit
+with 128-bit S-box lookups), and a third one in the foreseeable future
+(either full 512-bit, or something like 1024-bit with 512-bit S-boxes,
+whichever turns out to be optimal on actual AVX-512 CPUs).
+
+After that, update every 10 years or so.
+
+Note that compatibility (both backward and forward) may easily be
+maintained, with fallbacks to generic code for settings that have no
+optimized code written for them yet or for which such code has already
+been dropped.  Generic code for BlockMix_pwxform is quite simple.
+
+The actual settings used will need to be encoded along with hashes, or
+along with encrypted filesystems, etc., just like m_cost and t_cost.
+
+Alexander
+

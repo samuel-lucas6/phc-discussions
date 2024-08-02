@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] Transforming hash to different cost setting
+
+Message-ID: <CAOLP8p50Q_6uBu7pAa1kVADnGW_3RgYDoQh7tCrKFHKAwosMow@mail.gmail.com>
+Date: Sat, 22 Mar 2014 08:39:21 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+On Sat, Mar 22, 2014 at 3:41 AM, Sweta Mishra <swetam@...td.ac.inwrote:
+Thanks Jeremi, but for the calculation of a password hash another
+requirement is that we need sufficiently large memory and we constantly use
+them throughout the calculation. Now if we try to update the previous stored
+hash then next calculation will only depend on the stored hash value and
+then how will it fulfil the memory requirement criteria for transforming
+hash to different cost setting.
+>
+>
+Thanks & Regards
+Sweta Mishra
+
+I use Christian's solution for this.  It loses up to 2X in terms of
+time*memory security, so users would not use this up-front.  However,
+an admin might be looking at passwords that are 100X out of date
+compute-time wise, so using this is a win in that case.
+
+Basically, Christian's idea was to double memory each time, so a user
+might start with 50MiB, and later an admin might make it compute
+50MiB, 100MiB, 200MiB, and 400MiB.
+
+Gary has a similar idea, but he wants to store the new rehashing
+parameters in a chain with each password.  That would allow the admin
+to take that 50MiB hash and turn it into a 2-step hash of 50 MiB and
+400MiB.  It's more efficient, but adds complexity.
+
+Bill
+

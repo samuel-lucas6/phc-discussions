@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <20140327165525.GA22817@openwall.com>
+Date: Thu, 27 Mar 2014 20:55:25 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Jeremi,
+
+On Tue, Mar 25, 2014 at 01:39:58AM +0400, Solar Designer wrote:
+OK, maybe it makes sense to apply this approach to L2, despite of the
+inefficiency.  Or maybe not.  Typical L2 is 256 KB/core (it has actually
+decreased in size when L3 was introduced), meaning 64 KB/thread may be
+"safe" to use.  At this size, my guess is you give advantage to some GPU
+attackers vs. your typical defender, for the reason explained above.
+
+I did some testing with escrypt's S-boxes, and things are reasonably
+good.  For the first few doublings of S-box size, beyond L1 cache size
+but still fitting in L2 cache, there's only a ~10% performance hit per
+doubling on Sandy Bridge-EP.  It's not worse than that in part because
+escrypt also does some L2/L3/RAM accesses anyway, so there's some L1
+cache thrashing going on anyway.  For pufferfish, the slowdown per
+doubling of S-box size might be a bit higher (although I guess it'd
+start only with 16 -32 KiB), but perhaps not terribly so.  1 MiB total
+memory, 2 threads/core, slowdown by S-box size:
+
+8 -16 KiB: 7%
+16 -32 KiB: 12%
+32 -64 KiB: 17%
+64 -128 KiB: 21%
+
+Total since 8 KiB: 53% of original performance remains
+
+112 GiB ROM + 1.75 MiB RAM, 2 threads/core, slowdown by S-box size:
+
+8 -16 KiB: 10%
+16 -32 KiB: 10%
+32 -64 KiB: 10%
+64 -128 KiB: 19%
+
+Total since 8 KiB: 60% of original performance remains
+
+On Bulldozer, things are significantly worse, but not necessarily to the
+point of this being totally inappropriate.  1 MiB total memory, 2
+threads/core, slowdown by S-box size (same test as the first one given
+for Sandy Bridge-EP above):
+
+8 -16 KiB: 20%
+16 -32 KiB: 28%
+32 -64 KiB: 11%
+64 -128 KiB: 13%
+
+Total since 8 KiB: 44% of original performance remains
+
+I stopped this at 128 KiB since going beyond 256 KiB combined for the
+two threads is "unsafe" for many CPUs, so higher values are probably not
+reasonable due to higher risk of incurring unacceptable slowdowns after
+migrations to other/future systems.  Indeed, we could test them anyway.
+
+This is for AVX builds of current development escrypt.  The random
+lookups are 128-bit wide, made with AVX instructions.  They're uniformly
+distributed over the S-boxes of the sizes given above.
+
+Alexander
+

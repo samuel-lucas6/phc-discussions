@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150420221353.GA15182@openwall.com>
+Date: Tue, 21 Apr 2015 01:13:53 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+Hi Dmitry,
+
+On Mon, Apr 20, 2015 at 11:36:09PM +0200, Dmitry Khovratovich wrote:
+I did add extra 1/16 of memory to each tradeoff attack (line 613 of
+the code), so you should not add it again.
+
+I saw this line, but I thought that when the program reports e.g.
+"fraction 6", it does not take that calculation into consideration, or
+does it?  To me, the "6" appears to come from q from the "for (unsigned
+q = 2; q <= 80; q++)" loop.  Does the tradeoff attack somehow ensure
+this 1/q ratio is met exactly, including the 1/16 extra into the
+accounted for memory?
+
+The program outputs different C(q) because it runs multiple tests
+where addresses are determined randomly. For each iteration the memory
+saving and the penalty is different, and I just average them over 100
+tests.
+
+Yes, I've since figured that out.  Thanks.
+
+The parameter WIDTH_SIZE/3q determines the number of the most
+expensive blocks. They are so expensive that we store any block that
+refer to them, that's the idea of the ranking method.
+
+Is the "3" in this parameter tunable?  If so, is "3" optimal?
+
+I should add that C(q) is actually overestimated in the program.
+First, it does not take into account that the total number of blocks
+is limited (2^20 for 1 GB, for example). Secondly, it counts every
+block as many times as it appears in different branches of the
+recomputation tree. A more clever tradeoff method would not recompute
+the same block too many times.
+
+OK.
+
+Regarding your comment on the average memory use, I note that the
+program does not exploit all the memory immediately. For every block
+it decides whether to store it or not, and does not delete the blocks.
+
+Of course, no program nor even ASIC can possibly put all memory to use
+instantly (for one hash computation).  My point was that without TMTO
+the memory usage grows relatively slower (relative to the total running
+time) than with TMTO, because with TMTO each iteration of the original
+loop takes progressively longer as the recomputation depth grows.  For
+example, the first few iterations don't become slower at all (since they
+don't depend on any non-stored blocks yet), while the last few may be
+many times slower (as the recomputation depth is near its maximum).
+During those first few iterations, the memory usage is negligible.
+During those last few iterations, the memory usage is nearly the
+highest.  It's due to the change in shape of this curve (memory usage
+vs. real time) that I expect a higher average/peak memory usage ratio
+over (also normalized) time for the TMTO case.  Or in other words, the
+area below the curve normalized for peak memory usage and total running
+time, or the integral of average/peak ratio over time divided by the
+TMTO-increased running time, will also be higher.  That's a multiplier
+you could need to apply to your reported memory ratios (of course, along
+with due explanation).
+
+Thanks,
+
+Alexander
+

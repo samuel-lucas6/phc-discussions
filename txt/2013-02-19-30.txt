@@ -1,0 +1,46 @@
+phc-discussions - Required Output Key
+
+Message-ID: <51238DE5.7000309@defuse.ca>
+Date: Tue, 19 Feb 2013 07:36:21 -0700
+From: havoc <havoc@...use.ca>
+To: discussions@...sword-hashing.net
+Subject: Required Output Key
+
+It is important for the submissions to return two values:
+
+(1) A standard hash for verification.
+(2) A variable-length encryption key.
+
+If an attacker has access to the hash list, they'll probably have access
+to other data in the database (user's name, credit card number,
+messages, etc.), and assuming a full compromise, the only way to secure
+them is by encryption with a key derived from the user's password.
+
+It's easy to create two different hashes of the single output and use
+one as the hash and the other as the key. But if what's standardized
+only defines a verification hash output, coders are going to have to
+implement that themselves, and they're going to invent all sorts of
+wacky and insecure stuff.
+
+Some mistakes I can see happening:
+
+1. Hashing the hash to get the key.
+2. Using SHA256(password) as the key.
+3. Re-running a different stretching algorithm on the password.
+4. Using the hash as the key and a hash of the hash as the hash.
+5. Deriving a 32-byte key from the 16-byte output.
+
+... and so on ...
+
+These are obvious mistakes to us, but we are cryptographers, and the
+majority of coders using PHC are not. So either PHC should require
+separate key/hash output parameters, or we should, in parallel, decide
+upon the best scheme for deriving a (key,hash) pair from the single output.
+
+What do you think?
+
+Regards,
+-- 
+Havoc
+(sorry for the nym -- I'll use my real name someday)
+

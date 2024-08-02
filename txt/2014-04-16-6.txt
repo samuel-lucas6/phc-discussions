@@ -1,0 +1,78 @@
+phc-discussions - Re: Lyra2 initial review
+
+Message-ID: <CAOLP8p7OjrDw4gtoiEc7r9cXM+Udm+uGNtR2zmXTWtnRx+FAOA@mail.gmail.com>
+Date: Wed, 16 Apr 2014 18:09:34 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Lyra2 initial review
+
+On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I think there may be a bug in sse/Sponge.c.  If not, at a comment
+explaining how this works is in order.  Here's the Blake2b implementation:
+>
+static inline void blake2bLyraSSE(__m128i *v){
+    __m128i t0, t1;
+>
+    ROUND(0);
+    ROUND(1);
+    ROUND(2);
+    ROUND(3);
+    ROUND(4);
+    ROUND(5);
+    ROUND(6);
+    ROUND(7);
+    ROUND(8);
+    ROUND(9);
+    ROUND(10);
+    ROUND(11);
+}
+>
+Here's the ROUND definition:
+>
+#define ROUND(r) \
+  G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  DIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+  UNDIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]);
+    ROUND_LYRA(11);
+}
+>
+Macros can be really weird, but it looks to me like ROUND(r) is not a
+function of r.  This might cause the SSE version to have an insecure PRK.
+ However, it generates the same hash result as the reference version.  Is
+this macro really doing a proper Blake2b round, or is this some altered
+version?
+>
+>
+I dug into this.  It's cool, and shows that the Lyra2 team:
+a) Isn't afraid to muck with the internals of Blake2b
+b) Knows a lot more about Blake2b than me!
+
+The macro ROUND does not in Lyra2's version depend on r.  This corresponds
+to running Blake2b while compressing all 0's.  When compressing 0's, all
+the Blake2b rounds do the same thing, so you can simplify the code and get
+rid of the r variable.
+
+I was concerned that squeeze might reveal all the state bits, making it
+simple for an attacker to predict future bits as more are squeezed.
+ Lyra2's sponge has a 1024 bit state, the same that is hashed in rounds of
+Blake2b.  Lyra2 squeezes only 768 bits before applying 12 rounds of
+Blake2b's compression G function with 0's for input.  Thus, an attacker is
+missing 256 bits of the internal state each time, and likely cannot make
+any predictions about what will come out to the sponge next.  I was
+wondering why Lyra2's block size is 96 bytes while Blake2b hashes 128 bytes
+of state in it's rounds.  I think this may be the reason.
+
+Lyra2's version of Blake2b skips the initialization from IV and two
+variables called f and t.  It also skips compressing the state down to 512
+bits at the end by XORing the upper half onto the lower half.  I assume
+they understand what's going on in Blake2b well enough to make these
+choices confidently.  I'll need to have the rationale explained to me.
+
+Bill
+
+
+

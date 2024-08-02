@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+Message-ID: <20131125072143.GA27228@openwall.com>
+Date: Mon, 25 Nov 2013 11:21:43 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A (naively?) simple PHC submission using hash chains
+
+On Wed, Aug 07, 2013 at 10:11:28AM +0200, CodesInChaos wrote:
+I don't know any sources for this technique, but I suspect it can be used
+on all hashing schemes with predictable memory access.
+
+* You can use it to accelerate scrypt's first phase, but not the second
+phase. Since scrypt only claims that the second phase is memory-hard, this
+doesn't break scrypt.
+   Discussed this with solardiz on twitter:
+https://twitter.com/solardiz/status/362644103546142721
+* You can use it on yarrkov's high AT proof-of-work scheme:
+   Discussed on the crypto mailing list a few months ago
+http://www.mail-archive.com/cryptography@randombit.net/msg03689.html
+
+The general idea is that you don't keep everything in memory you're
+supposed to, but only an occasional checkpoint. From this checkpoint you
+can recompute memory near it. Often it's a good choice to keep sqrt(n)
+checkpoints from which you can recompute any value you're interested in in
+time n/sqrt(n)=sqrt(n).
+
+The total AT cost, disregarding area consumed by computation cores, is:
+
+N^(1/2 area + 1 time) + N^(1 area + 1/2 time) = 2*N^1.5
+
+On specialized hardware it's often cheap to recompute it in parallel to
+your normal computation without delaying the normal computation.
+Unpredictable memory access often breaks this, since the recomputation
+delays the normal computation instead of running in parallel.
+
+It's often possible to improve upon the sqrt(n) technique by adding more
+intermediate steps. But I didn't work out the details.
+
+I gave this some thought today.  Here's what I am getting with one extra
+intermediate step (and N^(3/4) parallel cores in the last step):
+
+N^(1/2 + 1) + N^(3/4 + 1/2) + N^(1 + 1/4) = N^1.5 + 2*N^1.25
+
+So it's still O(N^1.5) due to the first step, regardless of how many
+more steps we add, but there is an up to a factor of 2 improvement over
+the 2-step algorithm.
+
+Alexander
+

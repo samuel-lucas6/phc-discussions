@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="../../../2014/02/27/1">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="../../../2014/04/21/12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7kx4K2pfAKhZWHoz5ggm_6KXW6NY9+i0Hy14JTQw-Y6Q&#64;mail.gmail.com&gt;
+Date: Wed, 26 Feb 2014 16:29:17 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Wed, Feb 26, 2014 at 4:18 PM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+&gt; I've succeeded!
+&gt;
+&gt; It took some crazy optimization for Haswell, but I now get 0 to 8
+&gt; scalar multiplies per inner loop of memory hashing - 32 bytes worth
+&gt; (just 3 AVX2 instructions in the body of a for loop), without slowing
+&gt; down the memory hashing unless I set the number of multiplications too
+&gt; high.  For running out of L1 cache, Haswell is so fast, it didn't have
+&gt; time for even 1 multiplication in the loop, and an if-statement around
+&gt; the multiplication loop slowed it down too much.  So, wrote a wrapper
+&gt; function around the block hash algorithm with a switch statement on
+&gt; the number of multiplies, and I passed a constant to hashBlocks in
+&gt; each case.  The compiler was smart enough to in-line the multiplies
+&gt; the correct number of times, with 9 different versions of the
+&gt; subroutine.  Now 0 multiplies runs as fast as before I integrated the
+&gt; multiplication loop into hashBlocks.
+&gt;
+&gt; Bill
+
+Here's runtime data for the hand optimized AVX2 code vs my unoptimized
+reference code on Haswell, when running out of L1 cache.  The
+optimized code is 32X faster!  Haswell has very high bandwidth to L1
+cache.  This run did 668 GiB/s of reads from L1 cache:
+
+tigerkdf&gt; time ./tigerkdf -B4096 -t8 -m128 -b4096 -r$((1024*1024)) -M0
+garlic:0 memorySize(KB):128 multiplies:0 repetitions:1048576
+numThreads:8 blockSize:4096 subBlockSize:4096
+Password:password Salt:salt
+
+bb 0a c5 44 8b 80 9c cf
+72 87 60 a3 63 ea b4 f2
+67 87 93 39 c9 67 dd ef
+71 62 de fb 47 74 53 b7      32 (octets)
+
+
+real    0m0.383s
+user    0m3.040s
+sys     0m0.000s
+
+This is the reference version.  It does 20GiB/s to L1 cache.  AVX2 for
+L1 hashing rocks:
+
+tigerkdf&gt; time ./tigerkdf-ref -B4096 -t8 -m128 -b4096 -r$((1024*1024)) -M0
+garlic:0 memorySize(KB):128 multiplies:0 repetitions:1048576
+numThreads:8 blockSize:4096 subBlockSize:4096
+Password:password Salt:salt
+
+bb 0a c5 44 8b 80 9c cf
+72 87 60 a3 63 ea b4 f2
+67 87 93 39 c9 67 dd ef
+71 62 de fb 47 74 53 b7      32 (octets)
+
+
+real    0m12.403s
+user    0m12.389s
+sys     0m0.000s
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

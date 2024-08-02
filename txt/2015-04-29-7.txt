@@ -1,0 +1,143 @@
+phc-discussions - Added multi-threading support to test suite
+
+Message-ID: <CAOLP8p6LUh=PiDUE_wFK+sVWbi-5Pc-dTk0JwJ+EDdEuH9gEaA@mail.gmail.com>
+Date: Wed, 29 Apr 2015 12:15:41 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Added multi-threading support to test suite
+
+I've enhanced Milan's PHCtest on my github account to add a -p <threads>
+parameter.  I only currently support this flag with argon, argon2d-sse,
+lyra2-sse, yescrypt-2pw-sse, and yescrypt-sse.
+
+Here's a summary of the fastest speeds, when run on my Xeon E5-1650 v2 @
+3.50GHz.  All hashes were 1GiB:
+
+Algorithm          Speed (in ms)
+--------------------------------
+Argon2d-sse          151
+Yescrypt-2pw-sse     160
+Yescrypt-sse         175
+Lyra2-sse            258
+Argon               1620
+
+All but Argon are memory-bandwidth limiited.  Argon is external cache-miss
+penalty limited, and is not well suited as an Scrypt upgrade (it would be a
+downgrade, IMO).  However, since the PHC panel has not yet determined
+whether to allow Argon2 into the competition, I've included Argon's
+performance here.  Hopefully, this adds some support for allowing Argon2.
+
+Argon2d, Yescrypt, and Lyra2 all provide excellent defense, IMO.  I think
+the best defensive runs are, in order of defense:
+
+Yescrypt-2pw-sse with 4 threads, hashing 1GiB in 167ms
+Yescrypt-sse with 12 threads, hashing 1GiB in 175ms
+Argon2d-sse with 8 threads, hashing 1GiB in 155ms
+Lyra2-sse with 4 threads, hashing 1GiB in 218ms
+
+If I understand correctly, the 2-round Yescrypt-2pw-sse run is slightly
+more compute-time hardened than the 6-round Yescrypt-sse run.  The 6-round
+version does make better use of all 6 of my CPU cores, but I do not think
+an attacker will be very computation core limited.  I would rather just use
+4 cores and get better runtime and compute-time hardening.
+
+I rate Argon2d-sse after Yescrypt-2pw-sse and Yescrypt-sse for poorer
+compute-time hardening and GPU defense, and Lyra2-sse after Argon2-sse for
+it's longer runtime, since memory*time defense goes as the square of the
+memory hashing speed.
+
+All tests run 3 times, and I show best of 3 runs.
+The numbers printed are: in out m_cost t_cost time[ms] memory[kb].
+
+Argon-aesni
+-----------
+
+$ ./tst-argon-aesni -p1 -m1045000 -t0
+8 32 1045000 0 15252 1041416
+
+$ ./tst-argon-aesni -p2 -m1045000 -t0
+8 32 1045000 0 7331 1041472
+
+$ ./tst-argon-aesni -p4 -m1045000 -t0
+8 32 1045000 0 4096 1041512
+
+$ ./tst-argon-aesni -p8 -m1045000 -t0
+8 32 1045000 0 2198 1041900
+
+$ ./tst-argon-aesni -p12 -m1045000 -t0
+8 32 1045000 0 1620 1041704
+
+Argon2d-sse
+-----------
+
+$ ./tst-argon2d-sse -p1 -m1048000 -t0
+8 32 1048000 0 604 1044432
+
+$ ./tst-argon2d-sse -p2 -m1048000 -t0
+8 32 1048000 0 328 1044432
+
+$ ./tst-argon2d-sse -p4 -m1048000 -t0
+8 32 1048000 0 215 1044440
+
+$ ./tst-argon2d-sse -p8 -m1048000 -t0
+8 32 1048000 0 155 1044524
+
+$ ./tst-argon2d-sse -p12 -m1048000 -t0
+8 32 1048000 0 151 1044504
+
+Lyra2-sse
+---------
+
+$ ./tst-lyra2-sse -p1 -m43700 -t1
+8 32 43700 1 680 1044960
+
+$ ./tst-lyra2-sse -p2 -m43700 -t1
+8 32 43700 1 345 1044952
+
+$ ./tst-lyra2-sse -p4 -m43700 -t1
+8 32 43700 1 218 1045024
+
+$ ./tst-lyra2-sse -p8 -m43700 -t1
+8 32 43700 1 235 1045000
+
+$ ./tst-lyra2-sse -p12 -m43700 -t1
+8 32 43700 1 258 1044620
+
+Yescrypt-2pw-sse
+------------
+
+$ ./tst-yescrypt-2pw-sse -p1 -m17 -t0
+8 32 17 0 543 1044416
+
+$ ./tst-yescrypt-2pw-sse -p2 -m17 -t0
+8 32 17 0 285 1044444
+
+$ ./tst-yescrypt-2pw-sse -p4 -m17 -t0
+8 32 17 0 167 1044656
+
+$ ./tst-yescrypt-2pw-sse -p8 -m17 -t0
+8 32 17 0 163 1044660
+
+$ ./tst-yescrypt-2pw-sse -p12 -m17 -t0
+8 32 17 0 160 1044512
+
+Yescrypt-sse
+------------
+
+$ ./tst-yescrypt-sse -p1 -m17 -t0
+8 32 17 0 914 1044420
+
+$ ./tst-yescrypt-sse -p2 -m17 -t0
+8 32 17 0 471 1044608
+
+$ ./tst-yescrypt-sse -p4 -m17 -t0
+8 32 17 0 369 1044468
+
+$ ./tst-yescrypt-sse -p8 -m17 -t0
+8 32 17 0 209 1044560
+
+$ ./tst-yescrypt-sse -p12 -m17 -t0
+8 32 17 0 175 1044588
+
+
+

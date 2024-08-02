@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+Message-ID: <1503155559.401467.1366210259092.open-xchange@email.1and1.com>
+Date: Wed, 17 Apr 2013 09:50:59 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for
+ desired output
+
+On April 17, 2013 at 7:25 AM Matthew Green <matthewdgreen@...il.comwrote:
+>
+>
+I think this statement could be relaxed a bit, but I also agree that overall
+computational cost should be dominated by the work factor specified as input
+to the function -- it should not depend strongly (i.e., linearly) on output
+length.
+>
+This would be a real issue in an authentication system where the defender was
+generating long 'hashes' but an attacker could save cycles by only computing a
+shorter prefix to test against.
+>
+
+The problem is that people don't know that PBKDF2 is for generating keys and not
+password hashes. Even Microsoft gets this wrong:
+http://hashcat.net/forum/thread-1752-post-9981.html#pid9981
+
+The correct way to use PBKDF as a password hash:
+* hash = Encrypt(PBKDF2(pw, salt, iterations, keySize), staticOrKnownText) //
+Encrypt(key, message)
+* hash = MAC(PBKDF2(pw, salt, iterations, keySize), staticOrKnownText) //
+MAC(key, message)
+* hash = PBKDF1(pw, salt, iterations, keySize) // I don't think this is an
+approved use of PBKDF1, but I see nothing wrong with it. I.E. don't use this.
+not:
+* hash = PBKDF2(pw, salt, iterations, keySize)
+
+In the case with AgileBits, they are generating a key and an IV and only the key
+is needed to verify the padding. This would have been a non-issue if AgileBits
+took the first 128 bit as the IV and the second 128 bits as the key. Although
+with access to SIMD instructions, such as SSE2, there is little to no difference
+in time between PBKDF2_HMAC_SHA1(pw, salt, iterations, 128) and
+PBKDF2_HMAC_SHA1(pw, salt, iterations, 256).
+
+
+By the way, this would seem to be an issue for scrypt as well, since it uses
+PBKDF2 for the final generation.
+>
+
+No this is not a problem with scrypt because it uses an iteration of 1 with
+PBKDF2. This is after the hard part is done which takes a few milliseconds. So
+unless you are storing a several kilobyte hash there is almost no difference in
+time.
+
+
+We should discuss whether we want this to be a criteria for PHC.
+>
+
+This is already in a sense is a requirement, but this is impossible to follow
+perfectly. With all hash functions you can do an early exit to skip a couple
+steps, but with properly iterated hashes this saves an almost negligible amount
+of time. Also early exit is not allowed by the defender since this leaks info
+about the stored hash.
+
+

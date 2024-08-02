@@ -1,0 +1,35 @@
+phc-discussions - Improving Makwa and arguing points for or against
+
+Message-ID: <120823624.202018.1410689591850.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Sun, 14 Sep 2014 05:13:11 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Improving Makwa and arguing points for or against
+
+I think Makwa has one nice feature: delegation. The fixes needed are: required
+pre-hashing, post hashing, and clearing p and q right after they are generated.
+Replacing e=2**n with e=65537**n also require gcd(65537, (p-1)*(q-1))=1. This
+way you can say it's as safe as RSA. I guess that's not really necessary since
+post hashing is now required.
+
+Fixing these problems removes the touted features password escrow (worst idea
+ever), fast path, and offline work factor (Although this is not "true" since any
+hashing algorithm can. With an upgrade parameter that just loops calls of the
+main algorithm using the password as the hash from the previous one. I
+understand that this upgrade is literally increases the work factor [ie Hash of
+cost=10 then upgrade cost by 10 is the same as hash of cost=20]. This is needed
+for delegation to work smoothly with upgraded hashes).
+
+In respect to the time cost, if you know p and q it runs in constant time. This
+is for fast path if you keep p and q you can do m**(2**x) (mod n) super fast but
+an attacker needs to do x squarings. This is a server-specific shortcut and was
+given has something interesting for submitters to have. I thought yeah that is a
+cool idea, but when you compare it to "server-specific key", "server-specific
+shortcut" is worthless.
+
+Delegation is cool, but I don't see it as something that will be used in the
+real world. The only arguing points I see are: is delegation awesome enough to
+make it go to the next round, whether we can force changes to an algorithm, and
+whether we can prevent the author from saying "you could keep p and q for fast
+path".
+

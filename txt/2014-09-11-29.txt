@@ -1,0 +1,132 @@
+phc-discussions - Re: Re: Re: Re: Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Message-ID: <lut1mu$iq8$1@ger.gmane.org>
+Date: Thu, 11 Sep 2014 13:46:22 -0700
+From: Alex Elsayed <eternaleye@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Re: Re: Re: Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Andy Lutomirski wrote:
+
+On Thu, Sep 11, 2014 at 12:27 PM, Alex Elsayed
+<eternaleye@...il.comwrote:
+>Andy Lutomirski wrote:
+>>
+>>On Thu, Sep 11, 2014 at 11:39 AM, Alex Elsayed
+>><eternaleye@...il.comwrote:
+>>>Andy Lutomirski wrote:
+>>>>
+>>>>On Thu, Sep 11, 2014 at 11:26 AM, Alex Elsayed
+>>>><eternaleye@...il.comwrote:
+>>>>>Alex Elsayed wrote:
+>>>>>>
+>>>>>>Mm, with the parallel PAKE we've latched P as a necessary part of
+>>>>>>the protocol, so _here_ your original idea of passing H(P) to the
+>>>>>>token, which it uses to encrypt its (internal) value, would not
+>>>>>>weaken the scheme in the case of a malicious token.
+>>>>>>>
+>>>>>>Given token T holding secret X, user U holding password P, and
+>>>>>>server S:
+>>>>>>>
+>>>>>>U -T: H(P)
+>>>>>>T -U: Y = E(k=X, H(P))
+>>>>>>T -S: R_t = PAKE(X)
+>>>>>>U -S: R_u = PAKE(Y)
+>>>>>>T -U: R_t
+>>>>>>U: K = R_t ^ R_u
+>>>>>>
+>>>>>After I posted the correction to this yesterday, I realized that
+>>>>>there's an even more optimal approach combining this with my original
+>>>>>scheme. It satisfies all of the properties you brought up, _and_ the
+>>>>>property I'd like that the server doesn't even need to know that a
+>>>>>token is in use at all (permitting a user to add a token to any
+>>>>>account they want to) - without requiring any local storage on the
+>>>>>user's machine.
+>>>>>>
+>>>>>Let E( K, M ) be an encryption function with key K and message M
+>>>>>Let H( M ) be a hash of a message M
+>>>>>Let sizeof( H( A ) ) == sizeof( K in E( K, B ) ) for all A and B
+>>>>>>
+>>>>>Given:
+>>>>>    Token T holding secret X
+>>>>>    User U holding password P and pin N
+>>>>>    Server S
+>>>>>>
+>>>>>1.) U and T establish a channel C by executing a PAKE over N
+>>>>>2.) U sends H(P) to T over C
+>>>>>
+>>>>This step loses the property that a malicious token doesn't weaken
+>>>>security over no token at all -- a malicious token can do an offline
+>>>>dictionary attack on the password.
+>>>>
+>>>I'd argue that while it isn't _ideal_ (ideally, a malicious token
+>>>couldn't do that, I agree) it doesn't weaken security over no token at
+>>>all - because without a token (and thus X) the _server_ can perform a
+>>>dictionary attack on the verifier - so really, you wind up exactly
+>>>where you would be without the token as long as H is at least as secure
+>>>as the verifier generation algorithm.
+>>>>
+>>>
+>>Yeah, fair enough.  I guess that, if you're not willing to store a
+>>blob on your computer, then that's the best that you can do.
+>>>
+>>On the other hand, for some token designs, you might have no choice --
+>>tokens with no storage will require you store a blob somewhere.
+>>
+>True enough - my thinking has been along the lines of smartcards (or
+>GNUK), where the _cheap_ ones are storage only, and the rest are storage
+>+ processing.
+>>
+>Then again, a token with no storage at all can't really have much in the
+>way of a secret X - and if you _do_ store a (rather small - key-sized)
+>blob W on your computer, you can just replace H(P) with H( E( W, P ) ),
+>since H is only ever executed by U, thus preventing the token from
+>brute-forcing (since W is strong randomness &c)
+
+I should have said ROM-only token as opposed to token w/o storage.
+Incidentally, Intel SGX looks a lot like a ROM-only token built in to
+a CPU :)
+
+>>
+>I just personally think the usability loss of storing a blob outweighs
+>the security loss of not doing so, especially since it needs to be
+>replicated to every machine that you want to log in from - making it (in
+>a sense) a poor hybrid between a software 'token' and a saved password.
+
+I'm thinking of it like an ssh private key file with added two-factor
+goodness.
+
+Well, my opinion on SSH private keys in files (as opposed to tokens) is 
+"poor man's software token"...
+
+It really is trying to fulfill "something you have", the passphrase for the 
+key is "something you know" - but it's weakened as a "something you have" by 
+being trivially cloneable.
+
+It all comes down to the three proofs of identity - something you have, 
+something you know, and something you are. Having _something_ is better than 
+_nothing_ in each category, but you really don't benefit all that much by 
+having more than one in a category.
+
+You _do_ benefit in certain measures of security, but it starts costing more 
+to get all of them to play nicely, and you start losing out on 
+complexity/robustness grounds. To me, that's a huge problem, because 
+Security Hole Zero is "the tools were a pain so I didn't use them."
+
+It's the single most common security problem, whether it manifests as poor 
+passwords, reused passwords, sticky notes with passwords on them, leaving 
+two-factor authentication turned off because they don't want to type a 6-
+digit code on login...
+
+If I find myself bored enough, I'll try to implement something in the
+Java card edition or whatever it's called and see if I can upload it
+to my YK NEO. *
+
+* Old YK NEOs are unlocked and you can upload applets.  New ones are
+locked, but I think you can email Yubico and ask for the developer
+version.
+
+--Andy
+
+
+

@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140111173014.GA6636&#64;openwall.com&gt;
+Date: Sat, 11 Jan 2014 21:30:14 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Bill,
+
+On Sat, Jan 04, 2014 at 10:07:58AM +0400, Solar Designer wrote:
+&gt; In escrypt running in this mode, SMix first loop has sequential writes
+&gt; and random reads, and second loop has random reads only.  So it's 3*N
+&gt; memory accesses (not counting accesses to data that is presumed to be in
+&gt; L1 cache).
+
+BTW, that data "presumed to be in L1 cache", such as the r-sized X and Y
+buffers used in the second loop, may be getting copied to memory once in
+a while, thereby wasting memory bandwidth.  It is unfortunate that we
+only have caches and no local memory.
+
+On Sat, Jan 11, 2014 at 09:01:20PM +0400, Solar Designer wrote:
+&gt; 2*3*10*2^30/10^9/5.362 = ~12 GB/s
+&gt; 
+&gt; I suspect that some of the memory bandwidth might be wasted on reading
+&gt; from to-be-written-to memory locations into cache, before the
+&gt; corresponding cache lines are finally complete with the newly written
+&gt; data and are written out back to memory.
+
+With these two undesired effects combined, about one half of the memory
+bandwidth might be wasted.
+
+Here are two examples of how gcc places the memory write instructions:
+
+     3a7:       c5 f1 fe ed             vpaddd %xmm5,%xmm1,%xmm5
+     3ab:       c5 e1 fe e2             vpaddd %xmm2,%xmm3,%xmm4
+     3af:       c5 f9 70 db 39          vpshufd $0x39,%xmm3,%xmm3
+--&gt;  3b4:       c5 f8 29 6e 30          vmovaps %xmm5,0x30(%rsi)
+     3b9:       c5 f9 70 d2 4e          vpshufd $0x4e,%xmm2,%xmm2
+     3be:       8f e8 78 c2 e4 12       vprotd $0x12,%xmm4,%xmm4
+     3c4:       c5 39 ef c4             vpxor  %xmm4,%xmm8,%xmm8
+     3c8:       c5 e1 fe ff             vpaddd %xmm7,%xmm3,%xmm7
+     3cc:       c5 e9 fe f6             vpaddd %xmm6,%xmm2,%xmm6
+     3d0:       c5 f8 28 e5             vmovaps %xmm5,%xmm4
+     3d4:       c5 b9 fe c0             vpaddd %xmm0,%xmm8,%xmm0
+     3d8:       c5 78 28 cf             vmovaps %xmm7,%xmm9
+--&gt;  3dc:       c5 f8 29 7e 10          vmovaps %xmm7,0x10(%rsi)
+     3e1:       c5 78 28 c6             vmovaps %xmm6,%xmm8
+     3e5:       c5 78 28 d8             vmovaps %xmm0,%xmm11
+--&gt;  3e9:       c5 f8 29 06             vmovaps %xmm0,(%rsi)
+--&gt;  3ed:       c5 f8 29 76 20          vmovaps %xmm6,0x20(%rsi)
+     3f2:       0f 84 58 05 00 00       je     950 &lt;blockmix_salsa8+0x8d0&gt;
+
+    2221:       c5 f1 fe ed             vpaddd %xmm5,%xmm1,%xmm5
+    2225:       c5 e1 fe e2             vpaddd %xmm2,%xmm3,%xmm4
+    2229:       c5 f9 70 db 39          vpshufd $0x39,%xmm3,%xmm3
+--&gt; 222e:       c5 f8 29 6c 02 70       vmovaps %xmm5,0x70(%rdx,%rax,1)
+    2234:       c5 f9 70 d2 4e          vpshufd $0x4e,%xmm2,%xmm2
+    2239:       8f e8 78 c2 e4 12       vprotd $0x12,%xmm4,%xmm4
+    223f:       c5 39 ef c4             vpxor  %xmm4,%xmm8,%xmm8
+    2243:       c5 e1 fe ff             vpaddd %xmm7,%xmm3,%xmm7
+    2247:       c5 e9 fe f6             vpaddd %xmm6,%xmm2,%xmm6
+    224b:       c5 f8 28 e5             vmovaps %xmm5,%xmm4
+    224f:       c5 b9 fe c0             vpaddd %xmm0,%xmm8,%xmm0
+--&gt; 2253:       c5 f8 29 7c 02 50       vmovaps %xmm7,0x50(%rdx,%rax,1)
+    2259:       c5 f8 28 df             vmovaps %xmm7,%xmm3
+--&gt; 225d:       c5 f8 29 44 02 40       vmovaps %xmm0,0x40(%rdx,%rax,1)
+    2263:       c5 78 28 d0             vmovaps %xmm0,%xmm10
+    2267:       c5 f8 28 d6             vmovaps %xmm6,%xmm2
+--&gt; 226b:       c5 f8 29 74 02 60       vmovaps %xmm6,0x60(%rdx,%rax,1)
+    2271:       48 83 c0 40             add    $0x40,%rax
+    2275:       4c 39 f9                cmp    %r15,%rcx
+    2278:       0f 87 22 fa ff ff       ja     1ca0 &lt;blockmix_salsa8_xor_save+0x400&gt;
+
+As you can see, these are not very close together, and the first of four
+writes in these two examples happens to be to the end of the cache line,
+not the beginning, even though in the source these are close together
+and the lower address right comes first.  Clearly, these were rescheduled
+in order to better meet other instructions' latencies (not attempt
+writes when their source operands are not yet out of the pipeline).
+Now, I could pack them closer together with asm code, but then the CPU
+would probably similarly re-order them based on source operand readiness.
+
+Maybe replacing or following Salsa20 with something that produces the
+outputs in the order that matches the memory write order would do the
+trick.  Wait, we can simply write the outputs in whatever order matches
+Salsa20 (or whatever) best.  This should be easy to test.  From the
+gcc-generated code above, it appears the optimal order would be 3,1,0,2.
+Of course, this will break compatibility with scrypt, so is only usable
+other than in classic scrypt compatibility mode.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

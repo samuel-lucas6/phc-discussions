@@ -1,0 +1,97 @@
+phc-discussions - Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+Message-ID: <CAOLP8p5-gBoHfWWCDwmBOTmLDJkkG9k+dKBb+51O12FuF1c=oA@mail.gmail.com>
+Date: Wed, 19 Mar 2014 23:23:09 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+On Wed, Mar 19, 2014 at 10:39 PM, Steve Thomas <steve@...tu.comwrote:
+>On March 19, 2014 at 8:09 PM Andy Lutomirski <luto@...capital.netwrote:
+>>
+>On Wed, Mar 19, 2014 at 5:54 PM, Bill Cox <waywardgeek@...il.comwrote:
+>One reason I think we see applications running without SSE/AVX2
+>support is that operating systems don't want to support two versions
+>of a binary, and they have to support older machines. The Blake2 code
+>I've read does not provide for a single binary that supports both - I
+>have to link either to the blake2-ref code or the blake2-sse code. My
+>TwoCats code has inherited this limitation, since I used the Blake2
+>code as a roadmap for figuring out how SSE2 works. These guys over on
+>StackOverflow think they've got code to detect SIMD support and allow
+>a single binary to support both:
+>>
+>>
+>http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
+>>
+>That answer is crap. You cannot detect whether AVX is usable using
+>just cpuid -- you need to use (IIRC) xgetbv as well.
+>
+Agree.
+>
+>On gcc 4.8 and up, function multiversioning [1] is probably the way to
+>go. On Windows (if you want to support MSVC), you'll need to do
+>something different. Of course, function multiversioning has the same
+>bug [2] and no one has fixed it yet.
+>>
+>[1] http://gcc.gnu.org/wiki/FunctionMultiVersioning
+>[2] http://gcc.gnu.org/bugzilla/show_bug.cgi?id=55307
+>
+Disagree. That's cool and all but worthless: only Linux and buggy.
+
+This clearly is an area in flux.  I hope we get something decent soon.
+ It's not just crypto that could be sped up.  This could be quite
+valuable in my day job.  However, all our code gets compiled in an
+ancient version of Red Hat Enterprise for supported releases.
+
+Bill don't try to learn SS*E*/AVX* from the blake2-ref code... besides being
+buggy. It is really hard to read. For me it was actually easier to read code
+(https://github.com/dchest/blake2b) in a language I don't know than to read
+that. I was trying to figure out how Blake2b worked and with the combination
+of bad doc and bad code it was "impossible" (not worth a few hours). Until
+finding a simple  implementation in Go.
+
+I haven't read the reference version.  I suspect it was written by a
+different author.  The Blake2s-sse version (and my TwoCats SSE version
+that copies a lot from it) are difficult to read.  Maybe I'm just
+getting old, but SIMD coding is a difficult.  If I saw a single
+worthwhile improvement to be made in the Blake2-sse code, I would have
+posted it here.  For groking what it's doing, I'd prefer Python or
+similar.  I'm not surprised the Go version was a better description of
+what it does.
+
+For doing what you've been doing - finding weaknesses - the Go version
+is probably a lot better.  Your finding weaknesses, at least for my
+code, has been pretty awesome, so I take what you say very seriously,
+not that my opinion counts much in company like this.
+
+The way I' ve been dealing with write "once" compile twice (Linux/Windows)
+run best code "everywhere" is: http://www.tobtu.com/files/rt-bench.zip
+Specifically:  src/common.cpp (getInstructionSets()),  src/hashfactory.h,
+and
+src\hash\*. Note there are better ways to do this. This was just one I did
+awhile ago and I am still like well I could change that and it would be
+better.
+>
+Also this is for a different purpose  hash cracking with rainbow tables but
+can be used with hash cracking in general and parallel  hashing. These
+implementations are all single block and are severely  length limited.  Oh
+right it has support for detecting AVX2 but no code is written for it.
+Although
+it would be super easy to add it (I just wanted to test it first but at the
+time I
+don't think I knew about Intel's emulator and obviously  AVX2 was not out
+yet
+[this was all written in late 2011 and early  2012]).  One way to make this
+better is using templates and static inline class  functions to do the minor
+differences in  architectures .
+
+I haven't looked yet, but I suspect I'd like the code better without
+the C++ templates. C++ and it's insane implementation of templates,
+among other features, slowed down the entire industry for years, IMO.
+If you read a lot of typical C++ code, I suspect you'd agree with me.
+It's the worst code in FOSS land, on average.  There is very little in
+the world of computer languages that has caused so many bugs and
+incredibly stupid implementations of simple functions.
+
+Bill
+

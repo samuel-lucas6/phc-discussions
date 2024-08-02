@@ -1,0 +1,58 @@
+phc-discussions - RE: [PHC] Re: Suggestion: API should include a verifier function
+
+Message-ID: <007401ce2b82$7ec9a490$7c5cedb0$@acm.org>
+Date: Thu, 28 Mar 2013 00:04:29 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Re: Suggestion: API should include a verifier function
+
+The problem of the variable string comparison time in naïve hash-match checks is a good reason for the separate Verifier API that Tony suggested.
+
+This problem and its solution is well-known and taught in introductory cryptography courses.  This is the simple example used to demonstrate timing attacks.  (E.g., in the Coursera Cryptography 1 course created by Dan Boneh.) I suppose this might have inspired some of the 100s of thousands who have taken such courses to try exploits.
+
+The best way to ensure that the fixed-time solution is employed is to use a verifier API that does the comparison in constant time and simply reports pass or fail.  It also must compute the hash, and it is desirable that there be no exploitable variation there as well (given the particular set of fixed parameters).
+
+This one is simple:
+
+   good = true;
+   for (i = 0; i < hash.length; i++)
+        {good &= (hash[i] == key[i])}
+   return good;
+
+The verifier must return only pass/fail and not differ in the (measurable) timing in reaching the different conclusions.  Even the above code might leak measurable information in an implementation. A platform-tuned verifier is where that can all be tuned away.
+ 
+ - Dennis
+
+-----Original Message-----
+From: Jeremy Spilman [mailto:jeremy@...link.co] 
+Sent: Wednesday, March 27, 2013 21:21
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+LMGTFY: 
+http://www.security-assessment.com/files/documents/presentations/TimingAttackPresentation2012.pdf
+
+-----Original Message----- 
+From: Peter Gutmann
+Sent: Wednesday, March 27, 2013 8:24 PM
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Suggestion: API should include a verifier function
+
+Watson Ladd <watsonbladd@...il.comwrites:
+
+>This isn't necessary: a non-constant time comparison at worst reveals the
+>hash, which doesn't give an attacker enough information to break a password
+>anyway if we do our jobs right.
+
+Oh yes it can ;-).  There's a clever attack that was presented at Kiwicon 
+last
+year that turns timing attacks on hashed passwords into partial attacks on 
+the
+original passwords.  It'll appear in the Crypto Corner column of IEEE 
+Security
+and Privacy in (AFAIK) the next issue.
+
+Peter. 
+
+
+

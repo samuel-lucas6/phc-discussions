@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p78zqvVXwCN1h4kV4_REHUaWFbgV0L+4dTtKNNfWAUfiA&#64;mail.gmail.com&gt;
+Date: Sun, 12 Jan 2014 07:45:25 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF
+ available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 11:47 PM, Andy Lutomirski &lt;luto&#64;...capital.net&gt; wrote:
+&gt; To be clear, I was thinking about the possibility of hammering cache
+&gt; and main memory at the same time.  Imagine some matrix multiplies or
+&gt; other cache-heavy operations needed to select the next memory index to
+&gt; access.  If you could get 30 or 40 GB/sec and, say, 100GB/sec to L2,
+&gt; you'd probably be doing even better.  (No clue whether this is
+&gt; possible -- I'm not at all sure whether modern CPUs can sustain that
+&gt; much bandwidth anywhere.  Something that depends on low-latency access
+&gt; to a block of cache might be a better bet.)
+&gt;
+&gt; --Andy
+
+That might be an improvement.  I guess matrix multiplies would be good
+for machines with large vector processors.  I don't know how much
+vector processing hardware our CPUs have, but I doubt it's enough to
+justify the additional complexity.  Security is partly about the KISS
+rule, I think.
+
+Generally, people refer to me as a "router guy."  I've written a lot
+of routers to connect stuff on chips.  One mistake I see over and over
+when people come up with ideas for improving the speed of computation
+is forgetting to take the routing penalties into account.  For
+example, data flow machines would have dominated decades ago if not
+for data routing delays.
+
+Our CPUs are stuck with tremendous routing delays that just don't
+exist on an ASIC when computing our inner-loops.  Any attempt to
+protect passwords with computation-limited inner loops is not going to
+get us very far.
+
+If I really wanted to force an attacker to have a nice expensive CPU
+like mine, I would fill instruction memory with pseudo-random
+instructions.  Java is everywhere, so we could generate a megabyte of
+bytecode in a way that we know it will execute a certain number of
+hashing instructions before returning a hash result.  An attacker
+would have to execute the code to make a password guess, and there's
+no way he's going to execute that code faster than an Intel or AMD
+CPU.  That would destroy his speed advantage, and we could still
+hammer memory to reduce his cost advantage.  That would be awesome.
+
+However, that complicates the algorithm dramatically, hurts
+portability, and brings all the security holes in Java to our password
+KDF.  I think the security experts' heads would explode if we tried to
+standardize such a KDF.
+
+I think the next significant layer of protection after off-chip memory
+should be using GPUs for KDF.  Most smart phones and likely all future
+desktop and laptop CPUs have significant GPU hardware, and we could
+use that in parallel with hashing external memory.  That's why I think
+a KDF should be designed with an adjustable parallelism parameter.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

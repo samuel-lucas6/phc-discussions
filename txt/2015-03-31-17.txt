@@ -1,0 +1,84 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <CALW8-7LxDUcE9oWZnqg+85A0TqVVMmS0BtgfDEsSW=tscAxohA@mail.gmail.com>
+Date: Tue, 31 Mar 2015 15:34:44 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 2:50 PM, Solar Designer <solar@...nwall.comwrote:
+>
+>means that the block latency is not 16 pwxform calls+ 8 Salsa rounds,
+>but far smaller, only the equivalent of 4 pwxform+8 Salsa rounds.
+>
+No.  Where does the number 4 come from?
+
+Let me reformulate. Pwxform operates lanewise and can be fully
+parallelized up to the lane level. What I meant is that you get only
+1-lane latency for the entire sub-block. You do not have to know an
+entire subblock to compute the next one, so the total latency of
+Blockmix is 16 1-lane pwxform. This value I divided by 4; maybe I was
+incorrect if you implicitly took this into account, and by latency of
+32 sequential pwxform's meant "latency of 32 sequential 1-lane
+pwxform's" (should there be 16, not 32?).
+
+Well, you may consider the same for Argon2, since the Blake2b round
+also has internal parallelism, and the round latency is only 2
+quarterround latencies. A fair comparison between the latencies of the
+two schemes becomes difficult at this level, I feel. Whereas Argon2
+has definitely more parallelism inside, it also synchronizes much more
+often, whereas yescrypt synchronizes the lanes only in Salsa.
+
+What we can do, for example, is to draw up for each scheme a chain of
+operations that must be sequential. For Argon2, I see a chain of 16
+additions, 16 XORs, and 16 rotations, which depend sequentially on one
+another. Such a chain exists for every 64-bit word of the 1 KB-block.
+For yescrypt's pwxform, I see a chain of 2 multiplications (or S-box
+calls), 2 XORs, 2 additions - for first subblock, 4 mults, 4 XORs, 4
+additions - for the second subblock, etc., up to 32 mults, 32 XORs, 32
+additions for the last subblock + Salsa.
+
+For me these two sets of chains look comparable, and almost equal in
+average length.
+
+>
+Yes, it can be computed lanewise up until the final Salsa20/8, but
+that's a non-issue.  In fact, this flexibility may be somewhat useful on
+register-starved archs.  pwxform() in yescrypt-opt.c actually partly
+takes advantage of this: it has the loops re-ordered to be
+gather{rounds{simple}} rather than rounds{gather{simple}}, for some
+slight speedup on register-starved archs.  yescrypt-opt.c does not take
+this to the BlockMix level, but it could.
+>
+Do you think this has any drawback, and why?
+
+I understand. I do not know yet if it is a drawback since I have not
+found an attack. I must check some ideas, also on your S-box
+generation...
+
+
+>Do I understand yescrypt right?
+>
+I think not.  Perhaps I need to describe it better, including the
+expected latencies.
+
+So do I understand it now?:)
+>
+>That's cool, but that's 8192-bit parallelism, right?
+>>
+>I would like to comment on this as well, but I do not quite understand
+>how you measure the parallelism. Maybe the compression function
+>picture in Argon2 specification helps.
+>
+I was looking primarily at your code.  I saw 16 BLAKE2 rounds, of which
+2 groups of 8 had data dependencies between the groups.  This appears to
+be consistent with what you're saying.  Right?
+>
+
+Right.
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

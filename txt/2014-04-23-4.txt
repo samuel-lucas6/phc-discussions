@@ -1,0 +1,91 @@
+phc-discussions - Re: [PHC] Dumb fast file digest idea...
+
+Message-ID: <CALW8-7L16VUNPMgf9rm6qusUMt=dW=KryY_EmMWoM_NnVmzhsw@mail.gmail.com>
+Date: Wed, 23 Apr 2014 16:29:49 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Dumb fast file digest idea...
+
+I think that collisions for this hash function can be found by differential
+cryptanalysis, where differences are injected in block[0], block[1], and
+block[128*128-1]. The first two compensate each other in the state, and the
+third one cancels the difference in buffer[0].
+
+
+On Wed, Apr 23, 2014 at 4:03 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+On Wed, Apr 23, 2014 at 9:31 AM, Dmitry Khovratovich <
+khovratovich@...il.comwrote:
+>
+>Hi Bill,
+>>
+>If you alternate AES rounds with message injection on the full state,
+>collisions can be found instantly.
+>>
+>It is a non-trivial task to make a secure AES-based hash function, and
+>there have been many attempts during the SHA-3 competition. All of them are
+>not that fast.  One of problems is that the 128-bit state can provide only
+>64-bit security against collision attacks, which is certainly not
+>recommended.
+>>
+>
+I see.  Blake2b should still be a decent candidate for the lower level
+primitive, providing up to 256 bits of collision resistance?
+>
+>
+>I do not understand what you're doing in the last two paragraphs. A
+>pseudocode would help.
+>>
+>Bets regards,
+>Dmitry
+>>
+>
+The code, without parallel lanes or dealing with the last partial block,
+or optimizing memory accesses, would look something like:
+>
+blockSize = 64*128*128 // 1 MiB buffer
+uint512 block[128*128]
+uint512 state = 0
+while(block = readBlockFromFile(file)) {
+    state = hashBlock(block, state)
+}
+output state // Digest of file
+>
+hashBlock(uint512 block[128*128], uint512 state) {
+    uint512 buffer[128*128]
+    for(i = 0; i < 128; i++) {
+        for(j = 0; j < 128; j++) {
+            state = Blake2B_ROUND(state, block[i*128+j])
+            buffer[i + j*128] = state // Note that we multiply j, not i by
+128
+        }
+    }
+    for(i = 0; i < 128*128; i++) {
+        state = Blake2B_ROUND(state, buffer[i])
+    }
+    return state
+}
+>
+In this case, Blake2b_ROUND would be something like Lyra2's modified
+Blake2b round, where the state and 512 bits of input are XORed together
+before doing just the one round.  I incorrectly stated that Blake2b uses 8
+rounds above.  It normally uses 12.  This version would use only 2.
+>
+By writing non-cryptographically strong single-round hashes separated by
+long distances in memory, and then doing an outer hash of the memory,
+adjacent memory locations should not be at all correlated.  Wont this allow
+a cryptographically strong hash be derived from the buffer using only 1
+round per 512-bit location in the buffer?  Of course, I'm very often
+wrong...
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

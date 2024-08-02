@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <533033C8.3080805@bindshell.nl>
+Date: Mon, 24 Mar 2014 06:31:52 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On 3/24/2014 2:19 AM, Jeremi Gosney wrote:
+On 3/23/2014 8:43 PM, Bill Cox wrote:
+>This seems a bit complicated to me for a nice simple password hashing
+>function. 
+I will consider simplifying this a bit. I had selected
+chacha8 to fill the sboxes since it is a lot more lightweight than
+sha512, and I didn't want this part of the algorithm to be the most
+expensive part. For example, if we used sha512 instead of chacha8 to
+fill the s-boxes, an m_cost of 64, we'd need 1024 iterations of sha512.
+That's really heavy for just the initialization. But, it could indeed be
+simplified by just doing something like:
+>
+state := hmac-sha512 (sha512 (salt), password)
+foreach sbox do
+    for i := 0 to 3 do
+        for j := 0 to m_cost / 4
+            sbox[i][j] = sha512 (state)
+key := hmac-sha512 (state, password)
+  
+But while it is less steps, it's also a lot more expensive. I'll
+experiment with it, but I really don't see a need to be so compute-heavy
+during the initialization phase.
+
+I went ahead and experimented with this tonight, and while it is a fair
+amount heavier, it is simpler and I do believe I like it better. So I
+went ahead and commited this revision to the repository.
+

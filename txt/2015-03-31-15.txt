@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <20150331133034.GA2968@openwall.com>
+Date: Tue, 31 Mar 2015 16:30:34 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, Mar 31, 2015 at 03:02:06PM +0200, Dmitry Khovratovich wrote:
+Yes, you're right, the code is little-endian only so far (the
+specification implicitly suggest little-endianness in the
+initialization phase). This must be changed, and I will do it.
+
+Sounds fine.
+
+Another concern here is C strict aliasing rules.  When you cast some
+integer type to a pointer to a char-sized type, that's fine so far
+(since char is special).  However, if the function you pass this to then
+casts that to a different-sized integer type, you have a C strict
+aliasing violation there, so UB, and it may be exposed and result in
+visibly incorrect behavior if the compiler performs optimization across
+function boundaries (such as does function inlining and link-time
+optimization).  This actually affects the official scrypt's
+crypto_scrypt-nosse.c when compiled with (extreme) function inlining,
+resulting in incorrect computation.  I have not yet seen it happen
+across object file boundary, but since link-time optimization is a thing
+I expect that it may (if not now, then later).  This affects a lot of
+existing code out there.  (In the submitted yescrypt code, I tried to be
+careful about this, but e.g. some of my older code in JtR is affected.)
+
+        blake2b_update(&BlakeHash, (const uint8_t*)&lanes, sizeof(lanes));
+[...]
+
+Surely blake2b_update() then uses its own choice of integer or SIMD
+types for this data.
+
+A solution here is to use a union type containing all of the integer and
+SIMD types.  The called function may cast the pointer to a pointer to
+such union type, then access the fields of its desired type.  The
+compiler will then know that they might alias those other listed types.
+
+Alexander
+

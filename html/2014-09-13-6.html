@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - A review per day - Battcrypt</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="../../../2014/09/14/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;54148FD4.2050607&#64;ciphershed.org&gt;
+Date: Sat, 13 Sep 2014 14:41:24 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: A review per day - Battcrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Battcrypt is interesting.  It's most similar entry is PufferFish,
+which is also an extension of Bcrypt to use more memory.  It was
+written by Steve Thomas, who not only is quite good at finding
+weakness, he's also great at writing code that clearly has none.  It
+took me very little time to review his code.  I have zero negative
+comments to report.  I see zero mistakes that result in weaknesses.
+
+As an algorithm, Battcrypt inherits the Blowfish encryption from
+bcrypt, but extends it to use more memory.  It has a 2KiB window it
+moves around memory unpredictably, doing Blowfish encryptions.  Like
+PufferFish, I expect it to have excellent GPU defense.  I was hoping
+that Battcrypt, with it's 2KiB window it moves around, would run
+efficiently when busting out of cache memory into DRAM, making it a
+possible Scrypt replacement.  However, in it's current form, it's too
+slow.  Here's my benchmarks.
+
+4MiB benchmark:
+
+PHC&gt; time ./phs-battcrypt 0 9
+Allocated 4194304 memory
+
+47 b1 c0 b0 71 9c 87 f1
+9c 3c 6e 2d b1 c3 95 39
+a3 9c 22 38 9d a5 41 29
+06 eb cb 9b 7d 62 14 06      32 (octets)
+
+
+real	0m0.089s
+user	0m0.089s
+sys	0m0.000s
+
+
+1GiB benchmark:
+
+PHC&gt; time ./phs-battcrypt 0 17
+Allocated 1073741824 memory
+
+17 2b e5 77 32 76 4a 97
+39 a4 fe 1c f6 32 fe c4
+74 80 24 39 ec fb 71 08
+db 70 c1 0e a7 24 e3 76      32 (octets)
+
+
+real	0m20.192s
+user	0m20.122s
+sys	0m0.076s
+
+
+These numbers are *way* too high for competing with Scrypt in large
+memory hashing.  However, for strong GPU defense in small memory,
+Battcrypt is great, just like PufferFish and bcrypt.  I tried to see
+if I could tweak the code to get it to be speed competitive with the 3
+potential Scrypt replacements, but I failed.  I reduced the encryption
+rounds from 16 to 1, and that helped a lot, and I got rid of the early
+garlic rounds and only computed the last one, but it was still too
+slow.  Here's my benchmarks with these two tweaks:
+
+
+Reduced round version with minGarlic == maxGarlic:
+
+PHC&gt; time ./phs-battcrypt 0 9
+Allocated 4194304 memory
+
+56 c5 19 9a f6 08 1f 6e
+39 c0 c1 05 11 4d 98 87
+bd 62 10 c5 00 27 02 61
+4b 8c 0e f5 a6 bd d8 2b      32 (octets)
+
+
+real	0m0.014s
+user	0m0.009s
+sys	0m0.005s
+
+PHC&gt; time ./phs-battcrypt 0 17
+Allocated 1073741824 memory
+
+18 fd d1 02 33 32 49 89
+bd 48 86 70 64 10 78 e2
+aa ae 02 4d 32 4e ac c5
+03 83 be c8 06 b7 d7 62      32 (octets)
+
+
+real	0m2.232s
+user	0m2.168s
+sys	0m0.064s
+
+Lyra2 does the 1GiB benchmark in something like 0.34 seconds.  &gt; 2
+seconds is a non-starter for Scrypt replacement.  I am not sure
+exactly what is keeping it from running faster, but Steve can figure
+it out.  As it is, I see Battcrypt and PufferFish as essentially on
+equal footing as a pure Bcrypt replacement.  Only Yescrypt also
+competes in this category at this level with these two, though both
+PufferFish and Battcrypt have that bcrypt KISS simplicity, while
+Yescrypt does not.
+
+Assuming we may want to have a Bcrypt replacement winner, I have a
+hard time recommending that either PufferFish or Battcrypt be dropped
+from the second round.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFI/QAAoJEAcQZQdOpZUZ/M4P+QHU6AgqmwWUfbz7Hv7zmpdh
+TiXA/JmccpXP+jpUG5rH8ZOiTHUbD8PPCTVS+CfAt8695c4WquggJ1eXpW1Bujas
+hxZeyDtrVCdGUlrsbB0eryvFwrLfZK8JKAn0lgvXuTGKv6VjSrrJF4CMnjCj0VyH
+ZawfRXAe9C94p2CANQYKPwx4O/D0Ik3B+FTBYKGgYWYIHhJx2thj3DhZXidiauzF
+UHRtx2MjjuDdhq6wCtLKWD8mVop76MhepNS6ozaPqTux3KuAS5AMyZyXWtVW2Nnl
+EEvNnsknp/iw6kUGPK3qBhJpOXmg7bmbnN+HQvnh8hT/IPVe2fMFZrtpU12gvEFp
+4i0a+pIhC9MipklPSy1VUVlIT5oqexvsaDtULqnnh0VXxn9U/8fg6wgBmXt723h3
+R3IeLhh4xtx5TK0bl4SqU11FbT3lIADZqBJR1uBCrjOSmrOEugZCWqaOMn/4Nhe2
+AKzofgROHhdYCnCcFz+OeWY2OxzVCcYb+P4t/ULxLyNijrlXNBdWvpRc2kQTZgx3
+f4Z8bW3YF/kEL8VAZjViL4q17X3fWeCEcmQbXWX6ilnhmPSjIZtyKMA+7AOiXmMT
+9xKNLlB2c2k8Qp/BI6NAeElUTQWxkKAqw/ZA5nWuKCX5oO/R5I8IFECb0ZfwbK5v
+rQepNrSF496iboGy0reN
+=u8SX
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <20140110134114.GB31480@openwall.com>
+Date: Fri, 10 Jan 2014 17:41:15 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+On Fri, Jan 10, 2014 at 07:50:45AM -0500, Bill Cox wrote:
+The case of PHP is interesting, but this is of course server-side only, at
+least in cases I'm aware of.  I'd love to see a Javascript optimized
+memory-hard KDF.  Especially in client-side Javascript, I'd worry less
+about timing attacks and focus on memory filling speed and sequential
+hardness.
+
+As I mentioned in another posting, JavaScript is equally slow or fast
+(depending on its implementation) for standard primitives such as
+SHA-512 (which it lacks) and less usual ones such as EksBlowfish.  The
+latter currently provide huge advantage against GPUs, especially when
+total memory usage is not high (lower than tens of MB) - and we might
+not have time to use a lot of memory.  Thus, a JavaScript optimized KDF
+may be quite different from a PHP/Perl/Python/... optimized one.  Yes,
+this is unfortunate, since it would otherwise be preferable to have
+fewer different KDFs in use.
+
+A server running Drupal or any PHP back-end can almost always call a
+process in C to do key stretching.  I believe this is a better architecture
+anyway.  It's one thing to worry about memory leaking between processes,
+and another to worry about leaking to all those unaudited PHP libraries
+that get sucked into Drupal or any other popular back end.  I want my key
+derivation performed in a process where we can check the code and believe
+it is secure.
+
+This can't possibly be the default setup of future Drupal, nor any other
+popular web app.  Whatever password hashing scheme they'd use would need
+to be purely PHP.
+
+Any chance we'd get to see a Java translation?
+
+On Fri, Jan 10, 2014 at 07:51:27AM -0500, Bill Cox wrote:
+s/Java translation/Javascript translation/
+
+Of smhkdf?  Not at this time, or not by me.
+
+For JavaScript, maybe a translation of a future revision of escrypt
+would be more appropriate.  BTW, Dmitry Chestnykh has JavaScript
+implementations of scrypt (and benchmark results in different browsers,
+which IIRC required different optimizations).
+
+Alexander
+

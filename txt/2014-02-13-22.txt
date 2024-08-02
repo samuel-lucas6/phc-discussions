@@ -1,0 +1,29 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213193745.GA7078@openwall.com>
+Date: Thu, 13 Feb 2014 23:37:45 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Sun, Feb 09, 2014 at 05:47:29AM +0000, Samuel Neves wrote:
+I managed to shave one instruction (cycle) off in two different ways,
+one requiring SSE4.1, the other only SSE2. Both run at same speed.
+
+Cool!
+
+One note: since we're doing two PMULUDQ, and they cannot be dispatched
+in the same cycle, the lower bound for the latency of any accurate
+emulation is 6 cycles.
+
+Good point.  However, when we have a sequence of multiple emulated
+_mm_mullo_epi32()'s, this extra cycle may be incurred only once per
+sequence rather than once per _mm_mullo_epi32().
+
+It's similar to how the scalar widening MUL has (on some CPUs) 1 cycle
+higher latency for edx (or rdx) than for eax (or rax).  In the table I
+posted, I included the higher latency, but we may have in mind that in
+some instruction sequences the lower latency will sometimes apply.
+
+Alexander
+

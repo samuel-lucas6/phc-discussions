@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] catena.c</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="5">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p61G9SHcuvS6PZF6GZLh4Spx+m7-zxmX29J7gbNW0oDcQ&#64;mail.gmail.com&gt;
+Date: Mon, 27 Jan 2014 22:44:30 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] catena.c
+
+That's fun!  The Catena master branch has 128, and my waywardgeek
+branch has H_LEN*2, which is my prefered ordering and spacing compared
+to 2 * H_LEN.  However, it should be twice H_LEN regardless.  There
+were some hard-coded 64's as well, and a few places that assumed H_LEN
+&lt;= 64, and placed where constants were passed rather than GARLIC and
+MIN_GARLIC.  I think I got them all... To replace the hard-coded 64's,
+I added MAX_HASHLEN.
+
+I also replaced all the __HashX with __FastHashX in the row data
+computations, which resulted in the expected speed-up.  __FastHash is
+just the NoelKDF multiply hash.
+
+My more radical change for today was to factor out the mid-row
+computations so that I could easily embed a Catena-7 sub-DAG in the
+first row.  You've got to love git... it let's me make all the changes
+I want without messing with master.
+
+Bill
+
+On Mon, Jan 27, 2014 at 10:17 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; Christian,
+&gt;
+&gt; I guess the 128 constant in the snippet below was meant to be H_LEN,
+&gt; since otherwise behavior will differ for H_LEN != 64, and it could even
+&gt; be over-read beyond the malloc()'ed memory.
+&gt;
+&gt; For the current H_LEN == 64, which is valid for both BLAKE2b and
+&gt; SHA-512, this change is obviously a no-op.
+&gt;
+&gt; diff --git a/src/catena.c b/src/catena.c
+&gt; index 5486709..8c84f82 100644
+&gt; --- a/src/catena.c
+&gt; +++ b/src/catena.c
+&gt; @@ -66,7 +66,7 @@ void LBRH(const uint8_t x[H_LEN], const uint8_t lambda,
+&gt;      __Hash2(r + (c-1)*H_LEN, H_LEN, r, H_LEN, r);
+&gt;      p = r + H_LEN;
+&gt;      for (i = 1; i &lt; c; i++, p += H_LEN) {
+&gt; -      __Hash1(p - H_LEN, 128, p);
+&gt; +      __Hash1(p - H_LEN, 2 * H_LEN, p);
+&gt;      }
+&gt;    }
+&gt;
+&gt; Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+phc-discussions - Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+Message-ID: <20140315001924.GA31920@bolet.org>
+Date: Sat, 15 Mar 2014 01:19:24 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On Delegation (Was: "Why I Don't Recommend Scrypt")
+
+On Fri, Mar 14, 2014 at 11:42:41PM +0400, Solar Designer wrote:
+As I mentioned before, I think a shortcut like this could be used for
+more effective memory cost upgrades than what e.g. Catena provides.
+
+I envision the "fast path" to be adequate to situations where there are,
+say, several login servers feeding on the same database of hashed
+passwords but offering different services, and one of them can be
+entrusted with a private key which allows for (much) faster password
+verification for some reason, e.g. because it has an HSM while other
+frontends do not. Or something like that.
+
+In any case, a fast path can be retrofitted to any password hashing
+function by the simple expedient of storing both the hash value AND an
+asymmetric encryption of the password (or of SHA-256(password) or
+anything similarly fast) with some public key; a system which has a copy
+of the private key can forget the hash and use decryption to recover the
+password (or its fast hash). Without the private key, the public-key
+encrypted password is useless (normal asymmetric encryption algorithms
+are randomized, so that cannot be used for enumerating passwords). Such
+a scheme implies a storage overhead which needs not be large (with
+EC-based ElGamal or ECIES, this could be done with, say, 50 bytes
+overhead per stored password).
+
+(I don't follow what you mean by memory cost upgrades in the context
+of a "fast path" so I fear we may not be speaking of the same thing.)
+
+
+Anyway, both the ability to increase the cost parameter from the hash
+value alone (without access to the source password), and the "fast
+path", are straight from the PHC call for submissions:
+
+  | Ability to transform an existing hash to a different cost setting
+  | without knowledge of the password.
+
+and:
+
+  | For example, one may design a scheme that is slow to evaluate
+  | except on a server given some server-specific shortcut.
+
+Since these properties were listed as desirable, I kind of assumed that
+they were desired.
+
+
+Or even more advanced features such as the ability to
+delegate computation to an external untrusted system.
+
+This is an interesting topic, which somehow we haven't touched on this
+list yet, although at least Jeremy Spilman and I thought of it before.
+
+Arguably, it falls in the same category as hash upgrades and client-side
+pre-hashing, because it can also be implemented on top of an existing
+password hashing scheme lacking this feature as a built-in one
+
+Now I am all ears.
+
+Background: my own candidate (which I submitted three weeks ago) offers
+cost parameter increase, a fast path, and delegation. Delegation to an
+_untrusted_ external system seems quite non-trivial to me, and I found
+only one way to achieve it, which involves some maths. I do not see how
+it could be implemented "on top of an existing password hashing scheme".
+So if you have a method for that, I am VERY interested.
+
+To avoid any misunderstanding, let me formulate what I mean by
+"delegation to an untrusted server".
+
+Let a system S which must compute h(s,p) for a salt value 's', a
+password 'p', and a PHS h(). The h() function is configurably slow,
+so that leaking h(s,p) to an hostile entity is less problematic (but
+you still don't want it to happen if you can avoid it). Anybody
+can compute h() (given s and p), there is no secret value in it;
+but it is (by construction) expensive.
+
+The system S does not have much (free) computing resources, but can ask
+an external system D to compute things for it. However, D is not
+trusted: we do not want to give p to D, or even h'(p) for any
+deterministic function h'() because this would allow D to, afterwards,
+"try passwords" (an offline dictionary attack). D must help us computing
+the value, but must not extract any information from what S shows to D
+which could allow testing potential passwords. In particular D must
+not see h(s,p).
+
+The salt 's' is assumed to be known to everybody. D is modeled as a
+passive attacker: D will faithfully run the requested computation (if D
+is an active attacker, then it can disrupt the service by simply not
+responding, or returning random junk).
+
+
+If you can describe how such a thing could be built on top of, say,
+bcrypt, then please show me.
+
+
+the output is 192 bits only,
+
+184, and that's more than enough.
+
+Technically, bcrypt is a custom 64-bit block cipher with a very long key
+schedule, which is then used to encrypt a 192-bit input (exactly three
+blocks). If it is limited to 184 bits, it is as an artefact of ulterior
+encoding (Base64, 31 _characters_ instead of 32, so you really get 186
+bits, not 184). If you need more than 128 bits, then that's for a KDF,
+and in that case there is no point in applying the Base64 encoding and
+its historical shortcomings at all, so you would get the full 192 bits.
+
+Of course, any output can be extended with some KDF, but that's one more
+algorithm, extra complexity and so on.
+
+
+The actual limit is 72 chars.  56 is an error in the bcrypt paper, and
+it's repeated in the scrypt paper and elsewhere.
+
+Well, the authors of bcrypt specified it as using 56 bytes, so I would
+say that the "error" is 72, not 56 -- by definition. Although it can be
+argued that the algorithm "works" for longer inputs, one could say that
+the "official" bcrypt (with appropriate double quotes around "official")
+is the one which the paper defined, because that is the one which got
+theoretically reviewed by other cryptographers.
+
+The "56" comes from the fact that bcrypt is derived from Blowfish, which
+uses keys of up to 56 bytes (and no more). However, a longer key would
+fit in Blowfish as well. If we say that limiting bcrypt to 56 bytes is
+an error, then so is limiting Blowfish keys to 56 bytes.
+
+
+practice more often 55 or 51 characters, depending on the implementation
+library),...
+
+Huh?!  I've never seen implementations of bcrypt like that.  Have you?
+Got any pointers?
+
+I'll have to dig a bit around; it is old memory. The "51" apparently
+comes from a faulty assumption in some usage somewhere of bcrypt that
+the "55 bytes" included a 4-byte salt (which may have been true in some
+variant). The "55 vs 56" is about the inclusion or not of a terminating
+0.
+
+
+I also don't think so, but I also don't think the portfolio should be
+large.
+
+Last I heard, some rumours talked about a dozen candidates or so, which
+is not much (but it is also rumoured that rumours occasionally turn out
+to be off by a long shot). This could yield a portfolio of, say, three
+or four schemes.
+
+In any case, when considering the AES and SHA-3 competitions, I usually
+say that the greatest thing about them is not that they came up with a
+good final choice, but that it also exposed a lot of backup schemes.
+E.g. all the round-2 SHA-3 candidate schemes got a fair amount of
+scrutiny, and none of them was so much as scratched in any
+non-ridiculous way, so we now have 14 extra hash functions which are
+"quite probably strong" and ready to be used should some issue be found
+later on with the "SHA-3 winner". In the AES competition, 2 of the 15
+candidates were "broken", and only in an academic way (e.g.
+cryptanalysis with cost 2^100 or so), leaving us with 13 quite decent
+block ciphers. Indeed, at least Serpent and TwoFish, two former AES
+candidates, have pursued independent careers even though they did not
+became "the" AES.
+
+In that view, the competition will "naturally" produce a portfolio
+consisting of all functions which survived. Regardless of whether one
+in particular will be singled out as the winner.
+
+
+not excuse us for subjecting the industry to an unnecessarily large
+number of "approved" password hashing schemes.
+
+If the industry can be persuaded to stop doing a couple of SHA-1 and
+calling that "password hashing", then we would already have reason
+enough to open some Champagne in celebration.
+
+
+	--Thomas Pornin
+

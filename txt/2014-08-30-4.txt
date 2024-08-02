@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] A review per day - RIG
+
+Message-ID: <CAOLP8p6vqMKKxNS-nYioJCpGsMAL3-5XnvajeEXu7YNmQvpTTA@mail.gmail.com>
+Date: Sat, 30 Aug 2014 05:46:14 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] A review per day - RIG
+
+On 08/30/2014 12:11 AM, Solar Designer wrote:
+On Fri, Aug 29, 2014 at 06:01:07PM -0400, Bill Cox wrote:
+>The XOR-ing over memory is an idea from Gambit that we talked
+>about quite a bit.
+>
+I think this idea pre-dates Gambit, or do I miss something?  Here
+it is in a comment by Anthony Ferrara (@ircmaxell) made 3 years
+ago:
+
+I also said, "Multiple entries use the XOR-ing thing, so I have less
+trouble with that, but it follows a pattern..."  I didn't mean to say
+Gambit invented the idea.  However, it was discussed mostly while
+discussing Gambit, I think.
+
+https://www.drupal.org/node/1201444#comment-4675994
+>
+| This "issue" could be eliminated by simply writing to V_j in the
+| second loop, for example: | | For i = 0 ... N - 1 |     j <--
+Integerify(X) mod N |     V_j <-- X xor V_j |     X <-- H(V_j) | B
+<-- X
+>
+At least I call it Anthony Ferrara's scrypt tradeoff defeater, and
+it was in my code leading up to yescrypt probably before Gambit
+appeared.
+>
+BTW, the Gambit submission doesn't appear to credit any prior work
+that it builds upon (it's not the first memory-hard function, not
+the first to suggest use of a ROM array, and not the first to XOR
+things onto memory), except for Keccak.  I wouldn't care much, but
+maybe you're bashing RIG for the same kind of things too much... or
+would you do it to Gambit too, when you reach it?
+
+The Gambit author took issue with me calling the cache-timing-resistant
+category the "Catena inspired" category.  I believe him when he says he has
+been thinking of a cache-resistant algorithm before Catena's paper came
+out.  His algorithm also does not seem to rip-off any of Catena's ideas at
+all.  It is very minimalistic - just the sponge and a memory access
+pattern, without all the framework stuff from Catena.  Adding the ROM seems
+odd to me, given that the algorithm is minimalistic.  You must have made a
+really good case for your ROM idea at some point :-)
+
+Gambit did combine a sponge and cache-timing resistance, which seems to be
+his main point, and his memory access pattern proved very hard to pebble
+below 1/8th memory TMTO (unlike Lyra2's).  His code is painfully slow, but
+easy to read and verify.  I can't put Gambit in the same category as Catena
+for having a lot of good new ideas, but it's not offensive at all.
+However, he did not convince me to stop calling it the "Catena inspired"
+category :-)
+
+RIG, on the other hand, did everything but copy Catena's code and paper,
+without mentioning anywhere that they were based on Catena.  Their hash
+matches Lyra2's stripped-down Blake2b round character-for-character...
+hopefully just copied from the same paper, but surely they got they idea
+from Lyra2, and those guys aren't even in the bibliography.  The XOR
+connection to Gambit is a weak, so I'll stop complaining about that.
+
+>Now that I've found that writing to a memory location just read
+>from is quite fast compared to writing to a different location, I
+>am a fan.
+>
+Yes, I like this too.  It works great for our typical defender, but
+what would it mean for an attacker with custom memory chips?  That
+attacker can implement the XOR near memory rather than near the
+hashing cores.
+>
+Luckily, this doesn't save them any bandwidth: they still need to
+pass the data to XOR with to memory, and the data read back from
+memory (before or after XOR, depending on algorithm) back to a
+hashing core. ...Unless a given password hashing scheme only XORs
+things onto memory, without using that memory's contents in any
+other way at the same time. yescrypt is fine in this respect (it
+also uses the data), but some other PHC candidates might not be -
+we could want to check them for this risk.
+
+Lyra2 gets this detail right.  Gambit gets it wrong.  I'll check for this
+detail when I read the code.
+
+I haven't actually done a proper analysis of the RIG code, yet.  I am
+waiting for them to explain why I'm wrong to find their paper and code
+offensively similar to Catena.  I make a lot of mistakes, and if this is
+one, I'll apologize and properly analyze their work.
+
+Then, what if the attacker implements more or all of the hashing
+logic, not just the XOR, near memory?  The concept of memory
+bandwidth stops to make full sense, so we can't reasonably say that
+such attacker would e.g. halve their required memory bandwidth, but
+perhaps there are still some savings due to use of possible custom
+memory cells that support a write-XOR-read operation?  I guess such
+savings might exceed the speedup we're seeing, relative to
+unrelated read/write locations, on our target CPU+RAM systems.
+Hopefully, this risk is rather theoretical, and clearly its worst
+case impact is limited to 2x (or actually less, if we consider it
+relative to defender's speedup).
+
+A DRAM cell is "one transistor", which is a bit bogus, but everyone
+says that.  The cheapest XOR I've seen is 4 transistors, so I don't
+think there's much chance a custom cell will be used to make this
+operation faster in any high capacity DRAM chip.
+
+If algorithms are XORing onto sequential addresses, I'd just make it two
+separate memory operations, put the XOR on the DRAM chip near the
+interface, and have two DRAM chips alternate addresses between them.  While
+one is doing a read-XOR operation, the other one would be doing a write of
+the previous read-XOR result.
+
+Bill
+
+
+

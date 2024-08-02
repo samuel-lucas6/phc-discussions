@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALW8-7+bTZMZHC4g6kNkBp8Mzih+zqX0w8aoXecWRtjfQsc6rg&#64;mail.gmail.com&gt;
+Date: Mon, 30 Mar 2015 14:58:45 +0200
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Hi Alexander,
+
+you're certainly right, the stored indices must be taken into account
+when counting memory for tradeoffs. For the default parameters of
+Catena and Lyra2 that we considered, these indices occupy less than
+1/1000 of total memory, and we just (explicitly or implicitly) ignored
+this small addend in the computation. The same happened to other
+"service" information that we use in the attacks (such as storing the
+access complexities, which accounted to 1/6000 of memory, cf. page 9
+of the report).
+
+Indeed, smaller blocks would increase the proportion of indices in the
+memory. To have them occupy, say, 1/10 of memory, let us consider 1 GB
+memory size. 100 MB of 3-byte indices would imply 2^{25} blocks, i.e.
+32-byte blocks. However, on the x86 architecture random access to
+32-byte blocks  would increase latency dramatically (my estimate would
+be 3-5x at least), and make the scheme much slower and thus weaker.
+
+On the architectures where the memory latency is only  a few CPU
+cycles (AVR?), smaller blocks can be useful.
+
+Dmitry
+
+
+
+On Mon, Mar 30, 2015 at 2:31 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Fri, Feb 13, 2015 at 04:45:35PM +0100, Dmitry Khovratovich wrote:
+&gt;&gt; The report is permanently available at
+&gt;&gt; <a href="http://orbilu.uni.lu/handle/10993/20043" rel="nofollow">http://orbilu.uni.lu/handle/10993/20043</a>  and will be soon added to ePrint
+&gt;&gt; as well.
+&gt;
+&gt; Sorry for stating the (maybe) obvious, but here's an additional comment,
+&gt; which I don't recall seeing on this mailing list yet:
+&gt;
+&gt; Indices of or some other kind of references to vertices cost memory too,
+&gt; a few bytes each.  They will be needed to actually mount the attacks,
+&gt; and their number (and thus total size) may be significant.
+&gt;
+&gt; For example, Table 6 seems to imply that a massively-parallel machine
+&gt; with essentially free computing cores would compute the hash with a time
+&gt; penalty equal to the depth penalty, which is only 26.6 for 1/10 memory.
+&gt; (While this feels like a bad tradeoff, it could make sense for some
+&gt; attackers who e.g. only have 1/10 memory in a chip.)  However, with a
+&gt; small enough block size, storing that tree's structure as needed for
+&gt; such optimal computation may take a comparable amount of memory to that
+&gt; for the actual data being stored.
+&gt;
+&gt; Thus, decreasing block size is a way to make TMTO less efficient.  In an
+&gt; extreme case, the block size may be comparable to one index size (e.g.,
+&gt; 4 bytes), and this would defeat even mild TMTO attacks (except on
+&gt; TMTO-friendly schemes like the original scrypt, where it is not
+&gt; necessary to record any metadata).  However, to significantly discourage
+&gt; TMTO attacks needing a depth like the 26.6 figure above, block size of a
+&gt; few hundred bytes would likely work as well (and this is a reasonable
+&gt; setting for some PHC schemes).
+&gt;
+&gt; BTW, the extra/sim-tmto.c simple TMTO attack implementation included in
+&gt; the yescrypt submission accounts for the metadata required to mount the
+&gt; attack, and reports it like this:
+&gt;
+&gt; scrypt ircmaxell:
+&gt; B' = 24efce90
+&gt; t_cost = 512
+&gt; m_cost = 256
+&gt; scrypt ircmaxell TMTO1 = 5, TMTO2 = 2:
+&gt; B' = 24efce90
+&gt; t_cost = 978
+&gt; m_cost = 180 elements + 256 indices (363 alloc + 256 ptrs) + 512 counters
+&gt;
+&gt; This shows that while the number of "elements" decreased from 256
+&gt; without TMTO to 180 with TMTO, we also added "256 indices (363 alloc +
+&gt; 256 ptrs) + 512 counters" for this algorithm's metadata.  At small
+&gt; element size, this would be non-negligible, up to the point where the
+&gt; TMTO doesn't reduce total memory usage at all despite of reducing the
+&gt; number of elements significantly.
+&gt;
+&gt; Here's what I wrote in a private e-mail reply a year ago:
+&gt;
+&gt; ---
+&gt; Someone wrote:
+&gt;&gt; [...] I seem to recall from
+&gt;&gt; my theory of computation class that TMTO is a property of anything
+&gt;&gt; that can run on a Turing machine, so it seems hopeless to defeat it
+&gt;&gt; completely,
+&gt;
+&gt; Sort of.  You can in fact always recompute instead of storing and
+&gt; retrieving intermediate results, but the theory that the memory needs
+&gt; can always be reduced, up to the point of needing no memory for any
+&gt; intermediate results, fails when you realize that referring to
+&gt; intermediate results that you don't store has non-zero memory cost -
+&gt; e.g., it can be the size of a set of array indices.
+&gt;
+&gt; Suppose at some point in computation your algorithm finds out it needs a
+&gt; past intermediate result it didn't store.  It can initiate recomputation
+&gt; of that intermediate result, but for that it needs to store some
+&gt; identifier of that intermediate result somewhere (e.g. in a variable or
+&gt; in a recursive call's stack frame or on a Turing machine's tape), so
+&gt; that the re-invoked algorithm can store this one intermediate result
+&gt; this time.  OK, it's only one such identifier, not a big deal - but what
+&gt; happens if the same issue had already occurred (and thus will occur
+&gt; again) during the recomputation of that one intermediate result?  You
+&gt; now have two identifiers to store, and so on.
+&gt;
+&gt; Given this theory, it's _not_ hopeless to defeat TMTO completely.  This
+&gt; may be done by keeping the size of intermediate result identifiers on
+&gt; par with or larger than the size of those intermediate results
+&gt; themselves - in other words, making them tiny but numerous - then coming
+&gt; up with an algorithm that computes the function in the least amount of
+&gt; memory possible.
+&gt;
+&gt; However, this might be impractical, for other reasons.
+&gt;
+&gt;&gt; but I definitely see where there is room for improvement.
+&gt;
+&gt; Yes, the current focus is on discouraging TMTO (unless it's specifically
+&gt; desired in a given use case), not on making it impossible (even if that
+&gt; could be done).
+&gt; ---
+&gt;
+&gt; Once again, sorry for stating the (maybe) obvious.
+&gt;
+&gt; Alexander
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

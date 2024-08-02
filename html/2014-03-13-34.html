@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="33">[&lt;prev]</a> <a href="35">[next&gt;]</a> <a href="33">[&lt;thread-prev]</a> <a href="35">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-Id: &lt;1738B8D1-6FBC-4547-AAA2-7B0A8339FFD4&#64;bolet.org&gt;
+Date: Thu, 13 Mar 2014 19:20:34 -0400
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+
+On 2014-03-13, at 4:27 PM, Solar Designer wrote:
+
+&gt; In short: I mostly disagree with the opinion you express, although I see
+&gt; how you (and others) can arrive at that opinion (it is intuitive).
+&gt; I'd probably be of that opinion too if it weren't for the benchmarks I
+&gt; ran on actual servers, etc.
+
+Well, It is a recurrent debate and it is easy to predict that it will remain a recurrent debate. A core problem is the notion of a "usual server", which is, let's say, a bit lacking on the objectivity side.
+
+If I may summarize things: the defender's machine has, on average, some available resources, which are the difference of what the defender started with (i.e. what he gets from his hardware) and what was used for the "normal business tasks" of the defender. The defender will want to use these resources for password hashing, i.e. he will configure the various parameters of his password hashing function so as to maximize the cost _for the attacker_ while using only his free resources (resources become "not free" when using them forces the defender to slow down his business tasks below some predefined limit of acceptability).
+
+If the function was well designed, then the most cost-effective hardware for the attacker is the same machine as what the defender uses. However, since the attacker does only the password cracking, while the defender has other things to do, they don't both compete with exactly the same weapons.
+
+The resources offered by the hardware are of different kinds. To simplify things here, there is CPU time, and RAM bandwidth. Both kinds can be allocated with fine granularity (as you say, it is easy, for the hardware, to interleave RAM access requests on a given bus with low switching overhead; the same can be said for CPU, as long as you don't try to switch more than a few thousand times per second because of the L1 caches). "Optimal" hardware is one where the amounts of both resources will be well balanced with regards to the problem at hand: if you increase the load (e.g. number of concurrent users), at some point you will run out of CPU or of RAM bandwidth; for optimal hardware you will run out of both at the same time.
+
+We can easily describe kinds of server-like systems which are thoroughly unbalanced, toward CPU usage or toward RAM bandwidth usage. For instance, if the server does heavy computations which fit in L1 cache, then there will be a lot of free RAM bandwidth when the CPU saturate. Ideally, the password hashing function will be tuned so as to restore the balance, thus maximizing the free resource usage. Since various servers have various resource usage patterns, we can say that a good password hashing function will offer many tunable parameters so that optimality may be reached.
+
+
+The gist of our disagreement is then the following: I tend to assume, from "shared experience", that the majority of servers actually in use have more free CPU than free RAM bandwidth. Apparently you don't assume the same. But, really, the problem is ill-defined as long as we don't specify what really is our target market. What servers are we talking about ? How do we measure how "important" a kind of server is ? The question is more about economics than computer science, so that call for another species of specialist.
+
+
+Another point is that I don't actually believe in tunable parameters. At least not many. If we take 100 sysadmins, and give them a password hashing function with a single tunable parameter, we can expect that about 80 or 90 of them will do at least token effort at setting that parameter to a right value for their problem at hand. With two parameters, that proportion will drop; since measuring performance is actually hard (or, at least, much too rarely done, for some reason), two or more tunable parameters imply a lot of combinations which won't be explored correctly, or at all.
+
+In my view, a "good" password hashing function should provide enough parameters to make it adequate for a large variety of situations, but must refrain from complexity. A big part of what makes a cryptographic algorithm "good" is how much it intrinsically protects users from their own mistakes. Mutatis mutandis, this is why I really prefer HMAC over most other MAC algorithms: since HMAC has no IV, it is much harder to get wrong.
+
+That's my opinion, of course, but it implies that I am not a big fan of functions which can be tuned for both CPU and RAM "usage" (for some notion of usage). Such functions are doomed to be awfully misapplied in practice.
+
+
+	--Thomas Pornin
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

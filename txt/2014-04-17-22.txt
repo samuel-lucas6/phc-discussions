@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <20140417205606.GA12305@openwall.com>
+Date: Fri, 18 Apr 2014 00:56:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 04:36:55PM -0400, Bill Cox wrote:
+On Thu, Apr 17, 2014 at 4:10 PM, Solar Designer <solar@...nwall.comwrote:
+This assumes a total of 7 reads plus writes per location, which I'm not
+sure is correct.  Looking at the algorithm, it might be even more, but
+that would push the memory bandwidth usage even higher, which would be
+surprisingly high.  It might be 4 r/w per iteration in Filling Loop, and
+5 r/w per iteration in Visitation Loop, so 9 total.  If this is correct,
+we'd see 13.68 GiB/s here.  This might be realistic because, if I
+understand correctly, the same rand is reused with and without rotW(),
+which halves the amount of crypto-like processing per memory access even
+compared to reduced round TwoCats and yescrypt.  (If one round of
+pwxform is crypto-like, whereas one bit-rotate is not.)
+
+I think for DRAM bandwidth, 7 is the right number.
+
+I think you're correct.  I mistakenly counted the reads from prev,
+whereas we are not counting the equivalent of those for TwoCats and
+yescrypt DRAM bandwidth usage.
+
+BTW, yescrypt at zero rounds of pwxform might well be a reasonable thing
+to use, if we're to maximize memory bandwidth usage while not even
+trying to keep any compute time hardening (besides the occasional Salsa20).
+I just haven't studied it enough to recommend it as an option, and I am
+not aware of a use case where zero compute time hardening would be good.
+When making the rounds count tunable (and encoding it in the flags
+field), I am not sure if I should make zero a supported value.
+
+I think having a mode that is not explicitly compute-time hardened would be
+a good thing.  My SkinnyCat subset of TwoCats has no multiplication chains,
+and only has memory bandwidth to force attackers to take a while.  For
+machines without a dedicated multiplier, this might be a better mode for
+them to run.
+
+If Salsa20 (almost) does not count in terms of ASIC compute time
+hardening, then we sort of have that mode in yescrypt already, by simply
+not setting the YESCRYPT_PWXFORM flag.  However, then Salsa20 rounds
+count would need to be made tunable, if we want to maximize memory
+bandwidth usage in that mode.
+
+For CPUs without fast enough multipliers, I think (tweaked) yescrypt
+should preferably retain bcrypt-like GPU unfriendliness.  I am thinking
+to treat S_SIMD*S_P = 0 as requesting this special mode: it's kind of
+less than one normal pwxform 64-bit lane, so I could use a single 32-bit
+lane without the multiplies then, and would potentially have ~2x to ~4x
+better GPU resistance than bcrypt on those older CPUs (by using only 2
+instead of 4 S-boxes, and/or by making their combined size 8 KiB instead
+of 4 KiB).  I am assuming that CPUs without fast multipliers typically
+also don't need more than 32 bits of parallelism, and that any 64-bit
+CPU would have fast multipliers (at least one).
+
+I don't know what skipping pwxform calls does to security, though.  I'm
+sure you can deal with that.
+
+I think this has no undesired side-effects, other than the expected
+removal of GPU resistance and compute-time hardening, but it does feel
+like we'd be getting (too?) close to the edge of the cliff.  On the
+other hand, it'd be nice to have yescrypt reviewed and attacked in this
+cut-down form (as well as in full form) during PHC.
+
+Alexander
+

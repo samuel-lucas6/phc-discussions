@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <1863718116.48562201.1429423413281.JavaMail.root@larc.usp.br>
+Date: Sun, 19 Apr 2015 03:03:33 -0300 (BRT)
+From: Marcos Antonio Simplicio Junior <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+----- Mensagem original -----
+
+De: "Solar Designer" <solar@...nwall.com>
+Para: discussions@...sword-hashing.net
+Enviadas: Domingo, 19 de Abril de 2015 0:17:46
+Assunto: Re: [PHC] "Attack on the iterative compression function"
+
+On Sat, Apr 18, 2015 at 10:55:54PM -0300, Marcos Antonio Simplicio
+Junior wrote:
+After the initialization, though, the row is always read in the
+same order, so no further latency penalties apply as the
+recomputation depth grows.
+
+Why does this mean no further latency penalties? The recomputation
+algorithm is unlikely to encounter the same missing row again before
+the
+row has to be thrown out of the algorithm's temporary storage. And
+the
+row's columns are still needed in reverse order of computation, so
+the
+first-computed column, which has to be stored, is the last-needed
+one.
+Am I missing something?
+
+I'm not sure we are talking about the same thing, so I decided to draw what I was trying to say (see attached image): 
+
+1) If we initialize a row and later read/update it in the same order, then the recomputation of *that row* after several updates takes only C, since the updates can be pipelined 
+
+2) If we initialize a row in one order and all subsequent read/updates are done in the reverse order, then the recomputation of *that row* after several updates takes 2C, since the updates can be pipelined among themselves, but not before the row is fully initialized. (note: this is what we are doing with Lyra2) 
+
+3) If we initialize a row in one order, and each subsequent read/update is done in the same but the columns are themselves reversed, then there is no easy pipelining (unless, of course, if some extra columns besides the first one are kept in memory to accelerate computations) 
+
+Marcos. 
+
+
+
+Download attachment "ComputationLatencies.png" of type "image/png" (28833 bytes)
+

@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <20140921172424.7f9d6c85@lambda>
+Date: Sun, 21 Sep 2014 17:24:24 +0000
+From: Brandon Enright <bmenrigh@...ndonenright.net>
+To: Bill Cox <waywardgeek@...hershed.org>
+Cc: discussions@...sword-hashing.net, bmenrigh@...ndonenright.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Sun, 21 Sep 2014 08:48:53 -0400
+Bill Cox <waywardgeek@...hershed.orgwrote:
+
+I really hope there's something good here.  I would love to see a
+really good anti-SIMD moving forward, not that my opinion counts.
+
+Can I rewrite your code this way?
+
+depth = 0
+while true:
+    if coinFlip()
+        depth++
+    else
+        depth--
+    if depth <= 0:
+        return
+    switch depth:
+    case 1:
+        do_work_1()
+    case 2:
+        do_work_2()
+    ...
+    case N:
+        do_work_N()
+
+
+Your code doesn't emulate where execution stays in the outer loop and
+doesn't enter the inner loop.  I think you need to add a depth-- after
+all of the cases.
+
+Also, your case 1, case2, ... case n structure doesn't have a stack to
+it so it can't emulate nested loops like:
+
+while (coinflip()) {
+   do_some_work();
+
+   while (coinflip()) { ... }
+
+   do_some_more_work();
+}
+
+You'd need a way of supporting cases nestled within other cases and
+that needs a stack-like datastructure.
+
+Brandon
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlQfCdQACgkQqaGPzAsl94IY9wCeIna6kBJdWJYXusgGwL3ysEBe
+GJ0AnA9Ux0uABbEwimvJOcXv3DkRiipK
+=JToa
+-----END PGP SIGNATURE-----
+

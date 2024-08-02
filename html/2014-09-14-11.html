@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] PolyPassHash is broken</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;54160471.7010201&#64;ciphershed.org&gt;
+Date: Sun, 14 Sep 2014 17:11:13 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] PolyPassHash is broken
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 09/14/2014 03:45 PM, Justin Cappos wrote:
+&gt; We have some discussion about the points list in our paper
+&gt; (Sections 5.2.3 and 6 for example). However, I'll be more explicit
+&gt; and direct here.
+&gt; 
+&gt; Method 1
+&gt;&gt; * get partial hash from DB * find partial hash collision *
+&gt;&gt; crash/restart server * login
+&gt;&gt; 
+&gt; 
+&gt; Sure you can do this.  Once a threshold is reached, the attack will
+&gt; be detected because the full password hashes will not match.  That
+&gt; is, unless the attacker is fortunate enough so that the partial
+&gt; hash collision is the actual full hash / password.
+
+I have to agree with Steve that the Partial Validation feature needs
+work.  I was convinced the scheme proposed in the paper was secure
+until I read that section, which puts security in doubt.
+
+Revealing even two bytes of the password hash is dangerous.  For
+example, if there are 4 administrators, and two of them have passwords
+with only 32 bits of entropy, meaning that they exist in my 4-billion
+entry dictionary, and if only 2 shares are needed, then without the
+Partial Verification feature, I still have to try up to 2^64 guesses
+to find the master key, once I've chosen the right two admin accounts.
+However, with 16 bits of the hash from two password hashes, in 4*2^32
+hashes I can easily build dictionaries for all of them containing only
+matching hashes, which would be about 2^16 each.  I then only need to
+try 2^32 combinations for each of the 4 possible pairs to find the
+key.  Essentially, what this does is make it just about as easy to
+attack the database as if PolyPassHash were not in use.
+
+In general, I think most admins always want to be able to log in.
+This is a significant problem for wide-spread adoption of
+PolyPassHash, without the Partial Verification feature.  However, this
+seems to need work.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFgRuAAoJEAcQZQdOpZUZUNQP/3BwhmbICmXv3Fp+ylnBp0zP
+zlHKBPiYK65he9anRRI9grMg12euAQX0iwXT2UMaDwct9q7MGuZFfd08b5zb+m6m
+wDWY8btsyJ8ZNG0t0KIv7YEsDQnPxfGTXccNUaS3JxPUth3s/zvcvYl+XLpS0xli
+kbg1mLLQTXeQu8cDLFbJPBcYibWhGmQc34aLFCRoaTLEGYh1is1B9bhuBJgjCmwa
+zR4iIdUj7HsZxW++TJ+ot3WBn6ZrMRXLY3w/0HLpOfWE0aHNVQQW84r9w4cgo3i/
+H77J+baVRiLBG1X6PXWnacnXliv5cmvGA1epP/BPFl2QKnmhsp/LVvYX06tjlA2A
+UCJ2iS1eH9GNCZezExJeEOeD6q9zbsenFFDXoGTDaQWr9syf+xTWStGxUWv1o8Xx
+wLukKxYlb6MB8H4ZgpUvDGdyxPIZUjmbeNvEyXXDSCUezEOxvITa0so+7P9nbRI7
+gc172oNc1YinMqwyFCWanAQf/dhr1bnGw3jS3c4HTAYzi+tTV5IflBSwOmKCa/hT
+JSBHwi/e0qHI6QWiUU9P2MnrCvKsnp1mlnO4dgPJMrWVWADDWNFxSOSXaiUsmheV
+y17wzBjdV/lJTPbm2DzvS6R+BaQjAskoGVdakasnturFGKKuUT0NrmOMFmkIfslZ
+T3TcmYIMs1QwI9SXZFi3
+=kk0q
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

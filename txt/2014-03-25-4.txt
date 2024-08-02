@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] TwoCats multiplication chain
+
+Message-ID: <CAOLP8p4H4G9rXh+N0k+1YPn1FkbLDax+Pd157cJY2P6bs8ZWPA@mail.gmail.com>
+Date: Tue, 25 Mar 2014 07:36:58 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sat, Mar 22, 2014 at 8:13 PM, Bill Cox <waywardgeek@...il.comwrote:
+On Sat, Mar 22, 2014 at 3:16 PM, Solar Designer <solar@...nwall.comwrote:
+>Bill,
+>>
+>In current TwoCats, you have:
+>>
+>                // Compute the multiplication chain
+>                for(uint32_t k = 0; k < multiplies; k++) {
+>                    v = (uint32_t)v * (uint64_t)oddState[k];
+>                    v ^= randVal;
+>                    randVal += v >32;
+>                }
+>>
+>I think this has twice lower ASIC attack latency than what you
+>probably expected.  Here are some test questions: can the next
+>multiplication start being computed before the previous one completes?
+>Can this reduce total latency for two multiplications, and by how much?
+>>
+>In a 32x32 multiplier, the highest latency is for bit 31 of the result.
+>I look at these diagrams when considering what happens there:
+>>
+>http://www10.edacafe.com/book/ASIC/Book/Book/Book/CH02/CH02.6.php?interstitial_displayed=Yes#pgfId=167904
+>>
+>In your code, only one of the partial products for bit 31 depends on the
+>previous iteration's bit 31 of v.  Thus, almost all of the partial
+>products can start being computed before bit 31 of the previous
+>iteration's v is ready.
+
+Here's my modified multiplication chain code.  It does two
+multiplications per loop, and uses only the upper 32 bits, which are
+harder to speed up in hardware than the lower 32:
+
+                // Compute the multiplication chain
+                for(uint8_t k = 0; k < multiplies; k++) {
+                    a ^= (uint64_t)b*c >32;
+                    b += c;
+                    c ^= (uint64_t)a*d >32;
+                    d += a;
+                }
+
+The 4 variables are initialized from the "state" values.  This
+function allows the additions to be done in parallel, but the
+multiplications and xors must be sequential.  It runs well on both 32
+and 64 bit Intel architectures in my tests.
+
+There is a multiplication poisoning issue, but with the 4 variables, I
+have not seen it occur after a billion iterations, so the percentage
+of blocks that would have poisoned chains is tiny.  The poisoning
+would occur if a and c both become 0 or 1 at the same time.
+Otherwise, if only a or c is 0 or 1, changes in b and d should kick
+them back into higher values.
+
+Will this do?
+
+Bill
+

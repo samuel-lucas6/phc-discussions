@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="17">[&lt;prev]</a> <a href="19">[next&gt;]</a> <a href="17">[&lt;thread-prev]</a> <a href="19">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140417201002.GA10975&#64;openwall.com&gt;
+Date: Fri, 18 Apr 2014 00:10:02 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 03:32:25PM -0400, Bill Cox wrote:
+&gt; You're right.  I skimmed the code, and I saw:
+&gt; 
+&gt; /* 6: for i = 0 to N - 1 do */
+&gt;                 for (i = 0; i &lt; Nloop; i += 2) {
+&gt; ...
+&gt; 
+&gt; The comment made me think it would execute N-1 times, but that's just the
+&gt; Script comment.  I went back and read your documentation on Nloop in your
+&gt; writeup, and it's clear enough.  I just missed it before.
+
+I can see how the comment can be confusing.  Since yescrypt builds upon
+scrypt quite closely, I kept the numbered algorithm lines and comments
+from scrypt, and in the writeup I am adding unnumbered algorithm lines
+inbetween those, to show just what is added compared to scrypt.  Perhaps
+at some point it'd be cleaner to define yescrypt on its own, rather than
+as a "diff from scrypt".
+
+&gt; BTW, I think having a partial second loop is an excellent idea.  Your use
+&gt; of t_cost in this way wins.  It's even better than just having an outer
+&gt; loop like garlic, without increasing memory.  I see Lyra2 does something
+&gt; similar.  In both Lyra2 and Yescript, TMTO resistance increases with
+&gt; t_cost.  Very nice.
+
+I like this too.  Besides TMTO resistance, also average to peak memory
+usage ratio increases with higher t_cost.  This wouldn't be happening
+with Catena's garlic.
+
+&gt; I tried r=32, and here are the results:
+
+Thanks!  Did you also try r=16?  In some of my tests, r=16 was actually
+faster than r=32, although that was with 2 threads/core.  r=32 needs
+about 16 KiB of L1 cache per thread, because it's 4 KiB for current
+block (X or V_i), 4 KiB for random block (V_j), and 8 KiB for pwxform
+S-boxes, so we're bumping into 32 KiB L1 cache size with 2 threads/core.
+This is not yet the case with 1 thread/core, though.
+
+&gt; Lyra2:
+&gt; Peak memory/second: 1.52 GiB/s
+&gt; Average memory/second: 1.14 GiB/s
+
+These look correct to me, given the Lyra2 algorithm on page 11 in
+Lyra2ReferenceGuide.pdf for T=1.
+
+&gt; Memory bandwidth: 10.64 GiB/s
+
+This assumes a total of 7 reads plus writes per location, which I'm not
+sure is correct.  Looking at the algorithm, it might be even more, but
+that would push the memory bandwidth usage even higher, which would be
+surprisingly high.  It might be 4 r/w per iteration in Filling Loop, and
+5 r/w per iteration in Visitation Loop, so 9 total.  If this is correct,
+we'd see 13.68 GiB/s here.  This might be realistic because, if I
+understand correctly, the same rand is reused with and without rotW(),
+which halves the amount of crypto-like processing per memory access even
+compared to reduced round TwoCats and yescrypt.  (If one round of
+pwxform is crypto-like, whereas one bit-rotate is not.)
+
+BTW, yescrypt at zero rounds of pwxform might well be a reasonable thing
+to use, if we're to maximize memory bandwidth usage while not even
+trying to keep any compute time hardening (besides the occasional Salsa20).
+I just haven't studied it enough to recommend it as an option, and I am
+not aware of a use case where zero compute time hardening would be good.
+When making the rounds count tunable (and encoding it in the flags
+field), I am not sure if I should make zero a supported value.
+
+&gt; Yescrypt: Salsa20/2, 1 PWXFORM round, r=32
+&gt; Peak memory/second: 3.09 GiB/s
+&gt; Average memory/second: 1.93 GiB/s
+&gt; Memory bandwidth: 8.23 GiB/s
+&gt; 
+&gt; TwoCats: multiplies=1
+&gt; Peak memory/second: 4.64 GiB/s
+&gt; Average memory/second: 2.23 GiB/s
+&gt; Memory bandwidth: 9.28 GiB/s
+&gt; 
+&gt; I agree that average memory*time is the most important metric.  TwoCats is
+&gt; only ahead by about 15% on that scale.  If I want more compute time
+&gt; hardening, I should set multiplies to 2, in which case I'd probably run
+&gt; slower.  In any case, my machine changes it's mind on runtimes by 15%
+&gt; depending on it's mood it seems, so we're getting down to a level of speed
+&gt; improvement that even I can't get excited about.
+&gt; 
+&gt; I'm still sticking to my "alternate win condition" based on peak memory *
+&gt; time :-)
+
+Sounds good.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

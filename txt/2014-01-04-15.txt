@@ -1,0 +1,40 @@
+phc-discussions - RE: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <007801cf0971$9c5f4f00$d51ded00$@acm.org>
+Date: Sat, 4 Jan 2014 09:22:56 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+
+If you can construct such a detector, you’ve just provided an opening for a security-argument refutation with regard to NOELKDF being (computationally) indistinguishable from random.  The security argument is about the existence of *any* feasible procedure for predicting future bits with better-than-random success.  
+ 
+In this case, I think it would be for being able to tell between a true random source and NOELKDF, which is what your non-randomness identifier is doing (at least).  I assume that you can get consistently better than 50% accuracy with fewer that 32KB.
+ 
+On the other hand, I’m not sure what your use case and threat model are that have this matter.  Weakening the PRG further does not seem to be justifiable if PRG strength matters, though.
+ 
+-   Dennis
+ 
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Sent: Friday, January 3, 2014 14:27
+To: discussions@...sword-hashing.net
+Subject: [PHC] Re: Reworked KDF available on github for feedback: NOELKDF
+ 
+The hashed memory from NOELKDF passed the dieharder tests!  Given how dumb the hash is, I'm floored.  A very simple routine can be written that will identify this as non-random output after 32KB with 100% accuracy.  It was never meant to be very random, but I guess I can now say that it least *looks* pretty random.  This may mean I should simplify the hash even more, but there's not much room left for speed-up.  KDFs in this competition, IMO, should not waste cycles trying to produce high entropy hash data, but it's a nice bonus.
+ 
+On Fri, Jan 3, 2014 at 3:12 PM, Bill Cox <waywardgeek@...il.com <mailto:waywardgeek@...il.comwrote:
+I gave it a name this time.  It's based on the experience so far from keystretch, but is simpler, and even faster.  It doesn't use a "key" to hash pages, but instead treats the previously generated "page" as the key for generating the next one by hashing it with a random previous page.  On my Corei7 server, it runs about 15% slower than memmove (which is faster than memcpy because 1/2 the memory is allocated).  2GB of hashing takes 0.35 seconds.  Both are multi-threaded 2-way, which is the fastest case on both machines.
+ 
+The code is at:
+ 
+https://github.com/waywardgeek/noelkdf
+ 
+The name for NOELKDF comes from one of (I'm not saying which):
+ 
+a) A contrived acronym of "Numerical Order Encryption Ladder" somehow related to the ladder of hashed pages.
+b) The name of my cat :-)
+ 
+Bill
+ 
+
+
+

@@ -1,0 +1,248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TwoCats multiplication chain</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/06/03/3">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/03/25/17">[&lt;thread-prev]</a> <a href="../../../2014/06/22/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140621210654.GA23087&#64;openwall.com&gt;
+Date: Sun, 22 Jun 2014 01:06:54 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+Bill, all -
+
+Here's one more idea I'd like to have recorded in here, and it's about
+multiplication latency hardening in general, not TwoCats specifically.
+
+An attack which I think we haven't mentioned yet is speculative
+computation of multiple possibilities of the next MUL before a previous
+MUL completes.
+
+For a simplified example, suppose there's exactly one MUL output bit
+that limits the overall speed (it arrives late and/or is needed early,
+overall more so than the rest of bits do/are).  We can trivially
+eliminate this bottleneck, exposing whatever next bottleneck there may
+be, by starting to compute the next MUL for both possible values of this
+one bit before its actual value is known.  Ditto for the next bottleneck
+bit, and so on.  To do it for e.g. 10 bits at once, we need 1024
+multipliers - this is likely still affordable in terms of die area (it
+may be less than the die area we're forcing the attacker to spend on
+memory), but it might or might not be affordable in terms of routing and
+extra MUXes (which introduce delays, too).
+
+So this technique is of limited use, and is mitigated by having more
+high-latency output and early-needed input bits than are efficiently
+eliminated with speculative computation.
+
+The existence of this technique, however, might affect which MUL output
+bits are optimally fed (passing through another operation first) into
+which next MUL input bits.
+
+I commented on which MUL output bits to use in the message quoted below,
+and the above is one more factor to consider... making the determination
+even more difficult to make with any sort of confidence.  For now, all
+we have are educated guesses, and we have our gut feeling that a
+possible speedup is limited to ~2x as you say.  (That's not including
+additional speedup from not needing to spend a cycle on XOR, shift, etc.,
+which we do spend on CPU.  Maybe a future crypto-friendlier CPU should
+deliver a suitable primitive that would execute in exactly as many clock
+cycles as a MUL alone does.)
+
+Alexander
+
+I don't normally bottom-quote, but this time I did it on purpose:
+
+On Tue, Mar 25, 2014 at 03:16:49PM -0400, Bill Cox wrote:
+&gt; On Tue, Mar 25, 2014 at 1:01 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt;&gt; There is a multiplication poisoning issue, but with the 4 variables, I
+&gt; &gt;&gt; have not seen it occur after a billion iterations, so the percentage
+&gt; &gt;&gt; of blocks that would have poisoned chains is tiny.  The poisoning
+&gt; &gt;&gt; would occur if a and c both become 0 or 1 at the same time.
+&gt; &gt;&gt; Otherwise, if only a or c is 0 or 1, changes in b and d should kick
+&gt; &gt;&gt; them back into higher values.
+&gt; &gt;
+&gt; &gt; Is your use of four variables intended specifically to reduce the
+&gt; &gt; frequency of such poisoning, or were there other reasons as well?
+&gt; 
+&gt; It's mainly for the poisoning issue.  With just two variables, one of
+&gt; them would become 1 pretty often.  It also gave me a chance to throw
+&gt; addition into the mix.
+&gt; 
+&gt; &gt;&gt; Will this do?
+&gt; &gt;
+&gt; &gt; Probably.
+&gt; &gt;
+&gt; &gt; Here's another thought I had, but didn't mention yet: what if the
+&gt; &gt; attacker makes their multiplier circuit such that it's not constant
+&gt; &gt; time, but rather that it may complete a cycle earlier in case the final
+&gt; &gt; carry chain is interrupted (has 0's) in places allowing for such
+&gt; &gt; speedup?  If sums of partial products for some of the output bits are
+&gt; &gt; zero, then higher output bits don't depend on sums of partial products
+&gt; &gt; for any bits lower than that.  This means that e.g. bit 63, which
+&gt; &gt; potentially depends on everything due to this final carry, may in fact
+&gt; &gt; be computed very quickly most of the time.
+&gt; 
+&gt; I'm not following this logic.  About half of the final output bits
+&gt; (the upper 32 - I discard the lower 32) will be zero, and the higher
+&gt; output bits still depend on all the inputs.  In a carry-save
+&gt; multiplier, the carries propagate in all the partial products, and can
+&gt; influence the next column in any of them.
+&gt; 
+&gt; There are a ton of ways to speed up a multiplier.  I know about Booth
+&gt; encoding because I used it once, but I don't know what's used today in
+&gt; an Intel processor.  Mathematically, there are tons of opportunities
+&gt; to reduce far below the 2X savings we get with Booth encoding, but
+&gt; having an efficient layout is important to reduce delays, so most of
+&gt; the opportunities are not used, IIRC.
+&gt; 
+&gt; &gt; Higher 32 bits are probably in fact "harder" to speed up in hardware
+&gt; &gt; than the lower 32, as you wrote, but once someone went for the effort of
+&gt; &gt; this variable-time multiplier circuit, maybe it'd actually run faster
+&gt; &gt; than it could otherwise?
+&gt; 
+&gt; I'm concerned there is still an opportunity to speed up a chain of
+&gt; multiplications and XOR by up to a 2X-ish factor, but not knowing much
+&gt; about modern multiplier design, I'm not sure.
+&gt; 
+&gt; For example, if we built a carry-save multiplier (which no one does),
+&gt; we could pipeline along the diagonal, rather than between multipliers.
+&gt;  Normally, the critical path in a carry-save multiplier is 64
+&gt; carry-save units long.  If we pipeline from the upper left to lower
+&gt; right through the middle of the multiplier, then the distance between
+&gt; flops seems to be 32 rather than 64.
+&gt; 
+&gt; However, other optimization techniques work against this speedup.  For
+&gt; example, Booth encoding reduces it to roughly a 16x33 array of carry
+&gt; save adder cells, saving almost 2X in area, and the adders are often
+&gt; carry-look-ahead or similar.  In this case, there's not much to be
+&gt; gained by pipelining within the multiplier.
+&gt; 
+&gt; &gt; I've been thinking that maybe the middle 32 bits (16 to 47) are actually
+&gt; &gt; the slowest to compute, even in a variable-time optimized circuit, but I
+&gt; &gt; could be wrong.  This is more of a gut feeling than careful analysis.
+&gt; &gt; And on 32-bit archs this double-register shift may be costly.  On 32-bit
+&gt; &gt; x86, right now you simply pick EDX instead of EAX, but if going for bits
+&gt; &gt; 16 to 47 you'd have a SHRD in there, wasting a cycle and thereby
+&gt; &gt; probably killing any advantage this would provide.  On ARM, I think it'd
+&gt; &gt; be even worse: LSR and OR-with-shift, meaning two cycles wasted.  (But
+&gt; &gt; I'm not familiar with ARM.  I merely looked these up in arch reference.
+&gt; &gt; Maybe there's a quicker way I overlooked.)  It's on 64-bit and on SIMD
+&gt; &gt; with 64-bit vector elements that we incur a similar shift anyway, and
+&gt; &gt; can adjust the shift count arbitrarily (be it 32 or 16).
+&gt; 
+&gt; I'm pretty confident the upper bits are the slowest to compute.
+&gt; However, my multiplication function has asymmetrical timing on the
+&gt; inputs.  One input is valid long before the other, and an attacker
+&gt; could design a multiplier optimized to be faster for one input than
+&gt; the other.  However, I'm not sure how to do that once past the first
+&gt; partial product, because all the outputs toggle based on the late
+&gt; arriving input.
+&gt; 
+&gt; &gt; Another consideration in deciding between &gt;&gt; 32 vs. &gt;&gt; 16 vs. &gt;&gt; 20 (or
+&gt; &gt; 21?) is that shifts by up to 20 (or 21?) only use multiplication result
+&gt; &gt; bits computable in double-precision floating-point, making this more
+&gt; &gt; JavaScript-friendly and maybe friendlier to some GPUs (such as high-end
+&gt; &gt; NVIDIAs).  This has both pros and cons.  Since I do currently have an
+&gt; &gt; arbitrary shift in a 64-bit value anyway (unlike you), this change is
+&gt; &gt; within consideration for me (whereas it'd cost 1+ cycle of overhead for
+&gt; &gt; you, so probably not worth it given that it has both pros and cons).
+&gt; &gt; Maybe this shift count may be a parameter (choice between 32 and 20?)
+&gt; &gt;
+&gt; &gt; I think you shouldn't make further changes to this now unless a major
+&gt; &gt; problem is found.  I'm just rambling.  I'd be interested in your
+&gt; &gt; comments, though, as this might affect my work on escrypt.
+&gt; 
+&gt; I agree.  It's time to finalize the algorithms.
+&gt; 
+&gt; Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

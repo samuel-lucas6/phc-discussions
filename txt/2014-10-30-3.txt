@@ -1,0 +1,83 @@
+phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Message-ID: <CAOLP8p78A=31X_+PehAFzf9Ooe3bFGtF7Y3-o5F-v5MrACjsEw@mail.gmail.com>
+Date: Thu, 30 Oct 2014 05:55:22 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Hi, Jacob.  This is a nice analysis.  I like that you've read each
+algorithm carefully and have gained several insights into each.  That's a
+ton of work.  I know how hard it is to read the algorithms and get all the
+details about each right.  Of course, the responses will only point out the
+mistakes... which I'll now do for TwoCats...
+
+You misread TwoCats.  It is easy to do, which is one reason I wrote
+SkinnyCat, which indeed is vulnerable to both GC and WGC attacks.  However,
+TwoCats has strong defense against both.  I would argue that TwoCats has
+the strongest GC and WGC defense of all the entries.
+
+TwoCats uses Catena's idea for “garlic” to defend against memory-leak
+attacks.  If we wind up creating a framework for the eventual winner based
+on Catena's framework, I would like to add this garlic-based memory-leak
+defense.  It can be applied to any of the memory-hard algorithms.
+
+TwoCats overwrites the derived key (hash32 is the variable name) after
+hashing only 1KiB of memory, which it does faster than any other entry.  It
+then overwrites this 1KiB of hashed memory by hashing 2KiB of memory over
+it, and then overwrites the derived key again.  This should sound familiar
+- I copied it from Catena :-)  However, while Catena eventually abandoned
+starting with minGarlic == 0 and instead uses minGarlic == maxGarlic,
+TwoCats continues this process, applying garlic from 0 to maxGarlic –
+overwriteCost before applying maxGarlic.  By default overwriteCost is 6,
+meaning I give up 1/32nd run-time, and therefore lose 1/32 memory*time
+defense against brute-force guessing attacks.  I felt this was a reasonable
+trade-off, in order to gain strong memory leak defense, including GC and
+WGC defense.
+
+This not only overwrites hashed memory derived from the key and the derived
+key, but also stack variables, which should also be taken into account
+(which is yet another idea I learned from Alexander).  By default, TwoCats
+also overwrites the password passed to it before hashing any memory.  I
+believe TwoCats is the only entry that does this.  Leaving the password in
+memory while running a memory-hard hash is obviously worse than being
+susceptible to a WGC attack.  I certainly hope the PHC never publishes real
+code that does this, even if it is simply reference code.
+
+Here's my analysis of Catena's memory-leak defense (based on the first
+submitted version - I haven't read the new revision yet).
+
+By default, Catena runs with minGarlic == maxGarlic == 18.  In this mode,
+Catena does not begin to overwrite memory derived from the password until
+it has finished filling memory.  During this entire time, H(H(key
+material)) is present in memory.  If Catena tries to use too much memory,
+this memory might get swapped to disk.  If Catena is running continuously,
+as it might on an authentication server, with lambda == 3, there is about a
+1 in 4 chance that a cold-boot attack, DMA attack, or forced hibernation,
+will reveal H(H(key material)).
+
+In contrast, TwoCats, when repeatedly called to hash even 32MiB of memory,
+a cold-boot attack has only about a 1 in 2^15 chance of revealing H(H(key
+material)).  IMO, Catena, as well as most other entries, does not do enough
+to protect this early sensitive data.  This is how the PHC winner is likely
+to be PWN-ed in reality.  This is not a theoretical attack like
+cache-timing attacks, but something any script-kiddie can do easily today.
+
+After the winner is announced, assuming we do not require that it be
+strengthened to provide better memory leak resistance, here's what I could
+do in theory at the next BlackHat (but I wont):
+
+I could set up an authentication server continuously running the PHC
+winner, walk up to it with a plug-in peripheral like a firewire device,
+perform a DMA attack, and likely walk away with the H(H(key material))
+without even having to shut down the server.
+
+I believe memory leak vulnerability is the most significant weakness of
+memory-hard password hashing schemes.  Applying early levels of garlic
+seems like the best defense, IMO.  A "tweak" to Catena could easily provide
+this defense.
+
+Bill
+
+
+

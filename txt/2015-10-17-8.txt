@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] Argon2 PHC release...
+
+Message-ID: <20151017222348.GA2262@openwall.com>
+Date: Sun, 18 Oct 2015 01:23:48 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 PHC release...
+
+On Sat, Oct 17, 2015 at 08:09:53PM +0000, Jean-Philippe Aumasson wrote:
+One of my concerns with ds is, as you point out, the immaturity of its
+design and of its code. There's already a lot to do to make the code
+reliable.
+
+Let's not exclude an S-box-based version later, but I'd like to deliver a
+first usable release by end of this month.
+
+I understand and agree with your concerns and priorities, but wouldn't
+this result in us eventually blessing 3 flavors instead of 2 for little
+reason?  Or would "an S-box-based version later" be non-PHC?
+
+<evil>This leaves more room for uses of yescrypt, so why would I mind.</evil>
+
+BTW the code in https://github.com/P-H-C/phc-winner-argon2 is now less
+C++-looking, with C-style naming convention, and we're getting rid of
+C++isms and misused keywords (working with Samuel on that). We've fixed a
+couple of of bugs too.
+
+Yeah.  BTW, your removal of ds is incomplete: you can also remove
+"uint64_t x = 0;" and:
+
+    next_block->v[0] += x;
+    next_block->v[ARGON2_WORDS_IN_BLOCK - 1] += x;
+
+    state[0] = _mm_add_epi64( state[0], _mm_set_epi64x( 0, x ) );
+    state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64( state[ARGON2_QWORDS_IN_BLOCK - 1], _mm_set_epi64x( x, 0 ) );
+
+Alexander
+

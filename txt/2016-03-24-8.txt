@@ -1,0 +1,31 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324143456.GA10719@openwall.com>
+Date: Thu, 24 Mar 2016 17:34:56 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 03:29:34PM +0300, Solar Designer wrote:
+I am considering hashing in round+keylen.
+
+No, this does not fully do the trick, and is unnecessarily complex to
+reason about.
+
+Another detail is that 6 least significant bits of keylen don't really
+need to be encoded, but this detail doesn't appear to be of any use,
+unless we were to encode (round + (keylen >6)) and declare keylen's
+needing more than 14 bits unsupported.
+
+This isn't exactly right.  It would need to be "number of SHA-256
+blocks" instead of just "keylen >6".  This gets too complex.
+
+So not wanting to double the SHA-256 block count for keylen=32 and not
+wanting to introduce too much complexity (to code or/and reasoning), we
+seem to be limited to either relying on the trick I suggested earlier
+(hash in the round number last) or providing a mitigation only for
+keylen up to 2^24 (if we use aligned 32-bit words only) or up to 2^48
+(if unaligned, fully using space up to the max of 55 bytes).
+
+Alexander
+

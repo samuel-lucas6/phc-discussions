@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] avoiding cache thrashing
+
+Message-ID: <CAOLP8p4e2GZ52cNPiPoXaS0+OnBYQ=P=crBChXzfXKeJp+2xOg@mail.gmail.com>
+Date: Thu, 20 Feb 2014 20:32:14 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] avoiding cache thrashing
+
+On Wed, Feb 19, 2014 at 9:39 AM, Solar Designer <solar@...nwall.comwrote:
+On Wed, Feb 19, 2014 at 06:25:24PM +0400, Solar Designer wrote:
+>A drawback of this workaround is that it effectively halves our usable
+>sizes of both caches.  What can we do about that?  Another workaround:
+>once in a while, alter our choice of address bit that we split the two
+>types of accesses on.
+[...]
+>amortize the cost of this AND in software, which is desirable since this
+>cost is fully avoided in ASIC.
+>
+Correction: if we do alter the choice of our selector bit, then the mask
+is not entirely constant (some of its bits are, some are not), so its
+cost is no longer fully avoided in ASIC.  This is an additional slight
+benefit to altering the choice (and to using as wide a range of selector
+bits as practical).  (Although no longer being able to use an immediate
+value for the mask might have a cost in software, too - depending on
+architecture, available registers, specific CPU type.)
+>
+I care about these minor costs because random L1 accesses need to be
+very frequent in order to match bcrypt's GPU unfriendliness.
+>
+Alexander
+
+This is some pretty mind blowing cache optimization.  I'm still trying
+to get my head around it.  Are you doing huge numbers of small memory
+authentications that run mostly out of L1 and L2 cache?  If it busted
+out into main memory, would this scheme give the hardware prefetch
+algorithms problems?
+
+When I run on my son's quad-core 3.4GHz Ivy Bridge machine, with 4MB
+and 8 threads, it does 154GiB/s of memory hashing bandwidth (hashing
+4MiB, 10,000 times, 2 reads + 1 write each pass, .775s runtime).  4
+threads do about 142GiB/s, and then it drops rapidly, and 1 thread
+does 54GiB/s.  That's very close to 128 bits every clock, but with 1
+thread I wouldn't expect many L1 misses.  With 4 threads, I get
+142GiB/s rather than 4*54GiB/s = 216GiB/s.  Is this due to cache
+pollution?  I was pretty happy to see 4 threads working that well in
+parallel.  I put the 10,000 repeat loop around the block hash, and set
+the block size to 4KiB, so each thread is hammering the same 4KiB over
+and over most of the time.  It remains to be seen if the simple hash
+I'm doing is strong enough, but it seems to hammer memory pretty well,
+at least with low thread counts.  My thinking was that if I run just
+large enough to bust out of GPU local memory, then these highly
+repeated hashing loops should cause GPUs lots of memory access grief,
+especially since 1/2 of the reads are randomized every 32 bytes, just
+as you suggested (randomizing *prev rather than *from).  For some
+reason, my rewrite of the code no longer suffers nearly as much from
+the randomized prev reads... I am quite confused about that, but happy
+the problem is gone.
+
+I could probably use access to other machines now.  I feel like I'm
+getting close to done optimizing for Ivy Bridge, and should take a
+better look at AMD processors.  Also, my son's getting miffed that I
+keep killing his MineCraft servers so I can do performance
+benchmarking.  The ones I have access to at work are impressive
+machines with 8 cores and 128GiB of RAM, but our sys admin runs such
+an old version of Debian on it, gcc doesn't know how to use SSE, and
+-O3 is buggy.  I can't get more than around 10 GiB/s main memory
+bandwidth on it.  Even memmove is slow.
+
+If your offer is still good, I'd appreciate a chance to play with an
+AMD machine with some impressive memory bandwidth.
+
+Bill
+

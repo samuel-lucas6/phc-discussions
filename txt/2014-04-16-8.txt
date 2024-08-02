@@ -1,0 +1,79 @@
+phc-discussions - Re: [PHC] Re: Lyra2 initial review
+
+Message-ID: <534F0968.3090806@larc.usp.br>
+Date: Wed, 16 Apr 2014 19:51:20 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Lyra2 initial review
+
+Hi, Bill.
+
+I will come back to your previous e-mail soon, but for now I will focus
+on this one, which is simpler (seriously, I have received much less
+detailed/relevant reviews on academic papers after 3 months... we need
+more reviewers as fast as you in academia ;-) )
+
+
+
+On 16-Apr-14 17:54, Bill Cox wrote:
+On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+>1.47GiB/s of memory hashing (.57GiB/.39s) peak
+>1.10GiB/s average
+>4.41 GiB/s DRAM bandwidth
+>>
+>>
+I made a mistake on the memory bandwidth computation.  I forgot to add in
+the 2 reads and 2 writes on average per location in the wandering phase.  I
+should have multiplied by 7 instead of 3!  The fixed numbers are:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+10.3 GiB/s DRAM bandwidth
+
+That bandwidth is close to maxed out for one thread on my machine.  12GiB/s
+seems to be about the limit (EARWORM maxes out at 12GiB/s, with a far
+simpler inner loop).  I suspect the code is more memory bandwidth limited
+than CPU limited.  To test this, I commented out the XOR onto the row
+indexed by 'rowa'.  The runtime dropped from 3.9s to about 3.05.  This is
+another indication that the code is mostly bandwidth limited.  It's also
+another reason for me to dislike the XOR-ing onto rowa.  With a slightly
+more complex setup phase loop, it could have good cache timing resistance
+without the XORs, and run 25% faster, increasing memory*time cost to
+attackers for a given runtime by the same 25%.
+
+Bill
+
+
+Slight modifications to the Setup phase may be one of our future tweaks,
+but we are not planning on changing the Wandering phase: the only reason
+why we get a m_cost^{2*t_cost} (or, using our notation, R^{2*T}) factor
+on our TMTO analysis is because of the writes in it... Without them, we
+could only get a m_cost^{t_cost} factor as in the original version of Lyra.
+
+Hence, at least for the Wandering phase, I believe this is not a very
+good trade-off. Actually, we considered in the document writing on
+*more* rows (with the "delta" parameter on section 6.3), but as you may
+have guessed, the consequent slow-downs did not pay up, so delta = 1
+(i.e., a single random row being read and written, as of today) seems to
+be the best alternative when trading bandwidth limitation for TMTO.
+
+That being said, removing the writes on the Setup phase may pay up, but
+I just made some tests similar to yours (suppressing the XORs) and got a
+speed-up of approximately 10-15% for the Setup phase only (with ~1.5GB
+memory usage). The question that remains is whether or not this gain is
+worthy given that it will be diluted as t_cost increases. Also, the XORs
+help overwriting the data in the matrix and hide correlations between
+cells processed with the reduced-round sponge, so the algorithm would
+lose this (useful?) feature.
+
+All in all, we will keep the bandwidth issue in mind, but maybe that
+will end up being one of the algorithm's weaknesses...
+
+Marcos.
+
+---
+This email is free from viruses and malware because avast! Antivirus protection is active.
+http://www.avast.com
+
+

@@ -1,0 +1,141 @@
+phc-discussions - The EARWORM password hash
+
+Message-ID: <87txivehaj.fsf@wolfjaw.dfranke.us>
+Date: Sun, 11 Aug 2013 23:09:40 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: The EARWORM password hash
+
+The password hash implementation that I alluded to yesterday in my
+question about C99 extensions isn't quite ready for release yet, but
+this seems like a good time at least to briefly share what I'm working
+on, even if only as pseudocode.
+
+EARWORM is a password hash designed to be bound by memory bandwidth.
+It is inspired somewhat by Solar Designer's concept of "ROM-port
+hardness", and has in common the benefit that it can demand an almost
+arbitrarily large amount of (read-only) memory for an almost
+arbitrarily small amount of time.  This should make it an appealing
+choice for busy web servers that need to process a high volume of
+login requests at low latency.
+
+EARWORM has some drawbacks that will likely make it unappealing for
+most other use cases. Using EARWORM only makes sense if its ROM is
+kept resident in memory most or all of the time, because for most
+reasonable choices of time and space parameters, loading the ROM from
+disk will take a lot longer than the hash computation itself. Hogging
+a big chunk of RAM 24x7 is fine if it's actually in use for most of
+that time, but it's an undue burden if you're using it twice a day to
+hash your laptop password.
+
+EARWORM is designed to take advantage of Intel AES-NI instructions,
+and takes a steep performance hit if they're not available. This makes
+it a poor choice for use on mobile devices, or in sandboxed
+environments (e.g. web browsers) that do not allow native code
+execution.
+
+In spite of these drawbacks, I think EARWORM will fill its chosen
+niche more effectively than anything else proposed to date.
+
+Anyway, without further ado, here is a pseudocode description of
+EARWORM.
+
+|| denotes concatenation.
+
+The function
+
+  prf(secret,salt,outlen)
+
+is PBKDF2-SHA256-HMAC with an iteration count of 1. outlen is in bytes.
+
+The function
+
+  aesround(block,roundkey)
+
+is the round function for AES encryption. The Intel AESENC instruction
+computes precisely this function.
+
+CHUNK_LENGTH, CHUNK_WIDTH, and WORKUNIT_DEPTH are integer constants,
+provisionally defined to be 128, 4, and 256 respectively.
+
+The function
+
+  workunit(secret,salt,m_cost,arena,outlen)
+
+takes the following inputs:
+
+  * 'secret' is the password being hashed, considered as an octet
+    string of variable length.
+
+  * 'salt' is another octet string of variable length.
+
+  * 'm_cost' is the memory cost parameter.
+
+  * 'arena' is a read-only three-dimensional array of 128-bit words,
+    with dimensions (2**m_cost) by CHUNK_LENGTH by CHUNK_WIDTH.
+
+  * 'outlen' is the desired output length.
+
+The arena's entire contents are random, initialized once by the site
+administrator and then reuseable indefinitely.
+
+workunit() maintains the following state variables:
+
+  * 'scratchpad' is a one-dimensional array of CHUNK_WIDTH 128-bit words.
+  
+  * 'index_a' and 'index_b' are integers.
+
+Its body is as follows:
+
+begin workunit(secret,salt,m_cost,arena,outlen)
+
+    index_a || index_b := prf(secret, 0x00 || salt, 32)
+    index_a := mod(index_a, 2**m_cost)
+    index_b := mod(index_b, 2**m_cost)
+
+    scratchpad[0 .. (CHUNK_WIDTH - 1)] :=
+        prf(secret, 0x01 || salt, 16 * CHUNK_WIDTH)
+   
+    for d from 0 to (WORKUNIT_DEPTH / 2)
+
+        for l from 0 to (CHUNK_LENGTH - 1)
+            for w from 0 to (CHUNK_WIDTH - 1)
+                scratchpad[w] := aesround(scratchpad[w], arena[index_a][l][w])
+            end for
+        end for
+
+        index_a := mod(scratchpad[0], 2**m_cost)
+
+        for l from 0 to (CHUNK_LENGTH - 1)
+            for w from 0 to (CHUNK_WIDTH - 1)
+                scratchpad[w] := aesround(scratchpad[w], arena[index_b][l][w])
+            end for
+        end for
+
+        index_b := mod(scratchpad[0], 2**m_cost)
+
+    end for
+
+    return prf(scratchpad[0 .. (CHUNK_WIDTH - 1)], 0x02 || salt, outlen)
+end workunit
+
+The EARWORM hash function is then computed by calling workunit()
+t_cost times with distinct salts, and XORing together the
+outputs. (Hence, workunits can be computed in parallel).
+
+The structure of the workunit function provides opportunities for some
+nice optimizations.  Presuming that the length/width/depth constants
+are known at compile-time, all loops can be unrolled, and all the
+function's mutable state (scratchpad, index_a, and index_b) can be
+held in registers.  Therefore, the 'l' and 'w' loops can be optimized
+down to nothing but a long series of AESENC instructions.  Since
+index_a and index_b can be computed right after one 'l' loop but then
+are not used until the after the completion of the next one, chunks
+of ROM can be prefetched and be warm in L1 cache by the time they're
+needed.
+
+Experimentation on my Opteron 6376 workstation shows that computing a
+single workunit takes about 350 microseconds, and that two CPU cores
+are sufficient to saturate my memory bandwidth (PC3-12800 ECC,
+quad-channel).
+

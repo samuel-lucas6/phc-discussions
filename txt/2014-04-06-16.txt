@@ -1,0 +1,30 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <CAOLP8p6n1pu-jh+jFZ7wvbq7XLy-LAdTV4wR5UrW2T2MYd_O6g@mail.gmail.com>
+Date: Sun, 6 Apr 2014 10:03:10 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Pufferfish has a minor bug in api.c.  I'm not 100% I got the fix
+right, but I am 100% sure this is a bug.  On line 135, memmove is
+calling strlen(hash) to determine how much data to copy.  It seems
+like it should use strlen instead, assuming Pufferfish supports
+variable out length.  Here's the diff after I made this change:
+
+diff --git a/Pufferfish/src/common/api.c b/Pufferfish/src/common/api.c
+index 288937d..58daf4b 100644
+--- a/Pufferfish/src/common/api.c
++++ b/Pufferfish/src/common/api.c
+@@ -132,7 +132,7 @@ int PHS (void *out, size_t outlen, const void *in,
+size_t inlen, const void *sal
+                 return 1;
+         }
+
+-        memmove (out, hash, strlen (hash));
++        memmove (out, hash, outlen);
+         free (settings);
+         free (hash);
+
+Bill
+

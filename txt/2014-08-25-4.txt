@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <20140825223723.GB9159@openwall.com>
+Date: Tue, 26 Aug 2014 02:37:23 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Tradeoff cryptanalysis of password hashing schemes
+
+Bill,
+
+I'm no expert in this, but:
+
+On Mon, Aug 25, 2014 at 12:32:58PM -0400, Bill Cox wrote:
+A reasonable goal would be to have several such GDDR interfaces on
+your ASIC.  It is very hard to do!  However, it is doable, at least in
+theory.  If you had 512 pins all running at 6Gpbs, you'd have 384GiB/s
+bandwidth.  That would probably set a world record for chip bandwidth,
+but it's within a factor of 2X of what has been built before.
+
+This is very close to what high-end GPUs and Xeon Phi currently (at
+least claim to) achieve - on a 512-bit bus with GDDR5 memory, yes.
+Current top GPUs are 288 GB/s to 320 GB/s.  Xeon Phi 5110P is 320 GB/s,
+7120P is 352 GB/s.  Yes, these are GB/s, not GiB/s, so your 384 GiB/s
+is still ~17% faster.  I think you were subtly wrong about it, though:
+6 Gbps probably uses powers of 10, not of 2.  Only 9% faster than
+Xeon Phi 7120P, then.  So it's clearly within reach, perhaps with some
+overclocking of the lucky ones of those same chips.  I guess some
+scrypt-based cryptocoin miners have already been overclocking their GPUs
+like that... even though it's 20% higher than the GPUs' 320 GB/s at
+stock clocks.  Whether such overclocking is a reasonable thing to do is
+another matter, but this being the new world record is fairly unlikely.
+
+What do you think of HMC?  A few months (or even a year?) ago, @jangray
+tweeted pictures of prototype FPGA+HMC boards from a technology
+exhibition he attended.  I don't recall this reliably now, but I guess
+those boards used individual HMCs, so 160 GB/s only (half of what we
+have with GPU boards), but perhaps this can be scaled to accessing
+multiple HMCs from a single FPGA or ASIC?  How many?
+
+http://en.wikipedia.org/wiki/Hybrid_Memory_Cube
+http://hybridmemorycube.org
+http://www.micron.com/products/hybrid-memory-cube
+
+http://www.eetimes.com/document.asp?doc_id=1319391
+
+"according to Micron, a single HMC can produce an incredible data
+bandwidth of 160GBytes/sec"
+"demonstrated interoperability between Micron's HMCs and Altera's
+Stratix V FPGAs using a full 16-transceiver HMC link"
+
+I guess a relevant question is: how many suitable transceivers do
+current FPGAs have?  From the above, clearly it's at least 16, but if
+it's 32+, then 2+ HMCs can be interfaced at full speed from one FPGA,
+right?  And how many can an ASIC reasonably have?  Also, would the cost
+and/or power consumption of the HMCs dominate anyway, in which case
+lowering the number of ASICs wouldn't be all that important?
+
+http://picocomputing.com/products/backplanes/ex-800-blade-server/
+
+Four FPGAs and one 160 GB/s HMC on a board, so not that impressive for
+our needs yet - but shows that boards with HMCs are already commercially
+available.  And given demand, I guess boards with at least as many HMCs
+as FPGAs on them can appear as well.
+
+Alexander
+

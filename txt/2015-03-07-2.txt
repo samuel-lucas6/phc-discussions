@@ -1,0 +1,48 @@
+phc-discussions - RE: [PHC] PHC output specifics
+
+Message-Id: <E1YU9iP-0005RJ-Br@login01.fos.auckland.ac.nz>
+Date: Sat, 07 Mar 2015 21:04:05 +1300
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] PHC output specifics
+
+Marsh Ray <maray@...rosoft.comwrites:
+
+>So how about this wording:
+>
+       "For best interoperability of credentials, character data
+       SHOULD be a UTF-8 encoded sequence of [cite: ISO 10646] characters.
+       [cite: Unicode] aware applications that wish to perform normalization
+       SHOULD normalize to [normalization form TBD] before UTF-8 encoding."
+
+I don't even know if a SHOULD will make much difference.  The people
+implementing the crypto are highly unlikely to be the ones providing the
+passwords to the API, so from the crypto-implementer point of view a password
+is a { void *password, int length } combination, and from the user of the
+password-processing function it's whatever they want it to be (ASCII, UTF-8,
+Unicode, etc).  Consider for example Windows (CryptoAPI -stunnel -web
+browser) or Android (OpenSSL? -Dalvik -app developers), in both cases the
+consumers of the functionality are two levels away from the ones implementing
+the password-processing function.  Adding a note alerting users at the
+password end of the chain to the issue is a good idea, but trying to tell
+developers at the low-level crypto API end of the chain what to do when they
+themselves have little to no control over what's being passed to them probably
+isn't useful.
+
+Another consideration is, how much of a problem is this in practice?  I've
+seen this issue come up for debate in the past, and the general approach has
+always been that there's lots of hand-wringing, no-one can agree on what's
+best, some token words are added to a spec somewhere and near-universally
+ignored, and then life goes on as normal without the world ending.  So you
+could just say:
+
+  Implementers should be aware of potential interoperability problems due to
+  character-representation issues and, if cross-platform portability for a
+  wide range of character types is an issue, use appropriate encodings such as
+  Unicode or UTF-8.
+
+That's good enough, it alerts developers to the potential issue but leaves it
+up to them as to how they want to deal with it.
+
+Peter.
+

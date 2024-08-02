@@ -1,0 +1,212 @@
+phc-discussions - Re: [PHC] What is "basic cryptography" ?
+
+Message-ID: <20141013134718.GB14880@openwall.com>
+Date: Mon, 13 Oct 2014 17:47:19 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What is "basic cryptography" ?
+
+Thomas,
+
+I think I'm not good at precise definitions, yet I happen to have some
+comments:
+
+On Sun, Oct 12, 2014 at 04:24:43PM +0200, Thomas Pornin wrote:
+in his survey, Dmitry Khovratovich includes a property called "basic
+cryptography" and defined succinctly as:
+
+  "Basic cryptography ??? collision/preimage resistance, unpredictability."
+
+While I can intuitively have a rough idea of what this means, I struggle
+to write it down as a mathematically precise definition.
+
+Yes, this would be useful, and yes it's trickier than it might seem at
+first.
+
+My goal is to
+have sufficiently clean definitions so that I could set out to "prove"
+security of some functions (in my case Makwa, but this may be applicable
+to other candidates as well) in the sense that any successful attack
+would have to either break a known underlying hard problem, _or_ to be a
+computational shortcut such as a TMTO or something like that. In
+informal terms, I want to separate the "cryptography" from the
+"engineering".
+
+Shouldn't "a computational shortcut such as a TMTO or something like
+that" fall under "engineering", or under some inbetween category?  This
+doesn't intuitively feel like "basic cryptography" when we're talking
+about hash functions.
+
+In fact, per your definitions below, some TMTOs (higher level ones,
+maybe-possible for large password spaces) would fall under "preimage
+resistance" violations, and some would not (those present within each
+individual hash computation, as well as those maybe-possible for large
+salt spaces).  Maybe this is how we want it (or maybe not), but at least
+we probably want to treat password and salt spaces the same (for
+purposes of all attacks, not just potential TMTOs), or as one {password,
+salt} space.
+
+On a (not so) related note, I was surprised when Bill mentioned (not)
+keeping things in memory (I don't recall the exact wording) as falling
+under "basic cryptography".  To me, it does not.  It may be a property
+of the hashing scheme - that is, the scheme is such that sensitive data
+is naturally overwritten early on with no processing cost overhead
+compared to performance-optimized evaluation of the hash - which is
+nice, but typically has drawbacks for some use cases (it typically
+implies slower memory usage growth than would be possible with a
+slightly different design).  Or it may be a property of an
+implementation (explicit zeroization or e.g. self-test performed after
+actual hash computation).  I think neither of these cases falls into a
+category overlapping with "basic cryptography".  In fact, the latter -
+property of an implementation - is irrelevant to PHC at this point (can
+be taken care of later), although the PHC relevant aspect is that it's
+not as safe as the former (but might not have the drawback I mentioned).
+
+For collision resistance, I can have something satisfactory: for a
+password hashing function h(), that takes as inputs a salt s and
+password p, collision resistance is about the computational
+infeasibility of finding (s,p,p') where p <p' and h(s, p) = h(s, p').
+Note that I am talking about infeasibility, regardless of the space of
+plausible or potential passwords. While collisions can help an attacker
+only within rather esoteric usage scenarios involving active misuse of
+the function by the defender, it is still a nice thing to have.
+
+In particular, collision resistance implies second-preimage resistance,
+and THAT is good for security proofs, in the following sense: if the
+attacker is given s and h(s, p), and is challenged with finding a
+password p' such that h(s, p') = h(s, p) (that is the normal setup when
+considering an authentication server), then second-preimage resistance
+means that if the attacker succeeds, then he found p' = p; otherwise,
+that would contradict second-preimage resistance. So far so good: if
+second-preimage resistance can be proven (and proving collision
+resistance implies proving second-preimage resistance), then we have
+shown that if an attacker finds a matching password, then he found _the_
+password, meaning that no password entropy was lost in the process: the
+space of potential passwords, already quite small (that's the problem
+with passwords), is not unduly shrunk through some misbehaving of the
+function.
+
+This looks good, except that you're only considering one salt value.
+I think a collision of the form h(s, p) = h(s', p') should also be a
+concern, falling under "basic cryptography".  Like you say, these are
+not a problem for typical intended use of password hashing functions,
+but they may be for possible unintended uses.  Also, they may undermine
+confidence in a password hashing scheme.
+
+Similar concerns about salts apply to all of the below, and to a much
+greater extent.  A hash function that simply ignores the salt input
+would pass your definition of preimage resistance, yet would allow for
+obvious faster attacks on multiple hashes.  I think that's not how we
+want it.
+
+It is with preimages (not second-preimages) that I have a problem.
+[...]
+
+With password hashing, things are not as easy. The space of possible
+inputs will be a lot smaller, and quite smaller than the apparent size
+of the output space. For instance, a password hashing function may
+produce a 128-bit value, but since there are much fewer than 2^128
+possible passwords (realistically), then not all 128-bit outputs are
+actually possible. In any case, brute force on the input is assumed
+to work (the input is a password). So I could try something like this:
+
+   Password-hashing function h() will be said to be preimage resistant
+   if it is not feasible, given s and h(s, p) for an unknown p chosen
+   randomly and uniformly in space P, to find p' such that
+   h(s, p) = h(s, p') with average cost less than #P/2 the cost of
+   evaluating h().
+
+I am not satisfied with that definition for the two following reasons:
+
+ - This depends on the space of potential passwords. For the definition
+   to be useful, it must hold for all spaces of a given size, and not
+   just "on average". That is, the "average cost of #P/2 evaluations"
+   must be understood as "over all p in P for a single, given P". I
+   fear that such a definition may be defeated by anomalous spaces of
+   passwords that are not realistic in any way.
+
+ - This definition includes the cost of evaluating h(), i.e. it
+   postulates the lack of any shortcut. Thus, it fails at separating
+   cryptography from engineering.
+
+To address your second concern above, maybe you can refer to number of
+evaluations of h() rather than cost of evaluating h()?  Then any
+shortcut that might let an attacker evaluate the required number of
+values of h() with less effort would be considered an engineering
+problem.
+
+BTW, I think such shortcuts can be of very different kinds.  Some may
+reduce abstract computational cost of computing a hash, on average (so N
+hashes may be computed in less than N times the number of some kind of
+basic operations for computing one hash), whereas others may reduce
+some real-world cost metric (e.g., energy consumption on actual hardware)
+while not reducing the abstract computational cost.  Do we really want to
+have both kinds in the same category?  Maybe not.  Maybe it's not
+"cryptography" vs. "engineering", but more like "cryptography" vs. two
+other categories (what do we call them?)
+
+Also, strictly speaking your definition can't be satisfied: there's
+always some processing that can be reversed (going back from a hash
+value to crack to some intermediate value), and this will only need to
+be done once per hash to crack rather than once per password to test.
+So testing many passwords is theoretically at least very slightly cheaper
+per-password than testing one.  In practice, for a good password hashing
+scheme this difference might be so small that it's not worth exploiting,
+but I think it does invalidate this sort of formal definition.
+
+So far my best attempt at producing a clean, mathematical definition of
+preimage resistance for a password hashing function is the following:
+
+   For a given space P of inputs, the password-hashing function h() will
+   be said to be preimage-resistant over P if, given s and h(s, p), the
+   average cost (for p chosen randomly and uniformly in P) of finding p'
+   such that h(s, p) = h(s, p') is not less than the computational cost
+   of evaluating h(s, t) for all t in T, for any subset T of P such that
+   #T >= #P/2.
+
+   h() will be said to be preimage-resistant up to "k bits" if it is
+   preimage-resistant over all possible spaces P of size less than 2^k.
+
+Are you sure about "#T >= #P/2", can this really be satisfied "for any
+subset T of P"?  I think not.  I think only the "#T = #P/2" can almost
+be satisfied, short of the detail I mentioned above and potential issues
+with odd #P where "average cost" may be non-integer, but #T is integer.
+
+Also, when we say "average cost", what set of costs are we considering?
+Is it e.g. for all possible orderings of candidate passwords, equally
+represented, to exclude chance?  If so, should we spell this out?
+
+The intuition behind this definition is that h() must be such that
+cracking a password must involve obtaining the hashes for at least half
+of the potential passwords.
+
+For an infinite number of all possible password cracking attempts
+against an ideal password hashing scheme, this should be exactly one
+half.  (And what if the number of potential passwords is odd?  When not
+using the big-O notation, we might have to be careful about detail like
+that in our definitions.)  For a finite number, this can be more or less
+than one half, depending on luck.  I think "at least" is wrong for a
+definition.
+
+All of this is assuming uniform distribution of the passwords to be
+cracked.  Ideally, we'd have definitions not limited to that.  If it's
+simpler to make this assumption, we may (like you did), but maybe it's
+worth trying to somehow approach the problem from a password cracking
+perspective, for distributions with arbitrary guessing entropy.  The
+average number of hash computations (excluding a final, feasibly
+reversible portion of each hash computation) required to crack a
+password given a set of password hashes, each with its own salt, should
+be no smaller than (and actually the same as) it would be when probing
+passwords in an optimal order (given attacker's knowledge of the
+guessing entropy distribution) against an oracle.
+
+Now that is quite clunky and I don't really like it.
+
+I think it's not only clunky, but also flawed - but it's a good start at
+showing where the problems are, and that maybe we should approach this
+differently.
+
+Thanks,
+
+Alexander
+

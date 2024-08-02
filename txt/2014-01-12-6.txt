@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140112101337.GA9134@openwall.com>
+Date: Sun, 12 Jan 2014 14:13:37 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sun, Jan 12, 2014 at 01:14:53PM +0400, Solar Designer wrote:
+Xeon Phi 5110P, using 2 GB, r=8 p=240, 240 threads, Salsa20/2, abusing
+scalar units for computation (no SIMD code implemented yet), no
+prefetches, 10 hash computations:
+
+real    0m 5.00s
+user    17m 54.14s
+sys     0m 18.27s
+
+2*3*10*2^30/10^9/5.00 = 12.88 GB/s
+
+Tried running 3 instances in parallel, 80 threads for each, 6 GB total
+memory usage:
+
+[user@...er-mic0 user]$ cat>r
+OMP_NUM_THREADS=80 LD_LIBRARY_PATH=. time ./tests &
+OMP_NUM_THREADS=80 LD_LIBRARY_PATH=. time ./tests &
+OMP_NUM_THREADS=80 LD_LIBRARY_PATH=. time ./tests &
+[user@...er-mic0 user]$ . r
+
+[...]
+
+real    0m 20.85s
+user    8m 39.12s
+sys     0m 12.79s
+real    0m 20.85s
+user    8m 44.29s
+sys     0m 11.24s
+real    0m 20.85s
+user    8m 40.44s
+sys     0m 13.44s
+
+No luck - this is even slower:
+
+2*3*10*3*2^30/10^9/20.85 = 9.27 GB/s
+
+Alexander
+

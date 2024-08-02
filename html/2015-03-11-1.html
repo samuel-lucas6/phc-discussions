@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] NFC v NFD UTF-8 Normalization Re: [Was output specifics]</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/03/10/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/03/09/2">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150311184252.GA25276&#64;bolet.org&gt;
+Date: Wed, 11 Mar 2015 19:42:52 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] NFC v NFD UTF-8 Normalization Re: [Was output specifics]
+
+On Mon, Mar 09, 2015 at 03:41:51PM -0600, Jeffrey Goldberg wrote:
+&gt; But now to the NFC/NFD debate. The case for NFC is obvious. It's what
+&gt; is widely used already. 
+&gt; 
+&gt; The case for NFD is if one wanted to do something like what Facebook
+&gt; does with CAPS-LOCK. If your password fails, Facebook will
+&gt; automatically and silently retry it with case shifted. 
+&gt; 
+&gt; So if someone wanted to do something similar with ö and o, it is much
+&gt; easier to engage in such transformations with NFD.
+
+This picture is, I think, enlightening:
+
+   <a href="http://unicode.org/reports/tr15/NormalizationOverview.GIF" rel="nofollow">http://unicode.org/reports/tr15/NormalizationOverview.GIF</a>
+
+If you want to remove accents and do similar transformations, then NFKD
+may be preferable. For instance, in NFD, the "fi" ligature (should be
+"ﬁ" but it does not display well in my terminal font) is a single code
+point U+FB01, while NFKD will make it a "f" followed by an "i" (U+0066
+U+0069). Of course, it depends on whether you want to consider the
+ligature "fi" as equal to or distinct from the two-letter sequence "fi".
+You can even get that sort of question with very mundane latin-1
+characters ("æ").
+
+Also noteworthy is the fact that casing is a complex matter in all
+generality. For instance, the switched-case equivalent of "sTRASSE" can
+be either "Straße" and "Strasse" -- so it may depend on how much the
+user is intent on using correct German typography (for a notion of
+"correct" than can occasionally change, as it did in 1996 in Germany,
+but not in Switzerland, for a number of words involving indeed the "ß").
+Another problematic case is related to U+01F1, a letter which occurs in
+Polish, Hungarian, Slovak, and a few other languages; it somewhat looks
+like "DZ". That digraph has a lowercase variant (looks like "dz") AND a
+third possible case called "titlecase", which looks like "Dz".
+
+The bottom-line is that if you want to do smart things with casing
+and accents and ligatures, and want to do it properly, then:
+ -- it will depend on what _exactly_ you want to do;
+ -- it will be hard.
+
+Normalization is only a first step, and won't be sufficient (unless you
+are ready to tolerate approximations, which may or may not make sense
+for passwords, depending on the context). If we defined PHS to use NFD
+(or NFKD), then:
+
+  -- People who just want to "hash a password" will have to include some
+  normalization library to pre-process whatever they got from the user
+  interface, which _usually_ produces NFC. Some language frameworks
+  already include such a library (e.g. Java, C#/.NET...), others do not
+  (typically C).
+
+  -- Peter's argument applies: some people will just take the bytes as
+  they got them, and I suspect this will be a rather common case.
+  "Maximizing interoperability" really means "doing the same as almost
+  everybody else"; if most other people use NFC (either explicitly, or,
+  more often, simply because they did not care enough and just used "the
+  bytes") then maximum interoperability will be achieved by using NFC.
+
+
+So my conclusion is: if we want to specify (at "SHOULD" or "RECOMMENDED"
+level) some encoding rules (and I believe we want to include such a
+specification), then it should be NFC. Otherwise it won't work as
+announced (i.e. it won't "maximize interoperability"), even if it might
+be preferable for better support of some other features.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

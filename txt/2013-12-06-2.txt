@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] blakerypt sequential memory-hard function
+
+Message-ID: <CALCETrXN3DkvMWtzuZyUK9QddqDDVj5kcFxpUvyP0uRShsG2pQ@mail.gmail.com>
+Date: Fri, 6 Dec 2013 14:09:00 -0800
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+On Fri, Dec 6, 2013 at 9:45 AM, Krisztián Pintér <pinterkr@...il.comwrote:
+>
+Dennis E. Hamilton (at Thursday, December 5, 2013, 5:16:02 PM):
+>The advantage is that the Fibonacci recurrence provides a nice way
+>of deriving k on the fly by seeing how much time is being taken in
+>real time, and incrementing by the next step if a target threshold
+>has not been reached.
+>
+this is a recurring theme, and i never was a great fan of that. now i
+took some time to think through why.
+>
+conclusion
+>
+determining the proper cost parameters should not be a part of the
+actual algorithm, and should come from outside. the parameters must be
+provided in an explicit format, that is, number of cycles, number of
+memory blocks, etc. it allows equivalent forms, like 2^t time, but
+disallows time in milliseconds.
+>
+rationale
+>
+1. theoretical stand: separate things should be separate. it is
+conceptually different to determine the parameters and using them. use
+small code blocks, avoid swiss army knife antipattern.
+>
+2. many times we want to calculate the hash on different platforms,
+including the case of switching platforms in the future. it is unwise
+to lock the parametrization to the current platform.
+>
+3. if we always use fixed parameters, hashing the password the first
+time and checking a password does not differ at code/circuit level.
+this simplifies the code.
+>
+4. we lose nothing with taking fixed parameters. we can at any time
+offer the user a separate "benchmark" option. together with a table of
+preset values for different platforms.
+>
+>
+
+I'd certainly like a password hash I used to have a function to
+estimate the time for given parameters or to find parameters for a
+given time and memory usage.  (Also, implementing such a thing might
+cause password hashing algorithms that have time complexity that
+heavily depends on password length to notice and fix it.)
+
+--Andy
+
+the above is an opinion. don't get offended, discuss!
+>
+
+
+
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
+

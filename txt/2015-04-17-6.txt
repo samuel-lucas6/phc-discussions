@@ -1,0 +1,119 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <CALW8-7KW700yb0zEZpGcnFToYqa4m3_Hd1P+J7mUuTp7kziqLA@mail.gmail.com>
+Date: Fri, 17 Apr 2015 10:55:31 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+On Thu, Apr 16, 2015 at 3:01 AM, Solar Designer <solar@...nwall.comwrote:
+>
+Yes, now I can see how the shuffling may affect this.  Original scrypt's
+sub-block shuffling appears to double the latency of your attack at each
+level of the recomputation tree.  Correct?
+
+Possibly. But there is always an option to store some extra subblocks
+so that latency decreases further...
+
+>
+I guess original scrypt's sub-block shuffling is defined in the exact
+way it is in order to ensure that two successive applications of the
+shuffling don't cancel each other.  However, I don't immediately see a
+specific reason to have this requirement, and from the point of view of
+maximizing latency in your attack, simple reverse order of sub-blocks
+(e.g., "B_15 xor B_14", "B_14 xor B_13", etc. written to new B_0, B_1,
+etc. instead of the current "B_15 xor B_0", "B_0 xor B_1", etc.) feels
+like it'd work best.  I haven't thought this through yet.  I'd
+appreciate your thoughts on the reverse order of sub-blocks idea.
+
+An attacker would just store every $q$-th subblock thus spliting the
+entire block into segments.
+Then the recomputation can be contained to segments and parallelized,
+like in our attack on Catena.
+
+First I intended to write that playing with subblocks just complicates
+the security. However, I have realized,
+that it might be possible to devise a rigorous approach to that. To
+figure out how the latency is affected by tradeoffs,
+we consider a _stack_ of compression functions (BlockMixes, Argon2d
+permutation, etc.) and mount a tradeoff attack on it.
+The attacker's goal is to reduce the latency by careful storing of
+subblocks (or their parts). We could give extra power to the attacker
+by assuming he knows the recomputation tree structure in advance
+(always true for data-independent addressing), so he might want to
+store
+different subblocks in different blocks.
+
+
+
+>
+>Our approach is to avoid this
+>situation for all, requiring that there simply must not be any
+>tradeoff attack on the compression function, or, in other words, the
+>computational latency must be tradeoff-resistant. The Argon2
+>parallelism that you have mentioned is somewhat unavoidable if we want
+>this resistance.
+>
+Yes, I figured this out yesterday.
+>
+I think it's avoidable, but a possible reduction of parallelism just
+does not occur with your approach naturally, and it'd cost a few extra
+XORs or such to introduce it.  Looking at it from a different angle,
+maybe this is your opportunity to easily introduce tunable
+instruction-level parallelism (have a couple of flags dictate whether to
+introduce or skip those extra data dependencies).
+
+I think now it should be easy to add some chaining at 25% cost or so,
+which increases the normal latency and avoids parallelism. Still,
+this chaining will be subject to tradeoffs, so the tradeoff latency
+will be pretty much the same as now.
+
+
+I confirm your analysis.
+>
+I assume the C(q) and D(q) figures are currently inexact, for the reason
+you mention ("have to plug yescrypt mode of operation (and its
+addressing) into our ranking method"), but they look sane to me, and the
+combination with your attack on BlockMix_pwxform looks correct to me.
+>
+I hope that yescrypt's D(q) will turn out to be slightly higher than
+what you included here once you consider yescrypt's Wrap().  I guess
+your current C(q) and D(q) assume modulo division in place of Wrap()?
+
+No, I used the real Wrap(). Without wrap the numbers would be smaller.
+But I did not exploit Wrap(), i.e. the storing algorithm does not know that
+you never refer to first blocks.
+
+I have posted the code that I used to generate the numbers online:
+https://github.com/khovratovich/Tradeoff
+The output .log file that is created contains the numbers. As
+explained in our earlier paper,
+the ranking method has parameter <q(segment length). We run 100
+tests on each q from 2 to 80,
+and cluster tradeoffs that have the memory reduction around 1/D for
+all integer D.
+
+It lacks comments and is quite a mess, but at least people will see
+where the numbers are coming from.
+
+In order to get the numbers for other values of t, you just change the
+constant 1.33 in main() to
+the number of passes.
+
+>
+You make two observations: about late inter-lane diffusion, and about
+recovering missing blocks subblockwise.  It appears that you currently
+only make use of the latter observation.  Do you think the former is of
+any use in an attack?
+
+It is just an extra parallelism. As long as it is fully employed by
+the defender, I do not see an attack.
+
+Thanks again,
+
+You're welcome!
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

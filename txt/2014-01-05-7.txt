@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20140105031752.GB6394@openwall.com>
+Date: Sun, 5 Jan 2014 07:17:52 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Tue, Dec 31, 2013 at 11:48:39AM -0500, Bill Cox wrote:
+I made the number of SHA-256 rounds selectable, from 1 up.
+
+I don't think I described the purpose of the sha256 rounds very well.  2048
+rounds takes 2.5ms on my linux box using scrypte's sha256.c for
+PBKDF2-SHA256 key derivation.  If I do this and then clear the password,
+the plaintext password is only there for 2.5ms.
+
+After that, I do a huge memory hash, and I feel it is common for this sort
+of memory hog of a process  get swapped out (if mlock is disabled or not
+working or available).  Maybe other processes will be swapping and the
+whole thing is so slow that the user closes his laptop, and hibernation
+writes out the contents of RAM to SSD, where files aren't even erased if
+you overwrite them with 0's.  By doing that 2.5ms of key derivation as a
+pre-process, which is tiny compared to the 1s-ish desired for a strong KDF,
+we make it harder for an attacker to discover the password.
+[...]
+There's a lot of talk about not writing data derived from the password data
+to memory to avoid such an attack, but I've convinced myself that we have
+to write password-derived data to memory to build a memory-hard KDF, There
+seems to be no way around it.
+
+Right.
+
+I prefer for that data to be somewhat safe -
+not NSA safe, but average-joe cracker safe.
+
+This makes sense.
+
+Alexander
+

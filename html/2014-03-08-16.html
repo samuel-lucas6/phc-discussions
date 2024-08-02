@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Upgrade HKDF to HKDF2?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="15">[&lt;prev]</a> <a href="../../../2014/03/09/1">[next&gt;]</a> <a href="../../../2014/03/09/10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7pHyzQqcQiuNFb178JjOgKtT4_WZGtOhpq8She_Ud8ag&#64;mail.gmail.com&gt;
+Date: Sat, 8 Mar 2014 13:48:09 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Upgrade HKDF to HKDF2?
+
+All the current KDF primitives I have read about have serious
+limitations.  I don't want to inherit those limitations in my PHC
+entry.  Rather than simply pre-processing and post-processing around
+an existing KDF as a work-around, why not upgrade HKDF (the best I've
+seen so far for a memory hard KDF) and make it work really well for
+password hashing?  I propose to call this HKDF2, if the HKDF authors
+allow it (and preferably this whole thing is done with their blessing
+and review).
+
+Digging into HMAC, PBKDF2, HKDF, and what Blake2 does with it's key
+data has been very interesting.  Here's limitations of each:
+
+HMAC: Input collisions galore!  Really?!?  Why are we using this for
+hashing passwords???
+PBKDF2: Inherits HMAC collisions, and suffers from chosen c attack -
+PBKDF2 should be avoided
+HKDF: Still new, but it works around HMAC input collisions.  However,
+it potentially leaks password length
+             due to no padding.  It also forces sensitive "info" data
+to remain in memory too long.
+Blake2: Implements secure HMAC-like functionality directly with no
+input collisions, which is cool.
+             It is not able to directly generate long output lengths,
+and has a limited input key length.
+             Blake2 isn't meant to directly be a KDF, so this isn't a
+criticism, just an observation.
+
+What I'd like to do is enhance HKDF:
+
+1) Stop using HMAC under HKDF.  Instead, when the hash function is
+like Bake2 and implements a secure HMAC interface, use it directly
+rather than HMAC.  When it's not available, such as SHA-256, use the
+hash function's Init, Update, and Finalize interface to hash in the
+padded/compressed password, and then the data.
+
+2) Add an "info" parameter to HKDF_Extract (credit for this idea goes
+to Dennis E. Hamilton).  There is no reason to waste time hashing
+input parameters into every output key, and being forced to keep
+sensitive data around to the end is a security problem.
+
+3) Pad sensitive inputs, and let them be long: password, salt, and info inputs
+
+4) Hash in passwordSize, saltSize, and infoSize, so the user wont have to
+
+5) Expand the counter that is hashed along with the other data in
+HKDF_Expand to 32-bits.  It's currently 8 bits.
+
+6) Add "clearPassword" and "clearInfo" flags and securely erase the
+password and info if set
+
+Upgrade 1 improves security by bypassing the current rampant mis-use
+of HMAC in password hashing.  HMAC is a terrible primitive for
+password hashing due to it's trivial password input collisions.  HKDF
+hacks around this limitation, by abusing the HMAC interface: it passes
+the password as "message" and the salt as "key".  Yuk!  Instead of
+this hack, which causes HKDF to potentially leak timing information
+about the password length, let's pad the password correctly, unlike
+HMAC.
+
+Upgrade 2 is a simple improvement that improves both speed and
+security.  There is no reason, for example, to hash the passwordSize
+parameter into every output block of HKDF_Expand, rather than hashing
+it into the PRK generated by HKDF_Extract.  This is not just faster,
+but it also enables the user to clear sensitive data like secondary
+secret keys used in as info parameter while doing processing between
+HKDF_Extract and HKDF_Expand.  For example, that processing might be a
+memory-hard KDF that runs for a second, and hashes several GiB of
+memory.  HKDF currently would force a server master key, when used as
+info, to hang around until the memory hashing completes.  This is
+uncool!
+
+Upgrade 3, padding sensitive inputs, provides additional security
+against timing side-channel attacks that might enable an attacker to
+gain some knowledge about the password length.  I think this should be
+done with all variable length inputs, not just the password: password,
+salt, and info.  The info parameter might be as sensitive as the
+password, and as we see from how HKDF abuses HMAC by passing the
+password as the message and the salt as the key, it is likely down the
+road that the salt parameter might be sensitive data.  We should not
+leak length information about any variable length inputs!  Is
+something as basic as this controversial?
+
+Padding should be done by simply running a multiple of a PAD_SIZE of
+iterations, copying from the input into the pad.  Here's my code for
+it:
+
+static void extractPassword(uint8_t prk[KEYSIZE], uint8_t *password,
+uint32_t passwordSize, bool clearPassword) {
+    uint8 pad[PAD_SIZE];
+    for(uint32_t i = 0; i &lt; passwordSize; i += PAD_SIZE) {
+        for(uint32_t j = 0; j &lt; PAD_SIZE; j++) {
+            pad[j] = password[(i + j) % passwordSize]);
+        }
+        // prk = Hash(message=pad, key=prk
+        Hash(prk, KEYSIZE, pad, PAD_SIZE, prk, KEYSIZE);
+    }
+    if(clearPassword) {
+        secureZeroMemory(password, passwordSize);
+    }
+    secureZeroMemory(pad, PAD_SIZE);
+}
+
+Upgrade 4, adding input sizes to the info parameter and hashing it in
+along with everything else, can be accomplished by setting prk to 0's,
+and then writing these lengths to it, before it's passed to the
+padding function.  This eliminates collisions caused by password size
+reduction, for example, which is a problem in HMAC.
+
+Upgrade 5 is just a trivial expansion of the counter length to 4 bytes
+to support longer output hashes.  For example, I use Blake2s to
+initialize the first block of memory, which is currently 16KiB.  HKDF
+can only generate 8KiB.  This is a trival upgrade that in no way
+impacts security, so if we're upgrading HKDF anyway, I'd throw it in.
+
+Upgrade 6: Add parameters to securely clear the password and info
+inputs as soon as they are no longer needed.  This is not a critical
+upgrade, and can be left out, but most users will wind up rolling
+their own, and doing it wrong!  Here's my secureZero function,
+originally copied from Blake2, but modified to use padding:
+
+static inline void secureZeroMemory(void *v, uint32_t n) {
+    volatile uint8_t *p = (volatile uint8_t *)v;
+    for(uint32_t i = 0; i &lt; n; i += PAD_SIZE) {
+        for(uint32_t j = 0; j &lt; PAD_SIZE; j++) {
+            p[(i + j) % n] = 0;
+        }
+    }
+}
+
+Blake2 does not need the pad in their version of secure_zero_memory,
+since they only zero fixed-length data, but this function would be
+used to clear the password.  This function does not leak the lower m
+bits of n, where PAD_SIZE = 2^m.  It does potentially leak the upper
+bits of n.  I'm using PAD_SIZE == 256 at the moment, for 8 bits of
+obfuscation, enough for the most cases.  There is a tradeoff here: it
+is more likely to leak cache timing information the longer we loop
+over the password, which could leak some password length info (like
+nearest multiple of 64).  However, running with a short pad
+potentially leaks more bits if an attacker gains knowledge of how long
+this function runs.  The choice of PAD_SIZE is thus a compromise.  I
+currently use 256.
+
+Thoughts?  Is it time to create HKDF2, or should I just hack around
+HKDF or PBKDF2 however I like, just like everyone else?
+
+One dumb idea: allow the PHC entrants to change their initial/final
+KDF schemes when "tweaks" are allowed, and allow them to collaborate
+on how this is done so that preferably, they all do it in a similar
+way to the extent possible.  I'm leaning towards proposing an HKDF2
+implementation, but I'd like to adopt whatever the PHC judges think is
+best.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

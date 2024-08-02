@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <20151009121815.GA22236@bolet.org>
+Date: Fri, 9 Oct 2015 14:18:15 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On Fri, Oct 09, 2015 at 04:16:58AM +0300, Alexander Cherepanov wrote:
+inline is not in C89.
+
+This is true. I'll fix it.
+
+
+Such casts are probably for C++ compatibility...
+
+Exactly. Though I want to write portable C code, I'd prefer it if this
+code can also be used "as is" in C++, because I know that there are a
+lot of developers out there who think in terms of "C/C++" without really
+noticing that they are distinct languages.
+
+
+>		acc = (acc << 6) + (unsigned)d;
+
+...but this one seems entirely redundant:-)
+
+This cast is for readability. Readability depends on who is doing the
+reading, and, in this case, the cast is for me. I tend to add explicit
+casts when switching between signed and unsigned integer types, because
+long ago I ran into trouble with signedness issues(*) and I got into the
+habit of making things more obvious.
+
+The cast is redundant because the C compiler already applies it -- so
+the compiler won't mind.
+
+
+(*) This code:
+
+	unsigned x = 10;
+	long y = -1;
+	if (x < y) {
+		...
+	}
+
+will execute the code in the 'if' on a 32-bit machine, not on a 64-bit
+machine(**); and this is not undefined behaviour. In both cases, the
+result is clearly and unambiguously defined by the standard.
+
+(**) Except on Windows / Visual C with default option on 64-bit Windows,
+where 'long' is still 32-bit for compatibility with existing code and
+API that equates 'DWORD' with 'unsigned long'.
+
+
+	--Thomas
+

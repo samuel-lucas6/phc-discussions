@@ -1,0 +1,96 @@
+phc-discussions - Re: [PHC] Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+Message-ID: <CALCETrWK32LbAAbZGs4+WUZGxp60rE5JBqpKiEzu4KL-kGcqaQ@mail.gmail.com>
+Date: Tue, 9 Sep 2014 20:46:26 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: Re: Re: Re: Re: Second factor (was A review per day - Schvrch)
+
+On Wed, Sep 3, 2014 at 4:15 PM, Alex Elsayed <eternaleye@...il.comwrote:
+Andy Lutomirski wrote:
+>
+>On Wed, Sep 3, 2014 at 3:45 PM, Alex Elsayed
+><eternaleye@...il.comwrote:
+>>Andy Lutomirski wrote:
+>>>
+>>>On Wed, Sep 3, 2014 at 3:29 PM, Alex Elsayed
+>>><eternaleye@...il.comwrote:
+>>>>Besides, why store _anything_ on the user's computer? The user types in
+>>>>N, and then P, and neither has any related data stored anywhere on the
+>>>>computer; the less you process P the less time it spends resident in
+>>>>memory as well. Treat it like a hot potato and hand it straight to the
+>>>>token.
+>>>>>
+>>>>
+>>>Because I want to trust my token as little as possible.
+>>>
+>>My point is it doesn't actually trust your token any less.
+>>>
+>>Handing your token F(P) instead of P doesn't matter, because F(P) is
+>>still sufficient for a malicious token to never ask again if it stores it
+>>- and a malicious token disclosing P rather than F(P) only matters if
+>>your password hygiene is really terrible (reuse, etc).
+>>>
+>>Besides, the token _does_ rely on you relaying the second exchange for it
+>>- if it tries to do an exchange when you didn't _initiate_ an exchange,
+>>that's a 'KILL IT WITH FIRE' indicator; that leaves only that it
+>>surreptitiously stores what you give it and waits for someone to steal it
+>>from you.
+>>
+>Let me try to say it more precisely.  I want a fourth security
+>requirement: even if the token is actively malicious (e.g. records
+>things it shouldn't, sends maliciously incorrect output, and leaks
+>things to <insert government agency here>), then the protocol should
+>still be as secure as either password-authenticated or
+>encrypted-key-authenticated protocols, depending on whether the user
+>stores a key file on his/her hard drive.
+>>
+>I think that my protocol achieves this, or at least tries to.  Yours
+>seems to be completely insecure in this threat model.
+>
+Mm, I see.
+>
+>Yours might be fixable for this purpose by having the user do a second
+>PAKE exchange with the server, protected by the output of the first
+>one.  This requires more round trips than my approach.
+>
+Actually, another option is to run step 4 in _parallel_ with a PAKE exchange
+directly between U and A. Since the exchanges are the same, this results
+(assuming some bundling) in a doubling of message _size_ (and the server
+must store two verifiers), but not of the _number_ of messages.
+>
+At that point, though, you might as well not pass the token anything (or
+pass it public data like the name of the service you're authenticating to),
+again obviating the need for storing anything on disk while satisfying the
+additional constraint unconditionally.
+
+Hmm, interesting.  I had assumed that a secure protocol involving
+password tokens needed some mechanism for authenticating the user to
+the token to prevent the token from being useful if stolen.  But maybe
+this is entirely unnecessary.
+
+On the other hand, it should also be impossible for a server and a
+stolen user's computer to do an offline dictionary attack without
+access to the token.  I think that two parallel augmented PAKE runs
+doesn't have this property.  This might be fixable by storing the
+client computer's key share in some form that can only be decrypted
+with access to the token (e.g. take the secret PAKE key, encrypt it
+against the token's secret, and encrypt *that* against the password).
+
+Hmm.  Maybe I should try to write this stuff down and post it to IACR.
+
+>
+Sadly, this loses the property from the original scheme that the server
+doesn't need to even know that a token is in use - a PAKE exchange between U
+and A appears the same to A as the token protocol.
+>
+It would also require care on the part of A to avoid timing leaks - it'd
+need to check both verifiers even if one failed.
+>
+
+It looks like the catid tabby PAKE might be compatible with a secret
+sharing approach like in my earlier email.  It has no security proof,
+though.
+
+--Andy
+

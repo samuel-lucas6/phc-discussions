@@ -1,0 +1,55 @@
+phc-discussions - pufferfish
+
+Message-ID: <532EF6E4.5060704@bindshell.nl>
+Date: Sun, 23 Mar 2014 07:59:48 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: pufferfish
+
+I've pushed code to a public repository for the candidate I will be
+submitting, pufferfish. This repository will be frantically updated over
+the coming week as I prepare my submission, but I wanted to get some
+initial feedback before the cutoff.
+
+https://github.com/epixoip/pufferfish
+
+As the name implies, pufferfish is an improvement upon bcrypt, and ergo
+blowfish. Concisely stated, pufferfish modifies the blowfish algorithm
+to use 64-bit words, a 128-bit block size, and dynamic s-boxes. The
+reference implementation uses a fixed key size of 256 bits, simply
+because for these purposes there is no need to support different key
+lengths.
+
+The dynamic s-boxes are of course the biggest differentiating factor
+between pufferfish and blowfish. The s-box generation is as follows:
+
+1. Hash the raw salt as sha512
+2. hmac-sha512 the password using the hashed salt as the key
+3. hmac-sha512 the password again, using the output of the hmac
+operation in step 2 as the key
+4. These two hmac hashes are concatenated to initialize the 1024-bit state
+5. The four s-boxes are each filled with m_cost / 4 / sizeof (uint64_t)
+words by iterating over the internal state with a variant of chacha8
+
+The state is then iterated 64 more times with chacha8 to generate a
+third hmac key, which is used to hmac-sha512 the password one more time
+to generate the inital encryption key.
+
+The rest of the construction is largely identical to bcrypt, using the
+same eksblowfish algorithm. However, to support variable output lengths,
+the 256-bit ciphertext is hashed with sha512 after being repeatedly
+encrypted before being written to the output buffer.
+
+I elected to use this design because I really like bcrypt, and I really
+like the idea of being memory hard while using as little memory as
+possible. And I believe that the modifications I have made increase the
+effectiveness and extend the longevity of the original bcrypt design.
+
+The reference code is clear, concise, and extensively commented, so it
+should easy to read, especially if you are already familiar with
+blowfish and/or bcrypt. I welcome your feedback.
+
+- epixoip
+
+
+

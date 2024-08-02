@@ -1,0 +1,31 @@
+phc-discussions - Re: [PHC] C99 in reference implementations
+
+Message-ID: <52092663.4050909@dei.uc.pt>
+Date: Mon, 12 Aug 2013 19:16:03 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On 12-08-2013 17:46, Mansour Moufid wrote:
+>
+So for MSVC one can minimally replace the <stdint.hheader with:
+>
+    typedef int i32;
+    typedef long long int i64;
+    typedef unsigned int u32;
+    typedef unsigned long long int u64;
+>
+>
+MSVC >= 2010 does contain stdint.h. MSVC 2013 will have stdbool.h, mixed
+declarations, compound literals, and designated initializers. Older MSVC
+(at least as old as MSVC 6) contains the __intXX types, which are more
+resilient to architecture changes. So:
+
+#if defined(_MSC_VER) && _MSC_VER < 1600
+  typedef signed __int8 int8_t;
+  ...etc
+#else
+#  include <stdint.h>
+#endif
+
+

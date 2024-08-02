@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <20140323175708.GB29626@openwall.com>
+Date: Sun, 23 Mar 2014 21:57:08 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Jeremi,
+
+On Sun, Mar 23, 2014 at 07:59:48AM -0700, Jeremi Gosney wrote:
+I've pushed code to a public repository for the candidate I will be
+submitting, pufferfish. This repository will be frantically updated over
+the coming week as I prepare my submission, but I wanted to get some
+initial feedback before the cutoff.
+
+https://github.com/epixoip/pufferfish
+
+I definitely would have more comments on both the underlying idea (as I
+had thoughts along similar lines too, and found much of what you
+describe just not good enough) and the specific scheme and code, but I'm
+afraid I won't have time for that before the submission deadline, unless
+I decided right now that I won't be submitting escrypt.
+
+So I'm afraid we'll need to discuss this after the submissions deadline,
+even though I think my feedback could significantly influence your work.
+
+Either that, or we need to extend the deadline by a few months more or
+introduce an extra round of submissions. ;-(
+
+https://twitter.com/Sc00bzT/status/438872150691180544
+
+I haven't looked at your code yet, but have you introduced two layers of
+lookups - tiny yet frequent (bcrypt-like) vs. larger and infrequent
+(scrypt-like)?  If not, your scheme won't scale beyond L1 cache size, so
+will have only slight advantage over bcrypt (only due to modern CPUs'
+L1 caches allowing for up to ~12 or ~16 KiB per thread until there's a
+performance hit, vs. bcrypt's 4 KiB).  The way I'd try dealing with this
+when enhancing bcrypt is by having bcrypt-like S-boxes randomly move
+across a larger arena once in a while.
+
+Well, you could accept that performance would drop when you no longer
+fit in L1 cache, hoping that attackers would have a similar performance
+hit anyway.  This may be true for attackers with CPUs and GPUs, but
+perhaps not with ASICs.  Maybe that's OK, but this raises the question
+of why deviate from bcrypt at all if it's not against ASICs.  Well,
+maybe that's in case future/bigger GPUs are better at attacking bcrypt,
+which is likely, but not at attacking your scheme.
+
+And like I said in those tweets, I think the introduction of SHA-2 and
+HMAC is unnecessary (you can process 72 chars using the same "trick"
+that BSDI crypt() did for 8 chars with DES, and it did that well),
+and it removes much of the advantage of this being a tweak of bcrypt.
+
+Oh, and you also introduce ChaCha?  With that mix, what's the advantage
+over scrypt?
+
+I think a key advantage of building upon bcrypt would be to stay with no
+external crypto primitives.  I understand, though, that as soon as you
+revise Blowfish, you no longer have _any_ studied crypto primitive in
+there, so that's probably what prompts you to introduce something extra.
+Maybe stay with classic Blowfish, then, and enhance the scheme in other
+ways (mentioned above).  Yes, you won't use 64-bit CPUs more optimally
+and won't rely on more than 4 KiB of L1 cache (but you may rely on some
+L2+ cache and RAM) then...  A nasty tradeoff.  Maybe you can introduce
+tunable parallelism, though, so that once we finally have faster gather
+loads, those could be used for defense (and we'd use more L1 cache in
+that way).
+
+Overall, with all of those concerns I think you can see why I chose not
+to go in that direction.  Add to that possibly frustrating the OpenBSD
+folks if we tried to build upon bcrypt too closely, and this becoming
+less reasonable if we deviate from bcrypt very far and introduce more
+crypto primitives.
+
+That said, it's great that you're experimenting with this approach, at
+least to provide another baseline to compare other PHC submissions
+against.  Thank you, and good luck!
+
+Alexander
+

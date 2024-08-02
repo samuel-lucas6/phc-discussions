@@ -1,0 +1,107 @@
+phc-discussions - Intentionally increasing password hash collisions
+
+Message-ID: <CAJ9ii1HdcaRPpXsAd6ktfNUG1Fwbqo8GNECXz38xts57KKf3+w@mail.gmail.com>
+Date: Mon, 9 Dec 2013 12:55:04 -0500
+From: Matt Weir <cweir@...edu>
+To: discussions@...sword-hashing.net
+Subject: Intentionally increasing password hash collisions
+
+Hi, I'm working on a submission to PHC. I wanted to give people an overview
+of it and hopefully get some feedback.
+
+In a nutshell I'm arguing there's many cases where it may be worthwhile to
+intentionally increase collisions in password hashing algorithms to make
+password reuse attacks more expensive.
+
+Taking a step back, attackers typically crack password hashes for two
+reasons.
+
+1) If an attacker gains access to the hashes but does not have access to
+the individual user accounts, (an example would be a SQL injection attack
+with only SELECT privileges), then by cracking the hash they can log in as
+the user
+
+2) The attacker is attempting to gain knowledge about user's raw password
+for use in attacking other sites/services.
+
+The core idea behind this submission is that it may be worth giving up the
+security in use case 1, as well as making it possible for an attacker to
+log into a site via a collision, with the end goal of making use case 2
+more costly for an attacker. Or to put it another way, there's a lot of
+sites on the internet that are not valuable to users, but are valuable to
+attackers looking to steal credentials for use in attacking more valuable
+sites.
+
+Now ideally the password reuse problem would be solved by everyone using a
+password manager and choosing unique passwords for every single site. That
+requires users to change their habits though. Another good solution would
+be to use a computationally and/or memory expensive hashing algorithm,
+(hence the PHC). I'm not arguing strong hashing isn't important. It is.
+What I'm saying is adding collisions has the potential to enhance the cost
+to an attacker for a password reuse attack regardless of the underlying
+hashing algorithm chosen.
+
+Because of that, this isn't a stand alone solution as it is meant to be
+largely hash independent, (with a few requirements such as needed a long
+random salt). The reason I'm submitting it to PHC is I'd like to have this
+idea beat up and analyzed by as many people as possible. Here's a quick FAQ:
+
+Q) How will collisions be created?
+A) Collisions will be created by cutting bits off the end of a password
+hash. The number of bits will be related to the number of collisions that
+are desired to be generated vs the amount of risk the defender is willing
+to accept for an attacker to be able to log in during an online guessing
+attack via a collision vs the real password.
+
+Q) Besides cutting bits, what else is required under this scheme?
+A) A long random salt is required so the same set of collisions are not
+shared between multiple sites that use the same password. There's a couple
+of other additions I plan on discussion in the submission on how a defender
+can minimize some of the risks associated with this scheme, (such as
+preventing collisions with common passwords like '123456'), but they aren't
+required. In fact I'm not altogether convinced that the security added by
+some of the additions offsets their added complexity
+
+Q) How does this make password reuse attacks more expensive?
+A) Usually for an attacker, making offline guesses against a hash is
+cheaper than making online guesses by trying to log in as the user. With
+even the strongest hash an attacker can still make offline guesses at the
+same rate as the defender can verify passwords. Online attacks on the other
+hand require dealing with all the security mechanisms of the service
+itself, (logging, rate limiting, IP blacklisting, etc). That's why
+attackers take the time to crack hashes in the first place. Collisions
+complicate hash cracking though. The attacker no longer knows if they
+cracked the user's real password or created a collisions unless they verify
+it some other way, (such as using that guess to successfully log into a
+different site). This makes the decision to stop cracking a hash much more
+problematic. Collisions also reduce the amount of mangling an attacker can
+perform when performing an online attack since they will be “wasting”
+guesses on collisions that have no relationship to the user’s real
+password. In addition, hash collisions have the potential to substantially
+disrupt the 3rd party password cracking marketplace since the person paying
+will have a difficult time verifying if the 3rd party cracker is making a
+legitimate effort or just generating collisions without attempting to find
+the actual password.
+
+Q) What is the recommended default bit length for hashes?
+A) Following NIST's SP 800-63-1 Electronic Authentication Guideline,14 bits
+for a site requiring Level 1 assurance, and 20 bits for a site requiring
+Level 2 assurance.
+
+Q) Will there be an attempt to measure actual cost to an attacker or risk
+to the defender in more detail
+A) Yup, I expect that will take up a significant portion of the submission.
+Any suggestions on this will be apprecaited
+
+Q) Is more information available about this?
+A) Yes, I talked about this quite a bit on the crypt-dev mailing list about
+a year ago when I was initially exploring the idea:
+http://www.openwall.com/lists/crypt-dev/2012/12/12/3
+
+Q) Is there a name for this method?
+A) Not yet, but I'm open to suggestions.
+
+Matt Weir
+
+
+

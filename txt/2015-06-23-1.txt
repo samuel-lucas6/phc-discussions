@@ -1,0 +1,470 @@
+phc-discussions - Comments from Argon2 and Catena co-designers
+
+Message-ID: <CAGiyFddGf0qG9hQuK1SOdems4pEC+7L9KFwsUvZ13S+HgjvRpg@mail.gmail.com>
+Date: Tue, 23 Jun 2015 09:52:47 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Comments from Argon2 and Catena co-designers
+
+Hi,
+
+The PHC panel has been discussing which algorithms to includes in its final
+portfolio (aka "winners"). Panel members believe that Argon2 and Catena are
+the top candidates in the category where they're playing. It's difficult to
+make up our mind though, so to help us we've asked designers of these
+candidates to make the case for their respective candidates.
+
+For a better transparency, we're publishing those comments below: comments
+by Stefan Lucks from the Catena team (followed by his March 31 votes
+regarding PHC winners), and comments by Dmitry Khovratovich from the Argon2
+team. Both agreed to have their comments published here.
+
+<CATENA author="Stefan">
+
+---------- Forwarded message ---------
+From: <Stefan.Lucks@...-weimar.de>
+Date: Tue, May 19, 2015 at 7:55 AM
+Subject: Re: PHC vote
+To: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+Cc: <Stefan.Lucks@...-weimar.de>
+
+
+On Fri, 15 May 2015, Jean-Philippe Aumasson wrote:
+
+Which instance(s) of Catena would you recommend?
+
+Both. ;-) And let Catena-Axungia make the choice for you. (I am not sure
+if "Axungia" is a good name, maybe we should rename it "Catena-Delphi".
+
+One of the benefits of Catena (over Argon2i, for an instance) is that
+Catena allows you to eat the cake, and keep it: Good defense for defenders
+with moderate memory (say, 1 to 12 MB) and good defense for high-memory
+defenders. Fixing "which instance" from the beginning would counter that
+advantage.
+
+IMHO a Dragonly instance is better suited, though I'm not sure that
+there's a market for really high-memory hashes (say, 100MB+).
+
+Same with me. Before PHC, I would never have anticipated people seriously
+considering such large memory for password hashing (except, possibly, for
+key derivation). I am not sure if the race to maximise the memory usage in
+given time in the PHC competition is an offspring from some real demand
+for that kind of password hashing, or an artifact of the competition.
+Which is precisely why I think it would be good to maintain the best of
+both worlds.
+
+Also, what are the advantages of Catena(-Dragonfly) over Argon2i?
+
+Well, Catena-Dragonfly and Argon2i are fairly similar. ;-) Catena has been
+specifically designed as a framework, to support any hash function of your
+choice. And it would be still Catena, as given in the specification
+document, just another instantiation. E.g., one could easily employ Catena
+based on SHA-512 (and its round function) to ease NIST standardisation.
+Our specification actually invites such instantiations.
+
+While you *can* rewrite Argon2 in a similar fashion, this would appear a
+lot more intrusive. As I wrote before:
+
+   Argon2 propes a compression function G, build upon the Blake2b round
+   function. G compresses two 8192-bit values into a single 8192-bit value.
+   The authors claim an improved performance for their compression function,
+   compared to approaches using the Blake2b round function more directly.
+
+   It is not clear under which circumstances one could change from the
+   Blake2b round function to the round function of another primitive.
+
+      3. As "honorable mentions" (or whatever phrase for the alternative
+winners
+      will be), I propose the winners in the A1 and A3 scenarios: Lyra2
+and
+      Makwa.
+>
+>
+These are probably the most thoughtful designs in their respective
+categories. I believe
+Makwa does deserve some kind of recognition, though I'm not sure that it
+would gain traction
+among developers. An argument is that Thomas is well-respected (esp. for
+his Stackoverflow
+contributions), which may help.
+
+Agreed!
+
+Do we need an A1 *and* and A2 winner though? (rhetorical)
+
+It is a rethorical question -- but I'll answer it anyway.
+
+Given the discussion on the benefits of a few more bits of pseudo-entropy
+versus a weakness to side-channel attacks that could either kill you or
+not affect you at all, I guess people would ask for it.
+
+So long
+
+Stefan
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+
+1. Technical Criteria (I will not call this "superiority")
+==========================================================
+
+The PHC committee should select a portfolio of algorithms suitable for
+different application scenarios. I anticipate three different
+application scenarios:
+
+A1, memory-hard password hashing, not much concern for side-channels:
+
+Password hashing is performed in an environment, where one can neglect
+side-channel attacks, such as cache-timings, this allows to maximise
+the memory used (depending on the memory the defender can use for
+password-hashing), and to provide maximum defense against slow-memory
+attacks.
+
+One might argue that scrypt, while not a candidate, also fits into
+this scenario.
+
+A2, memory-hard password hashing, avoid side-channels:
+
+Password-hashing is performed in an environment, where one cannot
+immediately exclude side-channel attacks. If one just tried to
+maximise the memory used, one wold risk to loose everything by
+side-channel attacks. The price for resistance to attacks such as
+garbage-collector attacks and cache-timing attacks is that the
+password hash function will be a bit slower, i.e., it will allocate
+less memory than possible under A1. Also, the defense against
+slow-memory attacks is reduced.
+
+To the best of my knowledge, no pre-PHC password hashing functions
+would fit into this scenario. Addressing this one of the main
+innovations of the PHC competitions.
+
+A3, password hashing with low memory:
+
+This appears to be very similar to the established technique of
+password hashing by iterating a cryptographic hash function many
+times, as with, say, md5crypt. A password hash function for this
+scenario faces the challenge of providing a significant benefit over
+existing password hash functions.
+
+Selection of Candidates:
+
+The technical score I will give for each candidate is relative to the
+application scenario. I refuse to call the candidates I vote for
+"superior", compared to the candidates I downvote. My score and votes
+are more about how well a candidate fits to its specific scenario.
+
+
+2. Ease of Deployment
+=====================
+
+The two main questions are "how easy is the candidate to implement
+from the scratch", and "given a reasonable implementation, how
+difficult would it be to deploy it".
+
+
+3. Features
+===========
+
+We are trying to select a new generation of password hashing
+functions. Like a tuck takes to water, any modern hash function should
+support features, such as client-independent updates and server
+relief. Similarily, any password hashing function should be ready to
+be used for key derivation.
+
+
+4. Confidence and Trust
+=======================
+
+The winners should be based on well-understood cryptographic
+primitives. As we have seen during the PHC competition, the
+cryptographic community has not been very eager to analyse password
+hashing functions in general, or the the PHC candidates specifically.
+No PHC candidate designed as a primitive of its own right has already
+been scrutinised sufficiently to be proposed for general usage.
+
+Ideally, the winners should be based on a single primitive, and it
+should be easy for the users to change to another primitive.
+(Actually, this is related to Ease of Deployment.)
+
+
+5. Specific Commeents on each of the Candidates:
+================================================
+
+Argon2:
+
+I will not consider Argon(no-number) since it is in many ways inferior
+to the revised version Argon2. The design strategy of Argon2 is
+similar to the round2-tweaked submissions Lyra2 and Catena.
+
+Argon2 comes in two variants, Argon2d, which targets for application
+scenario A1 and Argon2i, which is a bit slower and targets for
+application scenario A2.
+
+Argon2 propes a compression function G, build upon the Blake2b round
+function. G compresses two 8192-bit values into a single 8192-bit
+value. The authors claim an improved performance for their compression
+function, compared to approaches using the Blake2b round function more
+directly.
+
+It is not clear under which circumstances one could change from the
+Blake2b round function to the round function of another primitive.
+
+Given the novelity of G -- Argon2 has been propsed on January, 31st --
+this approach would need much more scrutinity than it has seen so far.
+
+battcrypt:
+
+Battcrypt employs SHA-512 and Blowfish, two well-established
+primitives. It targets for scenario A1. The submission document
+provides a sketchy security analysis. It does not describe how to
+apply client-independent updates, server relief, or key derivation.
+
+While battcrypt is an interesting candidate, it is hard to see any
+specific advantages or benefits over other candidates for the A1
+scenario.
+
+Catena:
+
+By default, Catena employs Blake2b and the Blake2b round function.
+Being a framework, it is easy to change to another hash function (say,
+SHA-512) or another round function (say, the SHA-512 round function).
+Catena targets for the A2 scenario and is supported by a significant
+amount of security analysis. Its two main instantiations are
+Catena-Butterfly for moderate memory usage, and Catena-Dragonfly for
+large memory usage (under the constraints of the A2 scenario). It
+readily supports client-independent updates, server relief, and key
+derivation.
+
+Lyra2:
+
+Lyra2 targets for the A2 scenario. It employs a modified Blake2b round
+function. The security implications of this are not quite clear. It
+would appear straightforward, though to employ a different round
+function, e.g., the original Blake2b round function or the SHA-512
+round function.
+
+Lyra2 is secure against garbage collector attacks. LYRA2 runs in two
+phases. The first phase accesses the memory in a password-independent
+manner, the second phase is password dependent. Thus, it provides
+*some* resistance to cache-timing attacks, without victimising
+resistance to low-memory attacks. This is in contrast to unlike
+Argon2i and Catena, which provide full cache-timing resistance at the
+cost of reduced resistance to low-memory attacks.
+
+To be precise, Lyra2 is vulnerable to the following form of
+cache-timing attacks: Given some cache-timings, the adversary is able
+to crack low-entropy passwords, even without knowing the password
+hash. Thus, if there is a chance to keep the password hashes secret,
+or to encrypt them, and there is a chance that cache timings might
+leak, then using a highly advanced password hash function, such as
+Lyra2, may be worse than using md5crypt, or even storing the password
+unencrypted.
+
+Makwa:
+
+Makwa targets for the A3 scenario. It is based on the unique (in the
+PHC candidate field) idea of employing a primitive from asymmetric
+cryptography, namely an operation similar to the RSA encryption. This
+idea allows to support the unique "delegation" feature.
+
+Parallel:
+
+Parallelal employ SHA512 and also targets for the A3 scenario. Its
+inner loop can be performed in parallel, i.e., not just the attacker
+can benefit from parallelism, but also the defender. It is supported
+by a brief security analysis.
+
+At the first look, this is a cool idea. The chance to benefit from
+parallelism may be a significant benefit for the defender, compared to
+established password hashing functions, such as md5crypt. But by
+"peppering", i.e., by keeping some bits of the salt secret,
+parallelism is also applicable to established password hashing
+functions. The benefit of the explicit parallelism in Parallel is
+negligible.
+
+POMELO
+
+POMELO is another candidate for the A1 scenario. POMELO is not based
+on an underlying primitive, but has been designed as a primitive of
+its own right. For a newly designed primitive, the author's security
+analysis is extremely short. POMELO provides the same limited
+resistance to cache timing attacks, as Lyra2, risking to compromise
+low-entropy passwords even when the password hash is kept secret or
+encrypted.
+
+The author discusses how to support client-independent updates with
+POMELO. As pointet out by the author, this comes at the cost of
+further weakening the resistance to cache-timing attacks. It is not
+clear how to support server relief with POMELO. The submission
+document does not discuss how to use POMELO for key derivation. But in
+an email, the author claimed POMELO to be readily usable for key
+derivation. The idea appears is to truncate the 256-byte output to the
+number of bits required for the key. This approach would suffer from
+two disadvantages, though: (1) Given the same salt and password,
+shorter keys are just prefixes of longer keys. This may facilitate
+attacks on schemes with flexible key sizes. (2) The keys cannot be
+longer than 256 bit.
+
+Pufferfish:
+
+Like battcrypt, Pufferfish is based on SHA-512 and a modified
+Blowfish. The security analysis is extremely short. The submission
+document does not explain how to handle server relief,
+client-independent updates or key derivation.
+
+While Pufferfish is an interesting candidate, it is hard to see any
+specific advantages or benefits over other candidates for the A1
+scenario.
+
+yescrypt:
+
+Another candidate for the A1 scenario is yescrypt, based on the SALSA
+round function and SHA-256. Both an advantage and a disadvantage is
+the huge number of optional features and tunable parameters. One such
+optional feature is, e.g., the novel idea of performing random (i.e.,
+password-dependent) reads from a huge read-only memory. Activating
+this feature does clearly kill resistance to cache timing attacks --
+but it is optional, as so many other yescrypt features.
+
+While yescrypt is an interesting candidate, the number of tunable
+parameters and optional features appears to be a severe barrier to
+deployment (at least for mere cryptographers, like myself). If
+yescrypt is considered to be selected for PHC, a yescrypt-subset
+should fix most of the tunable parameters and options.
+
+
+6. Comparison of Candidates for A1 scenario:
+============================================
+
+There is a big field of good candidates in this field. I would vote
+for Argon2d and Lyra2. If only one of them is to be promoted, I would
+have a small preference for Lyra2.
+
+A great candidate would be a well-chosen subset of yescrypt. But
+yescrypt is too complex, and my understanding of all the features and
+parameters is insufficient to propose an appropriate subset.
+
+Scores:	       Technical	 Deployment 	Features  	 Confidence
+
+Argon2d	       4		4		3		 2
+battcrypt      1		5		0		 3
+Lyra2	       5		4		3		 3
+POMELO	       3		3		0		 1
+Pufferfish     1		4		0		 3
+yescrypt       4		0		1		 3
+
+
+7. Comparison of Candidates for the A2 scenario:
+================================================
+
+Both Argon2i and Catena fit well to this scenario. A disadvantage of
+Argon2i appears the novelity of the compression function G. It is
+based on the Blake2b round function, but it has very low diffusion,
+and would need further scrutinity. The effect of changing to the round
+function from another primitive is unclear.
+
+Otherwise, Argon2i is quite similar to the Dragonfly instance of
+Catena. It lacks an instance similar to Catena-Butterfly, which
+employs limited memory on the defender's side (say, 10MB or less), but
+severely pushes back adversaries with less than that amount of memory.
+
+Scores:	       Technical	 Deployment 	Features  	  Confidence
+
+Argon2i	       3		 4		3		  2
+Catena	       5		 4		3		  3
+
+
+8. Comparison of Candidates for the A3 scenario:
+================================================
+
+Makwa is the only candidate that fits this scenario and does offer a
+significant advantage over existing password hashing functions. The
+somewhat low deployment score is due to the need for a big-num
+library.
+
+Scores:	       Technical	 Deployment 	Features	Confidence
+
+Makwa		5		 3		3		3	
+Parallel	0		 5		0		3
+
+
+9. Final Remarks:
+=================
+
+The portability of the reference implementations (endianess problems)
+is a non-issue for me. The PHC is about selecting password hashing
+schemes. After that has been done, fixing the implementations is not a
+big deal.
+
+The above writing reflects my personal bias. I'd like to stress that I
+didn't try to tweak the criteria such that the outcome for Catena is
+good! The design choices we (the Catena team) made for Catena reflect
+our (and, speficitcally, my) priorities, and the criteria I applied
+for all PHC candidates are based on the same priorities, of course.
+
+
+</CATENA>
+
+<ARGON2 author="Dmitry">
+
+---------- Forwarded message ---------
+From: Dmitry Khovratovich <khovratovich@...il.com>
+Date: Sun, Jun 21, 2015 at 1:32 PM
+Subject: Fwd: PHC
+To: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>, Alex Biryukov
+- UNI <alex.biryukov@....lu>
+
+
+
+Hi Jean-Philippe,
+
+Briefly speaking Catena-Dragonfly is still vulnerable to the same  tradeoff
+attack that we showed last summer. Below we summarize several advantages of
+Argon2i (default t_cost=3) over Catena-Dragonfly (default lambda=2):
+
+ 1) Argon2i is about three times as fast. On our 1.8 GHz machine it hashes
+128 MB of RAM in 0.2 seconds, whereas Catena-Dragonfly spends 0.5 seconds
+on the 2.5 GHz CPU (as reported). The independent benchmarks by Milan Broz
+demonstrate a similar performance advantage by Argon2i.
+Catena-Dragonfly-Full is 5-6 times as slow.
+
+2) Argon2i supports multi-threading and can run twice as fast using
+multiple threads, which Catena does not offer at least for the moment.
+
+3) Argon2i is much more secure to tradeoff attacks. The computational
+penalty using our best algorithms is 2^12 for using 1/2 of memory, 2^22 for
+using 1/3 of memory and so on, whereas for Catena-Dragonfly these numbers
+are 4 and 6 (linear function of the memory reduction factor). Even an
+adversary with a number of parallel cores would spend much more area for
+the cores than for the area already if the memory is reduced by the factor
+of 3. Therefore, the time-area product for Argon2i can be reduced by 3 at
+best, whereas for Catena-Dragonfly it can be reduced by the factor of 25.
+The attack giving this reduction is a small modification of our first
+attack on Catena, and we attach the description.
+
+4) [our biased view] Argon2i is also simpler. The original Catena was very
+simple, but the current version has too many parameters so that it is
+difficult to understand how a concrete instance works.
+
+5) Argon2i comes with a faster data-dependent version Argon2d essentially
+for free (little change in specification and code).
+
+6) Using two Blake2b rounds instead of one, Argon2i has twice larger
+computing-time hardness for the same memory parameters as Catena-Dragonfly.
+
+To be fair, we can list also the advantages of Catena as we see it:
+
+1) Longer history and thus more third-party analysis.
+
+2) Built-in support for standard cryptographic hash functions.
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+</ARGON2>
+
+
+

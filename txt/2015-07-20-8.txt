@@ -1,0 +1,193 @@
+phc-discussions - Re: [PHC] winner selection (Makwa)
+
+Message-ID: <20150720213229.GA13268@bolet.org>
+Date: Mon, 20 Jul 2015 23:32:29 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] winner selection (Makwa)
+
+On Fri, Jul 17, 2015 at 06:56:17AM -0500, Steve Thomas wrote:
+This is super embarrassing I can't find this email on the list, but I do have
+this draft from April. Just checked the gmane archive and it's not in there
+either... Oops.
+
+I remember why I never sent this. When I finished my analysis on
+delegation another two algorithms for delegation were announced. So I
+wanted to read those before I sent this, but I forgot I never sent
+this. Wow that PDF wasn't that hard to read. Back's scheme prevents
+this attack at a cost of 14 to 20 times more work. The optimized
+back's scheme is susceptible to this attack but it's easier to test
+for. I guess you can ignore "the only useful in these two cases" and
+requirements now that delegation isn't broken.
+
+There may still be some misunderstanding to dispell though. I'll just
+reiterate a few points:
+
+ - Shortcut and escrow are about the same thing. An efficient shortcut
+   allows for an efficient dictionary attack, and we care about password
+   hashing (as opposed to regular hashing) precisely because efficient
+   dictionary attacks work well.
+
+   I am well aware that the term "escrow" is prone to trigger some
+   reactions. It is unpopular. Your position, for instance, appears to
+   be that escrow is bad because escrow is BAD; this is a tenable
+   philosophical postulate, though not necessarily universal. The notion
+   of a shortcut was in the call for candidates (I did not invent it) so
+   I provide it as a feature; the way Makwa works merely highlights what
+   I said in the previous paragraph: the power to shortcut is really a
+   power to unescrow, and should be treated as such (i.e. a very
+   sensitive private key). It is not that Makwa is "broken by design";
+   it is only the inevitable consequence of a shortcut, regardless of
+   the design.
+
+   Notably, pre- and post-hashing do not change things substantially
+   here. With these extra (fast) hashing steps, the shortcut is still an
+   efficient shortcut, and dictionary attacks still apply.
+
+   Also notably, computing a HMAC with a secret key is NOT a "shortcut".
+   The notion of a shortcut is that you can compute a hash value faster,
+   but that you could also have computed otherwise, without knowledge of
+   the shortcut secret. A shortcut naturally relates to asymmetric
+   cryptography (and, on cue, Makwa really is Rabin-like asymmetric
+   encryption). Your nifty comparison array:
+
+        .                 | Makwa               | Secret key
+        ------------------+---------------------+-------------------
+        Secret not leaked | Takes t_cost time   | Can't do anything
+        Secret leaked     | Takes constant time | Takes t_cost time
+
+   ... does not actually make sense. A shortcut is not the same as
+   some secret key MAC. This is another feature which was hitherto
+   absent from existing password hashing solutions. It has its own
+   characteristics -- that you are free to like or dislike, in any
+   context; but basic comparison like that does not really apply.
+
+
+ - The really important word here is OPTIONAL. When you say that a
+   private key may "leak", there is a very simple and easy method _not_
+   to let it leak: simply never save it in the first place. All of Makwa
+   (including delegation) can work without that private key residing
+   anywhere. Thus, the shortcut/escrow is really a feature that you can
+   ban forever, if that is your thing.
+
+   This does raise the question of how to generate the modulus with
+   guarantee that the private key is not saved anywhere. To my
+   knowledge, there is no "mathematical" method to do so, but even if
+   there was, how would you trust that a modulus you see was really
+   generated with such a method ?
+
+
+ - As you point out, the delegation parameters may be "rigged" if
+   whoever generates them has malicious intent. There are many ways to
+   turn "weak" knapsacks into seemingly strong ones, and many asymmetric
+   encryption schemes have been designed on that idea (many were broken,
+   too, because such hiding is not easy at all). The multiplicative
+   knapsack can be deemed strong only as long as the basis was really
+   generated randomly.
+
+   This is mostly the same situation as the modulus. Normally, you
+   generate the parameters at the same time as the modulus itself (it is
+   more efficient when the factors are known, i.e. at modulus generation
+   time), so if you have a way to trust the modulus (e.g. you generate
+   it yourself) then the same way applies to the parameters.
+
+   The expected model for an authentication server is that the server
+   admin will generate both the modulus and a set of delegation
+   parameters. The delegation parameters and modulus are NOT expected to
+   be obtained from the delegation server -- the server to which you
+   delegate computations is hired muscle but it not expected to have any
+   kind of storage, and would not be trusted for that anyway.
+
+
+ - Back's scheme applies to a rather different concern. We envision here
+   a model where some machine A knows the password (e.g. an
+   authentication server to which the password was conveyed) and wants
+   to obtain the hash thereof, and delegates the bulk of the computation
+   to machine B, in a context where B will not see the resulting hash
+   value or even anything related to it. For instance, the hashing is
+   done to derive a symmetric encryption key K, and the attacker
+   (machine B) will not see K or even anything encrypted with K. We want
+   here to prevent B not only from obtaining the password, but also from
+   obtaining anything that can serve as a test for an offline dictionary
+   attack.
+
+   We may note here that learning the factors would NOT help that
+   attacker -- which is enough to show that this is not the same attack
+   model as the whole shortcut/escrow thing.
+
+   In my scheme, such an attacker is defeated by the hardness of solving
+   the multiplicative knapsack. While this seems to be a strong problem
+   (generically, knapsacks are NP-complete, and multiplicative knapsacks
+   have been around for about two decades and are still well and alive),
+   some people fear that an attacker _in that model_ with infinite
+   computing power could solve the knapsack (repeatedly) and use that to
+   extract an offline dictionary attack test from delegation
+   requests+answers. Back's delegation scheme defeats even that kind of
+   godly attacker (that's what "information theoretic" is about).
+
+   It turns out that the storage requirements for Back's delegation
+   scheme are light (only one generator, instead of 300 pairs of values)
+   so you may want to use that delegation method if you are very short
+   on local (unprotected) storage (by "unprotected" I mean that it is
+   not _confidential_ data; I am not talking about integrity).
+
+
+In the specification I list three contexts in which delegation is useful:
+
+ 1. A server that authenticates users (the common model on today's Web)
+    and wants to hire extra muscle for the hashing.
+
+ 2. A server that authenticates users (still the same model) and wants
+    to enlist other, already connected clients in the hashing process.
+
+ 3. PAKE protocols.
+
+In both contexts 1 and 2, the server that authenticates users just
+_sees_ the passwords when users send them, so if that server was
+malicious it could just write them down. In these contexts, the same
+server would naturally generate its own modulus at installation time,
+and produce the delegation parameters at the same time (it may also
+generate them later on, but in any case it will save the result
+locally). There is no trust issue here. These are the main contexts in
+which I expect Makwa to be most useful and most used (if it gets used at
+all). I don't see how (and you don't tell how) these contexts are "weak"
+when using delegation.
+
+
+The PAKE model is more interesting. In all generality, a PAKE protocol
+is a mutual authentication relatively to a shared secret value (of
+possibly low entropy). Such a protocol will use a number of parameters;
+some will be known a priori by the relevant parties (e.g. the knowledge
+that this specific PAKE protocol is to be used, and the implementation
+of it); others can be validated as per the course of the protocol. For
+instance, when doing SRP, there is a modulus, and the two parties must
+trust that the modulus is not "rigged" to make discrete logarithm
+easier; if the server sends is to the client and the client just trusts
+it, then a fake server could send a rigged modulus and then use the
+client answer to run an offline dictionary attack. Thus, the problem
+of making sure that "parameters" are good and honest is already present,
+and if a PAKE protocol is to be used at all then there must be a
+solution for that. Makwa merely jumps on that train: whatever method
+is used to ascertain that the parameters are trustworthy can be used
+for Makwa's modulus and delegation parameters as well.
+
+
+------------------------------------------------------------
+
+To make a short summary: it is true that Makwa uses parameters (modulus,
+parameters for delegation...) and the proper generation of these
+parameters is important for security. In many contexts this is not a
+problem (basically, whoever is in need for these parameters to be
+trustworthy is also who generates and stores them).
+
+In the case of PAKE protocols, in some specific contexts (a client with
+a single implementation, connecting to many distinct servers with
+distinct parameters, and no room for local storage of these parameters),
+this _is_ a problem, but not a new one -- it already existed beforehand.
+I don't think your signature-based system makes much sense: if the
+client has an asymmetric key pair, then why do a PAKE at all ? Some
+SSL-like protocol will be quite easier.
+
+
+	--Thomas Pornin
+

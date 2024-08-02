@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in
+ browsers
+
+Message-Id: <1390078766343.3a249192@Nodemailer>
+Date: Sat, 18 Jan 2014 12:59:26 -0800 (PST)
+From: "Stephen Touset" <stephen@...set.org>
+To: discussions@...sword-hashing.net
+Cc: "discussions" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Native server relief support for password hashing in
+ browsers
+
+My original idea behind the blakerypt session key was to defeat cache analysis.
+
+
+However, the Catena guys seemingly have a much better approach than mine, which doesn't require the hash to be keyed, so I have effectively bowed out of the competition to make room for the professionals here who know what they are doing. :)
+-- 
+Stephen Touset
+stephen@...set.org
+
+On Sat, Jan 18, 2014 at 12:15 PM, Andy Lutomirski <luto@...capital.net>
+wrote:
+
+On Sat, Jan 18, 2014 at 12:03 PM, Bill Cox <waywardgeek@...il.comwrote:
+>On Sat, Jan 18, 2014 at 2:44 PM, Tony Arcieri <bascule@...il.comwrote:
+>>I suggested to Brendan Eich (via Twitter) that browsers directly implement
+>>server relief for password hashing functions:
+>>>
+>>https://twitter.com/BrendanEich/status/424282367335731201
+>>>
+>>I think it'd be pretty cool if that happened!
+>>
+>I agree.  One thing I haven't figured out is how to do Blakerypt style
+>session key protection with server relief.  A Blakerypt session key is
+>a secret associated with the password which is decrypted with a secret
+>master key on the server.  So long as it remains a secret, off-line
+>brute-force attacks become impractical.  It's an awesome extra level
+>of protection for servers that implement it.  The problem is how can
+>we keep the session key secret if we broadcast it to clients?  I
+>suspect this is solvable...
+>>
+What protection does this offer above the following simple scheme:
+Choose a random key k.  Store it in an HSM.
+Server stores, for each user, (username, salt (etc), E_k(password
+hash)).  HSM has a primitive that takes E_k(password hash) and the
+hash and tells you whether they match.
+For even more fun, an HSM instead implement the server end of SRP or
+another augmented PAKE given E_k(the verifier).  That verifier could
+be based on an expensive hashed version of the password.
+Of course, once you have HSMs in the picture, one wonders whether
+expensive hashing is needed at all.
+--Andy
+
+

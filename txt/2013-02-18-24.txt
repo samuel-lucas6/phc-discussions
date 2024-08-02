@@ -1,0 +1,21 @@
+phc-discussions - Coding of the in[inlen] array for PHS( )
+
+Message-ID: <000101ce0e23$af8f9570$0eaec050$@acm.org>
+Date: Mon, 18 Feb 2013 14:02:45 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: Coding of the in[inlen] array for PHS( )
+
+The ASCII/non-ASCII about desirable test vectors suggest that being character set sensitive is permissible.  (That is how Java screwed up PBKDF2).  I suspect that is not intended.
+
+To be clear about it, I suggest specifying in[inlen] to be a sequence of storage units in in[0] to in[inlen-1] progression and that is all there is to know about it.  It is probably necessary to specify that the values must be between 0x00 and 0xFF as well (just in case the storage units are larger).  If the array is blocked into words in some manner internal to PHS, the tranformation should be explicit without assumption of some big/little-endian orientation.  (Ditto for the out[outlen] of course.
+
+It is best to consider that, within those constraints, the in[inlen] array consists of arbitrary values, whether or not indistinguishable from random.
+
+I don't think *anything* about character set encoding and whether or not the password that is used is well-formed in any way should cross the API barrier.  It seems to me that reproducible use of PHS() falls on the external application.  The application needs to ensure that the same password value is coded in response to the same password text entry (if that is the scheme) on the part of an user or user agent that enters via a different path.  That's where any constraints need to be. 
+
+In this way, it is entirely admissible to submit hashes to the function, as when extending an existing system to use the stronger PHS( ) by feeding it the hash previously retained by an authenticating service.  This is a way to upgrade without requiring knowledge of any password that produced the hash (or some indistinguishable from random) value being extended.  (The previous hash now becomes an intermediate value in the extended derivation.)
+
+ - Dennis
+
+

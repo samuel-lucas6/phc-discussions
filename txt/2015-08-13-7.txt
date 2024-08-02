@@ -1,0 +1,114 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CAOLP8p65RGstAvG7jmVAuc53moOKeug3Owz47xL+aiME43_rJg@mail.gmail.com>
+Date: Thu, 13 Aug 2015 08:44:49 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Alex Biryukov - UNI <alex.biryukov@....lu>, Daniel Dinu <dumitru-daniel.dinu@....lu>
+Subject: Re: [PHC] Argon2 improvement thread
+
+Awesome!  News of integrating MAXFORM is what I needed to see before
+promoting the algorithm.  I'll commence my promotion now... :)
+
+Also, I agree with Krisztián Pintér that a lower-level API should be
+provided, along with a higher level wrapper.  The Catena team provided the
+best framework, and many good ideas for what to put in it.  My preference
+would be to take most of Krisztián Pintér's ideas above, and see what the
+Catena team can come up with for a proposed framework.
+
+However, a simple API should also continue to be provided, to simplify
+porting to applications and languages where the whole framework is not
+needed.  By the way, I want to see one more feature in that API:
+
+- A flag to run Argon2i for a while, and then a bit of Argon2d.  This
+hybrid mode at a higher level has value, IMO.
+
+One more point:  The judges in this competition seems to have punted on the
+issue of side-channel-resistance vs offline attack resistance.  As a
+result, users are now going to have to decide on this issue on their own.
+It turns out that this will cause many arguments in a lot of places!  I
+think we may have done the world a bit of a dis-service here.  A hybrid
+mode flag seems to be an answer that can bring some of these arguments to a
+close.
+
+Bill
+
+On Thu, Aug 13, 2015 at 8:18 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Just for the information: we are now refactoring the code by eliminating
+duplicate code, merging 2d and 2i, integrating new API, fixing the
+endianness issues, adding license information, etc. Any changes in the
+specification will be reported separately. The new code will have BlaMka
+and new indexing function available by default, and the MAXFORM
+transformation available via #define.
+>
+Best regards,
+the Argon team.
+>
+>
+>
+On Thu, Aug 13, 2015 at 3:30 PM, Krisztián Pintér <pinterkr@...il.com>
+wrote:
+>
+>i proposed earlier to leave any such maintenance task to an outer
+>layer. i'm not even sure it needs standardization at all, especially
+>not within the scope of PHC.
+>>
+>in particular:
+>>
+>1, i propose not doing allocation within the hash function at all.
+>memory should be void* parameter to a buffer to use. rationale: there
+>are different ways of allocating memory. on embedded systems, there
+>might be no heap at all, and there might be different kinds of memory
+>(internal, external, etc). only the caller knows how to allocate and
+>then properly clean a memory block.
+>>
+>2, i propose taking the password and the salt in a pre-padded, fixed
+>size block. rationale: it might be not straightforward how to copy the
+>password from a buffer in a manner that does not leak the password
+>length. if the password is hashed, hashing leaks length like nothing
+>else. padding is of utmost importance.
+>>
+>3, there is no need to implement a separate verify interface.
+>rationale: verification is supposed to be a timing-safe comparison,
+>and can be or already is provided by other libs.
+>>
+>4, if the algorithm provides server relief, the interface should
+>reflect to that, and have two parts, pass 1 and pass 2, which are
+>supposed to be chained together when server relief is not used.
+>rationale: usage modes belong to the outer layers, the core should be
+>as simple as possible (but not simpler). there is no need for a
+>function that combines the functionality of other two functions.
+>>
+>5, the result should be a binary of the designed length. no encoding
+>or parameter-prepending is necassary. rationale: it is the task of the
+>outer layers. it might be unnecessary to store the parameters at all,
+>as they might be fixed. an implementor might be short on storage, or
+>must put the hash in 16 bytes space for back-compat.
+>>
+>i personally don't care too much about any additional optional
+>interfaces, as long as the core, as explained here, is exposed.
+>>
+>>
+>On Thu, Aug 13, 2015 at 3:08 PM, Dmitry Khovratovich
+><khovratovich@...il.comwrote:
+>I would rather enable scrubbing in the extended API to simplify the
+>default
+>one. The extended API can then have a boolean flag to clean all the
+>inputs
+>immediately after they are used.
+>>
+>Maybe there are other opinions on that? So far only a few people
+>participated the API discussion...
+>>
+>
+>
+>
+--
+Best regards,
+Dmitry Khovratovich
+>
+
+
+

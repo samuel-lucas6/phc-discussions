@@ -1,0 +1,66 @@
+phc-discussions - Opinions sought on whether a specific side-channel leakage is ok.
+
+Message-ID: <CA+aY-u5TJ6=GLUd5rgF4MR+7TSaT7LzO8Jj=AnEzPoXZyUHSDg@mail.gmail.com>
+Date: Mon, 27 Jan 2014 15:20:55 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Opinions sought on whether a specific side-channel leakage is ok.
+
+Without exposing too much of my intended design, I'd like to garner some
+opinion if that is possible.
+
+As a specific feature of my design, I'm intending on adjusting the
+computational & memory work requirement based on password complexity, in a
+somewhat probabilistic manner.
+
+So, lets say we can associate a given password with a scalar password
+complexity measure in the interval [0,1] with an as yet to be defined
+distribution.  To keep things nice and fair, lets assume that upon a
+password registration with password complexity p_c the algorithm calculates
+an interval [p_min,p_max], 0 < p_min < p_c < p_max < 1, st. the integral
+over the distribution from p_min to p_max is kept at a fixed global
+constant and the interval is, intuitively at least, centred around p_c.
+ Now, as a final step, the algorithm chooses a random value within
+[p_min,p_max], say p_r, and determines a computational & memory work
+requirement deterministically based on p_r, for example a function w: [0,1]
+-R where w(p_r) maps the complexity measure to something tangible.
+
+Each password complexity measure is kept a secret and after registration of
+a password is not known even to the server.  This allows another little
+trick that very much benefits the defender but isn't relevant here, only
+that the complexity measure is considered secret.
+
+The consequence of this model is that the defender can force weak passwords
+to take considerably more work per password guess, thus ameliorating much
+of the problem of users picking poor passwords.  Instead of an attacker
+being able to get some proportion of passwords almost guaranteed, they'll
+have to work just as hard for the low entropy passwords as the high entropy
+ones while the defender doesn't - on average - face any computational
+disadvantage, assuming login frequency is not dependent on password
+complexity and that I get my maths correct (which is dubious given I can't
+concentrate due to the pile-driving going on in the building site next
+door... the whole building is thumping at around 1Hz).
+
+The problem - and it's a not an insignificant problem - is that there is a
+rather obvious side-channel: the time taken to compute a valid login
+betrays some information about the password complexity.  Given password
+complexity is at least partially related to length, it may fall foul of the
+call for submission guideline:
+
+*"Resilience to side-channel attacks (timing attacks, leakages, etc.). In
+particular, information should not leak on a password's length."*
+
+The algorithm doesn't leak password bits, it only leaks a password
+complexity range that may give some information as to password length or a
+fairly large set to which the password may belong.  The other item to note
+is that repeated measurements don't give more information, the best an
+attacker can do is invert w() to get p_r, and get a rough idea of the range
+[p_min,p_max] but they cannot accurately determine p_c.  The interval
+p_min,p_max would be controlled by the previous mentioned fixed constant
+with obvious implications.
+
+The question is, whether this is an acceptable trade-off, at least as an
+optional feature?
+
+
+

@@ -1,0 +1,67 @@
+phc-discussions - Large memory block hash primitives?
+
+
+Message-ID: <CAOLP8p4=zae9X89jhKkL9SGkWJ1L9V9LROQCmadZ7-ddiHoeKg@mail.gmail.com>
+Date: Sun, 16 Mar 2014 14:36:33 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Large memory block hash primitives?
+
+I am considering splitting out the large block hashing algorithm in
+TwoCats as a primitive function on it's own, which could be passed to
+the higher level password hashing frameowrk.  I think Scrypt and
+related memory hashing schemes could be implemented with such a
+pluggable large block hashing function.
+
+A large block hash function in my world looks like:
+
+    Block hash2Blocks(SecureHash H, uint8 key[], Block block1, Block
+block2, uint32 blocklen,
+        uint32 subBlocklen, uint8 lanes, uint32 repetitions)
+
+where Block is large block of memory, typically 1KiB to 16KiB in my
+tests, and H is a cryptographic hash function such as SHA256 or
+Blake2s.  Key is matched in block-length of the hash function H, so 32
+for SHA256 and Blake2s, and 64 for SHA512 and Blake2b.  This function
+takes two large blocks, hashes them together, updates the key, and
+returns the new large block.  Blocklen is just the block length in
+bytes, and subBlocklen is the length of pseudo-random sub-block memory
+accesses, which should be equal to blocklen if password dependent
+memory addressing is avoided.  Lanes is a parallelism parameter meant
+to match the SIMD units on modern processors, and should be 1 for code
+that does not support SIMD units.  Repetitions unfortunately needs to
+be passed into the large block hash function to increase hammering L1
+cache in a world where write-through caches are common.  The block is
+only written on the last repetition of block hashing.
+
+A key feature of hash2Blocks is that it may implement a custom fast
+non-cryptographic hash function for hashing memory, and only call H at
+the end.
+
+Another large block hash that is common takes just one block and
+returns a new hashed block:
+
+    Block hash1Block(SecureHash H, uint8 key[], Block block, uint32
+blocklen, uint32 subBlocklen, uint8 lanes)
+
+Given these two large block primitives, I think I could implement
+Scrypt, Catena, Escrypt, and TwoCats - all the memory hard frameworks
+I've looked at.  I'm tempted to label them the way we do in our C APIs
+with PBKDF2.  Something like:
+
+    Hash2Blocks_Catena
+    Hash2Blocks_Script
+    Hash2Blocks_TwoCats
+
+Hash2Blocks_Catena and Hash2Blocks_TwoCats would take any hash
+function primitive, while Script uses Salsa20/8.
+
+One reason to consider large block hashing primitives is there may be
+some good ones embedded in hashing frameworks such as Escript that
+could be useful on their own.  Catena, in particular, could benefit
+from a richer set of large block hashing primitives rather than
+settling for 64-byte primitives that suffer from substantial
+cache-miss penalties for large memory sizes.
+
+Bill
+

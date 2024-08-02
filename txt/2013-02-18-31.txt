@@ -1,0 +1,146 @@
+phc-discussions - Re: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <CAEw2jfzOr8nFSnjWorBVcZd4yJfVWb3FjF8NpBLHLvrugZNssA@mail.gmail.com>
+Date: Tue, 19 Feb 2013 00:38:31 +0100
+From: Patrick Mylund Nielsen <patrick@...rickmylund.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Any "large verifiers" on the panel?
+
+Oh, the wonders of top-posting.  I can't even comment on that paragraph because
+it is unclear what exactly you were referring to. ;-)
+
+That attackers are compromising servers and sniffing passwords over the
+wire, waiting for re-authentications, rather than just grabbing the
+database.
+
+Actually, dealing with online attacks is not always that easy - in particular,
+if we consider that some may target password reuse from other sites.
+
+Sure, but if you actually get the username and password right, the PHC
+can't protect you anyway. My point was that it should not be the focus of
+the PHC to be resistant to online (slow) attacks since that is not where
+we're hurting the most, currently.
+
+Now, one can argue that a local parameter stored in the exact same place with
+the hashes is useless, and I agree - in cases where it's just an implementation
+obscurity, the false sense of security aspect may outweigh the arguable
+advantage of some attackers naively missing the local parameter.
+...
+Thus, the wording of in the call for submissions: a secret local parameter
+is allowed as an optional input, but its support is not required from PHC
+submissions.  It's then up to each individual submissions' authors to
+include this functionality or not, according to their beliefs, ease of
+inclusion of an extra parameter within their design, etc.  I think this is
+how it should be.
+
+This is the point I was trying to get across: It wouldn't hurt to be able
+to strengthen the construction somehow by using a secret that is stored
+elsewhere, but the security of the algorithm should not be contingent upon
+it.
+
+This is a simplistic/idealistic view.  We're dealing with a problem where
+we don't have the luxury of possibly arriving at a perfect solution anyway.
+ Why should we discard other imperfect security measures, then?
+
+I'm not sure if I was unclear here: PHC needs to resist offline attacks
+since we can assume that the database of verifiers/digests will be
+compromised at some point. I don't think this is simplistic/ideal, just
+realistic.
+
+
+
+On Tue, Feb 19, 2013 at 12:27 AM, Solar Designer <solar@...nwall.comwrote:
+
+On Mon, Feb 18, 2013 at 09:54:01AM +0100, Patrick Mylund Nielsen wrote:
+Except this is not what happens today.
+>
+Oh, the wonders of top-posting.  I can't even comment on that paragraph
+because it is unclear what exactly you were referring to. ;-)
+>
+What does happen, and what absolutely hurts the most, is when somebody
+gets
+a hold of your entire database of (weak) digests and cracks them on their
+own or dumps them in a pastebin, e.g. without the usernames. The PHC
+schemes, IMHO, really need to be resistant to this.
+>
+Yes, PHC is precisely about coming up with password hashing schemes that
+mitigate offline attacks.
+>
+We _already have_
+effective ways to resist online attacks--exponential backoff, bans, even
+captchas...
+>
+Actually, dealing with online attacks is not always that easy - in
+particular, if we consider that some may target password reuse from
+other sites.  Some large sites are having a hard time dealing with
+online attacks:
+>
+http://lists.openwall.net/full-disclosure/2012/05/17/11
+https://ripe64.ripe.net/presentations/48-AbuseAtScale.pdf
+https://speakerdeck.com/u/duosec/p/mike-hearn-at-ripe-64-abuse-at-scale
+>
+It's just beyond scope of PHC.
+>
+To give an example: Blizzard Entertainment got a huge level of flak from
+the tech, and even the crypto, communities for using SRP when their
+verifiers were compromised, as people realized that SRP protects against
+MITM attacks, not offline attacks:
+>
+http://arstechnica.com/security/2012/08/hacked-blizzard-passwords-not-hard-to-crack/
+>
+Sure.  SRP does not solve the problem that we're trying to focus on here.
+>
+IMHO, it is a more useful exercise to think about leveraging clients,
+e.g.
+for key derivation,
+>
+It is OK to discuss this in PHC context, but how does it affect the
+actual PHC submissions?  Well, scalability (via the cost settings) to
+mobile devices is relevant, and it may contribute to us choosing one
+password hashing scheme over another as a winner.  However, in order to
+actually do the hashing on the client, a suitable protocol would need to
+be used.  (And the security offered by that will vary across protocols,
+as well as across actual implementations, both client- and server-side.)
+I feel that as it relates to PHC winner selection, only the password
+hashing scheme scalability aspect is relevant.
+>
+than more secrets on the server side. The servers will be compromised.
+>
+This is a simplistic/idealistic view.  We're dealing with a problem
+where we don't have the luxury of possibly arriving at a perfect
+solution anyway.  Why should we discard other imperfect security
+measures, then?
+>
+A password hashing scheme that is more costly for an attacker to compute
+will result in that attacker cracking fewer passwords.  Similarly, a
+password hashing implementation with a secret local parameter will
+result in some attackers ending up with hashes, but not the local
+parameter value.  In either case, the overall number of passwords
+getting cracked - across multiple sites and attackers - is reduced.
+Thus, support for a secret local parameter is in line with the goals of
+PHC.
+>
+Now, one can argue that a local parameter stored in the exact same place
+with the hashes is useless, and I agree - in cases where it's just an
+implementation obscurity, the false sense of security aspect may
+outweigh the arguable advantage of some attackers naively missing the
+local parameter.  However, there are also cases where it won't be stored
+in the exact same place, and a subset of reasonable attacks will likely
+get to the hashes, but not to the local parameter value.  In PHC, we're
+merely providing password hashing schemes that are usable with a local
+parameter.  We do not control whether such uses will be reasonable or
+not.  Yet discouraging such uses in general just because some are
+unreasonable is not necessarily good.
+>
+Thus, the wording of in the call for submissions: a secret local
+parameter is allowed as an optional input, but its support is not
+required from PHC submissions.  It's then up to each individual
+submissions' authors to include this functionality or not, according to
+their beliefs, ease of inclusion of an extra parameter within their
+design, etc.  I think this is how it should be.
+>
+Alexander
+>
+
+
+

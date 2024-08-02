@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p6vCsqEP9AxANZyrNGnw_4DZwr9+-tX44bAJgsbAv2tdA@mail.gmail.com>
+Date: Wed, 26 Feb 2014 16:18:26 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Wed, Feb 26, 2014 at 12:22 PM, Bill Cox <waywardgeek@...il.comwrote:
+I'm going to reintegrate multiplication back into the memory hashing
+threads and eliminate the multiplication hardening thread.  At least
+for Haswell, a single scalar multiply and XOR seem to run nicely in
+parallel with AVX2 memory hashing, even at L1 hashing speeds.
+>
+I'm going to make an option for between 0 and 8 multiplications per
+256-bits of memory hashing.  0 would be useful for applications where
+multipliers are very slow or not available and have to be emulated, or
+if the CPU has no multiple instruction issue capability, meaning any
+multiplies add directly to user's runtime.  1 seems like a good match
+for AVX2 running in L1 cache, and I'm guessing 2 will be good for SSE.
+ For hashing into external memory, up to 8 seems reasonable.
+
+I've succeeded!
+
+It took some crazy optimization for Haswell, but I now get 0 to 8
+scalar multiplies per inner loop of memory hashing - 32 bytes worth
+(just 3 AVX2 instructions in the body of a for loop), without slowing
+down the memory hashing unless I set the number of multiplications too
+high.  For running out of L1 cache, Haswell is so fast, it didn't have
+time for even 1 multiplication in the loop, and an if-statement around
+the multiplication loop slowed it down too much.  So, wrote a wrapper
+function around the block hash algorithm with a switch statement on
+the number of multiplies, and I passed a constant to hashBlocks in
+each case.  The compiler was smart enough to in-line the multiplies
+the correct number of times, with 9 different versions of the
+subroutine.  Now 0 multiplies runs as fast as before I integrated the
+multiplication loop into hashBlocks.
+
+Bill
+

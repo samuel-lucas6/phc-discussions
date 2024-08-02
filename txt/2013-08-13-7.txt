@@ -1,0 +1,39 @@
+phc-discussions - RE: [PHC] C99 in reference implementations
+
+Message-ID: <39d25bd4efca450993c0827c0823a867@BLUPR03MB166.namprd03.prod.outlook.com>
+Date: Tue, 13 Aug 2013 02:08:03 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] C99 in reference implementations
+
+*Proposed* guidance for developers/submitters:
+
+Developers ought to be able to count on ...
+
+#include <stdint.h>
+
+... as making available ...
+
+intN_t, uintN_t, for 8 <= N <= 32 (and N a power of 2 obviously)
+
+... in the global namespace.
+
+So you should be able to avoid having to work this out yourself or make assumptions about the size of int/long/longlong.
+[Rationale: It's 2013. Pre-stdint.h compiler users can adapt.]
+
+Calls to malloc()/free() ought to be the preferred method of acquiring and releasing memory for memory-hard functions.
+[Rationale: They are the standard method and easy to swap out if needed]
+
+Developers should use a function like secure_wipe(p, n) to wipe sensitive data from memory before free()ing. This can be defined like:
+void secure_wipe(void * p, size_t cnt_bytes)
+{
+    // TODO use SecureZeroMemory or equivalent on platforms which provide it.
+    memset(p, 0, cnt_bytes);
+}
+[Rationale: see http://blogs.msdn.com/b/oldnewthing/archive/2013/05/29/10421912.aspx ]
+
+Will this work for everyone?
+
+- Marsh
+
+

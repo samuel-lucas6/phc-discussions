@@ -1,0 +1,87 @@
+phc-discussions - POMELO
+
+Message-ID: <20141017071700.GA10421@openwall.com>
+Date: Fri, 17 Oct 2014 11:17:00 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: POMELO
+
+Hi,
+
+I first brought this up as part of a broader discussion of PHC
+candidates on the panel list earlier this month, and I think it's my
+duty to post it to the public discussions list.  So here goes.
+(I am reusing pieces from two of my postings to the panel list, and
+adding some more content/clarifications here.)
+
+POMELO claims to be resistant to SIMD attacks.  First, I think we need
+to clarify: this may only apply if the hardware lacks efficient gather
+loads - a detail which may be obvious, but is somehow missing from the
+author's analysis.  A lot of current and planned general-purpose chips
+(AVX2 and AVX-512 capable CPUs, Xeon Phi, many GPUs) do have gather
+loads (of varying efficiency), so I think this must not be omitted.
+In the below paragraph, I assume that hardware does lack efficient
+gather loads:
+
+I think POMELO partially fails at anti-SIMD, despite of claims in its
+specification document.  It defeats SIMD for defense (if we don't
+consider hashing multiple passwords within one instance, which is
+cumbersome and is a risk), but not as much for attack.  In fact, I think
+there's a tradeoff here as it relates to possible POMELO tweaks (if
+limited to the currently hard-coded parameters): it can defeat SIMD more
+fully, but become even less suitable (slower) for large memory hashing.
+
+Samuel Neves confirmed the understanding that "POMELO does seem to allow
+some vectorization" (_not_ relying on gather loads), and asked for more
+detail on the tweak I had in mind.  Here it is:
+
+I meant simply making those data-dependent accesses in H more frequent,
+by removing the "i mod 4 == 3" condition or making this a tunable
+parameter ("i mod freq == (freq - 1)" or "i mod freq == 0").  Maybe G
+should have the same tweak applied, or maybe not (or maybe it should
+have its access frequency tunable separately).
+
+Comparison of POMELO tweaked as above against bcrypt and other schemes,
+not limited to the SIMD aspect (will also apply for MIMD, as long as
+global memory is accessed and behaves similar to how it does on current
+CPUs and GPUs):
+
+Since F takes roughly as much time as a Blowfish round does (but F lacks
+data-dependent accesses), doing one data-dependent access per H
+invocation (rather than one per four H invocations, as it is done now)
+means that step 6 will perform these accesses "only" ~4 times less
+frequently than bcrypt does (as opposed to ~16 times less frequently, as
+is the case now), but at the same amount of parallelism that bcrypt has
+(since the four Blowfish S-box lookups can be performed in parallel).
+As a result, step 6 will become about as local memory attack resistant
+as bcrypt is, but still ~4x less resistant (than bcrypt) to global
+memory attacks (as long as the memory usage per instance is low enough
+that we don't bump into total global memory size).  Since a half of the
+total running time will be spent in step 4, overall POMELO with this
+tweak and at bcrypt-like defensive memory usage might be ~2x weaker than
+bcrypt at local memory attacks and ~8x at global memory attacks.  Of
+course, it is meant to be used at higher m_cost - in fact, m_cost = 0
+corresponds to 8 KiB, which is twice the bcrypt's size.  8 KiB should
+actually work fine on typical defenders' systems, but once we exceed L1
+cache size, POMELO with this tweak should see performance impact similar
+to what we see with Pufferfish - well, maybe up to ~4x lower impact,
+though, because the data-dependent lookups are ~4x less frequent.  It
+will take some benchmarking to see at what m_cost settings such tweaked
+POMELO is fast enough compared to other PHC candidates.  Not tweaking G
+or otherwise making its access frequency much lower than H's may help
+here (making step 4 take considerably less time than step 6 does).
+
+One aspect I have not considered in the analysis above is that POMELO's
+data-dependent accesses in H are read-writes, as opposed to bcrypt's
+pure reads.  This may make POMELO up to 2x more resistant to some of the
+attacks above (where it'd mean twice more accesses over the memory bus),
+but it may also mean that it'd run somewhat slower defensively than it
+would with pure reads.  Yet I think these read-writes are a good idea
+at least when POMELO is used at low m_cost (corresponding to L1 cache).
+
+Overall, I like POMELO's simplicity and it trying to work well over a
+wide range of possible m_cost settings, yet I think this combination (of
+simplicity and wide range) makes it sub-optimal at most settings.
+
+Alexander
+

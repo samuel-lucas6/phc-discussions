@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 modulo division</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALW8-7KU=MMutw6y3YdNa7d27_bkv54-bkR12NdxJ=gf+mWQYQ&#64;mail.gmail.com&gt;
+Date: Wed, 29 Apr 2015 15:51:01 +0200
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Argon2 modulo division
+
+HI Alexander,
+
+thank you for the detailed analysis.
+
+We indeed have considered changing the addressing in Argon2d/i  (I
+think I mentioned it in an earlier e-mail) after we analyzed
+multi-pass TMTO resistance.
+
+However, the uniformity would not be the goal, but rather the higher
+computational/depth penalties for an attacker.
+
+All the tradeoff methods I have tried accumulated highest penalties in
+latest blocks. Therefore, the latest blocks should be asked rather
+more often - but not always (sliding window), as then the attacker
+would not store the first blocks at all.
+
+So if W(i) is the expected penalty for i-th block, the probability to
+request it should be proportional to 1/W(i).  The problem is that the
+computational penalty C(i) and depth penalty D(i) grow differently
+(the latter almost linearly), so only one of penalty types can be
+maximized that way.
+
+We planned to have a small report on this idea and subsequent
+modification to Argon2, but other deadlines have pressured on us
+recently.
+
+Dmitry
+
+On Wed, Apr 29, 2015 at 3:29 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Tue, Apr 21, 2015 at 06:26:31AM +0300, Solar Designer wrote:
+&gt;&gt; It appears that Argon2 uses modulo division with arbitrary (and
+&gt;&gt; changing) divisors (usually not powers of 2).  Argon2d applies this to
+&gt;&gt; secret-dependent integers.  This is an extra source of timing leaks, on
+&gt;&gt; top of secret-dependent lookup addresses.
+&gt;&gt;
+&gt;&gt; Do we consider this a drawback?
+&gt;&gt;
+&gt;&gt; TwoCats had this too, but I avoided this maybe-drawback in yescrypt.
+&gt;
+&gt; Another aspect of Argon2's approach, and an aspect that both yescrypt
+&gt; and TwoCats tried to address in different ways, is the highly
+&gt; non-uniform memory access pattern.
+&gt;
+&gt; I've just analyzed the block indices from 1 GB runs of Argon2d and
+&gt; yescrypt, both at lowest supported t_cost.  In yescrypt's case, I
+&gt; excluded from analysis its initial 1/64 m_cost (thus, 16 MB)
+&gt; sub-invocation, which it does to mitigate garbage collector attacks.
+&gt; (If included, it'd obviously show a higher hit rate to the first 16 MB
+&gt; portion.  But that's only 1/65 of the running time.)
+&gt;
+&gt; For Argon2d, I got 1048573 total indices, of which 524095 are unique
+&gt; (that's about 50% as expected for its algorithm).  Here's the histogram
+&gt; of access count by memory region (1 GB split into 50 regions).  (I hope
+&gt; your mail readers don't mangle it too badly.)
+&gt;
+&gt; 9.81%
+&gt; O
+&gt; O
+&gt; O
+&gt; O
+&gt; O
+&gt; Oo
+&gt; OO
+&gt; OOo
+&gt; OOO
+&gt; OOOO
+&gt; OOOOO
+&gt; OOOOOOo
+&gt; OOOOOOOOo
+&gt; OOOOOOOOOOo
+&gt; OOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOooo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOoooo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOooooo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoooooo
+&gt;
+&gt; As you can see, almost 10% of accesses go to the first 2% of memory.
+&gt; Here's a smaller, 4 column 10 row histogram showing distribution by
+&gt; quarters of the total memory:
+&gt;
+&gt; 59.67%
+&gt; O
+&gt; O
+&gt; O
+&gt; O
+&gt; O
+&gt; Oo
+&gt; OO
+&gt; OO
+&gt; OOO
+&gt; OOOO
+&gt;
+&gt; As you can see, almost 60% of accesses go to the first quarter.  And for
+&gt; halves of the total memory we get:
+&gt;
+&gt; 84.71%
+&gt; O
+&gt; O
+&gt; O
+&gt; O
+&gt; OO
+&gt;
+&gt; So attackers have fairly strong incentive to provide faster memory for
+&gt; lower block indices and slower, cheaper, or/and more distant memory for
+&gt; higher indices.
+&gt;
+&gt; For yescrypt, I got 1398100 total indices (723841 unique, or 69% of the
+&gt; 2^20 range), including 1048574 (595780 unique, or 56.8%) in SMix1 and
+&gt; 349526 (297265 unique, or 85% of these or 28.3% of the 2^20 range) in
+&gt; SMix2 (running for 1/3 of N).
+&gt;
+&gt; For SMix1 alone, which is most directly comparable to the Argon2d run
+&gt; above, the histograms are:
+&gt;
+&gt; 3.96%
+&gt; OOo
+&gt; OOOOo
+&gt; OOOOOOOo
+&gt; OOOOOOOOOo
+&gt; OOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt;
+&gt; 43.73%
+&gt; O
+&gt; O
+&gt; Oo
+&gt; OO
+&gt; OO
+&gt; OOo
+&gt; OOO
+&gt; OOO
+&gt; OOOo
+&gt; OOOO
+&gt;
+&gt; 74.99%
+&gt; O
+&gt; O
+&gt; O
+&gt; OO
+&gt; OO
+&gt;
+&gt; As you can see, there's also significant bias towards lower addresses,
+&gt; but it's not as bad as in Argon2d.  (And from the algorithm we know that
+&gt; it actually achieves uniform access across the smaller sliding window,
+&gt; which gives us a lower bound on the achieved non-TMTO area-time product.)
+&gt;
+&gt; For example, the hit rate for the first 2% of memory is reduced from
+&gt; 9.81% for Argon2d to 3.96% for yescrypt's SMix1.  For memory halves,
+&gt; it's 84.71% and 15.29% for Argon2d, vs. 75% and 25% for yescrypt SMix1.
+&gt;
+&gt; For the sake of completeness, here are histograms for yescrypt's SMix2:
+&gt;
+&gt; 2.04%
+&gt; OoOOOOOOOOoOOOOOoOoOOOOOOOOoOOooOoOo oOOOOOOoOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt;
+&gt; and for SMix1 and SMix2 combined:
+&gt;
+&gt; 3.48%
+&gt; OOoo
+&gt; OOOOOo
+&gt; OOOOOOOoo
+&gt; OOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOoo
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt; OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+&gt;
+&gt; Indeed, for SMix2 and for higher t_cost uniform access becomes easy, in
+&gt; Argon2 too.  It's the initial memory filling where non-trivial tradeoffs
+&gt; exist.
+&gt;
+&gt; Dmitry, maybe you'd consider adopting yescrypt's Wrap() or TwoCats'
+&gt; "cubed distribution" for Argon2?  You've already seen that Wrap()
+&gt; improves TMTO resistance, too.
+&gt;
+&gt; Bill, you could want to show how TwoCats behaves in this respect.
+&gt; I guess it'd win over yescrypt, since I guess you specifically chose
+&gt; the "cubed distribution" to achieve an overall closer to uniform
+&gt; distribution, whereas I focused on achieving exactly uniform
+&gt; distribution for the smaller sliding window, increasing the number of
+&gt; unique indices (the 56.8% figure above, vs. Argon2d's 50%), as well as
+&gt; avoiding the modulo division for reasons stated before.  ... or did you
+&gt; tune for higher TMTO resistance rather than for uniformity per se?
+&gt;
+&gt; Alexander
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Specification of a modular crypt format (2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/10/10/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/10/09/10">[&lt;thread-prev]</a> <a href="../../../2015/10/12/4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5619A8E1.4000202&#64;openwall.com&gt;
+Date: Sun, 11 Oct 2015 03:10:09 +0300
+From: Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-10-09 16:55, Peter Gutmann wrote:
+&gt; [Several replies combined into one, since I'm not sure how on-topic it still
+&gt;   is :-)].
+&gt;
+&gt; Alexander Cherepanov &lt;ch3root&#64;...nwall.com&gt; writes:
+&gt;
+&gt;&gt; [ftrapv]
+&gt;&gt;
+&gt;&gt; Yes, a nice option. Beware though that it doesn't work in 64-bit mode for gcc
+&gt;&gt; at least up to version 4.9:
+&gt;
+&gt; In any case the ftrapv behaviour (crash the program) is worse than useless,
+&gt; when you've got code that checks for overflows and handles them you want the
+&gt; checks to not be removed, not to be given the option to have your program
+&gt; crash.  So the difference between gcc and gcc -ftrapv is that the former
+&gt; produces braindamaged behaviour, the latter does the braindamage and then
+&gt; crashes your program as well.
+
+-ftrapv is great for testing (e.g. under fuzzer) or for code which 
+checks for overflows before operations and hence any overflow means a 
+bug in the program. If you want wrapping use -fwrapv.
+
+&gt;&gt; Maybe just fix bugs in the code?:-) Seriously, some recent tools make it
+&gt;&gt; easier. First of all, run your test suite with valgrind, Address Sanitizer
+&gt;&gt; and Undefined Behavior Sanitizer. Raise code coverage with a fuzzer (e.g.
+&gt;&gt; American Fuzzy Lop) and, perhaps, KLEE.
+&gt;
+&gt; I already do all of that,
+
+Are you sure? When I run testlib from cryptlib 3.4.3 compiled with '-m32 
+-fsanitize=undefined' I get:
+
+crypt/sha2.c:342:37: runtime error: left shift of 128 by 24 places 
+cannot be represented in type 'int'
+crypt/castenc.c:96:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/castenc.c:130:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5skey.c:117:11: runtime error: shift exponent 32 is too large 
+for 32-bit type 'long unsigned int'
+crypt/rc5enc.c:167:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:224:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:164:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:170:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:221:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:227:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:163:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:163:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:228:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:228:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/castenc.c:88:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/castenc.c:138:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:166:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:168:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+crypt/rc5enc.c:170:2: runtime error: shift exponent 32 is too large for 
+32-bit type 'long unsigned int'
+etc.
+
+Or let's see how the overflow in the excerpt you posted can be caught. 
+We don't have a test suite so let's use AFL to generate some samples. 
+And we need a wrapper which reads a line from stdin in a string "str". Then:
+
+1) compile with afl:
+
+$afl-gcc -o gutmann_num gutmann_num.c
+
+2) prepare input samples (any garbage will do in our case):
+
+$ mkdir in
+$ printf 0 &gt; in/zero
+
+3) run afl and wait for "cycles done" to become green (or at least 
+blue), then Ctrl-C:
+
+$ AFL_SKIP_CPUFREQ=1 afl-fuzz -i in -o out ./gutmann_num
+
+(afl generates 25 samples in 10 minutes and after 25 minutes turns green 
+due to not finding any more interesting samples);
+
+4) compile with ubsan:
+
+$ gcc -O2 -fsanitize=undefined -o gutmann_num_ubsan gutmann_num.c
+
+5) run all samples found by afl against ubsan:
+
+$ for file in out/queue/*; do echo "$file"; ./gutmann_num_ubsan &lt; 
+"$file"; done
+
+get this:
+
+[...]
+out/queue/id:000018,src:000015,op:havoc,rep:2,+cov
+gutmann_num.c:23:17: runtime error: signed integer overflow: 400040000 * 
+10 cannot be represented in type 'int'
+out/queue/id:000019,src:000015,op:havoc,rep:2
+out/queue/id:000020,src:000015,op:havoc,rep:4,+cov
+gutmann_num.c:23:17: runtime error: signed integer overflow: 2000000001 
+* 10 cannot be represented in type 'int'
+out/queue/id:000021,src:000007+000011,op:splice,rep:32
+[...]
+
+Easy, huh?
+
+I've used gcc 4.9 here which doesn't have an option to crash on ubsan 
+errors. With newer gcc or clang you can fuzz directly with ubsan.
+
+&gt; and also cppcheck, clang, Coverity, Klocwork,
+&gt; Prefast, and some others.  Problem is that (a) gcc breaks code faster and more
+&gt; effectively than any analyser can find things and (b) most developers don't do
+&gt; this, which means they can't even try to work around gcc's problems.  I hate
+&gt; to think how much code out there is broken by gcc, with no-one the wiser...
+
+BTW, according to [1], "even gcc 2.95.3, released in 2001," will exploit 
+UB of signed integer overflow for optimization, so it's not some recent 
+problem. This blogpost also mentions an interesting option 
+-Wstrict-overflow. With it, you can see at least some checks that gcc 
+optimizes away.
+
+[1] <a href="http://www.airs.com/blog/archives/120" rel="nofollow">http://www.airs.com/blog/archives/120</a>
+[2] 
+<a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wstrict-overflow-420" rel="nofollow">https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wstrict-overflow-420</a>
+
+&gt;&gt; Then use tools like Clang Static Analyser and cppcheck. Then proceed to
+&gt;&gt; STACK[3], Frama-C etc.
+&gt;
+&gt; That really doesn't scale.  I already perform what I'm sure most developers
+&gt; would agree is an insane amount of analysis on my code, and still can't catch
+&gt; all the things that gcc does to it.  What's worse, no matter how much analysis
+&gt; I perform, I can never be sure that I've managed to counter all the things
+&gt; that gcc will end up doing to it.  I can't imagine that any project built
+&gt; under time/commercial pressures could afford to invest this amount of effort
+&gt; into fighting what gcc does to their code.
+&gt;
+&gt; (Some time ago, one of the leads at Coverity said at a talk that they invest
+&gt; something like 80% of their effort not into creating more code to find
+&gt; problems but doing things like getting rid of false positives due to warnings
+&gt; that are technically valid but that most people would agree are unnecessary.
+&gt; In other words they recognise that Doing the Right Thing helps users more than
+&gt; quoting dogma at them and breaking things like the gcc folks do.  Other
+&gt; vendors like Fortify handle this a bit differently, they rank things by
+&gt; severity but don't put so much effort into FP suppression, so when you look at
+&gt; the lower grades of warnings you get so many of them that you mostly end up
+&gt; just skipping them.  Not saying that this is necessarily a bad thing, but I
+&gt; prefer the Coverity approach to the Fortify one).
+
+You seem to overly concentrate on static analysis. Perhaps try more 
+dynamic analysis?
+
+&gt;&gt; just start with the usual suspects
+&gt;
+&gt; Already doing that, but it's pretty sad that I need to add -fdont-break-my-code
+&gt; flags just to get the compiler to not break my code.  And just because you and
+&gt; I know that these flags exist doesn't mean that everyone else does, so they'll
+&gt; still get caught
+
+What are alternatives? Not breaking _any_ code probably means that no 
+changes in compilers are possible at all. If there is a buffer overflow 
+in a program which happens not to touch anything important, should this 
+program be kept working no matter what? There should be some formal 
+description which you could rely on. Why there is no specification for 
+such a variant of C?
+
+The only specification that I know is C standards -- C89, C99, C11 
+(modulo corrigenda etc.). And they are (un)surprisingly consistent -- 
+you cannot overflow signed integers, you cannot dereference NULL, you 
+cannot access objects as another type (with some exceptions), you cannot 
+shift values by their width etc.
+
+If you don't aim at standards-compliance your code is doomed to be 
+broken by compilers.
+
+In fact, there is some activity in this area -- [3][4]. But if you "have 
+to support pretty much every compiler under the sun" it will not of much 
+help to you even if these initiatives yield tangible results.
+
+[3] <a href="https://www.cl.cam.ac.uk/~pes20/cerberus/" rel="nofollow">https://www.cl.cam.ac.uk/~pes20/cerberus/</a>
+[4] <a href="http://blog.regehr.org/archives/1180" rel="nofollow">http://blog.regehr.org/archives/1180</a>
+
+-- 
+Alexander Cherepanov
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

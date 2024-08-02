@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <53345AD6.8070105@bindshell.nl>
+Date: Thu, 27 Mar 2014 10:07:34 -0700
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On 3/27/2014 9:55 AM, Solar Designer wrote:
+Jeremi,
+>
+On Tue, Mar 25, 2014 at 01:39:58AM +0400, Solar Designer wrote:
+>OK, maybe it makes sense to apply this approach to L2, despite of the
+>inefficiency.  Or maybe not.  Typical L2 is 256 KB/core (it has actually
+>decreased in size when L3 was introduced), meaning 64 KB/thread may be
+>"safe" to use.  At this size, my guess is you give advantage to some GPU
+>attackers vs. your typical defender, for the reason explained above.
+I did some testing with escrypt's S-boxes, and things are reasonably
+good.  For the first few doublings of S-box size, beyond L1 cache size
+but still fitting in L2 cache, there's only a ~10% performance hit per
+doubling on Sandy Bridge-EP.  It's not worse than that in part because
+escrypt also does some L2/L3/RAM accesses anyway, so there's some L1
+cache thrashing going on anyway.  For pufferfish, the slowdown per
+doubling of S-box size might be a bit higher (although I guess it'd
+start only with 16 -32 KiB), but perhaps not terribly so.  1 MiB total
+memory, 2 threads/core, slowdown by S-box size:
+[...]
+I stopped this at 128 KiB since going beyond 256 KiB combined for the
+two threads is "unsafe" for many CPUs, so higher values are probably not
+reasonable due to higher risk of incurring unacceptable slowdowns after
+migrations to other/future systems.  Indeed, we could test them anyway.
+>
+This is for AVX builds of current development escrypt.  The random
+lookups are 128-bit wide, made with AVX instructions.  They're uniformly
+distributed over the S-boxes of the sizes given above.
+
+Thanks, this is helpful. Is your code for escrypt public yet?
+
+Also, I added a jtr patch for the reference implementation of pufferfish
+to my github repository:
+
+https://raw.githubusercontent.com/epixoip/pufferfish/master/jtr/pufferfish-ref.diff
+
+I'm working on an optimized version now, and hopefully if time permits,
+a GPU version.
+
+Jeremi
+

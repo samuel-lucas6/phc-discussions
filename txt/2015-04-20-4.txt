@@ -1,0 +1,84 @@
+phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Message-ID: <CALW8-7+Lp4EvrK1Uo8ST+Nkr5ucdLKRzif+86xkv+17D408Z+Q@mail.gmail.com>
+Date: Mon, 20 Apr 2015 23:08:42 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Hi Alexander,
+
+thank you for investing so much effort into improving Argon2. Your
+contributions are sound, and they will indeed do the job of latency
+increase.
+
+First, I would like to better understand your reasoning of having
+S-boxes. For me, S-boxes in such ARX schemes look quite ad-hoc, and I
+want to get the right reason before introducing them. So my questions
+are:
+1) Are S-boxes only an anti-GPU countermeasure? As I understand, they
+should not be problem for FPGA and ASICs where the small-size S-boxes
+can be fit into the low-latency memory. Glanced at your recent
+bcrypt-FPGA paper, I suppose that FPGA would be a reasonable choice
+for any attacker and almost any scheme. If yes, then why bothering
+with S-boxes?
+2) If my logic is wrong, then how many S-box lookups per memory block
+(or per CPU cycle?) would you want? Maybe there can be an elegant
+solution then?
+
+Apart from S-boxes, the most natural way to increase the latency would
+be chaining the Blake permutations and integrating high-latency
+operations into them. It is a good question how to chain properly, and
+we are still working on it.
+
+Regarding your benchmarks, the impact of extra operations on 8 threads
+is so low, I guess, because the bottleneck is the memory bandwidth
+rather than the CPU.
+
+We thank you again for the patches, but just want to think a bit more
+on the most optimal update.
+
+
+On Mon, Apr 20, 2015 at 8:41 PM, Solar Designer <solar@...nwall.comwrote:
+Dmitry, all -
+>
+>
+I now put the high 32 bits of the final output of the multiplication
+chain into state[0]'s low 32 bits, which I think are then used for phi:
+>
+                phi = _mm_extract_epi32(prev_block[0], 0);
+>
+BTW, this SSE4.1 intrinsic (found in original argon2d-opt-sse.cpp) may
+be replaced with SSE2's _mm_cvtsi128_si32().
+
+Thanks for the advice (and the previous ones).
+
+>
+Since we have 8 parallel BLAKE2b's, it may be elegant to split our
+64-bit chain as 8 one-byte inputs/outputs into each BLAKE2b (perhaps in
+addition to using 32-bit values in state[0] and state[63]).  We could
+also merge them in-between the two groups of 8 BLAKE2b's.  Would this
+help increase the latency of tradeoff attacks?  Without thinking of this
+much yet, my gut feeling is that it won't, but it'd be some additional
+state information that is normally not stored, and that the tradeoff
+attacks will need to store (or they'd in fact incur a latency increase).
+Very little of it, though.  So probably not worth the overhead.  Yet I
+thought I'd bring this up for discussion.
+
+This discussion needs drawing and thinking. Ideally I would want a
+tradeoff-resistant solution
+be understandable just in mind, without pen and paper.
+
+>
+To increase the latency of tradeoff attacks, I think BlaMka may be used
+(along with an un-pwxform chain like this, which serves its different
+purpose - hardening non-tradeoff latency and providing some anti-GPU).
+>
+If using BlaMka, why extra xform chain?
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

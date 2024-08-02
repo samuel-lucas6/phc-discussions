@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Updated tests document
+
+Message-ID: <20150416140530.GA15171@openwall.com>
+Date: Thu, 16 Apr 2015 17:05:30 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Updated tests document
+
+Hi Milan,
+
+On Thu, Apr 16, 2015 at 08:53:00AM +0200, Milan Broz wrote:
+I tried to hack something, it is not perfect but it could provide some overview,
+but please take it with a grain of (non-crypto) salt :-)
+
+This is very helpful.  Thank you!
+
+You're benchmarking via the PHS() interface, right?  For authentication
+servers, a mode with reuse of a previous memory allocation also makes
+sense.  We should keep in mind that schemes demonstrating high hashes
+per second rates may be made even faster on such server setups, as well
+as during attack.  Improvements e.g. from 2000 to 3000 hashes/second at
+1 MB are possible in this way.
+
+yescrypt offers an API for this.  I think others currently don't.  It's
+probably fair not to add this sort of benchmarks yet (and it would be
+too much work for you to create the necessary APIs or hacks), but it's
+something to keep in mind.
+
+- using memory table from Steve (128k/1M/16M/128M)
+
+OK.
+
+- test forks N processes, parent waits 60 seconds (in this tests) and then
+*waits* for all children to finish the last hash (this time is measured).
+I am using SHM quite stupid way here to sync it, but it works it this case.
+
+Sounds fine, but I didn't look at the code.
+
+(Pufferfish and Argon1 on 100MiB run time exceeds 60 seconds, so measurement
+is really not reliable here.)
+
+Ouch.  Overall, per these results I think Pufferfish and Argon1 (without
+AES-NI) are out as potential winners for this use case.  They might
+still be used like that when a higher hashes/second rate is not needed
+anyway, but I think we must not select them as PHC winners as they are
+not general enough.  (And of course Pufferfish needs a bug fix before it
+can be used above 2 MB.)
+
+battcrypt and Catena-Butterfly are borderline.  I thought battcrypt
+would perform better.  Maybe there's room for code optimization.
+
+(Moreover, all hashes all the same but this should not be a problem.)
+
+Do you mean you're repeatedly hashing the same passwords?  This may
+potentially affect the speed figures.  I suggest that you correct this.
+
+For example, yescrypt's userom.c benchmark uses a time-dependent
+sequence of integers as passwords.
+
+- it increases # processes up to 8, 4 cpu it should not add anything.
+
+Actually, 4 CPU may increase speeds further if one instance of the
+hash doesn't have enough instruction-level parallelism in it and going
+for 2 concurrent threads/core would not exceed a cache size.  OTOH, it
+may also decrease speeds if we're just crossing a cache size there.
+So I appreciate you including such benchmarks as well.  It's useful to
+know that all of the benchmarked schemes behave reasonably in the 4 to 8
+threads range.
+
+I also added yescrypt with reduced 2 PWXrounds to repo, but I guess it makes sense only
+for "normalized" test chart...
+
+I think it's of as much relevance to this one as well.
+
+Also, I'd like to see Makwa added, perhaps to the 128 KB chart.
+
+Thanks again,
+
+Alexander
+

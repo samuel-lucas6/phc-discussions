@@ -1,0 +1,231 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <20140324213958.GA4289@openwall.com>
+Date: Tue, 25 Mar 2014 01:39:58 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+Jeremi,
+
+On Sun, Mar 23, 2014 at 08:07:09PM -0700, Jeremi Gosney wrote:
+I appreciate you taking the time to comment in spite of how busy you
+are. And I'd much rather see you submit escrypt than spend time
+discussing my submission.
+
+Thanks.  I will comment on a few things I can comment on quickly, but I
+will skip others.
+
+Well, you could accept that performance would drop when you no longer
+fit in L1 cache, hoping that attackers would have a similar performance
+hit anyway.  
+
+Yes, that's the idea.
+
+A risky one.  As I mentioned in another message today, you'd end up
+competing in terms of bandwidth (yet wasting most of it), and servers
+might end up losing to GPU cards.
+
+A longer while ago, I also mentioned (in a discussion with Bill on this
+list) that we had an implementation of bcrypt in OpenCL using global
+memory - in fact, Sayantan wrote it before switching to use of local
+memory.  IIRC, it ran at about 2k c/s for $2a$05 on HD 7970.  That's
+only twice slower than the implementation using local memory.  Now guess
+what happens if you exceed L1 cache with bcrypt-like lookups on a CPU:
+you can easily incur more than a 2x performance hit.  Yet a similar
+implementation on GPU would not incur any additional performance hit,
+unless and until you get to much larger required memory sizes per
+instance, so the total global memory size would become a limiting factor
+(would be insufficient to hide global memory latency, or even to use all
+computing resources).  The result is that pufferfish at memory cost
+settings in the range of ~32 KB to ~1 MB (warning: these are rough
+guesstimates) quite possibly favors GPU attacks over CPU defense, on
+currently common CPUs and GPUs and quite possibly also on many future
+ones.  That's the opposite from what you intended.
+
+There was some uncertainty regarding bcrypt-opencl with global memory
+benchmarks on HD 7970.  This gives a range of 1000 c/s to 2400 c/s:
+
+http://www.openwall.com/lists/john-dev/2012/07/10/30
+
+We did not investigate further since by that time we had already
+switched to using local memory, and were only still considering use of
+global memory as a possible extra (to achieve a greater combined speed,
+but that approach didn't fit in OpenCL, at least not with our possibly
+naive attempts).
+
+Unfortunately, I haven't found info on how much global memory we were
+using (what the optimal GWS setting was, and how much performance would
+drop at lower settings).  This info would let us estimate at what per
+instance size we'd bump into total global memory size (and would start
+incurring a performance hit).  Maybe it's somewhere in the archive, or
+maybe we/you can dig up the old code (or write new code) and re-test.
+
+This may be true for attackers with CPUs and GPUs, but
+perhaps not with ASICs.  Maybe that's OK, but this raises the question
+of why deviate from bcrypt at all if it's not against ASICs.  Well,
+maybe that's in case future/bigger GPUs are better at attacking bcrypt,
+which is likely, but not at attacking your scheme.
+
+Correct. The goal of pufferfish is to defeat next-generation GPUs and
+manycore CPUs.
+
+I'm afraid it's somewhat too likely to fail at that goal.  On GPUs,
+global memory might be faster than servers' RAM, even despite of this
+nasty access pattern, unless you bump into total global memory size.
+On many-core CPUs, it might (or might not, I admit) be possible to
+access other cores' local memory.  This is possible on Epiphany, but I
+think not on other current many-core archs.  So while defender with a
+typical server incurs 512-bit cache line loads from L2/L3/L4/RAM into
+L1, attacker with Epiphany will have only the actually requested 64-bit
+quantities transferred from nearby cores' local memory.
+
+On the other hand, when transferring from L2 on some modern CPUs there
+might not be much of an advantage in terms of clock cycles (but much
+more in terms of energy efficiency, which may allow for higher density).
+That's because those buses inside a CPU may actually be 512-bit wide,
+and so what if 448 of those bits are transferred in vain (that's just
+extra heat), and L2 cache access latency is comparable to Epiphany's
+latency for accessing distant cores (whether those will need to be
+accessed, or only the quicker L1 cache like latency nearby cores,
+depends on pufferfish memory cost settings).  And when pufferfish is
+tuned such that it doesn't fit in L2, probably it will also not fit in
+Epiphany's local memory (or will result in way too few cores being
+usable for computation).
+
+On Epiphany, I think you have 3 cycle latency (same as L1 on current x86
+CPUs) from 4 nearby cores (and 1 cycle from core's own local memory).
+With 32 KB/core, this gives 160 KB of L1 cache speed memory (but wastes
+4 cores' computing resources).  That's 10x higher than what current x86
+defenders have per thread.
+
+Summary: it's not obvious whether pufferfish will achieve its goal.
+I guess this will vary greatly by settings and by attack platform.
+
+The idea is that one would use just enough memory to
+force the use of global memory, and unlike blowfish, this can be
+increased as cache sizes increase.
+
+Which cache sizes increase?  L1 mostly does not, especially not per
+thread - and we care about the per thread size here, since even with
+classic bcrypt multiple 4 KB's are used on servers at peak password
+hashing load due to concurrent authentication attempts.  Chances are
+that the number of hardware threads per core will increase some further,
+possibly as fast or faster than L1d size per core increases.  I am
+wondering if along with introduction with AVX-512 we'll possibly have
+4 threads/core on general-purpose Intel CPUs.  (Some similarities with
+Xeon Phi suggest so.)  And we already have 4 threads/core on recent
+POWER and SPARC CPUs.  I think UltraSPARC T1 (OK, that's not recent
+anymore) has only 8 KB L1d/core and 4 threads/core, giving us as little
+as 2 KB per thread.  POWER7 has 32 KB L1d/core and 4 threads/core,
+giving us 8 KB/thread.  That's same as 486 or original Pentium.
+
+OK, maybe it makes sense to apply this approach to L2, despite of the
+inefficiency.  Or maybe not.  Typical L2 is 256 KB/core (it has actually
+decreased in size when L3 was introduced), meaning 64 KB/thread may be
+"safe" to use.  At this size, my guess is you give advantage to some GPU
+attackers vs. your typical defender, for the reason explained above.
+
+Typical L3 is much larger, but at least on current Intel CPUs you can't
+efficiently use all of it from one core (trying to do so is sometimes
+slower than accessing RAM!) - you only have good efficiency for
+accessing the core's nearby portion of L3, which is around 2 MB.
+Luckily, you don't even want to use all L3 from one core anyway, since
+parallelism is naturally available at a higher level, and settings are
+to be tuned based on this potential peak request rate case anyway.
+Also, 2 MB might just be good enough for your purposes.  But would it
+run faster or slower than attacks on GPUs would?  Unclear.  L3 cache
+latency is substantial.  (L3 cache bandwidth is on par with GPUs' global
+memory bandwidth, if you use only the core's local L3 cache portion, so
+we're OK in this respect.)
+
+As to possible use of L4 (eDRAM) or RAM, you'd more likely lose to GPUs
+in terms of bandwidth, but you'd at some point have them bump into total
+global memory size.
+
+Tricky stuff.  This might happen to work well for some ranges of
+settings, but do we want to rely on it?
+
+The ASIC threat, IMO, is greatly overstated. Most adversaries that one
+might assume are using ASICs, or would consider using ASICs, are really
+just using CPUs and GPUs for most things. There are of course some
+exceptions, and due to NDAs and confidentiality agreements I cannot
+elaborate on this, but I think you'd be surprised how many entities rely
+on john and hashcat.
+
+OK.  I'm not surprised.
+
+ASICs are good to consider not only because they are a potential threat,
+but also because by considering ASICs we implicitly consider any other
+current and future pre-existing devices.
+
+That said, I am also of the opinion that we should continue to consider
+current and expected near-future pre-existing devices, and not only the
+potential worst case of ASICs.
+
+I also agree that it's good to have the size tunable.  I intend to have
+escrypt's bcrypt-like S-boxes of tunable size (but there may be
+specialized code versions for specific currently common sizes).  Right
+now, this means moving from bcrypt's 4 KB probably to 8 KB.  Desirable,
+but not a sufficient reason to introduce a new password hashing scheme.
+
+No, I don't mean to discourage you from submitting pufferfish anyway -
+please do!  Rather, you might or might not choose to enhance it such
+that it'd achieve more than this minor improvement.  In fact, when you
+have only a 2x improvement in size, it might be fully negated by your
+move from 32-bit to 64-bit accesses (that's twice higher bit-level
+parallelism, if you kept the number of S-boxes at 4) for some
+defender/attacker combinations (consider a 32-bit defender here).
+
+Maybe you can introduce
+tunable parallelism, though, so that once we finally have faster gather
+loads, those could be used for defense (and we'd use more L1 cache in
+that way).
+
+That is a possibility, and might be something I will consider for the
+tweaking phase.
+
+Here's an idea I had (and in fact am implementing in pwxform in escrypt):
+widen Blowfish such that only the lowest N bits (either 32 or 64) are
+used to derive S-box indices, and they'd drive the lookups for the rest
+of the vector width.  This allows to use wider vectors without requiring
+gather loads.  (In current escrypt, both this vector width is tunable,
+in terms of number of 64-bit lanes, and the number of such parallel
+vectors is tunable.  So it's possible to set it to use e.g. 4x 128-bit
+SIMD with first 64-bit lanes in each of the 4 sub-vectors driving the
+second 64-bit lanes - a setting suitable for recent pre-Haswell x86
+CPUs.  It is also possible to set it to use 8x 64-bit, benefiting from
+64-bit gather loads and having no different treatment for any lanes.
+And it's also possible to set it to 1x 512-bit, with one 64-bit master
+lane that drives the remaining 448 bits.  Going beyond 512-bit is also
+supported.  This is mostly compile-time in current code, but there's
+nothing preventing from making it runtime tunable, although specialized
+code versions would need to be present for good efficiency at particular
+common settings.)
+
+Add to that possibly frustrating the OpenBSD
+folks if we tried to build upon bcrypt too closely, and this becoming
+less reasonable if we deviate from bcrypt very far and introduce more
+crypto primitives.
+
+You might have to elaborate on this. The bcrypt code in OpenBSD is
+copyrighted by Niels Provos, but afaik David Mazieres didn't place any
+copyright on the algorithm itself, and pufferfish doesn't use any of the
+copyrighted code from bcrypt.c. In all sincerity, it is not my intention
+to ruffle any feathers.
+
+Oh, it's not about copyrights at all, but rather about possibly
+affecting bcrypt's reputation, and OpenBSD being upstream for bcrypt.
+
+I think pufferfish is sufficiently different, and importantly is
+sufficiently differently named, that this won't be an issue.  But if we
+wanted to build upon bcrypt closer, we'd need approval first.
+
+Good luck to you as well!
+
+Thank you!
+
+... and I failed at keeping this reply quick and short. :-(
+
+Alexander
+

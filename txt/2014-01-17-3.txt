@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <CAOLP8p5XMcmUgF_3JTLeMGiYN7MvLsFGNs2zB_T6=dz4VK-+_w@mail.gmail.com>
+Date: Fri, 17 Jan 2014 09:35:29 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Fri, Jan 17, 2014 at 8:02 AM, Ivica Nikolic <cube444@...glemail.comwrote:
+I have a question about a possible PHC design strategy:
+Assume the defender is sitting on a GPU and his/her KDF saturates the memory
+bandwidth. The look-up table used in the KDF is large and it does not depend
+on the password. How can an attacker achieve a speed up?
+
+Can I assume that the KDF does random lookups in memory based on the
+password?  The first problem, which isn't major IMO, is the attacker
+can fill memory once, and then make password guesses without spending
+the time or bandwidth to do it again.  Assuming each password guess
+the same time and bandwidth as filling memory in the first place, an
+attacker only gains a 2X advantage.  That's very good, really
+outstanding, IMO.  On the GPU, you might even be able to make enough
+use of all the cores to begin increasing an attacker's cost
+significantly.  On our CPUs, even 32 parallel multipliers is cheap
+compared to the cost of even 1GB of external RAM.  4096 multipliers in
+parallel begins to be interesting.
+
+Silicon in most processes costs around $0.05/mm^2.  Assume an attacker
+is paying $0.10/mm^2 for 22nm, and package/test takes it to $0.20/mm^2
+(a total WAG).  A carry-save adder is maybe 12 gates of logic, and we
+need around 16x32 of them, for around 6100 gates.  Assuming and-packed
+logic in 22nm does about 1,000,000 gates/mm^2, we can probably pack
+150 of them per mm^2.  4096 of them would cost around $5.50.  That's
+comparable to the memory cost.
+
+Assuming the defender has a high-end graphics card, he can get better
+protection using it.  Someone else will have to comment on whether
+cache timing attacks are even possible against a graphics card, but if
+they are, an attacker might be able to gain advantage by aborting
+incorrect password guesses early based on memory access pattern.  One
+thing to worry about is time-memory trade-offs.  If an ASIC attacker
+can reduce the external RAM 4X or more, and recompute the missing data
+in parallel with a few cores, he gains a major advantage.
+
+Bill
+

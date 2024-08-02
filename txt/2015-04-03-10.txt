@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Compute time hardness
+
+Message-ID: <20150403122511.GA25529@openwall.com>
+Date: Fri, 3 Apr 2015 15:25:11 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+On Fri, Apr 03, 2015 at 03:13:06PM +0300, Solar Designer wrote:
+Here's another relevant detail I recalled:
+
+Pentium 4 (some or all of them? not sure) had double-pumped ALU, where
+it could perform ADDs at double the clock rate (so up to 7.6 GHz, at
+stock clocks).
+
+http://www.anandtech.com/show/1611/7
+http://forums.anandtech.com/showthread.php?t=603812
+https://news.ycombinator.com/item?id=8255157
+http://en.wikipedia.org/wiki/NetBurst_(microarchitecture)#Rapid_Execution_Engine
+
+Apparently, this could only execute two dependent ADDs in a cycle if
+they are 16-bit each.  To me, this indicates that an ASIC would probably
+be able to do similar for 32-bit if it wanted to.
+
+... and even 64-bit, since latency of a carry lookahead adder grows less
+than linearly.  (I'd be interested to see actual latency vs. width data,
+but I couldn't easily find any.)
+
+So I think this confirms 8x-ish difference in latency between fastest
+ADD and MUL.
+
+Pentium 4 had two dependent (16-bit) ADDs per cycle at sub-4 GHz clock
+rate at 180 nm.
+
+Current CPUs need at least 3 cycles per MUL at sub-4 GHz clock rate at
+22 nm.  (AMD APUs that have 2 cycles per MUL run at ~2 GHz.)
+
+This suggests a 6x difference in latency if it were the same process and
+same bit width.  Given that 180 nm vs. 22 nm is probably more of a
+difference than 16-bit ADD vs. 64-bit ADD, I think 8x is more realistic.
+
+Also, there's some per-instruction latency cost in a CPU, unlike in ASIC
+(where there's no distinction between e.g. two ADDs that are part of a
+Blake2 round and two ADDs that are part of a MUL).
+
+Alexander
+

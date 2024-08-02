@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+Message-ID: <20140124013752.GA13104@openwall.com>
+Date: Fri, 24 Jan 2014 05:37:52 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+On Fri, Jan 24, 2014 at 12:57:22AM +0000, Marsh Ray wrote:
+Yep, the main value of a PHC function and the work factor is obtained only after the attacker learns one or more of the stored hash values. Otherwise all we'd ever need is a time-invariant memcmp().
+
+But we also can't regress (relative to time-invariant memcmp) in the other (hopefully usual!) case where the attacker does *not* know the stored hash value. So leaking meaningful information about salt or derived values via side channels (with an attacker-chosen password input) should be considered a weakness too.
+
+I agree.
+
+Salt-only-dependent lookups are to be avoided.  If/when the function
+does start making lookups based on heavily-processed-password, it is OK
+and desirable for all of those to be dependent on the salt as well.
+Then without having at least made a likely guess at the password, salt
+bits are not leaked.
+
+... which leads us to a new concern: what if the same-machine attacker
+without knowledge of the salts does make a likely guess at the password
+(e.g., guesses "123456", which might be correct with 1% probability when
+there's no password policy)?  This attacker can then try to infer salt
+bits, still not knowing whether the password guess was right or not.
+Then, having obtained (via cache timings) the possible salt _assuming_
+that the password was guessed correctly, the attacker can use further
+cache timing attacks to test whether the password guess was in fact
+correct or not.  If not, repeat for second most common password.  Nasty.
+
+Now what, do we resort to (postponed) indexing by only the password or
+only the salt?  I think not, as this seems to fully(?) kill the benefits
+of indexing by any secret at all, as compared to Catena's approach.
+With indexing by only one of {password, salt}, the cracker's inner loop
+may iterate over the other, and thus benefit from advance computation of
+indices for prefetching, meaning no memory latency dependency anymore.
+
+Looks like this is another aspect of the cache timing resistance vs.
+offline attack resistance tradeoff.
+
+Mitigating factor: the attacker will need to watch multiple legitimate
+logins to test each candidate password in this way.  This may only be
+feasible against really weak passwords, which are much quicker tested
+for by attempted logins (but this may be logged and rate-limited).
+
+Yeah. But let's be clear here that nothing can save users who choose such common passwords anyway, because any defender with 5,000 logins-per-reasonable-time will have chosen a work factor small enough to make that calculation practical.
+
+I interpreted your 10k as a specific example, with the general idea also
+relevant to more complicated passwords.
+
+Then, slowing down offline attacks even on hashes of top 10k common
+passwords makes some sense.  Sure, such attacks will be practical for
+almost anyone, but the percentage cracked e.g. by a single-computer
+amateur attacker on the first day may vary depending on how good or bad
+the hashing scheme is, and this affects what percentage of accounts are
+exposed to abuse (e.g. retrieval of additional private info from them)
+until the service provider is able to respond.  For example, with 100M
+accounts and a speed of 5000 c/s, it'd take 5.5 hours to test all of
+them for the password "123456".  So it's 1% cracked in 5.5 hours if
+there was no password policy.  That's awful (it's 1 million accounts!),
+yet it's by far not as bad as what it could be with fast hashes (e.g.,
+same attacker cracking over 50% in first hour).  Probing for "123456"
+could also be done online, so at least some minimal password policy is
+needed even without hash leaks, and this would make better password
+hashing even more relevant.
+
+Alexander
+

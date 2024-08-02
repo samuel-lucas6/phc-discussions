@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] yescrypt throughput vs. PWXrounds</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="23">[&lt;prev]</a> <a href="25">[next&gt;]</a> <a href="23">[&lt;thread-prev]</a> <a href="25">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150403201118.GA29002&#64;openwall.com&gt;
+Date: Fri, 3 Apr 2015 23:11:18 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] yescrypt throughput vs. PWXrounds
+
+On Fri, Apr 03, 2015 at 09:05:59PM +0300, Solar Designer wrote:
+&gt; rounds  2 MB            128 MB          2 MB + 2 GB ROM
+&gt; 6       2772 / 511      30 / 7          2592 / 486
+&gt; 4       3653 / 691      32 / 9          3269 / 647
+&gt; 2       5340 / 1077     33 / 13         4288 / 974
+&gt; 1       6454 / 1451     33 / 15         4760 / 1255
+[...]
+&gt; [...] claim that yescrypt achieves bcrypt-like frequency(*) of its
+&gt; S-box lookups and thus is at least as GPU-unfriendly as bcrypt even at
+&gt; the lowest m_cost settings.  Would being no more than 2x worse than
+&gt; bcrypt still be OK?  I'm not sure.  I would be uncomfortable about that,
+&gt; even though bcrypt isn't one of the PHC finalists. ;-)
+&gt; 
+&gt; (*) Also considered are parallelism of the S-box lookups and total size
+&gt; of the S-boxes.
+
+One way to compensate for the reduced number of rounds in terms of
+bcrypt-like anti-GPU is to double the size of the S-boxes.  With the
+S-boxes doubled from 8 KB to 16 KB, and PWXrounds = 2, I get 4212
+hashes/second instead of the 5340 hashes/second in the table above.
+This gives 2772*6 / (4212*2) = 1.97 reduction in compute hardening, but
+2772*6 / (4212*2*2) = 0.99 almost no change in bcrypt-like anti-GPU,
+both compared to the current defaults of 8 KB and 6 rounds.
+
+So it is possible to retain bcrypt-like anti-GPU at lower PWXrounds, but
+I am not happy about the almost 2x reduction in compute hardening.  And
+the speedup achieved with the reduced PWXrounds is less, because some of
+it is lost to L1 cache misses on the S-box lookups.  16 KB is a bit too
+large since we have other data as well (current block being processed).
+IIRC, the impact on Intel CPUs is less, though.
+
+At 128 MB, PWXrounds = 2 with 16 KB S-boxes gives 31 / 11, as compared
+to 33 / 13 in the table above (for 8 KB S-boxes).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

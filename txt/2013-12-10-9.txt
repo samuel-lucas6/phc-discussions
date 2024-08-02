@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] IETF draft
+
+Message-ID: <21743.1386702411@critter.freebsd.dk>
+Date: Tue, 10 Dec 2013 19:06:51 +0000
+From: "Poul-Henning Kamp" <phk@....freebsd.dk>
+To: CodesInChaos <codesinchaos@...il.com>
+cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] IETF draft
+
+In message <CAK9dnSyjQup4Dv9AnOxzWffFE1fgGfJc3-yQ7aj=y31KcJWZMg@...l.gmail.com>
+, CodesInChaos writes:
+
+You're missing the point, and I was probably at fault for being
+unnecessarily terse.
+
+	DB(hash(password))
+
+has no resistance to precomputation, so we add a salt:
+
+
+	DB(salt, hash(salt + password))
+
+That has resistance to precomputation, which increases with the salts entropy.
+
+If the database is stolen, any accidental salt+password collitions
+with previous collections would be useful.
+
+This was the major attack vector on the DES based unix crypt(3), and
+a particular vulnerability when people do the "here is my encrypted
+password for my new account" setup-routine.  (You should *always*
+reset your password on first login, even if you set it to the same
+thing, in order to get a different salt.)
+
+My 1994 proposal:
+
+	DB(salt, hash(site_key + salt + password))
+
+Frustrates that attack, even if the site_key is also stolen, because
+there will not be any salt collisions -- as the site_key is
+effectively a part of the salt.
+
+It also prevents the above method of setting up new accounts, forcing
+people through your password changing routine, which can enforce
+password quality, if that's your thing.  (Obviously you can allow
+first login on the transmitted hash(salt+password) and then force
+people to set a new password etc. etc.
+
+Your proposal:
+
+	DB(crypt(site_key, hash(salt + password)))
+
+Only protects against somebody stealing the harddisk with the
+encrypted database *provided* they don't get hold of the
+site_key.
+
+For the same attack scenario, DB+site_key, your proposal is back
+to hash(salt+password) and the exposure to salt+password collitions.
+
+That being said: If password databases are transported, even if
+they are hashed, they should be encrypted with a disassocited key.
+
+That is sort of what you propose, so your proposal is not
+without merit, it just doesn't adds a different kind of security
+than the IETF draft and my 1994 prior art.
+
+-- 
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe    
+Never attribute to malice what can adequately be explained by incompetence.
+

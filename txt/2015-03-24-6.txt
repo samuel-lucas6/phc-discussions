@@ -1,0 +1,92 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests
+
+Message-ID: <55110AEB.3050308@gmail.com>
+Date: Tue, 24 Mar 2015 07:57:47 +0100
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests
+
+On 03/24/2015 04:45 AM, Solar Designer wrote:
+To add to the proper thread:
+
+On Mon, Nov 10, 2014 at 10:21:22AM +0100, Milan Broz wrote:
+>On 11/10/2014 10:04 AM, Solar Designer wrote:
+>>On Mon, Nov 10, 2014 at 09:22:23AM +0100, Milan Broz wrote:
+>...
+>>> - Yescrypt seems to produce different hash for 32bytes length than for other requested lengths
+>>>   if it is intended
+>>>
+>>Yes, and yes.  256-bit (32 bytes) is a special case usable for
+>>yescrypt's builtin support for "server relief".  For other output
+>>lengths, that functionality is not applicable, so the corresponding
+>>post-processing is bypassed.  For uses of yescrypt that don't care about
+>>"server relief" (which most of them won't), this should not matter.
+>>
+>Ah, missed this. Thanks for explanation!
+
+This has changed in the tweaked yescrypt (currently listed as v1 on the
+PHC website).  While 256-bit is still the hash length to use for server
+relief (and now also for upgrades), it is no longer special in terms of
+(not) bypassing the corresponding post-processing (which is now invoked
+for any output length, even when it's not usable for server relief).
+
+>>(yescrypt-lite will probably only support 32 byte output, so will invoke
+>>those code paths unconditionally.)
+>>>
+>>>(and not my mistake) then probably PHS() should fail for other req. output
+>>>
+>>Why?  The PHC call for submissions doesn't say anywhere that PHS()
+>>output for a shorter length should be a prefix of its output for a
+>>longer length.  In other words, the requested output length might or
+>>might not affect any/all output bits.
+>>
+>Yes. But the "32 bytes special case" is IMHO confusing.
+
+OK, it no longer is a special case in this respect.
+
+>>In fact, now that you bring this up, I think a slight improvement might
+>>be to always have the requested output length affect all of the output
+>>bits, even if just to avoid any confusion of this sort ("hey, there's a
+>>special case here").
+>>
+>Exactly! I think if it is dependent of output length then it should
+>be for the whole set. But just my 2 eurocents... :)
+
+Since yescrypt is also able to compute classic scrypt, I opted to make
+it behave the same as classic scrypt does.
+
+Thus, yescrypt v1's output for a shorter length is always a prefix of
+its output for a longer length.  I'd appreciate you re-testing yescrypt
+for this property.
+
+Well, once you reopen this thread...
+
+Actually I already run this test for all 2nd round candidates
+but did not have time to polish & publish output yet
+
+(I tried to include all submissions including new Catena versions and Argon2 and
+if possible even SSE optimized versions.)
+
+The underlying code is "ready" (https://github.com/mbroz/PHCtest/tree/master/hash_libs
+with quilt style patches to show fixes).
+
+There are a lot of engineering issues (endianess, crashes, ...), I will try to send
+a list of them to the list today, it need more context comments.
+
+Thanks,
+Milan
+
+p.s.
+My intention is to test KDF (for usage in cryptsetup FDE) on some real use case
+so I will add that testcase output here. It was intended for some workshop paper later
+but probably it is better time to publish it here for now.
+
+
+This was the other way to avoid the confusion you brought up, different
+from what I initially proposed above.  Unfortunately, that initial
+proposal would result in inconsistent behavior for classic scrypt vs.
+native yescrypt modes.
+
+Alexander
+
+

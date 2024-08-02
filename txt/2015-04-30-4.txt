@@ -1,0 +1,129 @@
+phc-discussions - Re: [PHC] Fastest algorithm shootout with threads...
+
+Message-ID: <CAOLP8p5Jr20i6tetGjVCJAGpB9yh+SvxBmTyq4KR_LTEXdDp+w@mail.gmail.com>
+Date: Thu, 30 Apr 2015 04:12:54 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Fastest algorithm shootout with threads...
+
+On Wed, Apr 29, 2015 at 9:13 PM, Solar Designer <solar@...nwall.comwrote:
+
+On Wed, Apr 29, 2015 at 03:47:35PM -0700, Bill Cox wrote:
+Just for fun, I added -p support for TwoCats.  I still win the speed
+competition :-)
+>
+Cool!  How many sequential MULs does TwoCats have per 1 KiB in that test?
+
+
+By default, it does 2048 sequential multiplies in the integer unit in
+parallel with hashing a 16KiB block in the SIMD unit, and then hashes all
+the results together with a full Blake2s.  So, that's 128 sequential
+multiplies per 1KiB block.  However, this is tunable.
+
+
+In short, here's the best runtimes, when choosing num threads for highest
+speed at hashing 1GiB:
+>
+TwoCats                103 ms
+Argon2d-sse            143 ms
+Yescrypt-2pw-sse       147 ms
+Lyra2-sse              212 ms
+>
+The problem is most apps and users won't run additional benchmarks to
+choose the optimal number of threads, and even if they do they'd likely
+need to be computing the same derived key on an upgraded machine later,
+where the old thread count would no longer be the most optimal one.
+
+
+This depends on the use case, I think.   For FDE or volume encryption, an
+automt datic parameter generator should run, just like Scrypt does today.
+For authentication servers, these would also be well tuned.  You're right
+about most apps and users, though.
+
+
+Yescrypt does 33% more I/O operations than TwoCats, and uses OpenMP
+rather
+than pthreads, and uses a 1KiB block size compared to TwoCat's 16KiB
+block
+size.  This explains the difference in speed.  Lyra2 does a lot more I/O
+operations than TwoCats, explaining it's bandwidth-limited speed.
+Argon2d-sse also uses a 1KiB block size, and in addition, it calls 16
+reduced Blake2b rounds rather than 12 like Lyra2.  I think this explains
+why it's running slower.
+>
+Unless I misunderstand something, Argon2d at lowest t_cost only goes
+through memory once (when filling it), without the extra 33% you
+mentioned for yescrypt.  So it could have reached TwoCats' speed, but
+somehow did not.  I guess the intermediate writes to state[] between the
+two groups of 8 BLAKE2b rounds might hurt even with write-back caches.
+Are those writes occasionally getting to higher-level caches or RAM?
+
+
+I did a few manual tests to see if I could get Argon2d and Yescrypt-2pw-sse
+to run at TwoCat's speed.  I succeeded for the single-thread case, but for
+multiple threads, the 1KiB block size used by Argon2d and Yescrypt slows
+them down.  I was able to slow TwoCats down similarly by useing a 1KiB
+block size.
+
+To get Yescrypt there, I commented out the multiplies in the PWX
+transform.  The fact that this runs as fast as TwoCats is impressive, given
+that Yescrypt was doing 33% more I/O operations.  It looks like even with 2
+rounds instead of 6, Yescrypt-2pw-sse is still computation time bound.
+
+To get Argon2d-sse there, I commented out half of their 16 reduced Blake2b
+rounds.  It seems Argon2d is also computation time bound on this machine.
+
+>
+Should both Yescrypt and Argon2d to use my distance-cubed distribution?
+Argon2d uses a uniform distribution, and Yescrypt uses a
+sliding-power-of-two distribution.
+>
+It's confusing to say that Argon2d uses a uniform distribution.  Both
+Argon2d and yescrypt use uniform distribution within their target range
+(all of memory written so far or the current window, respectively) at
+each given moment, but as we know this results in different non-uniform
+distributions across the entire memory filling loop's running time.
+
+
+Yes, it is.  As Dmitry said, their distribution is sub-optimal, with some
+room for improvement.  Your histograms show that pretty well.
+
+
+>
+This would enhance Argon2d's TMTO
+defense and Yescrypt could probably not run the second loop at all when
+t_cost == 0.  That would make Yescrypt-2pw-sse nearly as fast as TwoCats
+when running with enough threads.
+>
+Yes, perhaps.  It's a pity that TwoCats' TMTO wasn't studied by the
+Argon team.  Maybe we should have made TwoCats a finalist just for that
+privilege.  Then we would have greater confidence about your approach.
+
+
+It's not too late to study the distance-cubed distribution (or something
+similar).  The current Argon2d distribution is on the weak side.
+
+$ ./tst-twocats -p6 -m20 -t0 -r 10
+8 32 20 0 103 1044860
+>
+$ ./tst-twocats -p12 -m20 -t0 -r 10
+8 32 20 0 117 1044908
+>
+Oh, this is what I wanted to see.  I think it's actually a drawback that
+Lyra2 and TwoCats exhibit a performance reduction at more threads.
+OTOH, this implies they're probably not susceptible to faster CPU
+attacks (by interleaving multiple instances) on this machine at this
+m_cost.  (Argon2d and yescrypt might not be either, but it's not seen
+from these specific benchmarks.)
+>
+Alexander
+>
+
+Yes, Lyra2 has this problem to a small extent, and TwoCats has it worse.  A
+simple heuristic like "Use all my cores" is not optimal for TwoCats, while
+it seems to be pretty close for Yescrypt.
+
+Bill
+
+
+

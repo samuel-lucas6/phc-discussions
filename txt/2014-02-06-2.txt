@@ -1,0 +1,36 @@
+phc-discussions - Halting Password Puzzle support
+
+Message-ID: <CAOLP8p46thVjXPFXpRZfOYsMxXcFjqFsi8w2Nf9prYD4vhipKQ@mail.gmail.com>
+Date: Thu, 6 Feb 2014 17:19:32 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Halting Password Puzzle support
+
+I just added Halting Password Puzzle support to my code.  There are no
+patent issues with it are there?  Catena and other entries supporting
+garlic could use this as well.  I think it should be used in
+TrueCrypt, since it is critical there to have deniability, so we can't
+have any obvious parameters that look non-random.  The only two
+parameters we can store that I can see are:
+
+- salt
+- expected hash
+
+We just start with memory == small (1MiB), and iteratively increase
+garlic like we do with client-independent update, doubling memory each
+time.  When we get the expected hash, or reach a pre-set quitting
+level, we're done.  This really is how TrueCrypt should work.  It's
+password security for now is pretty weak against brute-force attacks.
+The code looks like:
+
+    resultHash = PasswordHash(password, salt)
+    for(garlic = 0; garlic < quitGarlic; garlic++) {
+        ApplyGarlic(resultHash, garlic)
+        if(resultHash == expectedHash) {
+            return true
+        }
+    }
+    return false
+
+Bill
+

@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] Response to recent comments on Rig
+
+Message-ID: <54045416.9070305@ciphershed.org>
+Date: Mon, 01 Sep 2014 07:10:14 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Response to recent comments on Rig
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/31/2014 05:30 PM, Somitra Sanadhya wrote:
+4. Another comment by Mr Cox is: "the memory swapping algorithm
+that the Catena guys invented fairly recently is there..."
+
+We would like to know which memory swapping algorithm is being
+referred to in the above statement ? Catena takes two inputs,
+hashes the concatenation of these two, and writes the result in
+some location in the array. On the other hand, Rig does two
+different memory overwrite operations. In the first one, we use
+sequential XOR of the chaining variable with the value of the same
+variable from the previous round at the same location. In the 
+second one, we XOR the chaining variable with the input variable
+indexed by the bit-reversal permutation from the previous round.
+
+I was wrong here, because I had not noticed your bug yet.  Your
+suggested fix will not work.  To get it to work, you will need to do
+what I though you were doing, and use Catena's trick to use one array
+for KeySet instead of two.
+
+Your suggested fix is to replace:
+
+    k[br(j)] = k[br(j)] XOR truncate(ChainingValue)
+
+with
+
+    k[j] = k[br(j)] XOR truncate(ChainingValue)
+
+This will overwrite the value in position j.  Later, for all values of
+j where br(j) j, when you read from k[j] to compute k[br(j)], you
+will read the value from the current row, when you meant to read the
+value from the previous row.
+
+Catena's trick is to realize that once you read from k[br(j)], you no
+longer need to remember the value stored in k[br(j)].  Instead of
+writing to k[j], write to k[br(j)], just like your submission does,
+which is why I thought you were using this trick.
+
+On the next row, instead of reading from k[br(j)], you need to read
+from k[j], because the data is already stored in bit-reversal order.
+You will also need to write to k[j], since that is the location no
+longer needed.  You will need different code for the even vs odd row
+updates, but it saves you from having to have two k arrays.
+
+I recommend you use this trick and simply acknowledge it the code
+and/or paper.
+
+I think you have an error in your security proof.
+
+Look at the proof starting on page 16.  In the first line "E1", you
+convert the probability that a value is stored from Pr(value at Pj is
+stored) to i/m.  You simply assume that the probability of the value
+being stored is proportional to the ration of values stored divided by
+the total values, independent of any property of Pr.
+
+If Pr were the identity permutation, an attacker simply needs one
+memory location, and he can compute the entire row sequentially, with
+no recomputations at all.  Clearly there needs to be some mathematical
+property of Pr that we can depend on to avoid this.  A pebbling proof
+like Catena's is needed here.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBFQTAAoJEAcQZQdOpZUZRmIQAKZYIOMvATsHn42V+XGv3fNa
+9KJ9YvMnVtMZY8JMVhaRoFKoHWlWHL3fhOvh1AOOZampWTCKy6DsIqXmjdX6oWqT
+jQLTLbxN6knczRKp8TN5sUO/HCuja71utjOd/wS7qyFLgl9z7gOdWgemmosH5Uyz
+U8O+7SSfsGWKGZQxQwvkfe4fpqy0Kjyct3IjhhY4Os2tOrSqPmPPYNNEL+46gr8E
+bzGcB4KVNVz9jXv2qBdqg0nsoBZWsDonYIa+L6H4nsFSm+EaZNWKy5ocFKbH3y5I
+KLTona7FKsOFFXDlmvoAq2OetoTa6ciXKXls1o9HF0DrwBQ2EYhz9tVKdlqjL2iW
+U6qDgnQP1oWIXECb1CO9DhIyL4Hlpd2hCP3UJH/a7lK+3w/MXP+xuBViPtI/qyrW
+GqnRo/KazwqRvf0dm72+ztD1E9wsSqQYPfnGIWgTXoPrCqOHJuRftUxd55pVKvrt
+RDVA2vcUHpBNcZflQf0WvzRWjRJSzfovx3wHQg/YHFWmJuCMyoP/7amc5HCgvw2G
+2QBUHMf2ei/aNVzTQFTwvE1Tv8LQCbWNvR5XRkIPQihJL+40RJDkl1/uo6ZLOwof
+7oLQA7LQeept1YbQj66oXE5t+lljoMFouI4LskM2Y1lWkmGpyvGK6yuBwlXQswhH
+UmMTKHsdgvJZBj8hN1Mg
+=SXWf
+-----END PGP SIGNATURE-----
+

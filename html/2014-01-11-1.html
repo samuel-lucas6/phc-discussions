@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] scripting memory (not so) high</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/01/10/24">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/01/10/18">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;651579752.618485.1389402382982.open-xchange&#64;email.1and1.com&gt;
+Date: Fri, 10 Jan 2014 19:06:22 -0600 (CST)
+From: Steve Thomas &lt;steve&#64;...tu.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+&gt; On January 10, 2014 at 6:28 AM Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Fri, Jan 10, 2014 at 06:19:21AM -0600, Steve Thomas wrote:
+&gt; &gt; I was aiming for least amount of calls to hash functions while keeping it
+&gt; &gt; memory-hard. I guess I forgot make sure about the last part :).
+&gt;
+&gt; Yes, these two were my goals too.
+
+Just thought of this, you can increase the cost of memory cheating.
+
+This forces doing two blocks of SHA512 with the equivalent of only 8.5 w[] for
+free (for the attacker) at a cost of 7.7% to you:
+        $v .= $x = hash('sha512', '12345' . $x . $x, TRUE);
+
+Two blocks reduced by 4.5 w[], cost 9.3%:
+        $v .= $x = hash('sha512', '12345' . $x . $x . '1' . $x, TRUE);
+
+Three blocks reduced by 8.5 w[], cost 15%:
+        $v .= $x = hash('sha512', '12345' . $x . $x . '1' . $x . $x, TRUE);
+
+* Note that currently it's one block reduced by 5 w[]. You need to calculate 64
+of these w[] and that each round (80) costs more than calculating w[]. Worst
+case, saving 8.5 w[] calculations only saves 6% of the block's calculations.
+Hmm when I say it like that the second one does not make sense.
+** I'm not counting the three additions in calculating w[]. I'm thinking of
+GPUs,
+but with FPGAs/ASICs this would probably be the opposite.
+If you wanted to do more just keep adding '1' . $x . $x to the end. This will
+only
+work 7 times ('12345' . $x . $x . str_repeat('1' . $x . $x, 7)) then an attacker
+can
+reuse some parts of w[] and not have the cost of shifting.
+
+'12345' is in there so the attacker needs to shift $x by an amount not divisible
+by 4 bytes. I chose 5 bytes instead of 1 because if you did '1' . $x . $x then
+the
+last block only has 8 bits of unknown which is small enough to precalculate.
+I also wanted at least 32 bits just to take that out of the picture.
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

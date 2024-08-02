@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <20140119215624.GA22972@openwall.com>
+Date: Mon, 20 Jan 2014 01:56:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Sun, Jan 19, 2014 at 12:40:05PM -0800, Larry Bugbee wrote:
+Correct me if I'm wrong, but server-side PHC begins with a cleartext pswd and stores some manipulation of it for later comparison.  Client side assistance also begins with cleartxt pswd and sends a manipulation to the server who may or may not add additional manipulations before storage and later comparisons.  Okay, fine.
+
+This suggests that whatever is done on the client side needs to be replicated exactly on the server should the user go to another machine/bowser without support and sends a cleartext pswd.  Okay, that works.
+
+The flip side is what concerns me.  If we come up with a server side PHC requiring lots of memory, memory filled with random patterns and the like, then client-side assistance will not be possible unless some major portion of the server's algorithm *can* be replicated on the client.
+
+Yes.  I happened to comment on this earlier today in another thread.
+Here's the relevant comment:
+
+"[...] I am
+compensating for the lower RAM usage per instance by also using a ROM,
+but pre-hashing on the client can't do that.  In order to allow for the
+fallback to processing on the server (e.g. when the same user connects
+from a different device), we'd have to use less RAM, and do so without
+also using a ROM - this is not good.  So maybe the "server relief" for
+such deployments should be partial, leaving a ROM-using portion on the
+server (all the time), or maybe it shouldn't be used for such dedicated
+auth server deployments at all (considering that in the worst case
+scenario, which the maximum supported throughput is meant for, all
+clients connecting at that moment will happen to lack "server relief",
+and that we have no non-authentication use for the server's resources)."
+
+...meaning, if client-side assistance is to be expected at some future date, the algorithm needs to be divisible such that the size of the intermediate work sent to the server is manageable.  ...and it is clear to the server just how much work was performed to get this intermediate result.
+
+Yes, and these are only some of the many issues.
+
+Here's a simpler issue: for client-side preprocessing, ideally we'd have
+it use not only the password, but also the salt.  Some hashing done on
+the password only is of a lot less help (leaving the most important
+portion of heavy processing for the server anyway).  So the server needs
+to send the salt to the client.  Yet it might not want to reveal whether
+the target account even exists.  Thus, it'd have to produce fake salts
+(for non-existent accounts) that are indistinguishable from real salts.
+While this can be done, perhaps by applying a hash to the username and a
+site-specific secret (assuming that actual salts appear just as random),
+this is extra complexity.  I'd say that this added complexity exceeds
+that of implementing the equivalent of Catena's "server relief" on top
+of another password hashing scheme without such builtin support.
+Moreover, these indistinguishable-from-real salts are likely easier to
+get wrong than the portion of "server relief" functionality that Catena
+provides as built-in.  BTW, I previously wrote about that aspect here:
+
+http://openwall.info/wiki/people/solar/algorithms/challenge-response-authentication#Username-probing
+
+These are some reasons why I think Catena's built-in "server relief"
+shouldn't be a significant deciding factor when comparing PHC
+submissions.  In fact, if the prevailing opinion would be that we want
+"server relief" in a PHC winner, yet a certain otherwise good submission
+lacks it, I think it'd be easy to add "server relief" as a "tweak".
+
+We might or might not add this to escrypt proactively (then potentially
+remove it, also as a "tweak", if the added API complexity is deemed too
+high for the limited benefit, although I think it'll be acceptably low).
+
+Will the submissions be designed so client-side assistance will be practical?
+
+PHC submissions should be designed such that they may operate on either
+side, but not necessarily such that they can be split between client and
+server (without building anything on top of them).  If someone manages
+to include support for such split in a generic and complete enough
+manner, yet without introducing too much complexity and controversy,
+this may be viewed as an advantage.  I think this is unlikely.
+
+Alexander
+
+P.S. Also, if the server is temporarily compromised, then the fake salts
+are no longer indistinguishable from real ones.  If the compromise is
+detected and the secret is changed, then remote attackers other than the
+one(s) who temporarily had access will also be able to infer valid vs.
+invalid usernames, by comparing salts after the secret change vs. their
+(recorded) server-provided salts from before the secret change.  If the
+secret is not changed (such as because the compromise is not detected,
+or to mitigate the attack I just mentioned), then the original attackers
+and whoever they may have shared the secret with will be able to probe
+for newly-created usernames (beyond what they could have seen during
+their temporary access to the server).  So under that setup there's no
+perfect recovery from a compromise.
+

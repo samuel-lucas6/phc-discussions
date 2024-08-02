@@ -1,0 +1,146 @@
+phc-discussions - Re: [PHC] yescrypt pre- and post-hashing
+
+Message-ID: <20150131235933.GA27449@openwall.com>
+Date: Sun, 1 Feb 2015 02:59:33 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt pre- and post-hashing
+
+Regarding yescrypt's pre-hashing, which in the previous submission was:
+
+	if (flags || t) {
+		SHA256_CTX ctx;
+		SHA256_Init(&ctx);
+		SHA256_Update(&ctx, passwd, passwdlen);
+		SHA256_Final((uint8_t *)sha256, &ctx);
+		passwd = (uint8_t *)sha256;
+		passwdlen = sizeof(sha256);
+	}
+
+and existed to deal with the HMAC/PBKDF2 peculiarity where SHA-256 of a
+65+ characters long password is plaintext-equivalent for that password.
+
+This was believed to be just a peculiarity with no security impact.
+Well, due to a recent tweet/reminder by Juliano Rizzo, I no longer think
+so.  There was real security impact, even if in obscure cases.
+
+Specifically, if a site upgrades from raw SHA-256 to e.g. scrypt hashes
+(by re-hashing passwords as users log in), but does not securely wipe
+all copies of the SHA-256 hashes from all places, then for the (few) 65+
+char passwords those hashes can be used to log in to the service,
+without the attacker ever having to crack the plaintext passwords.  This
+was Juliano's original concern.
+
+I came up with two more:
+
+Even without a hash type upgrade by any site, some of the users
+themselves may have reused passwords across multiple sites.  If one or
+more of those sites uses (or used) raw SHA-256, then hashes leaked from
+there (or abused by the site's admins) can be used to log in to sites
+that use scrypt - yes, for 65+ char passwords only.
+
+So far, these attacks are mitigated by yescrypt's pre-hashing above.
+That's because the site using yescrypt would apply SHA-256 once again,
+regardless of password length, so a pre-existing SHA-256 hash would not
+be usable to log in (it would have SHA-256 applied twice, resulting in
+no match for the final hash value).
+
+However (and that's my second attack, or third one counting from Juliano's):
+
+What if (ye)scrypt is used as a KDF, and someone reuses the same
+passphrase for logging in to a site that uses raw SHA-256 and for
+encrypting some data (e.g., a backup dump or a filesystem)?  Or what if
+a remote site itself uses (ye)scrypt to derive the keys for encrypting
+users' data at rest from their login passwords, and either the same site
+or any other site (where password reuse by the users could occur) ever
+used raw SHA-256 for password hashes used for authentication?  Then,
+despite of yescrypt's mitigation above, the full yescrypt derived keys
+may be computed from the SHA-256 hashes!  Sure, raw SHA-256 might have
+made it easy to crack the plaintext password anyway... but some
+percentage of passwords (not very large, but not negligible either)
+would withstand some offline attacks on their raw SHA-256 hashes.
+
+So we had 3 somewhat practically relevant problems with this in scrypt,
+and we still have 1 of them in yescrypt as previously submitted to PHC.
+
+Here's how I intend to fix this now:
+
+	if (flags) {
+		HMAC_SHA256_CTX ctx;
+		HMAC_SHA256_Init(&ctx, "yescrypt", 8);
+		HMAC_SHA256_Update(&ctx, passwd, passwdlen);
+		HMAC_SHA256_Final((uint8_t *)sha256, &ctx);
+		passwd = (uint8_t *)sha256;
+		passwdlen = sizeof(sha256);
+	}
+
+On Mon, Mar 31, 2014 at 05:53:24AM -0400, Bill Cox wrote:
+On Sun, Mar 30, 2014 at 10:36 PM, Solar Designer <solar@...nwall.comwrote:
+In particular, is it a good idea to enable this on any (other) deviation
+from classic scrypt, without requiring that this feature itself be
+requested explicitly?
+
+I don't think it's important to be able to use this feature while
+everything else remains Script compatible.  The password collision
+problem hasn't seemed to be a problem in the wild so far, and if a
+user is going to upgrade his password hashing scheme, I'd hope he'd
+consider using some of your other features, and not just this one.
+
+I guess I would prefer to specify if I want script compatibility, and
+if I say I don't need it, then then this should be enabled, along with
+any other improvement.
+
+Given new concerns above, I am changing yescrypt to enable the
+mitigation above even if most of the other deviations from classic
+scrypt are disabled.  Specifically, I am making this mitigation usable
+even with t = 0 in YESCRYPT_WORM mode.  That way, this will be trivial
+to adopt (as a tiny subset of yescrypt) by existing implementations of
+scrypt, with very little code to add.
+
+I think scrypt is very good, and I think there are some use cases for
+its deliberate TMTO-friendliness.  I'd like to give the (almost) classic
+scrypt a new life by making it a potential PHC winner, as one of the
+modes in / subsets of yescrypt.
+
+It will remain possible (in yescrypt) to compute classic scrypt hashes
+(without the mitigation above) as well, but for compatibility only.  The
+new way of requesting these is:
+
+flags = 0 means classic scrypt
+YESCRYPT_WORM means very slight deviation from classic scrypt
+YESCRYPT_RW means full native yescrypt
+
+I think your solution to the collision problem is cool.  You fixed the
+biggest drawback of how HMAC is used in PBKDF2, as if you'd simply
+gone in and deleted the offending if statement and forced SHA256 to
+always be called on the password.  You added a line to effectively
+delete one.
+
+Yes.  But I no longer like it that much, because of the issue with mixed
+raw SHA-256 and yescrypt KDF use.  So it will likely be gone in today's
+last-minute submission of yescrypt tweaks.
+
+2. Ability to upgrade raw SHA-256 hashes, which unfortunately are in use
+by some sites, to yescrypt hashes.  The specific choice of SHA-256 is
+simply because it's used in (ye)scrypt anyway, but it happens to be
+somewhat relevant for such upgrades.  Indeed, this sort of upgrades are
+always possible, but now for raw SHA-256's the resulting hashes would be
+genuine yescrypt hashes, with no need to record that they've been
+upgraded from raw SHA-256.  (For upgrading anything else to yescrypt,
+such info would still need to be recorded.)
+
+By raw SHA-256 hashes, do you mean just a hash of the password,
+without even salt?  I'm sure this is how many people store passwords.
+It's probably the second most common technique after just storing the
+password as plain text.
+
+Yes, that's what I meant, and yes raw SHA-256 is somewhat common (maybe
+less so than raw MD5, though).  Unfortunately, this nice property has to
+go, because we can't keep it in yescrypt while also allowing for safe KDF
+use of yescrypt when there might be raw SHA-256 hashes of the same
+passwords out there.  Well, I could introduce yet another flag and have
+it enabled when yescrypt is called via a password hashing rather than a
+KDF interface, but I'd better not introduce hacks like that.
+
+Alexander
+

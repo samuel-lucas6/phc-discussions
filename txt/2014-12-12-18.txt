@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] How important is salting really?
+
+Message-ID: <alpine.DEB.2.11.1412121133580.22319@debian>
+Date: Fri, 12 Dec 2014 11:44:27 +0100 (CET)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] How important is salting really?
+
+On Fri, 12 Dec 2014, epixoip wrote:
+
+Each password candidate has to be re-hashed with each unique salt. This
+is where your N-times slowdown comes from. Once a hash has been cracked,
+its salt is removed from the salt table
+
+What on earth do you mean by "salt table"?
+
+For each user, you know both salt and Hash(PW, salt), you don't know PW.
+
+The reason for using a salt is that if you have
+   X_1 = Hash(PW_1, salt_1),
+   X_2 = Hash(PW_2, salt_2),
+   ...,
+
+and have to re-compute H(PW_candidate, s) for each salt_i. Which is why 
+the salt_i need to be different.
+
+If you had no salt, then
+   X_1 = Hash(PW_1),
+   X_2 = Hash(PW_2),
+   ...,
+
+then you could just check look up Hash(PW_candidate) in your X_i table.
+
+Which means, the attack would get much cheaper. (Similarily, if you are 
+using the same salt for several users ...)
+
+So long
+
+Stefan
+
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+

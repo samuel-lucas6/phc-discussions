@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Why protect against side channel attacks
+
+Message-ID: <20150625205955.GA27847@bolet.org>
+Date: Thu, 25 Jun 2015 22:59:55 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Thu, Jun 25, 2015 at 09:17:47PM +0800, Ben Harris wrote:
+I'm curious if there was any period of time since the inception of the salt
+that it was considered "public".
+
+If you are doing some password-based key exchange (e.g. SRP) then the
+salt is necessarily public, since the whole password hashing must be
+done client-side, and at that time the client does not even know whether
+it is talking to the genuine server. There cannot be any notion of
+"server-side secret" in that case.
+
+Another situation where the salt is necessarily "public" is when doing
+password-based encryption (of, say, a file): to allow for decryption,
+any "salt" is embedded in the file header, thus in plain view.
+
+In fact, I'd say that salts can be kept private only in the one context
+of client authentication by a server whom clients trust (admittedly, a
+very common context).
+
+
+I guess the outcome of this thread is that side channel resistant
+candidates are compatible with public salts? For the (limited?)
+applications that require a public salt?
+
+If salts must be kept private, then they must also be unguessable, i.e.
+generated with a cryptographically strong PRNG. This is a nice way to
+generate salts anyway, but not a method which is mandatorily implied by
+the term "salt". Usually, the notion of "salt" requires uniqueness,
+which can be achieved in a number of ways (e.g. UUID, or a simple
+server-wide counter) that can be highly guessable. If a "salt" in a
+given algorithm requires other properties, then I agree with Stefan that
+calling it a "salt" is misleading (but maybe "key" is not the right term
+either).
+
+
+	--Thomas Pornin
+

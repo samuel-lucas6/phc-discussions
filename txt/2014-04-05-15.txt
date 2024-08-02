@@ -1,0 +1,79 @@
+phc-discussions - Re: [PHC] POMELO fails the dieharder tests
+
+Message-ID: <CA+aY-u6nPXqyDSM-eD4=Zg=dS94eYdTnCvJqOLAaqmLng8+ZBA@mail.gmail.com>
+Date: Sat, 5 Apr 2014 17:21:44 +0100
+From: Peter Maxwell <peter@...icient.co.uk>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] POMELO fails the dieharder tests
+
+On 5 April 2014 16:40, Bill Cox <waywardgeek@...il.comwrote:
+
+On Sat, Apr 5, 2014 at 8:37 AM, Peter Maxwell <peter@...icient.co.uk>
+wrote:
+On 5 April 2014 07:15, Daniel Franke <dfoxfranke@...il.comwrote:
+>>
+>POMELO is one of a handful of PHC candidates which are not constructed
+>around any established cryptographic hash function or cipher. POMELO's
+>security claims include collision-resistance. Unfortunately, its output
+>fails the dieharder tests.
+>>
+>
+While I don't have the time myself to do it this weekend, it might be
+better
+actually looking at the PHS output and what's going on in the reference
+implementation because you'd expect at least a wee bit of non-zero
+results.
+What you've got looks like a bug somewhere.
+>
+Looking at the output is a fine idea.  However, I feel very strongly
+that computational verification is important.  What Daniel is doing
+needs to be done.
+>
+
+​I was suggesting looking at the output/code because it sounds like a bug.
+
+Any randomness tests, for what they're worth in this context, must also be
+done very carefully.​
+
+
+
+>
+Also, although it's probably not what's causing your results here, I'm
+fairly sure that the dieharder tests aren't great for short inputs.
+>
+He ran it in a mode where pomelo is called repeatedly, generating what
+should look like an infinite source of random data.  He did it the
+right way, and I see no bug in his code.
+>
+
+​Strictly speaking, statistical randomness in the output isn't that
+important (stop and think about it).
+
+You're really concerned about three things:
+
+i. collisions, i.e. you must be assured that the function is at least
+injective on the specified domain;
+
+ii. that the function is not invertible in less work than it takes to
+calculate the hash via the standard route;
+
+iii. that that there is no short-cut method to calculate the hash result;
+
+iv. that the salt is random.
+
+
+​[snip]​
+
+
+
+The salt is overwriting the password.  I fixed that in my version, but
+the output is still massively non-random.  I printed the output for
+several passwords in dieharder format, and found that output values
+get repeated a ton.  There's at least one more bug in there.
+>
+
+​I haven't looked at pomelo but, yes, it does sound like a bug or ​whatever
+the collective noun for bugs is (a "keyboard" of bugs?).
+
+
+

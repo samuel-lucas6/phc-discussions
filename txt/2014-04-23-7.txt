@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Dumb fast file digest idea...
+
+Message-ID: <CAOLP8p7cUO--MvgjCa0=JosVHaEW+Yk1RjGX91XeyJVEwTgy1w@mail.gmail.com>
+Date: Wed, 23 Apr 2014 17:48:18 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Dumb fast file digest idea...
+
+On Wed, Apr 23, 2014 at 2:33 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I think there are various possibilities for hashing functions like the one
+above.  For example, how about using a large block hash function more
+like:
+>
+hashBlock(uint512 block[128], uint1024 state) {
+    state1 = state
+    state2 = state ^ RAND_CONST
+    for(i = 0; i < 128; i++) {
+        state1 = Blake2b_ROUND(state1, block[i])
+        state2 = Blake2b_Inverse_ROUND(state2, block[127-i])
+    }
+    // Full Blake2b hash to combine state1 and state2
+    return Blake2b(Blake2b(state1, low(state2)), high(state2))
+}
+>
+
+I coded this for fun, based on Lyra2's modified version of Blake2b.  I'm
+not confident it's secure, but it does run fast.  It hashes files almost
+3.5 GB/s, or just over 1 byte per clock.  Here's some speed comparisons:
+
+wghash (as I'm calling this hack): 3.48 GB/s
+md5sum: 0.72 GB/s
+sha256sum: 0.29 GB/s
+
+It's almost 5X faster than md5sum, and 12X faster than sha256sum.  It would
+be very cool of something like this works out.
+
+Bill
+
+
+

@@ -1,0 +1,74 @@
+phc-discussions - Shortcut-free functions
+
+
+Message-ID: <87siq9pksp.fsf@wolfjaw.dfranke.us>
+Date: Sun, 23 Mar 2014 01:04:54 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Shortcut-free functions
+
+The following definition grew out of an attempt at formally
+characterizing the manner in which EARWORM relies on the AES round
+function. I think some other submitters might find the concept useful in
+their own security analyses.
+
+Hopefully all the Unicode in this email renders properly for most of
+you.
+
+Let {fₙ | n ∈ ℕ} be a family of functions with signature
+
+    fₙ : {0,1}ⁿ × {0,1}ⁿ → {0,1}ⁿ
+
+such that fₙ is computable in polynomial time wrt n. Let
+
+    gₙ : ℕ × ({0,1}ⁿ)[L] × {0,1}ⁿ → {0,1}ⁿ
+
+(this notation for the second argument denotes a zero-indexed array of L
+n-bit strings), where
+
+    gₙ(0, K, m) = m
+    gₙ(i, K, m) = f(K[i-1], g(i-1, K, m)).
+
+gₙ is undefined when i ≥ L. Essentially, gₙ iterates fₙ by folding it
+over K, using m as a starting value.
+
+Consider the following game. The defender fixes the parameters n and L,
+chooses K ← ({0,1}ⁿ)[L] and m ← {0,1}ⁿ uniformly at random, and outputs
+n, L, and K, keeping m secret. The adversary then outputs a circuit
+description
+  
+    h : {0,1}ⁿ → {0,1}ⁿ.
+
+The attacker wins iff
+
+   h(m) = gₙ(L, K, m).
+
+{fₙ} is defined to be a "shortcut-free" family of functions iff for all
+adversaries A such that
+
+   * A executes in probabalistic polynomial time wrt n and L, and
+   * the circuit-size complexity of A's output is o(L) (sic: little-o
+     notation),
+
+A's success probability is less than ε(n), where ε is a negligible
+function.
+
+A particular function fₙ may informally be said to be shortcut-free if
+ε(n) is "sufficiently" small.
+
+This definition basically says that the attacker can't do any
+precomputation to usefully "compress" K for the purpose of computing gₙ.
+The first restriction on the set of adversaries says that the
+precomputation is tractable, and the second restriction says that it
+produces a beneficial result.
+
+For a simple example of a function family that is *not* shortcut-free,
+consider addition, where fₙ adds two n-bit integers modulo 2ⁿ. So, gₙ
+computes m + ∑K. In this case the adversary can precompute ∑K and then
+output a circuit that simply performs the single remaining addition (the
+complexity of which does not depend on L), thus winning the game with
+certainty.
+
+EARWORM, in order to satisfy its security goals, relies upon the
+conjecture that the AES round function is shortcut-free.
+

@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] further limitation: not writing secret to memory
+
+Message-Id: <77C4CA04-9E9A-486F-BF88-9092B614FF44@thorsheim.net>
+Date: Wed, 18 Sep 2013 19:16:53 +0200
+From: Per Thorsheim <per@...rsheim.net>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] further limitation: not writing secret to memory
+
+A good assumption, but the attacker would need access to the swap file. Physical computer access and no FDE, or somewhat control of the OS.
+
+Another physical attack would be live memory extraction using Firewire DMA. Now that has a limitation today of approx 4GB memory, so excessive use of memory way beyond that would be a good thing.
+
+The cold boot attack could also provide access to "frozen" keys/data in memory, this time by booting from external device with a minimum OS/size, and then search all "frozen" memory in the system, with or without access to computer drives.
+
+
+
+Den 18. sep. 2013 kl. 19:07 skrev Krisztián Pintér <pinterkr@...il.com>:
+
+
+maybe not thoroughly interesting, but i was worrying about large memory use, in the light of the priciple of "clean memory of secret data". large memory hugely increases the chance of being written to a the swap file. after this, cleaning secret becomes virtually impossible.
+
+the worst case would be if the attacker accesses the first piece of data written to the memory, and brute-force searches for a password that produces that particular data. effectively skipping the entire memory hardness.
+
+maybe it is enough to simply xor the values with a random constant? the random value will not likely be swapped, being used frequently.  would it create any vulnerabilities? like if i have access to m0+r, m1+r, m2+r, m3+r, knowing the way how mi values are generated, i can infer r?
+
+another straightforward solution would be encrypting the data, for example with salsa12, using a random key. the problem with this approach is that it adds some more processing on the defender side, but not on the attacker side. i wonder if there is a theoretical possibility to use some randomization, but in a way that can not be skipped.
+
+

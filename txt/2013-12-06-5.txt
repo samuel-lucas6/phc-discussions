@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] blakerypt sequential memory-hard function
+
+Message-Id: <7D0C3C94-0CEE-450D-B38E-377E97F8BF37@touset.org>
+Date: Fri, 6 Dec 2013 15:10:22 -0800
+From: Stephen Touset <stephen@...set.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+
+On Dec 5, 2013, at 12:03 AM, Krisztián Pintér <pinterkr@...il.comwrote:
+
+
+Andy Lutomirski (at Thursday, December 5, 2013, 2:26:19 AM):
+>Using 2^f_time as the iteration count seems unnecessarily restrictive
+>-- is there any reason not to just use f_time?
+
+IMO such things should not be part of the algorithm unless intrinsic,
+and also should not be part of the submission. it is part of the
+interface.
+
+but if we are at it, this could be used as a sort of middle ground
+parametrization: take f_a and f_b parameters, and use f_time = f_a <<
+f_b . this grants fine control over f_time even if f_a and f_b are
+small, like bytes. but still scalable up to ridiculous levels
+(255*2^255).
+
+but again, this is part of the interface, and not the algorithm.
+
+This does pose one minor thorn for my submission.
+
+An advantage of using 2^(factor) difficulties is that I can store those factors as 8-bit values (it’s unlikely anyone will ever be able to consume 2^2^8 bytes of memory, or 2^2^8 iterations). I had intended for the parameters to the function (mode, input length, time/space/parallelism factors) to be used as inputs to an HKDF-stle “extract” function for converting the password input to a block-size input with evenly-distributed entropy.
+
+Conveniently, I can store a packed struct of
+
+	struct blakerypt_salt {
+        	uint8_t  mode;         //  1
+		uint8_t  f_time;       //  2
+		uint8_t  f_space;      //  3
+		uint8_t  f_parallelism //  4
+		uint32_t key_id;       //  8
+		uint64_t in_len;       // 16
+	};
+
+in exactly 16 bytes, which is precisely the size of a blake2b salt.
+
+This may be unnecessary, but it ensures that calculations on one set of parameters are completely independent of calculations for another set, even when the personalization string and input to be hashed are identical.
+
+— 
+Stephen Touset
+stephen@...set.org
+
+

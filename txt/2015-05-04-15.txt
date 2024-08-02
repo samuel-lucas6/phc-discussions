@@ -1,0 +1,95 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+Message-ID: <20150504180927.GA21330@openwall.com>
+Date: Mon, 4 May 2015 21:09:27 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+On Mon, May 04, 2015 at 07:32:37PM +0200, Stefan.Lucks@...-weimar.de wrote:
+On Mon, 4 May 2015, Solar Designer wrote:
+
+>I just recalled an earlier discussion in here where Christian Forler
+>felt it was OK for Catena to absolutely rely on salt uniqueness for a
+>feature, and I felt otherwise:
+>
+>http://thread.gmane.org/gmane.comp.security.phc/612/focus=659
+>
+>While uniqueness isn't randomness, the similarity is in strong reliance
+>on a property of the salts.
+>
+>I think this shows my pragmatism.  When this kind of reliance isn't
+>absolutely required for a security feature (there was another way to
+>specify the feature in question), I am against it.  When there's a
+>tradeoff between a not-yet-practically-relevant weakness and a currently
+>practically relevant one, I may well choose to accept the former and
+>mitigate the latter.
+>
+>Arguably, this also shows Catena team's inconsistency. ;-)
+
+I see the smiley, but I don't get the joke.
+
+The smiley means that I am not being entirely serious about that
+statement.  I realize that it's a stretch.  Especially now that I found
+you actually have uuid as a separate input from salt.
+
+This is wrong for two reasons:
+
+Firstly, there is a simple logical implication, which holds for all salts 
+of decent sizes (like 128 bit for PHC):
+
+    If the salt is random
+    then it is unique (except with negligible probability).
+
+Thus, by relaxing the requirement (from random to unique) we get a 
+stronger scheme. And by inverting the requirement (from unique to random) 
+you get a weaker scheme.
+
+As I wrote, "the similarity is in strong reliance on a property of the
+salts".  I didn't mean to imply it's a similarly strong property.  You
+are correct that it isn't.
+
+You try to generate a counterexample to the logical implication
+
+No.
+
+by discussing 12-bit salts from old unix crypt. But this is 2015 and PHC, 
+unix crypt is history.
+
+I referred to the historical example because you (quite reasonably)
+insist on salts only being expected to possess whatever properties they
+possessed historically.
+
+I am opposing you in this thread for the sake of achieving a balanced
+discussion of the topic, by putting our arguments to test.
+
+Secondly, Christian has actually been pointing out the development for 
+encryption and authenticated encryption. Initially, many (mostly 
+un-authenticated) encryption schemes assumed a random "initial value". 
+Later, authors of encryption schemes just assumed unique nonces. By 
+weakening the schemes, they got stronger cryptography. Currently, the 
+discussion among cryptographers is about robust schemes: Even if you 
+assume a unique nonce for authenticated encryption, does it make sense to 
+maximise the remaining security you can preserve if nonces are 
+accidentally reused?
+
+I don't see what you're arguing with here.  My point in that old
+discussion I referred to was precisely that Catena's hash encryption
+feature could be made more robust by not relying on unique IDs (and
+instead using a block cipher).  Catena team opted for simplicity vs.
+(theoretical) robustness.  This may be reasonable, since simplicity (not
+needing an extra crypto primitive, nor building an own one out of a
+hash) may result in more robust implementations.
+
+The "inconsistency" I mentioned is that Catena team does not always opt
+for greater (theoretical) robustness.
+
+Of course, the Catena team consists of different human beings which may 
+have different opinions on some issues, or even change their opinion over 
+time. Maybe, that is what the smiley was about?
+
+I did have this thought too, but the smiley is primarily about the
+statement not being entirely serious.
+
+Alexander
+

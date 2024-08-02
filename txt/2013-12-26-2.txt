@@ -1,0 +1,32 @@
+phc-discussions - Potential cost improvement over scrypt
+
+
+Message-ID: <CAOLP8p5fJmbhhe=Q07W42VdnnfdA3XWGq9kDGTz88Z_Yhb9Pag@mail.gmail.com>
+Date: Thu, 26 Dec 2013 11:17:59 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Potential cost improvement over scrypt
+
+I just did some basic benchmarks and math to see how much improvement we
+can get over scrypt in terms of making it more expensive for custom
+hardware to hash passwords.  I used my very cost effective Core i7 linux
+box I built for $500, and estimated how much improvement I could get in
+custom hardware.  The short answer is that a 100X cost reduction seems
+plausible, using GDDR5 memory and custom ASICs.
+
+Because of the 12-ish ns latency in GDDR5, I estimate a custom scrypt
+cracker would take about 20ns per guess.  Assuming 1GB of hashing memory, I
+estimate a cost of around $32/password guesser.  From my benchmarks, it
+seem that scrypt can't be sped up as much as I thought originally, since it
+reads/writes 64 bytes at a time, reducing the cache miss penalty, and in
+any case the 3-ish cycles per byte of RNG data generation dominates.
+
+My take away is that filling memory with random data needs to be as fast as
+possible if we want to improve on scrypt's cost per guess protection.  Can
+we build a secure password hasher that uses a highly insecure but
+super-fast RNG?  To max out memory bandwidth, we need to be generating
+closer to 4 bytes/cycle on multiple threads rather than 3 cycles per byte
+on one.
+
+
+

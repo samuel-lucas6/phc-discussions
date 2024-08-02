@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAK9dnSzuNGfTDiB7cDx618D4CidikTrpNi5BdMNKdzJ5q5rS5Q@mail.gmail.com>
+Date: Fri, 7 Mar 2014 12:23:14 +0100
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+I like putting PBKDF2 in between the two parts of HKDF:
+
+hash1 = HKDF-Extract(salt, password)
+hash2 = PBKDF2(hash1)
+hash3 = HKDF-Expand(hash2, purpose, length)
+
+Using HKDF-Expand avoids the large cost increase for larger outputs
+and supports a purpose string.
+Using HKDF-Extract avoid the collisions (both the >64 and the 0
+padding variants) because it uses the salt not the password as HMAC
+key.
+
+Of course it still leaks information about the length of the password,
+but that's unavoidable if one doesn't limit the maximal password
+length.
+
+If you want to apply a pad, consider a removable padding, like PKCS#7
+instead of null padding.
+
+Even without a padding, an implementation can always choose to
+implement the initial hash step in constant time for all inputs
+shorter than a threshold.
+For example you could always use 5 SHA-256 compressions to avoid side
+channels on passwords shorter than 300
+or so bytes using proper constant time selection to choose one. The
+only problem with that is that many implementors won't bother.
+

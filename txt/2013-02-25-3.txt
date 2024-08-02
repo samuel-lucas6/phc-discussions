@@ -1,0 +1,65 @@
+phc-discussions - RE: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <alpine.DEB.2.02.1302251434090.15997@debian>
+Date: Mon, 25 Feb 2013 14:34:15 +0100 (CET)
+From: Stefan.Lucks@...-weimar.de
+To: Marsh Ray <maray@...rosoft.com>
+cc: Jeffrey Goldberg <Jeffrey@...dmark.org>,
+        "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Any "large verifiers" on the panel?
+
+On Sun, 17 Feb 2013, Marsh Ray wrote:
+
+While I'm not at liberty to disclose the exact number of password 
+authentications we process, I can say that it really comes down to 
+deciding how much CPU load you're willing to put on the system. Many 
+systems, you specify a password only once to login, and everything after 
+that is done with cookies. So even a very high work factor setting may 
+not represent a noticeable hit on overall server load.
+
+Ouch! So I log in once at your site (*), and soon close the connection. 
+But, since one or more cookies are left on my computer, any trojan that 
+later takes over my computer will be able to log in at your site, again?
+
+That is really poor security, and a good reason to delete cookies very 
+frequently, I think!
+
+Another anecdote comes from Moxie Marlinspike when he was at Twitter. We 
+were discussing memory-hard password hashing functions, and his response 
+was to the effect of "yeah we would definitely not be able to handle 
+near as many simultaneous auths as we do now if the shared memory bus of 
+the multicore server were constantly saturated."
+
+Indeed, that is an issue for memory-hard password hashing functions.(**)
+
+Actually, the current way of applying a password-hashing function by the 
+server is sub-optimal, at least.
+
+Ideally, given a (slow, memory-hard, or whatver) function F and a 
+cryptographic hash function H, the password hash should be X := 
+H(F(password, salt, ...)). Now, the client could compute Y := F(password, 
+salt, ...), and the server would only have to compute H(Y). So the server 
+would neither need many CPU cycles, nor much memory -- and still, 
+password, cracking would not get any simpler.
+
+The only assumption is that F cannot be so slow or memory-demanding that 
+it would not run reasonably fast on the client at hand.
+
+So long
+
+Stefan
+
+P.S.: Sorry for my late response. I had been on a vacation last week.
+
+
+-------------
+(*)  I understand that it is not really "your" site, of course. ;-)
+(**) I'd prefer to call them Password Scrambling Functions, but that is
+      just me and my taste.
+
+--
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

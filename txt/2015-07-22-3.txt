@@ -1,0 +1,52 @@
+phc-discussions - Re: Argon2 improvement thread
+
+Message-ID: <loom.20150722T123257-453@post.gmane.org>
+Date: Wed, 22 Jul 2015 10:34:31 +0000 (UTC)
+From: EddyHawk <quarsicon@...oo.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Argon2 improvement thread
+
+Congratulations to PHC!
+
+As my input, I don't know whether this is possible/better/already done
+to Argon2, but I prefer single unified PHC winner, like Argon2-hi-sd-hi:
+ ---
+ Phase1: expand/RAM-fill (write) from password hash / output of previous
+          iteration.
+         1 pass of 1/2 Argon2i (2 rounds of Blake2b).
+         sequential addressing.
+        
+ Phase2: salt-dependent-only random word swaps (read and write).
+         1 pass of Argon2d (4 rounds of Blake2b, or even 2 too).
+         optional blamka or maxform can be applied here (once).
+
+ Phase3: RAM state 'hashing' (read).
+         1 pass of 1/2 Argon2i (2 rounds of Blake2b).
+         sequential addressing.
+         prevents salt-derived swaps being trivially inverted.
+         outputs tag/hash for next iteration / as the final output.
+ ---
+to get the same performance as Argon2 hybrid. In other words,
+the single independent phase in split into two lighter phases
+before and after the non-independent phase.
+
+Additionaly, 3-pass hybrid above forms a single iteration (as time_cost).
+Thus, for very low mem_cost (say 8-64 KiB), we simply applies (& can afford)
+much higher iterations (say thousands) for this new Argon2, therefore
+making it more or less behave like Bcrypt (obtaining free Bcrypt-like GPU
+resistance without having to incorporate such thing explicitly).
+At very high mem_cost, we can only afford a few iterations, but Bcrypt-like
+GPU resistance is no longer matters here (and thus naturally being
+turned off by the choice of much less iterations).
+
+Summary:
+-Hybrid like Lyra2, but
+-Fully immune to cache-timing-attacks like Catena
+ (all cache-timing measurements will only leak information
+  about the salt, which is usually already known/public),
+-Faster than Argon2i (2 passes worthy instead of 3 passes),
+-Nice placement of optional (slow) features, automatic L1 cache defense,
+-Neat time_cost = iteration, like PbKDF2.
+
+
+

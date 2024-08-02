@@ -1,0 +1,60 @@
+phc-discussions - a sponge based approach
+
+Message-ID: <1194279277.20130811213920@gmail.com>
+Date: Sun, 11 Aug 2013 21:39:20 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: a sponge based approach
+
+hi,
+
+i came up with the following idea. my design goal was to be 100% inside an existing primitive, and not using secret-based branching.
+
+S.Init
+Mem[0..m-1] := 0
+S.Absorb salt || pwd || pad
+loop i in 0 .. t-1
+    // squeeze r words, write them to Mem sequentially
+    loop j in 0 .. r-1
+        Mem[(i*r + j) mod m] ^= S.Squeeze
+    end loop
+    // absorb r words from Mem using a different pattern
+    loop j in 0 .. r-1
+        S.Absorb Mem[((i*r + j) * f) mod m]
+    end loop
+end loop
+// save S here
+auth_key := S.Squeeze
+derived_key_1 := S.Squeeze
+derived_key_2 := S.Squeeze
+...
+
+with the following notations:
+
+S    a duplexed sponge
+t    time/CPU cost 
+m    memory cost, m<r*t/4 (see later)
+r    the number of words in the r part of the sponge
+f    interleave factor
+
+
+notes on f
+
+the f parameter is tricky, it is simply -1 for sponges that use random functions. for random permutations (that can run backwards), we need f that
+
+gcd(f, m) = 1
+gcd(f-1, m) = 1
+f is approx m*p/(p+1)
+
+where p is the relative cost of the permutation function backwards. this setup is supposed to defend against obvious memory-time tradeoffs, ensuring that all M[]-s are used, and used in a most unexploitable manner, maximizing the distance from any parallel running sponge instances.
+
+i'm not sure about the access pattern, which is pretty much the lynchpin of the design. anyone cares to attack it?
+
+
+notes on m
+
+obvious from the design that if you want all memory to be used, m<t*r must hold. if you want all written values to be read, you need m<t*r/2.
+
+because of the predictable manner of the reads/writes, during the first m steps, the used memory grows linearly. during the last m steps, less and less elements will be ever read again. that gives the obvious optimization opportunity to run the next attempt in parallel, using up the gradually released memory of the previous. for that reason, m<t*r/4 can be advised, allowing for 25% optimization for the attacker.
+
+

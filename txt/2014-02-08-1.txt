@@ -1,0 +1,46 @@
+phc-discussions - multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140208080030.GB8887@openwall.com>
+Date: Sat, 8 Feb 2014 12:00:30 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 07, 2014 at 05:32:45PM -0500, Bill Cox wrote:
+On Fri, Feb 7, 2014 at 1:35 PM, Steve Thomas <steve@...tu.comwrote:
+value = ROTATE_LEFT(value*(mem[prevAddr + i] | 3) + mem[fromAddr + i], 1);
+
+It's still a little creepy having that modulo 4 math eliminating the
+multiply.  Gary sent a quick response to my initial NoelKDF hash
+function, where he thought the OR was an AND, and his complaint that
+an attacker could skip the multiply wasn't as far off as I'd thought.
+If anyone can think of a reason to worry about it, I'll put in the
+rotate, or something like it.  I do want to keep the number of
+non-multiply operations to a minimum.
+
+As an option, you might want to reuse the operations and the constant
+used in Mersenne twister's initialization:
+
+#define NEXT_STATE(x, i) \
+	(x) = 1812433253U * ((x) ^ ((x) >30)) + (i);
+
+where "x" is the current state (32-bit) and "i" is the iteration number.
+
+If there's a shortcut to evaluating multiple iterations of this, it
+would also be useful in mt_rand() seed crackers, and so far I'm not
+aware of any implementing any such shortcut (this, of course, is no
+proof that no such shortcut exists - yet it is something).
+
+A drawback is that a multiplier by a (good) constant probably takes
+twice less die area in ASIC than an arbitrary 32x32 multiplier does - do
+I guess correctly?  I guess you're the best person in here to confirm
+this. :-)  Does such specialization of a multiplier reduce its latency?
+
+I ran 1,000,000 runs of NoelKDF with 1MiB memory and the last 32 bits
+had 113 collisions, right in the middle of the expected range.  That's
+in addtion to the dieharder tests.
+
+It's nice to hear you've adopted this test too.
+
+Alexander
+

@@ -1,0 +1,27 @@
+phc-discussions - Re: [PHC] yescrypt AVX2
+
+Message-ID: <55425930.5040104@dei.uc.pt>
+Date: Thu, 30 Apr 2015 17:32:48 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt AVX2
+
+On 04/30/2015 03:14 PM, Solar Designer wrote:
+Yes, the cast macros are not usable on the left-hand side, at least not
+with gcc.  Trying to do it with inline asm:
+>
+#define LOAD2X128(hi, lo) ({ \
+	register __m256i out asm("ymm0"); \
+	__asm__("\n\tvbroadcasti128 %1,%%ymm0" \
+		"\n\tmovdqa %2,%%xmm0" \
+		: "=xm" (out) \
+		: "xm" (hi), "xm" (lo)); \
+	out; \
+})
+>
+I got ridiculous speeds - like 30 times lower.
+
+Is it me, or are you mixing VEX-encoded instructions with regular ones in the above snippet? That is bound to generate a
+large number of stalls transitioning between YMM register states.
+
+

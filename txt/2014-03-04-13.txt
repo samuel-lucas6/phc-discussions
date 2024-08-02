@@ -1,0 +1,42 @@
+phc-discussions - Implemented Solar's TMTO resistance
+
+
+Message-ID: <CAOLP8p7Q9iw=V5hQFJ+rck5R=1jvDT5E+e42hFriQXELFSiZow@mail.gmail.com>
+Date: Tue, 4 Mar 2014 15:21:55 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Implemented Solar's TMTO resistance
+
+I have struggled with getting decent TMTO resistance in my algorithm
+the way Solar Designer does.  I think I've finally done it.  The issue
+is that if you run with multiple threads, each thread needs it's own
+block of memory or performance suffers.  This creates a simple TMTO
+attack: simply run the threads sequentially, using 1/N memory for N
+threads.
+
+What I do now is take my first cache-timing resistant loop and my
+second unpredictable addressing loop, and break them up into "slices".
+ I run all the threads in parallel for each slice, and then join them.
+ Each thread knows it can access memory from it's own current slice
+that it is generating, or data from any thread from any previous
+slice.  The result is that threads hash lots of data from each other,
+making it hard to run without all the memory for all threads loaded at
+once.
+
+Currently, I break memory into 16 slices, which seems to cause little
+overhead.  There is a TMTO attack against the last slice, where an
+attacker keeps 15/16ths of memory loaded, and then runs the last
+threads in series, but it hurts his time*cost to do that.
+
+Is this worth the additional complexity?  I'm having difficulty
+deciding.  It didn't seem too bad.
+
+Without it, the second loop accesses all the data from the 1st loop,
+but nothing kept an attacker from running all the first loop threads
+sequentially.  Again, it's not a way to lower time*memory cost, but
+any flexibility for an attacker is bad for the defender.
+
+What do you think?  Is computing hashed memory in "slices" a good thing?
+
+Bill
+

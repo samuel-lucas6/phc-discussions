@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150326134409.GA22701@openwall.com>
+Date: Thu, 26 Mar 2015 16:44:09 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 06:33:54AM -0700, Bill Cox wrote:
+10X is exaggerated, but not by much.  Results from my laptop this morning
+say that my "worker' threads are slowed down by up to 4.97X when TwoCats is
+running.
+
+Wow.
+
+I wrote up a simple "testwork" program that runs "workers" in parallel with
+TwoCats hashing.  The worker threads do non-SIMD read/write to L3 cache in
+a loop, and increment a counter once they've done it all.  They do some
+multiplies and adds in each loop iteration.
+
+The worst case is when I have only 1 worker, using 4MiB of memory (my L3
+cache size on my laptop), while TwoCats uses 2 threads to hash 4MiB.  The
+workers slow down by less each when I add more workers.  With 2 workers,
+the slow-down is less than 2X for the workers.
+
+[...]
+
+Here's the inner loop of the worker threads:
+
+for(uint32_t i = 0; i < len; i++) {
+            mem[i] ^= (mem[(i*i*i*i) % len] + i) * (i | 1);
+}
+
+The actual "work" done does not have a huge impact on the outcome.  The
+important thing is that the worker needs all of its L3 data.  I see use
+cases in real life that suffer from this problem when running SSE-optimized
+Scrypt.
+
+Perhaps there are such real life cases, but I think they're relatively
+uncommon.  For those special cases, similar impact may be seen e.g. by
+simply happening to run on a CPU with a twice smaller L3 cache.  So not
+that big a deal for most real world cases.
+
+Alexander
+

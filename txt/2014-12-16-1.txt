@@ -1,0 +1,229 @@
+phc-discussions - Re: Some KDF stumbling blocks, plus Common
+
+Message-ID: <loom.20141216T055116-340@post.gmane.org>
+Date: Tue, 16 Dec 2014 04:57:57 +0000 (UTC)
+From: Adam Back <adam@...herspace.org>
+To: discussions@...sword-hashing.net
+Subject: Re: Some KDF stumbling blocks, plus Common
+
+On 14 December 2014 at 16:24, Thomas Pornin <pornin@...et.orgwrote:
+That kind of thing could be handled "procedurally". For instance,
+some sort of ceremony where a few well-known persons gather together
+(people with high programming expertise), implement a RSA modulus
+generator that does not save the private factors, and run it.
+
+There is no procedure known to man that can not be simulated with
+video editing, preparation etc.  This issue has been discussed at
+length in the context of the trapdoors in zerocoin & zerocash.  It
+wont fly.  The failure-mode is catastrophic and the financial
+motivation $billions and the trust assumptions diverse.
+
+Thinking more about it, I came to conclusion that my blinding is not
+really different from yours; it is rather an improvement;
+
+it loses information theoretic security.
+
+  I chose e = 2^w because it made optimal implementation easier
+
+a reasonable tradeoff; less work but more predictable across
+implementations.
+
+  Anyway, the exact choice of e does not matter much here. Hashing
+  of password pw is done by padding pw into some integer m modulo n
+
+that also breaks information theoretic security and not needed if you
+have confidence in the blinding.
+
+  then computing m^e mod n (the padding is very important here
+  because RSA and Rabin are malleable, meaning that (m^e)*(m'^e) =
+  (m*m')^e, so without a proper padding, an attacker running an
+  exhaustive search might be able to mutualize some
+  exponentiations).
+
+I use a different n for each user because I avoid the shared trap
+door, so there is nothing to reuse.  I do see the attack and to
+elaborate concretely if you were reusing: compute lots of small prime
+values v_i: w_i = g^w mod n and then explore permutations of products
+of powers of v_i to find passwords.
+
+Now the creation of the blinding pair is a puzzler, because of the
+following:
+>
+  - The delegation server, being untrusted, MUST NOT learn the value
+    x (first element of the blinding pair). Otherwise, it could
+    deduce m from the received value u.
+>
+  - A given blinding pair (x,y) may be used repeatedly for a given
+    password m, but not for two distinct passwords m1 and m2;
+    otherwise, the delegation server (or an eavesdropper) may learn
+    m1/m2 and then deduce things about both m1 and m2 (this depends
+    heavily on the details of the padding).
+
+again I dont think you should be reusing blinding values, even for the
+same password.  If nothing else it leaks privacy and allows cacheing.
+Now someone can just find the cache, and no work is required other
+than the users stolen device with its stored blinding value.  Blinding
+values should be fresh, one-use and not-persisted client side (beyond
+the duration of the computation).
+
+  - Generating a new random blinding pair is as expensive as
+    computing a hash. It can be done efficiently if you know p and
+    q, but then, if you know p and q, you can also compute the whole
+    hash yourself.
+
+The scheme I use does not have that problem.
+
+https://bitcointalk.org/index.php?topic=311000.0
+
+Recall g is a fixed base, y=g^e mod n is stored at setup (when p and q
+is known), and blinded work is r=m*g^b mod n , the computation is
+s=r^e mod n and unblinding is u=y^b mod n (fast as b is < n) and
+m^e=s/u mod n.
+
+As I understand it, the usage context that we are talking about is
+that of a brain wallet, which is similar (conceptually) to
+password-based encryption for a file containing some confidential
+data (the wallet simplifies things by "just" generating the ECDSA
+private key directly instead of producing a symmetric key to encrypt
+a random ECDSA private key, but that does not change things much
+here).
+
+Thats a secondary and not recommended use.  Brainwallets are a bad
+idea.  Primary use is for offloading KDF from devices in the users
+control which contain encrypted keys that the user wants to protect
+with a password with more KDF work than they have compute resources
+for, but are willing to pay a cent or something to outsource the work
+for.  If/when the device is stolen, the security of this model reverts
+to the brainwallet scenario where the attacker can attack.
+
+Then I confess that I don't really see how you can use your blinding
+in that setup:
+>
+  - A blinding pair can be generated efficiently when n itself is
+    produced (with the knowledge of the factors p and q). However,
+    one has to assume that the hashing will be performed at a time
+    when p and q are no longer available, because otherwise you
+    could use p and q to compute m^e efficiently, without needing
+    any delegation.
+
+blinding in my scheme is different to yours.  Its something like
+elgamal y variable where g^b and y^b are both computed dynamically and
+cheaply as b is small, and then where at setup y=g^e mod n is computed
+cheaply while p, q are known.
+
+As far as I can see, in the brain wallet scenario, your proposal can
+be summarized as follows (it is possible that I did not get it
+right, so please correct me if that's the case):
+>
+  * You generate a new n, x, and y when the password is chosen or
+    changed.
+>
+  * The wallet has some local storage, where (x,y) is stored. We assume
+    that any compromise of this storage will be through a wholesome
+    theft of some device, which will not go unnoticed.
+
+There is no x, y with the x^y mod n relation that yours scheme has.  y
+label is used for something different, an elgamal-like y=g^e mod n.
+
+  * Whenever you need to hash m, you use the stored blinding pair
+    for delegation. An hostile delegation server learns nothing.
+>
+  * If the wallet is stolen then the thief must still pay the full
+    price of computing the expensive hash (and he could already have
+    done it with the ECDSA public key alone).
+>
+  * HOWEVER, if the device thief also has access to an instance of
+    the delegation protocol (through eavesdropping or collusion with
+    the delegation server), then he gets both x and x*m mod n, from
+    which he immediately deduces m. If the padding that transforms
+    the password pw to m is some (fast) hash, then the attacker does
+    not get the password itself, but a way to run a fast dictionary
+    attack, which is almost as good (or bad, depending on point of
+    view).
+
+no because b the blinding factor is fresh, one-use, non-persistent,
+and random on each and every run.  I dont think its accurate to call a
+protocol variable a blinding value *unless* it has those
+characteristics fwiw.
+
+the user wont be unknowingly paying for delegation KDF after the
+device is stolen because he no longer has the device.  This reduces
+security to noticing when someone takes your device which is something
+practical to do: its your smartphone, keep it in your pocket.  Have
+another smart-phone and a panic protocol, sweep the funds if your
+device is missing.  Key your smart-phone to a NFC key manager on a
+ring or bracelet, and encrypt its entire contents with the key at
+drive level, now your smart-phone is a brick when outside of your
+possession.
+
+in the Makwa proposal, [...] mechanism for delegation, that expands
+on the idea of the blinding pairs. The main idea is that if (x,y)
+and (x',y') are blinding pairs, then so is (x*x',y*y').
+>
+  + Instead of generating one blinding pair, I generate 300 of
+    them. If this is done at the same time as n is generated, then
+    this is still reasonably efficient. If the factors p and q are
+    not known, the 300 pairs can still be produced, at the same cost
+    as 300 full hashes.
+>
+  + Whenever the password must be hashed, a new random blinding pair
+    is produced, by multiplying together a random selection of some
+    of the 300 pre-generated pairs. That new pair is used for one
+    delegation, then discarded. The generation of such a pair is
+    more expensive than its actual use, but still tolerable in many
+    context (it amounts to 300 multiplications modulo n, about half
+    the cost a RSA private key operation).
+>
+  + The 300 "source" blinding pairs need no confidential
+    storage. They can even be shared between several users (subject
+    to the trust issue about proper generation of n and discarding
+    of the prime factors).
+
+nothing in my scheme requires confidential storage either, and its
+cheaper and info theoretically secure to just generate a random b?
+
+This system increases some costs, but fixes the "secure storage"
+issue.
+
+I am not sure what the secure storage issue is.  It is always better
+to have a non-public ciphertext even if there is a designed
+high-to-uneconomic (vs plaintext bitcoin) compute cost for deriving
+its key from a password.
+
+There is no additional secure storage requirement.  y & n can be
+public.  They need a different property: integrity.  But that can be
+achieved by putting a sticker on the laptop, card in wallet or all
+over the place with the information.  Its a recognition rather than
+recall question too for mnemonic storage.
+
+If a brain wallet uses this delegation system, then the device thief
+no longer gains anything by stealing the device, even if he colludes
+with the delegation server.
+
+that's just saying you'll reduce security by volunteering to put your
+encrypted private key online.  it doesnt increase security, but its a
+choice someone could make.  I wouldnt recommend it personally.  People
+are bad at estimating password entropy.  Someone might try the
+uneconomic attack and get lucky anyway.
+
+Does all of this makes sense ?
+
+I think the primary difference is you are admitting the security
+reduction of reusing n (assuming you can find a politically acceptable
+central trusted entity to delete p,q).
+
+If you drop that requirement and add a nice-to-have of
+information-theoretic security (of delegation) you're probably going
+to arrive at the same place I have.
+
+I was not planning of making a new package version, but if I do then
+I'll be sure to include some reference to you. Do you have some
+"official" publication beyond the Web forum entry quoted earlier ?
+
+no the web link is all there is.  I could put it on my web site to
+make it a little more redundantly stored.
+
+Adam
+
+
+

@@ -1,0 +1,101 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <5405C26A.7000708@ciphershed.org>
+Date: Tue, 02 Sep 2014 09:13:14 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Here is a devastating TMTO attack against Schvrch.  The idea is very
+simple, and has been used against Scrypt.  Simply save the state of
+some memory and associated state at various points in memory, and
+recompute the following memory locations that we didn't store when
+needed.  For Scrypt, this creates a runtime that is O(t^2), where t is
+the ratio of memory the defender used vs the attacker.  This attack on
+Scrypt is serious, but not devastating, because the time*memory cost
+remains constant.  Actually, it drops by 4X as t rises, but no more,
+which is good for the attacker, but not devastating.
+
+The same attack against Schvrch does not cause runtime to increase
+more than 2.5X.  At the same time, only 6KiB of memory is required!
+This is a devastating attack, that dramatically reduces an attacker's
+time*memory cost.
+
+The attacker simply saves the initial 256 64-bit words of state, and
+he needs two more buffers of equal size.  He does the t_cost loop, at
+the same speed as the defender, and then has to call stir on a
+large-ish memory that fits in L3 cache, such as 4MiB.  This memory has
+locations 0 .. 255 initialized to the values from the state array, and
+then stir is called with 4 rounds.
+
+To compute the second 256 words of state of memory, the attacker
+computes the carry from hashing the first 256 words.  He remembers the
+carry value at the end of this.  Since the rest of memory is just 0,
+he can compute the rest of memory, but he does not need to save *any*
+of it.
+
+On the second round, the first 256 words were correctly updated from
+the prior pass, and we have computed the initial carry, so the
+attacker can compute new values for the first 256 words.  Again, he
+remembers the carry at this point.
+
+Since he remembered the carry from the first pass, he can now
+recompute the second block of 256 words.  Then he can compute the new
+value, to compute the carry out for that block.  Each of the following
+blocks is computed by first recomputing the old carry in, and the
+recomputing the values from the first pass.
+
+Similarly, the 3rd pass requires that we do 2 recomputations of each
+block.  The 4rd pass requires 3.  The total recomputations is 3+2+1 =
+6, so the attacker does 10 passes worth of computation.  The defender
+did 4.  That is a 2.5X recomputation penalty, with only 6KiB of memory.
+
+Last spring, when we starting bringing up serious attacks against
+Schvrch, the author refused to respond with fixes, insisting that
+these attacks don't matter.  That's why we stopped bothering to come
+up with any further attacks.  We moved on.
+
+I didn't know how to say that we should just move on properly, so I
+just stated Schvrch is weak and moved onto RIG.  I don't know if the
+author will hear what we are saying this time.  The evidence so far
+says probably not.  It is not worth spending more time on Schvrch when
+the author refuses to modify his algorithm when we have shown to be
+dangerously weak.
+
+So, I'll suggest again that we move on.
+
+However, if you want to have some fun, I think there is an even more
+serious attack that can be done which is worse than any of these that
+I've pointed out today.  If you want a fun challenge, examine the stir
+function carefully from the point of view of an attacker.  For
+example, data only flows from low bits to high bits.  The value of the
+low 8 bits out in no way depend on the upper 7 bytes of any word of
+state.  There may be a devastating module 256 attack here.  This is
+why people use ARX (add/rotate/xor) operations in secure hashes.
+POMELO uses these, plus unpredictable memory reads, frustrating my
+more serious attacks.  Schvrch has no rotate.  I suspect there is a
+very cool attack that can be made that takes advantage of this.  Have
+fun :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBcJmAAoJEAcQZQdOpZUZpUkP/2WFS9zRtLlWFNPMr4WrPMqr
+gfutu3GPx6T2jridIN9eYHSz/HPruUdvG6uwR4+FDzW2tlOUH8rVbq+/LnaSbCEk
+4pcMB6FlnMDzWtoXlI7qeXHkPQgIyZSR7zvmr2CdC4XUUZOso+I7UxfUHpmfmvJ/
+vFQfX90C1N3iqnK5pz7i/GeY6AaM0yGs2/loI36R7jsN6o7XcKYt0IoC5Zo40+TM
+VpuqYvhjEaJVfy+1m79OY/ixShjRAauQz2IaSpqyKNPaapQ2Z5ST8d4/k4PiK1IC
+JUDnz3RHA8GqnRTLkPD7uBR8suyLP0XsC/6ShmuAwdYaKzkohAZXS4GkQVhlO2PT
+R0/vVeJn3riLLzOndKigCxjMAD6R1631BGG+6+lUVzAiilPS7yB/ibMs024odp9F
+71N2+oSoMJbfXa1yy1uN/XriCjoPvbLHmh8/BYChzzCJ7W23bNFoWULZovyGnC7H
+QqoSbx45RA3yq0ss6dJHZCEmFuCHJVBoj5VesK4F6bndUP0QmCZS1sZic0Ac+E5i
+FZ/+LejfBX2IqEMpTjkPSwGqYJRMQmwM/wzJzOVMoLje8hw2CaoASfnEYNKyHy+z
+4WUu03V8c97JcrysgjrFaXgzFTT/ujHGuzMm6i00LPnWRiwEBh/9FwgbuuXCv3+O
+0F+TkVp3093P1n2++NUI
+=1Rzp
+-----END PGP SIGNATURE-----
+

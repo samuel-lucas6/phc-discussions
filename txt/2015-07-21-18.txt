@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CAOLP8p7bHw1-p=PfYGoxtSWeP-pmeAwPCkXDYYLC7svc1_kj_A@mail.gmail.com>
+Date: Tue, 21 Jul 2015 13:14:35 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Tue, Jul 21, 2015 at 12:37 PM, Solar Designer <solar@...nwall.comwrote:
+
+The designers proposed an optional update:
+* "smarter non-linear indexing (...) in order to flatten the memory usage
+over time"
+>
+I support this tweak, although I haven't reviewed it yet - I have only
+read the relevant announcement in here.  In fact, Bill and I were
+advocating making a change in this area.
+>
+
+I also support this tweak.  Their proposal of using a distance-squared
+distribution was my second-choice after a distance-cubed distribution, but
+I do not have strong feelings either way.  If you get too extreme, for
+example using an exponential decay distribution, then you wind up with
+graph-cuts too narrow to avoid strong TMTO atacks.  With a distance-cubed
+indexing distribution, the min-cut is still about 1/8th N for a N node
+graph, IIRC.  The last back-edges have a 1/8th chance of crossing the
+mid-point, so that makes sense to me.  With a distance-squared
+distribution, those last edges will have a 1/4 chance of crossing the
+mid-point.  This is better for defending against min-cut TMTO attacks, but
+worse for defending against attackers who only drop later memory.  Also
+it's simpler and faster to compute the distance squared distribution.
+
+Both distributions did extremely well in my automated TMTO attacks.  I went
+with distance-cubed because it did slightly better.
+
+Bill
+
+
+

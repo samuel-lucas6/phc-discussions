@@ -1,0 +1,171 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104200711.GA4485@openwall.com>
+Date: Sun, 5 Jan 2014 00:07:11 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 04, 2014 at 04:49:49AM -0500, Bill Cox wrote:
+Thanks again for the detailed reply.  All this data is very helpful!  One
+data point I wouldn't mind seeing: what is the runtime of noelkdf with 1
+thread?
+
+Here you are:
+
+$ ./run_noelkdf 
+AA9C7A25DBAFC0EAC056FF37A29BCAE98415DAB00CDD98C4435B6DD3B94A7758
+
+real    0m1.838s
+user    0m0.768s
+sys     0m1.060s
+
+I'm running a home-built system I made for my son's birthday.  It's fast,
+but not the fastest  He runs Minecraft servers on them, which makes
+reliable benchmarking difficult.  Here's the parts I bought from Newegg to
+build it:
+
+CORSAIR Vengeance 8GB (2 x 4GB) 240-Pin DDR3 SDRAM DDR3 1600 (PC3 2800) Desktop
+Memory Model CMZ8GX3M2A1600C9B
+
+Intel Core i7-3770 Ivy Bridge 3.4GHz (3.9GHz Turbo) LGA 1155 77W Quad-Core
+Desktop Processor Intel HD Graphics 4000 BX80637I73770
+
+GIGABYTE GA-B75M-D3H LGA 1155 Intel B75 HDMI SATA 6Gb/s USB 3.0 Micro ATX
+Intel Motherboard
+
+Your system's performance should be quite close to the FX-8120 I was
+using, with a difference of maybe up to 30% in favor of one or the other
+on different codes, although indeed exceptions to that exist (and we may
+have run into one of those).
+
+Here's the runtime with git
+commit 00cef314195850dc7829dd684051a3646ca2cf93.  I modified some docs most
+likely since your benchmark - nothing that changed performance.  Here's
+three runs I just did:
+
+I also ran each benchmark several times, there was not much difference
+between the runs.
+
+noelkdf./run_noelkdf
+324C977EDEF4972925261D6B996C904E1EF297BC0EFF4286887D187CA16326EE
+
+real    0m0.311s
+user    0m0.560s
+sys     0m0.040s
+
+Your system time usage is a lot lower.
+
+What OS and version are you running?
+
+It might be that you have transparent hugepages and I don't, or
+something like that.
+
+On Sat, Jan 4, 2014 at 12:27 AM, Solar Designer <solar@...nwall.comwrote:
+I assume the previous "page" stays in L1 cache, so it's slowing
+noelkdf down, but not much.
+
+I think you're exceeding L1 cache even with 1 thread/core, because
+you're accessing 3*16 KB pages.  However, the sequential accesses are L2
+cache friendly.
+
+I'm inferring you've sped up scrypt by as much as 5X.
+
+This is definitely not true.  My optimized scrypt runs ~2x faster than
+Colin's original (the -sse version of it), and that's on a newer machine
+than what Colin was using at the time.
+
+Not that in a way scrypt's 1 GB corresponds to NOELKDF's 2 GB, because
+scrypt runs for 2*N time.  In terms of cost to attacker, NOELKDF's 2 GB
+is _presumably_ better than scrypt's 1 GB.
+
+Why do you say scrypt's 1GB is the same as noelkdf's 2GB?  For 1G, both
+read 1GB from memory, and write 1GB to memory.  Noelkdf just does it in 1
+loop instead of 2.
+
+Oh, you're right.  However, for escrypt with p=1, there is this 2x
+difference in memory access count:
+
+Now let's try escrypt in one of its native modes, with random lookups
+added to SMix's first loop and writes added to SMix's second loop.
+
+[...]
+
+Here's a nice comparison of the two processors:
+
+http://www.anandtech.com/show/4955/the-bulldozer-review-amd-fx8150-tested/2
+
+If I'm reading it right, your AMD FX 8 processor has a limit of 8
+instructions in parallel, while the Bulldozer Core i7 can do 16.
+
+No, this sounds wrong.  Per that table, it's 16 instructions peak decode
+rate per chip for either chip.  You should compare "Eight Core" FX
+(that's AMD's marketing for the 4-module chips) vs. "Quad Core" i7.
+
+[...] I think my server has mood swings, probably related
+to temperature.  By the time it runs 2 cores that long, it's already
+scaling back the clock.
+
+Hardly.  In my experience, recent Intel desktop CPUs almost always run
+at max turbo frequency possible for the core count in use, with no
+scaling down, and they definitely can't heat up that much in just a few
+seconds (it'd take minutes) - well, unless you have no heatsink or
+something (but then you'd have bigger problems). ;-)
+
+If you like, I'll run escrypt on my machine for you to see if you see
+similar speedups.
+
+We may do that, but I don't expect any significant speedup (possibly a
+slight slowdown for lacking XOP).  I am testing on several other
+machines as well, including i7-4770K.  I may give you access to those so
+that we can test on the same machine.
+
+Let's revert to 1 GB allocation, to have same iteration count as NOELKDF
+(but up to 2x lower area-time):
+
+I see no 2x difference.  Still, more data is good.
+
+Not "2x lower", but between 2/3 and 1x of NOELKDF's 2 GB, I think (as I
+explained in another message).
+
+I wouldn't worry about the numbers I get on my machine.  I've simply got a
+different CPU and memory setup.
+
+It's not very different, actually.  With properly optimized code (such
+as in JtR "formats"), we're getting similar speeds on Bulldozer vs.
+Sandy/Ivy Bridge (comparing AMD's "8-core" vs. Intel's quad-core).
+
+[...] From my memmove tests, my
+machine seems to max out around 22 GB/second of memory bandwidth.  Can we
+do better with SSE instructions and temporal cache instructions?
+
+22 GB/s sounds like your memmove() is already using SSE, which is not
+surprising.  This is 86% of theoretical peak, which is consistent with
+the best speeds I got with SSE.
+
+Again, thanks for the review and all the benchmark data!  I wish I could
+get you to SIMD optimize my code.  There are still very significant issues
+I don't know the answers to, like is it OK to have that 64-bit multiply in
+there?
+
+I already addressed this in another message.  There are both pros and
+cons to using 64-bit multiplies and adds.  The maybe-pros include slight
+unfriendliness to current GPUs.  The cons include unfriendliness to SIMD
+on current CPUs (with the MULs; 64-bit ADDs are OK).
+
+I had it based on 2 32-bit multiplies and a couple shifts, but
+64-bit ran faster everywhere I tested it.  I tried converting the code to
+all 32-bit, but it doubled my run-times.  If you don't mind working on two
+hashing projects in the same competition, I'd really appreciate having
+another author.  Two chances to win is better :-)
+
+Thanks for the offer.  Unfortunately, I barely have time to complete our
+own submission by the end of January, so I definitely won't work on
+another one directly at least until then.  Also, it's not as much about
+winning as it is about having better KDFs / hashing schemes among those
+selected as winners, if any.  I am happy to help you improve yours, such
+as by providing advice in this discussion, and your benchmark results,
+etc. may also indirectly help improve escrypt.
+
+Alexander
+

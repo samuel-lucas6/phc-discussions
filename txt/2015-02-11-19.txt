@@ -1,0 +1,263 @@
+phc-discussions - My votes as a panelist (well, some of them, for now)
+
+Message-ID: <BY2PR03MB554DF8BAFF73978FE94C1A5A7250@BY2PR03MB554.namprd03.prod.outlook.com>
+Date: Wed, 11 Feb 2015 21:48:03 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "' (discussions@...sword-hashing.net)'" <discussions@...sword-hashing.net>
+Subject: My votes as a panelist (well, some of them, for now)
+
+There's a lot of talk (and some outright silly accusations) on PHC-discuss about the voting process. I even agree that the published rationale looked a little thin. But I think the process is sound and I am happy with the current finalists.
+
+So in the hope that this will dispel misinformation, I will share some of my voting rationale as a panelist.
+
+In doing so I am taking a risk that this will just cause folks to demand ever more info. *I'm trusting you all, don't make me look like a fool.* For example, I doubt that all other panelists will volunteer to do the same and I don't support pressuring any of them to do so. I agree with JP that the panel list needs to be private to promote frank discussion.
+
+My voting criteria were based on the PHC criteria, my experience as a software engineer, and on other criteria Greg Zaverucha and I presented at PasswordsLV 2014 "What Microsoft Would like from the PHC".
+Video: http://www.youtube.com/watch?v=Kr6ruthF_4k
+Slides: http://permalink.gmane.org/gmane.comp.security.phc/1793
+
+For the record I don't see any conflict between "what my employer would like" and the stated goals of the PHC and as a panelist I am aware of being in the minority of those who represent eventual consumers of the PHC result. But these votes are my own.
+
+I did not vote on all the submitted algorithms. JP had asked for a certain minimum number of votes from each panelist.
+
+So how did I choose which ones to review and vote on?
+
+
+1.       I had some candidates I already wanted to review. I put these in my queue.
+
+2.       I had lunch with Greg and he suggested some others he thought I should review.
+
+3.       I selected from among the remaining algorithms using numbers from random.org.
+
+I am not *yet* sharing the algorithms which I picked TO ADVANCE. I do have personal favorites, but I don't want to share them yet. Probably in the future I will share these votes if there is interest. There may or may not be overlap between other panelists and submitters of these algorithms that voted TO ADVANCE. I honestly don't pay that much attention to the names on the algorithms or the list of panelists. (But I'm pretty sure there is overlap between panelists and submitters of algorithms I voted to NOT ADVANCE.)
+
+In summary, I feel the purpose of the PHC is to advance the art of storage of password-based credentials and the good news is that there are several great choices among the finalists. The bad news it's hard to choose. But the important thing is that we conclude the process with a bug-free and interoperable algorithm in hand.
+
+
+-          Marsh
+
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+Parallel
+
+============ Vote
+
+Vote to NOT ADVANCE to finalist.
+
+============ Discussion
+
+The KDF variant was not reviewed.
+
+=== Specification - Complete and unambiguous description of the scheme
+
+The language in which this specification is given seems ambiguous.
+
+The t_cost_1 parameter is defined but not used.
+
+=== Specification - Initial security analysis section
+
+Extremely short and gives no basis for its claims.
+
+=== Specification - Efficiency analysis section
+
+Extremely short and gives no basis for its claims.
+
+====== Other comments
+
+Issue: Its security is based upon the hardness of SHA-2-512. This will provide a significant advantages to FPGA and ASIC attackers and reflects a weakness.
+
+Issue: Because of the truncate(key, outlen) operation at the end of each iteration of i, this design suffers from image shrinkage. Bits of entropy lost will be roughly proportional to the t_cost parameter. It can never deliver its full outlen parameter of entropy, though this might not be significant in practice.
+
+Observation: Output is padded with zeroes for outlen 64. It would be better simply to forbid these values.
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+Tortuga
+
+============ Vote
+
+Vote to NOT ADVANCE to finalist.
+
+============ Discussion
+
+=== Specification - Complete and unambiguous description of the scheme
+
+The core function is based on the Turtle cipher defined in reference [1]. The call for submissions allows that "if the scheme reuses an existing primitive, this primitive need not be described", and gives as an example AES. In my view, Turtle is not in the same league as AES and thus the specification of Tortuga should not have relied on it solely by reference.
+
+Issue: In the pseudocode for genkey() on page 5, the 'for' loop advances variables i and j, but only i appears to be used.
+
+Issue: In Step One: Permutation Key Generation, the 'function genkey(key, keylen, salt)' function is called with the first parameter being the return value of encode_uint. However, the signature for encode_uint() gives it a return type of void. Instead we might assume that genkey was meant to operate on a buffer initialized by the specified encode_uint function. However, this function as specified only initialized the first four bytes of the buffer. Thus genkey() will operate on uninitialized memory whenever keylen is greater than 4.
+
+Issue: The 'm_cost' parameter is mentioned in the specification but not defined.
+
+The specification does not provide a complete and unambiguous definition sufficient for a correct implementation.
+
+=== Specification - Initial security analysis section
+
+Good references are given to prior work on the security of Feistel and sponge constructions. However, little guidance is suggested to the user for appropriate choices of cost parameters.
+
+=== Specification - Efficiency analysis section
+
+It is hinted that "various optimizations are possible" and "'close-to-the-metal' implementations", but nothing concrete is described. The question of whose 'metal' is optimal (the attacker's or defender's) is critical for a password hashing function.
+
+====== Design
+
+Observation: "The key size is the smallest power of four greater than the size of the password in bytes". This would appear to cause the security analysis to differ significantly between 15- and 16-byte passwords.
+
+Observation: The fundamental idea of using an extremely wide-pipe sponge for memory and CPU hardness is a good one.
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+Pufferfish
+
+============ Vote
+
+Vote to NOT ADVANCE to finalist.
+
+============ Discussion
+
+=== Specification - Complete and unambiguous description of the scheme
+
+Issue: In the pseudocode description of the algorithm, inside the 'j' loop the expression "sbox[i] + j" occurs twice. It is assumed the intent is "sbox[i + j]".
+
+Issue: In the pseudocode description, a function expandkey() is referenced. It is assumed this is the code defined later by 'function keyexpand'. This function is called repeatedly with a first argument of 'null', which is then treated as an array and indexed inside the function.
+
+Issue: In the pseudocode, the function 'encipher' lists many expressions of the form "L XOR expr". It is assumed that leftward XOR-assignment was intended.
+
+Issue: The count and types of elements in the 'data' 'key' and 'P' arrays are unstated.
+
+Issue: The function keyexpand(data, key) only ever accesses the first 18 elements of the key array. If the key array has elements of bytes, this means that there only 144 bits of the SHA-2-512 hash output being used. Probably not an issue. Alternatively, if the key array elements are 64-bit words, then there this would represent undefined/underspecified behavior.
+
+Issue: In function f(x), the variable log2_sbox_words is being assigned a value that is actually a power of two. Perhaps the exponent value was meant instead.
+
+Observation: If outlen is 0, the final loop in pufferfish never terminates.
+
+=== Specification - Initial security analysis section
+
+The assertion is made that the cryptographic security properties of unmodified Blowfish are not essential to the security of Pufferfish. This is a somewhat bold claim, but I think it is probably reasonable. After many years of analysis and real-world use, the known attacks on Blowfish have not translated into weaknesses of bcrypt.
+
+=== Specification - Efficiency analysis section
+
+An efficiency improvement (for the defender) is claimed due to the use of 64-bit integer operations. This is said to also translate into a disadvantage for an attacker hoping to benefit from GPU. But however well this statement reflects the current status quo, it is not likely to hold true forever as GPUs continue to evolve.
+
+====== Design
+
+Issue: The function f(x) indexes into the sbox[m][n] arrays in a pseudorandom sequence dependent on the secret password and salt. Function f is called from encipher, which is called from the keyexpand function. There will be at least 512 elements in the sbox subarray, so this is likely to represent a significant cache timing side channel.
+
+Observation: The SHA-2-512 operations could be accelerated by an FPGA or ASIC attacker, but represent a small part of the work of the overall function.
+
+Observation: If future GPUs include better support for 64-bit operations, Pufferfish may still be useful as a memory-hard variant of Bcrypt.
+
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+Yarn
+
+============ Vote
+
+Vote to NOT ADVANCE to finalist.
+
+============ Discussion
+
+=== Specification - Complete and unambiguous description of the scheme
+
+The Yarn specification probably give an implementer a good chance of producing an interoperable implementation.
+
+Issue: The AESPermutation function is described as "a combination of SubButes, ShiftRows and MixColumns AES steps". This needs to be defined explicitly, or at least by reference to Intel documentation.
+
+=== Specification - Initial security analysis section
+
+The security analysis describes Yarn's reliance on the security of the BLAKE2b and AES round function. It shows that the designer has considered a variety of corner cases and attacks.
+
+=== Specification - Efficiency analysis section
+
+Possible issue: The assertion is made that making an efficient ASIC or FPGA for Yarn would be tricky because x86 CPUs already have advanced memory controllers and AES implementations. While this is true, there are also large areas of the die which are completely unnecessary (e.g., caches) and could be eliminated in a specialized Yarn attack ASIC or FPGA.
+
+====== Design
+
+Observation: The design goals of Yarn are down-to-Earth and pragmatic.
+
+Issue: Yarn is excessively tied to a specific processor instruction set. It relies not only on the presence of some hardware-accelerated AES, but of the x86-specific aesenc instruction.
+
+Issue: Memory accesses are randomized with a pseudorandom sequence derived from the password. This is likely to represent a significant cache timing side channel.
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+Argon
+
+============ Vote
+
+Vote to NOT ADVANCE to finalist.
+
+============ Discussion
+
+=== Specification - Complete and unambiguous description of the scheme
+
+Excellent. Very standard CompSci algorithm notation with additional information filling in specifics of encodings. The Argon specification probably gives an implementer a good chance of producing an interoperable implementation.
+
+Observation: The specification benefits from some great diagrams.
+
+=== Specification - Initial security analysis section
+
+Observation: Argon benefits from previous analysis performed for AES, even in its reduced round variant.
+
+=== Specification - Efficiency analysis section
+
+Issue: The efficiency analysis of Argon is heavily oriented to modern x86/x64 chips.
+
+====== Design
+
+Observation: Argon draws inspiration from arcfour for some of its permutation steps. But as it is mediated by reduced-round AES, there is little to suggest that Argon would be significantly affected by known or future weaknesses in arcfour.
+
+Issue: Argon relies the presence not only of hardware-accelerated AES, but in a form amenable to a nonstandard reduced round variant.
+
+Issue: Memory accesses are randomized with a pseudorandom sequence derived from the password. This is likely to represent a significant cache timing side channel.
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+
+==========vvvvvvvvv==========vvvvvvvvv==========vvvvvvvvv==========
+
+============ Submission
+
+yescrypt
+
+============ Vote
+
+ABSTAIN
+
+============ Discussion
+
+=== Specification - Complete and unambiguous description of the scheme
+
+Issue: Yescrypt "is currently most precisely specified by means of a deliberately mostly not optimized reference implementation". Implementation-specified password hashing functions have caused problems in the past due to the insufficiency of C as a formal specification language.
+
+Issue: The pseudocode description of yescrypt defines it in terms of a set of changes to the older scrypt function. While scrypt is well-known, it should be included inline or at least by citation.
+
+==========^^^^^^^^^==========^^^^^^^^^==========^^^^^^^^^==========
+
+
+
+
+

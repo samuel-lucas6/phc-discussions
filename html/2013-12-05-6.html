@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] blakerypt sequential memory-hard function</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="5">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;007201cef1e8$419762b0$c4c62810$&#64;acm.org&gt;
+Date: Thu, 5 Dec 2013 10:31:46 -0800
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] blakerypt sequential memory-hard function
+
+
+Re Andy's questions:
+
+The biggest reason for choosing a Fibonacci-indexed work factor was to provide a compact code and use the saved space for more cryptographically-random salt bytes in the data structure chosen for conveying the parameters.  This seems particularly beneficial in case a fixed work-factor setting is used with high regularity, although one can do better than that with a time-adaptive iterator.  I also wanted a growth mechanism that would likely never outgrow a compact, fixed-width data element.  That's the particular appeal for using a compressed selection of timing work factors, however it is done.
+ 
+The Fibonacci recurrence is very useful for checking progress timing and knowing whether to try another block of iterations without growing quite so fast as doubling.  It is only necessary to keep two numbers, of course, with the first two known in advance.  Only additions are used in deriving additional iteration blocks.  This also avoids time-checking in the inner loop, and that strikes me as useful too.  I wanted to avoid setting timers or doing anything that depends on event mechanisms, although it is necessary to have access to a clock with reasonable granularity.  That was the second appeal to me -- the ease of working it progressively in an adaptive timing of the hash production.
+
+Powers of 2 seem a little too systematic and I wanted to avoid those as a simple precaution.  The Fibonacci scheme can be used to target timings between Ttarget and about 1.6*Ttarget, as Andy notes.
+
+Yes, it is necessary that the iterative hashing be "restartable" to obtain more iterations.  This does influence how cryptographic primitives are integrated with the iteration mechanism when a hash is being produced initially.  That is definitely additional complexity and there are many good reasons to be wary about it.  
+
+ - Dennis
+
+PS: In the case I had in mind, the document-embedded hash might be verified on different systems than the one used to produce it.  If there is a wide variation in implementation performance, that needs to be taken into consideration in using an adaptive timing on the iterations for the produced hash.  I mentioned that and some other aspects as simply something to pay attention to, not something unique to the Fibonacci compression of iteration cases.  It happens that these apply to the Fibonacci case, not that the Fibonacci compression provides anything unique.  It's just handy (and not uniquely so) for the two key reasons that mattered to me.
+
+
+-----Original Message-----
+From: Andy Lutomirski [mailto:luto&#64;...capital.net] 
+Sent: Thursday, December 5, 2013 09:16
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+On Thu, Dec 5, 2013 at 8:16 AM, Dennis E. Hamilton
+&lt;dennis.hamilton&#64;....org&gt; wrote:
+&gt; I favor Fibonacci indexes for this sort of thing.  That is k, in a small number of bits, produces work factor fib(k+n) where n is some value that assures a reasonable minimum and the maximum fib(k+n) is decisively out of reach for any forseeable time into the future.
+&gt;
+&gt; The advantage is that the Fibonacci recurrence provides a nice way of deriving k on the fly by seeing how much time is being taken in real time, and incrementing by the next step if a target threshold has not been reached.  This does mean that k is not known until the hashing has been completed, and the protocol has to accommodate that.
+
+What does this have to do with Fibonacci numbers?  fib(n) is, to an
+excellent approximation, ϕ^n (i.e. ~1.618^n).  1.618 &lt; 2, so this
+gives a bit more fine-grained control than 2^n, but it seems like it
+will come at a cost of being more esoteric.
+
+For what it's worth, it would be possible to implement any strictly
+iterative password hashing scheme so that it ran for a preset time and
+output the resulting iteration count.  This has nothing to do with
+Fibonacci numbers or even with exponential growth.
+
+I'm still not sure I see the advantage of any exponential approach
+over just a plain linear work factor (except for losing compatibility
+with some fancy chaining schemes).
+
+&gt;
+&gt; The advantage is that k will grow along with growth in processor power.  One disadvantage in certain applications is that the speed of the system where the hash is first created determines the work factor that less powerful systems will need to employ in order to verify the hash.
+&gt;
+
+This is true for any reasonably password hash as far as I know.
+
+--Andy
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

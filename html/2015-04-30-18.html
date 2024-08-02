@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="17">[&lt;prev]</a> <a href="19">[next&gt;]</a> <a href="17">[&lt;thread-prev]</a> <a href="../../../2015/05/04/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150430155505.GA25385&#64;openwall.com&gt;
+Date: Thu, 30 Apr 2015 18:55:05 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+On Thu, Apr 30, 2015 at 02:43:45PM +0200, Stefan.Lucks&#64;...-weimar.de wrote:
+&gt; Except that there is no law that requires defenders to publish their 
+&gt; password files. Given past experience, it would be unwise for the defender 
+&gt; to assume the password file will never be compromised. For this reason, the 
+&gt; defender must use a good password hash function. On the other hand, is 
+&gt; would be just as unwise to assume that the password file will actually be 
+&gt; compromised. Without knowing the password file, Mallory would be back to 
+&gt; on-line attacking the defender's system. The point I am trying to make is 
+&gt; that in such a situation, a password hashing function being vulnerable to 
+&gt; side-channel attacks would be a terrible choice.
+
+While you're mostly correct, you're somehow omitting important detail.
+As discussed before, salting may defeat side-channel attacks on password
+hashes, as long as the salts are not known/predictable by the attacker.
+In your example, "without knowing the password file, Mallory would"
+typically also not know the salts, so would not be able to mount a
+side-channel attack.
+
+A notable exception, as pointed out by Krisztian before, is what happens
+when you offload hash computation to the client.  In that case, you'd
+usually reveal the salt of the target user to the client system.
+Another user of the client system could then mount a side-channel attack
+there (by also obtaining the salt from the server via the same means).
+
+Similarly, if full hashing is sometimes performed on the server (e.g.,
+for clients that lack the custom software), then support for client-side
+hash computation could be used to retrieve salts for mounting side-channel
+attacks from another (pseudo-)user account or VM on the server.
+
+It's primarily this special case that warrants use of side-channel
+resistant password hashing schemes.  Indeed, it may be safer to use them
+unconditionally, e.g. in case client-side hash computation would be
+added to a given setup later.
+
+&gt; Even if the defender does not really understand how Mallory might mount a 
+&gt; side-channel attack against H1, choosing H1 for the marginal gain of a ten 
+&gt; times better performance could be a fatal move, if H2 is resistant to 
+&gt; side-channel attacks. The most serious issue are cache-timing attacks, 
+&gt; but one should also consider garbage collector attacks, and possibly other 
+&gt; attacks as well.
+
+This is right.  However, a relevant question is: are we focusing on
+avoiding unlikely yet potentially fatal special cases, or are we trying
+to reduce the percentage of passwords that will get cracked in a more
+likely case?  I expect that answers will vary.
+
+&gt; (Note that the situation for password-based key derivation, is different. 
+&gt; There, can hardly exclude Mallory from performing off-line attacks. Except 
+&gt; when Mallory doesn't have the ciphertext -- but then, why should Mallory 
+&gt; care for the key or the password at all?)
+
+Right.  However, garbage collector attacks do matter for KDF use,
+perhaps more so than for password hashing use.
+
+&gt; The consequence for PHC?
+&gt; 
+&gt; If PHC selects a single winner from one of the finalists, it should either 
+&gt; be Argon2i or Catena. If PHC selects more than one winner, the set of 
+&gt; winners should include at least one of Argon2i and Catena.
+
+This appears to be the case.  I think it was understood by most (or at
+least by many) panel members at finalists selection that unless a fatal
+flaw is found in Catena, it will most likely be a winner.  (We didn't
+expect a tweak to the extent of Argon2i, and it's still not accepted.
+But it might be accepted soon.)
+
+Personally, I would probably not recommend a side-channel resistant PHC
+winner for most use cases at least in the nearest future.  I think I'm
+not alone at that.  So if it's the only winner, then we should expect
+greater use of non-PHC schemes.  (Argon2 has advantage here: it's two
+complementary schemes at once.  OTOH, it is in need of further tweaks.)
+
+BTW, it might be more than a 10x difference in GPU attack resistance at
+low defensive running times (such as for achieving high request rate
+capacity on a server).  First, there's a 3x difference in running time
+for same memory usage (for Argon2d vs. Argon2i recommended minimum
+t_cost).  Then, there's exclusion of anti-GPU measures such as rapid
+secret-dependent S-box lookups, which potentially means up to the peak
+GPU/CPU performance ratio (if the defensive running time is limited such
+that the memory usage is very low).  Maybe a hashing scheme could
+introduce rapid secret-independent S-box lookups, which maybe would
+nevertheless be of some anti-GPU effectiveness.  But the confidence in
+that would be lower, and we don't have it in PHC currently.
+
+For Litecoin, which is scrypt at 128 KB and thus does include
+secret-dependent lookups (just not good enough ones), the GPU/CPU
+performance ratio is more like 20x.  Yes, scrypt is susceptible to
+efficient TMTO, whereas Catena and Argon2i try not to be, but those
+Litecoin GPU miners use a low TMTO factor - typically 1/2.  It just
+happens to be optimal for them.  So Catena and Argon2i may be just as
+susceptible to the ~20x attack performance ratio at low m_cost.
+Frankly, Argon2d too, which is why I proposed a tweak to it.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

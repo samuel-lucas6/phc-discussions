@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Comments from Argon2 and Catena co-designers
+
+Message-ID: <5589C040.9000907@larc.usp.br>
+Date: Tue, 23 Jun 2015 17:23:28 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Comments from Argon2 and Catena co-designers
+
+Hi all.
+
+On 23-Jun-15 06:52, Jean-Philippe Aumasson wrote:
+Hi,
+
+The PHC panel has been discussing which algorithms to includes in its final
+portfolio (aka "winners"). Panel members believe that Argon2 and Catena are
+the top candidates in the category where they're playing. It's difficult to
+make up our mind though, so to help us we've asked designers of these
+candidates to make the case for their respective candidates.
+
+For a better transparency, we're publishing those comments below: comments
+by Stefan Lucks from the Catena team (followed by his March 31 votes
+regarding PHC winners), and comments by Dmitry Khovratovich from the Argon2
+team. Both agreed to have their comments published here.
+
+<CATENA author="Stefan">
+
+---------- Forwarded message ---------
+From: <Stefan.Lucks@...-weimar.de>
+Date: Tue, May 19, 2015 at 7:55 AM
+Subject: Re: PHC vote
+To: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+Cc: <Stefan.Lucks@...-weimar.de>
+
+Lyra2:
+
+To be precise, Lyra2 is vulnerable to the following form of
+cache-timing attacks: Given some cache-timings, the adversary is able
+to crack low-entropy passwords, even without knowing the password
+hash. Thus, if there is a chance to keep the password hashes secret,
+or to encrypt them, and there is a chance that cache timings might
+leak, then using a highly advanced password hash function, such as
+Lyra2, may be worse than using md5crypt, or even storing the password
+unencrypted.
+
+
+I do not know md5crypt in detail, but I believe I understand what are
+the implications of storing an unencrypted password, so I'm not sure I
+agree with that affirmation: any cache-timing information leaked can
+only be used after Lyra2's Setup phase is finished.
+
+Hence, an attacker trying to use such information "will have to run the
+whole Setup phase and at least a portion of the Wandering phase before
+they can use cache-timing information for .filtering guesses" (to quote
+Section 5.3 of Lyra2's Reference Guide), paying the corresponding costs
+memory and processing costs. That would for example, allow the attacker
+to use half of the legitimate user's total memory and processing time,
+employing an strategy similar to that of section 5.1.2.1, assuming that
+such TMTO does not reduce the value of the cache-timing information (and
+that may be a strong assumption...).
+
+This 1/4 TA reduction is nearly a "best case" scenario, and contrasts
+with algorithms having memory-dependent accesses sooner, in which the
+cache-timing information can be employed long before the memory is
+filled or any TMTO becomes necessary. And it is likely much better than
+just getting the password from the memory with zero effort...
+
+Or did I misunderstand what you meant (and, in that case, this email was
+totally unnecessary :) )?
+
+BR,
+
+Marcos.
+

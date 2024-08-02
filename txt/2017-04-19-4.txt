@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] Fwd: memory-hard password hashing
+
+Message-ID: <20170419182755.GB10820@openwall.com>
+Date: Wed, 19 Apr 2017 20:27:55 +0200
+From: Solar Designer <solar@...nwall.com>
+To: Erik Aronesty <erik@....com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] Fwd: memory-hard password hashing
+
+On Wed, Apr 19, 2017 at 12:07:12PM -0400, Erik Aronesty wrote:
+There is a focus on memory-hard algorithms in password hashing, since that
+renders them ASIC/GPU resistant.
+
+It's not that simple.  (Maybe you over-simplified on purpose.)  There's
+a need to distinguish sequential memory-hard (as formally introduced
+with scrypt) and parallelizable/amortizable memory-hard.  And there are
+specific parameters to be "ASIC/GPU resistant" to varying extent.  BTW,
+the scrypt paper doesn't even mention GPUs.
+
+However, it is /possible/ for an ASIC to be tightly coupled with DRAM in
+ways that can exceed PC memory performance.
+
+Yes.
+
+You might misunderstand "memory-hard" as meaning "memory-bound", but
+those are distinct properties.  (Or maybe you're over-simplifying.)
+
+Memory-hardness is passing onto the attacker the cost of memory itself
+(die area occupied by memory), not the cost of providing a certain
+memory bandwidth.  So you need to distinguish: sequential memory-hard,
+parallelizable/amortizable memory-hard, and memory-bound.  There may
+also be combinations of these.
+
+To address the potential for reduction in the "time" factor in
+memory*time in an ASIC with higher memory bandwidth, sequential
+memory-hard schemes do quite some computation.  The extra bandwidth
+isn't really beneficial to an attacker unless there's sufficient memory
+(aka sufficient die area occupied by memory) to accommodate a larger
+number of instances, and/or there's a corresponding increase in
+computation speed within each one instance.  This is why some PHC
+schemes introduced compute latency hardening through integer
+multiplication and/or small S-box lookups (taking on the order of ~1ns
+on a CPU and presumably similar in an ASIC).
+
+Instead, is there an algorithm that is "very GPU friendly"?
+
+Yes.  As it happens, scrypt at low N and r=1, much like it's "misused"
+in Litecoin, is very GPU friendly.  Litecoin uses p=1, but if you want
+to occupy the entire GPU by one hash computation, you can set p to a
+high value (thousands).  Of course, ASICs do better yet.
+
+For asymmetric PoW, as it happens Equihash (at least as used in Zcash)
+is very GPU friendly.  ASICs are likely to do better yet (although it'd
+take more R&D effort than Litecoin scrypt ASICs did):
+
+http://www.openwall.com/articles/Zcash-Equihash-Analysis
+
+These two are very different: scrypt is sequential-memory hard, which we
+mostly undo with low N and high p, while Equihash is parallelizable
+memory-hard and likely memory-bound as it is.
+
+GPU's are cheap, common and highly optimized for certain operations in ways
+that make the construction of ASICs that beat them at what they are best at
+very unlikely.   They are, essentially, "floating point matrix operation
+ASICs".
+
+Sort of, but "very unlikely" is an exaggeration.  GPUs are not that
+specialized, and cost efficiency improvement is generally possible (the
+questions are: at what budget and by how much).
+
+That said, I do feel that running on a GPU and not making use of its
+computing power (which scrypt and Equihash use little of) is a waste.
+So if I were to target a GPU in a sequential-memory hard scheme, I'd
+probably include some compute latency hardening through multiplication
+e.g. by using yescrypt with unusually tiny pwxform S-boxes (like 256
+bytes per instance) or effectively without them at all (a modification,
+or size so tiny it's not requiring a local memory lookup but merely a
+conditional move from one of a couple of registers).
+
+Yes, this means that servers using such a mechanism may want to have GPUs
+installed to reduce hashing times and allow a larger number of operations
+to increase hashing security.   But I think this is a reasonable request
+for many applications.
+
+Yes, but when you consider the overhead of less standard hardware
+acquisition and systems administration, and the extra bugs and security
+vulnerabilities of GPUs/drivers (forcibly giving up on local security in
+those systems), and compare that against deploying HSM-alikes (similar
+overhead), the latter may end up winning.  They would not provide the
+heavy hashing, but instead they'd hold secrets (e.g. a hash encryption
+key).  You would still be able to do some heavy processing on the host
+(in case an HSM secret leaks).
+
+If it takes 10 milliseconds to compute a single hash with highly parallel
+FLOPs on a modern GPU, that affords a massive amount of security for a hash
+
+Yes.
+
+- ASIC resistant in ways that memory-hard algorithms cannot be.
+
+That's questionable.
+
+Then there's also that "ROM-port-hardness" aspect I introduced in 2012.
+With it in the mix, even ASICs would need to provide the, say, 112 GiB
+of memory - and efficiently sharing it across a large number of ASICs
+(to amortize its cost to an attacker) isn't that easy nor cheap.
+
+Is there an algorithm that already lends itself to this kind of application?
+
+Like I said, yes.  But I currently don't recommend that.
+
+BTW, 10ms is a lot for a deployment that is large-scale enough it would
+even consider customizing the hardware.  It's not typical.  But if you
+can afford that, it means you can do ~128 MiB (ye)scrypt on CPUs in a
+typical dual-socket server.  That's unusually high as it is.  And you
+can add to that e.g. a 112 GiB ROM, still staying only with standard
+server hardware (CPUs+RAM).  Then why also bother with GPUs?
+
+Alexander
+
+P.S. Why the "Fwd" in the Subject?  Are you adding to some old thread?
+

@@ -1,0 +1,82 @@
+phc-discussions - Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs
+
+Message-ID: <20140212171416.GD2098@openwall.com>
+Date: Wed, 12 Feb 2014 21:14:17 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs
+
+On Tue, Feb 11, 2014 at 05:13:20PM -0500, Bill Cox wrote:
+It turns out that what matters most for a cache-timing-attack immune
+KDF (like Catena) is memory bandwidth.  Everything else can be
+accelerated by an attack in an FPGA.  There is no significant gain in
+defense for running out of expensive on-chip cache,
+
+I think there could be, for L2+ cache, if the cache-timing-attack immune
+KDF has (pre-determined, mostly sequential) accesses with appropriate
+locality of reference and exceeding off-chip RAM bandwidth.  I think
+e.g. Catena could use sub-graphs for this purpose.
+
+and there is no
+significant gain for having a difficult to compute hash function (like
+my multiplication compute-time hardened hash function).
+
+I think there could be, as this would tie up as much of attacker's
+memory for about as much time (per hash computed).  Yes, even with a
+pre-determined memory access pattern.
+
+What we lose by going for a pre-determined memory access pattern is
+preference for lower memory latency and efficient small lookups.
+So e.g. a hypothetical unusually fast disk array would work just as well
+as RAM for/against Catena, but not for/against scrypt.
+
+It is far
+more important to hammer the memory bandwidth, so a fast hash
+function, and running hash functions in parallel are the important
+things, as these increase memory bandwidth.
+
+These are important, yes.  Sequential multiplies are also important.
+Ideally, a defensive implementation would use both memory bandwidth and
+multiplies at nearly the maximum speed the machine can support.
+
+Consider the case of a KDF that has a slow but cryptographically
+secure hashing function in its inner loop, which generally runs in
+cache rather than out of external DRAM.  The thinking is that
+read/writes of small 64-byte hashes randomly is inefficient for
+external cheap DRAM, but quite efficient for cache.  Instead of having
+several MiB of expensive on-chip cache for every guessing core, an
+attacker simply interleaves the memory for many guesses in parallel.
+For example, if the KDF does 64 bytes of memory read/write at a time
+to 10MiB of on-chip cache, then an attacker can instead interleave
+memory for 256 guesses in parallel into 16KiB blocks of memory and
+store them in cheap external DRAM.  There would be 16KiB read from
+external DRAM every time the KDF would normally read a 64-byte hash
+from cache, so we stream memory in/out efficiently at near max speed.
+
+Right.
+
+However, note that we know from Litecoin that 128-byte lookups from
+external RAM on GPU are actually quite efficient - as long as you can
+have lots of them pending (like a GPU can), to hide the latency.
+64-byte is not that much smaller.
+
+Of course, Litecoin's 128 KB (and it's 64 KB with 2x TMTO, which the
+miners use on GPU) is very little, which is what permits a lot of
+instances to fit in GPU card's RAM and, in turn, permits for a lot of
+pending lookups.  At YACoin's current 4 MB, the speed ends up being
+CPU-like, and we'll see what it'll be with 8 MB soon.
+
+So tying up significant amounts of memory per instance is important, for
+multiple reasons.
+
+This means cache-timing-attach immune KDFs need as simple a hash
+function as possible, and maybe they should do some hashing in
+parallel, with SIMD and/or multiple threads to get their memory
+bandwidth higher.  This is the best way to defend against brute-force
+guessing attacks.
+
+I agree, but throwing in some sequential multiplies is also helpful, as
+long as this doesn't reduce defender's memory bandwidth usage.
+
+Alexander
+

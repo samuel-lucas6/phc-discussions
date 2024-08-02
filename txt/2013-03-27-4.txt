@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Suggestion: API should include a verifier function
+
+Message-ID: <CA+aY-u6n2QArS=HssX1Hxx=5t00mrsVi8thT6yE_ASTmZYAdPw@mail.gmail.com>
+Date: Wed, 27 Mar 2013 13:55:06 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Suggestion: API should include a verifier function
+
+On 27 March 2013 02:57, Tony Arcieri <tony.arcieri@...il.comwrote:
+
+I think to be a "complete" solution, the API should include a verify
+function which guarantees a constant time comparison, similar to what NaCl
+provides for its authenticators:
+>
+http://nacl.cr.yp.to/auth.html
+>
+e.g.
+>
+    crypto_auth(a,m,mlen,k);
+    crypto_auth_verify(a,m,mlen,k);
+>
+Without such an API, I am afraid that users of the API will screw up the
+comparison and open themselves up to a timing attack.
+>
+
+I'm not sure such a strict condition is actually necessary, it is probably
+sufficient to require any underlying primitives are time-constant.
+
+>From what I understand, timing-attacks are really designed to derive key
+data by using data-dependent timing differences in an algorithm.  So, if
+there was a secret key involved in a password hash algorithm, that would
+need protecting in this manner.  Any secret key would however not be
+exposed due to differences in, say, an iteration count of the underlying
+primitive (you cannot derive any key material that isn't as efficient by
+brute-force).
+
+Deliberately introducing timing-differences in a well defined manner can
+actually create an asymmetric problem that is disadvantageous to the
+attacker and makes the defender's job easier; if I do submit an entry to
+the PHC, this will be included as a mode of operation in my submission.  In
+other words, one can force the attacker to do (I think) roughly O(n^2) work
+instead of O(n) work and retain the entire password hashing algorithm
+server-side.
+
+
+
+>
+The arguments of the verifier function are identical to the original
+hashing function, except instead of calculating a password hash, you'd
+provide a user-supplied one as input, and verify via a guaranteed constant
+time comparison whether or not it's correct.
+>
+--
+Tony Arcieri
+>
+
+
+

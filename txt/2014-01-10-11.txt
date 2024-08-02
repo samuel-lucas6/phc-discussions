@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] scripting memory (not so) high
+
+Message-ID: <1435842981.571864.1389356361142.open-xchange@email.1and1.com>
+Date: Fri, 10 Jan 2014 06:19:21 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] scripting memory (not so) high
+
+On January 10, 2014 at 6:02 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Fri, Jan 10, 2014 at 05:36:04AM -0600, Steve Thomas wrote:
+On January 10, 2014 at 4:21 AM Steve Thomas <steve@...tu.comwrote:
+>
+If you use 1/2 the memory it will cost 1.5x for each loop. So for $t_cost
+= 1
+it will take 7.5x more computations. Which is comparable to $k = 4.
+>
+Oh right I just remembered a better attack that cost 2*ram^(1/2) and takes
+2x
+operations. So for 1MB it needs 16KB and with $t_cost = 1 it's 10x. Well
+maybe I should stop considering the hashing of mem free. Oh well oops it's
+2.41x more operations.
+Normal: 16384 + 8192 * 5 + 1
+Cheating: (16384 - 128) * (5+1) - 128 + 8192 * 5 + 1
+>
+So max is 191/64 times (2.98x) more work with 2*ram^(1/2).
+>
+Can you describe that attack? Does it involve many parallel cores, and
+how many?
+
+No parallel cores.
+
+Store every "size^(1/2)"-th state starting with the first and have size^(1/2) of
+temp
+storage.
+
+Repeat $t_cost+4 times
+{
+    Start at last stored value fill temp storage. Use temp storage and discard.
+    Start at second to last stored value fill temp storage. Use temp storage and
+discard.
+    ...
+}
+
+
+You should keep
+$k relatively low. As $k increases this attack becomes more efficient for
+yours.
+>
+My $k is similar to scrypt's r, except that $k is not used as a
+multiplier for $m_cost, whereas scrypt's r is multiplied with N to
+produce m_cost (different interface). In scrypt's AT cost, I think r is
+included as O(r^1.5), due to CodesInChaos' sqrt(r) cores attack working
+on BlockMix, so, yes, r needs to be kept reasonably low (it is better to
+increase N rather than r). Besides, high $k or r is friendly to high
+latency memory, which we don't want to be (beyond defender's use).
+(Your scheme is even more friendly to high latency memory, and also to
+memory with large minimum sequential read sizes.)
+
+I was aiming for least amount of calls to hash functions while keeping it
+memory-hard. I guess I forgot make sure about the last part :).
+
+

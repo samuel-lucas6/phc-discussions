@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] Multiply with CUDA
+
+Message-ID: <20140921204556.GA10662@openwall.com>
+Date: Mon, 22 Sep 2014 00:45:56 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Multiply with CUDA
+
+Steve,
+
+I usually don't top-post, but in this case I only want to say that it
+appears we understand the technical details mostly in the same way, but
+somehow got confused in wording. :-)
+
+I also did not realize you brought this up in context of Makwa or alike.
+This explains a lot.
+
+Thanks,
+
+Alexander
+
+On Sun, Sep 21, 2014 at 02:11:21PM -0500, Steve Thomas wrote:
+On September 20, 2014 at 6:14 AM Solar Designer <solar@...nwall.comwrote:
+>
+On Fri, Sep 19, 2014 at 07:00:24PM -0500, Steve Thomas wrote:
+but still a little faster than CPUs.
+>
+I guess you mean in terms of throughput? Per multiprocessor vs. per core?
+>
+
+Total speed, if you tell a CPU and a GPU to do a bunch of multiplies, then I'm
+pretty sure GPUs are slightly faster. I think the source I got this from was
+doing arbitrarily large integer multiplies. If you only need to do 32 bit
+floating point multiply then GPUs will be "10x" faster.
+
+
+When comparing
+CPUs and GPUs with hash function speeds GPUs are ~10x faster than optimized
+SIMD
+CPU code. So we're losing SIMD with multiply so that's a 8x hit. GPUs have a
+similar hit on speed while doing smaller multiplies which is another ~4x
+slowdown.
+>
+You lost me here. In what case are we "losing SIMD with multiply"? Do
+you mean e.g. when we use specifically the 64x64->128 multiply on CPU?
+>
+
+There is no 64x64->128 vector multiply on x86.
+
+
+One of the reasons why I don't use 64x64->128 in yescrypt is that
+64x64->128 is not directly available on 32-bit CPUs and in 32-bit mode
+on 64-bit CPUs. With 32-bit CPUs/mode in mind, it's 32x32->64 max, and
+we do have SIMD with that.
+>
+
+Most of what I was talking about is for arbitrarily large multiplies. I was
+really thinking of Makwa. I probably should of mention this.
+
+
+Last note, interleaving MULX (umul128), ADCX (_addcarryx_u64), and ADOX
+(_addcarryx_u64) with VPMULUDQ (_mm256_mul_epu32) might get better
+performance
+on CPUs. MULX and VPMULUDQ should be similar in speed since VPMULUDQ can do
+4x(32bit*32bit=64bit) but there's 4x more work to do than doing
+64bit*64bit=128.
+Interleaving them should mask some of the latency.
+>
+I view potential SIMD/scalar interleaving as implementation detail, as
+long as the hashing scheme provides sufficient/tunable parallelism.
+>
+Why do you say that "4x(32bit*32bit=64bit)" is "4x more work" than
+"64bit*64bit=128"?
+
+Using "32bit*32bit=64bit" to do "64bit*64bit=128bit" takes four multiplies. Well
+if you have a "33bit*33bit=66bit" or you only need "62bit*62bit=124bit", then
+just three multiplies (and some extra additions and subtracts).
+

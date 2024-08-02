@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <20140911161613.GB13175@openwall.com>
+Date: Thu, 11 Sep 2014 20:16:14 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+On Thu, Sep 11, 2014 at 11:28:08AM -0400, Bill Cox wrote:
+On 09/11/2014 03:24 AM, Solar Designer wrote:
+So perhaps I should in fact export the pwxform rounds count as a 
+parameter, perhaps with some granularity.
+
+This would help single-thread performance a lot, which is important
+for low-end CPUs.
+
+Low-end CPUs are a different story, needing separate benchmarks and
+possibly tuning of more parameters.  It's sub-optimal to make
+conclusions about what's needed for them from benchmarks on Haswell.
+
+BTW, I ran some yescrypt benchmarks on Celeron N2815 (a recent low-end,
+low power Intel CPU for laptops) where SIMD multiplies are no faster
+than scalar ones per-element (so are much slower per instruction).
+To support CPUs like this better, we need a mode where the SIMD level
+parallelism would be removed.  This does mean exporting some (at least
+one) pwxform compile-time tunables as runtime parameters, but not
+necessarily the pwxform rounds count (although I'll likely make it
+tunable via flags too).
+
+I did more 2MiB benchmarks.  I needed to tweak it to initialize the
+first block faster, but after that, I got:
+
+1 thread, 2MiB: 4,216 h/s
+3 thread, 2MiB: 11,013 h/s
+1 thread, 1MiB: 8,695 h/s
+3 thread, 1MiB: 17,452 h/s
+
+Your "3 thread, 2MiB: 11,013 h/s" is impressive.
+
+A concern, though: if performance drops significantly with more threads
+(I guess it does for more than 3 threads in these tests?), this poses a
+problem for uses for user authentication, where the number of concurrent
+instances may be high during load spikes.  We don't want a short request
+rate spike to result in a performance drop, from which the server might
+not be able to recover easily until the request rate drops below a lower
+threshold.  This is why for such use I may prefer the case where
+yescrypt delivered 3400 c/s for 8 threads and 3150 for 4 threads, over
+the case where it delivered 4400 c/s for 8 threads and 6500 for 4 threads.
+While for cryptocoin mining the 6500 figure would be relevant since the
+thread count is easily controlled, for authentication the 4400 figure
+may be more relevant as it affects server capacity under worst case
+scenario.  (Not letting more than N concurrent threads proceed to hash a
+password is possible in some setups, but not in all - e.g., not when the
+threads may be from different services running in different VMs sharing
+a machine.)
+
+I prefer staying at 2MiB for PoW for a crypto-currency.  This is small
+enough to fit into most Intel compatible on-chip caches, while making
+it bigger would begin to blow out of them.  If you cut cache down by a
+factor of X, that makes an ASIC attack X times more effective,
+especially since it seems they are running the PoW algorithm
+single-threaded and applying threading in an outer loop.  Over time,
+it would be good to increase the memory size to keep up with cache
+size growth, or eventually an ASIC will have too much of an advantage.
+
+I think an ASIC to mine BTSY wouldn't necessarily have the 2 MiB blocks
+on die.  It could instead be similar to a specialized GPU or Xeon Phi,
+with latency-optimized circuits for yescrypt's anti-GPU rapid random
+lookups.  Perhaps it'd mine BTSY a few times faster than a GPU would
+(and perhaps a GPU would mine it with CPU-like performance).
+
+It will be interesting to see Arm benchmarks using their SIMD units.
+
+Sure.  We need to add NEON intrinsics to yescrypt-simd.c, and benchmark.
+
+Alexander
+

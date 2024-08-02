@@ -1,0 +1,86 @@
+phc-discussions - Re: [PHC] Argon2 modulo division
+
+Message-ID: <CAOLP8p43nigAqroG-DOtm26wEU+DD51H28DDYSW-KbN8iRw=mg@mail.gmail.com>
+Date: Tue, 21 Apr 2015 08:48:31 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2 modulo division
+
+On Tue, Apr 21, 2015 at 5:51 AM, Thomas Pornin <pornin@...et.orgwrote:
+
+On Tue, Apr 21, 2015 at 06:26:31AM +0300, Solar Designer wrote:
+It appears that Argon2 uses modulo division with arbitrary (and
+changing) divisors (usually not powers of 2).  Argon2d applies this to
+secret-dependent integers.  This is an extra source of timing leaks, on
+top of secret-dependent lookup addresses.
+>
+Do we consider this a drawback?
+>
+Generally, small integer division algorithms that are not constant-time
+have a running time that depends on the length of the operands, but not
+on the actual values. Thus, if you need to compute x % y while hiding
+the length of x, then you can compute (x + k*y) % y  with a suitable
+constant k (preferably a power of 2...). For instance, if x is a secret
+integer in the 0..0xFFFF range, then set k = 2^16. This won't hide the
+size of the divisor (y), but it should make execution time (and
+conditional branch pattern) independent of the actual value of x. The
+cost of the extra shift-and-add should be small compared to that of the
+division.
+>
+
+I do not consider this to be a limitation of Argon2d, though Lyra2 (and
+TwoCats) does protect against related attacks with it's password
+independent first loop.  However, there are some tin-foil hat attacks I do
+worry about, which could be effective against any algorithm without
+cache-timing attack resistance, including Argon2d and Yescrypt, but not
+against Lyra2.
+
+The mod operation on platforms that do byte-wise division would run faster
+1 in 256 times, just randomly, producing a useful timing signature for an
+attacker.  However, every entry in the competition already calls memcpy on
+the password, which also provides password dependent timing information,
+and very usefule information - the password length.
+
+The assumption in this competition has been that the attacker does not have
+such high resolution timing information that he could determine the
+password length from memcpy timing.  While attacks that could make use of
+this sort of timing mostly use oscilloscopes on the power rails, there are
+other possible atttacks.
+
+For example:  Intel's hardware RNG has an undocumented mode for producing
+raw data output.  I believe their design may be very sensitive to power
+supply noise, and could give an attacker sub-nanosecond resolution of
+whether the power rails are increasing or decreasing (a strig of 1's means
+power is sloping one way, 0's means the other way) - enough to see the
+length of a memcpy or other operation that hogs memory bandwidth.  It also
+might be able to detect a mod operation delay.
+
+However, a mod operation in modern hardware is fast compared to an L3 cache
+miss.  Password dependent hashing will generate an easily observed power
+rail waveform due to inactivity in the CPU during a cache miss.
+
+In short, only the cache-timing resistant algorithms (Catena and Argon2i)
+are at all resistant to an attack with power rail information.
+
+Worrying about Intel's hardware RNG being used to monitor the power rails
+is a bit silly - it's probably much more useful as a way to control the
+output of the RNG and PWN your crypto.  However, CPUs have incorporated
+power rail oscilloscopes directly on the die for decades.  We had one in
+the HP SPECTRUM PN-10 CPU I helped debug back in 1988.  It required a
+repeating power rail waveform to work, but modern CPUs likely can do it on
+one go.  Back then we had to design the whole CPU with around 180,000
+transistors.  Given billions, the oscilloscope design is fairly simple (a
+triangle wave feeding a bunch of latch-based comparators with buffers
+providing delays between their control inputs).  On the positive side,
+accessing those modes hopefully requires at least the same runtime
+priveledge as accessing page tables and such, assuming they aren't
+purposely back-doored...
+
+So, I don't think this mod operation in itself is that big of a deal.  The
+timing attacks in general worry me a bit, but not enough to switch to a
+fully resistant algorithm like Catena or Argon2i.
+
+Bill
+
+
+

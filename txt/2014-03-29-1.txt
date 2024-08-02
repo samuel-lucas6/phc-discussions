@@ -1,0 +1,45 @@
+phc-discussions - Re: [PHC] Scrypt can have highest time*average memory cost
+
+Message-ID: <20140329002316.GA30787@openwall.com>
+Date: Sat, 29 Mar 2014 04:23:16 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Scrypt can have highest time*average memory cost
+
+On Sat, Mar 29, 2014 at 03:13:28AM +0400, Solar Designer wrote:
+Given all of the above, maybe it's better to match on efficiency: have a
+common t_cost achieve 100% ATnorm efficiency for both kinds of modes?
+
+t_cost	t anti-TMTO	t TMTO-friend	AT (vs. scrypt not incl. TMTO)
+0	1 (89%)		5/3 (96%)	1/3	2/3
+1	4/3 (100%)	2 (100%)	2/3	1
+2	2 (89%)		3 (89%)		4/3	2
+3	3 (69%)		4 (75%)		7/3	3
+
+Actually, I like this one.  0 and 1 are special, the rest are trivially
+computed from t_cost.
+
+For t_cost=0 and anti-TMTO, maybe t very slightly higher than 1.0 should
+be preferred, like 13/12 for ATnorm half way between 4/3 (which it is
+at t=1.0) and 1.5 (max).  Otherwise the last few elements of V are
+almost certainly never read back.
+
+I think I'll do simply:
+
+t_cost	t anti-TMTO	t TMTO-friend	AT (vs. scrypt not incl. TMTO)
+0	4/3 (100%)	2 (100%)	2/3	1
+1	2 (89%)		3 (89%)		4/3	2
+2	3 (69%)		4 (75%)		7/3	3
+3	4 (56%)		5 (64%)		10/3	4
+4	5 (46%)		6 (56%)		13/3	5
+
+At first glance, anti-TMTO modes' AT cost shown here is lower and
+efficiency drops more rapidly, but note that this is for slightly lower
+running time and that TMTO-friendly modes' actual AT cost is up to 2x
+less than what's shown above if the TMTO is exploited.  With these
+aspects considered, the anti-TMTO modes' normalized AT cost is actually
+up to 3x higher than that of TMTO-friendly modes (for their respective
+100% efficiency t_cost points).
+
+Alexander
+

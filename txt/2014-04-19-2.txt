@@ -1,0 +1,125 @@
+phc-discussions - Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2 initial review)
+
+Message-ID: <20140419021328.GD18678@openwall.com>
+Date: Sat, 19 Apr 2014 06:13:28 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2 initial review)
+
+On Fri, Apr 18, 2014 at 02:34:26PM -0400, Bill Cox wrote:
+Yesterday, I had some fun benchmarking Lyra2, TwoCats, and Yescrypt.  Are
+there any other authors who would like their algorithms benchmarked?  I'd
+be happy to start tabulating data on all the entries that are ready for
+benchmarking.  After yesterday's hack-fest, I don't feel simply running the
+PHS routines without the involvement of the author is likely to generate
+useful data, so I'm only going to do benchmarking the authors request for
+now.
+
+Makes sense.
+
+We should discuss what to measure and how to report it.  Is there a better
+place than posting it here?
+
+I think posting in here is fine, and depending on how much data we have
+and how confident we are in it, we may put it on the wiki.
+
+I think we maybe we need three memory size categories, where PHC entries
+can be benchmarked in any or all of them.  Basically, the 3 memory sizes
+correspond to:
+
+- L1 cache bound:  how about 8KiB?
+- Cache bound: how about 8MiB?
+- External DRAM bound: how about 2GiB?
+
+I think it's better to separate by use case.  Surely we can afford more
+than 8 KiB even on older systems (glibc has been using 128 KiB for
+UFC-crypt since 1990s, not giving any lower-memory choice).  However,
+Pufferfish might suffer when we exceed L1 cache.  Also, we need to
+consider that the hashing scheme likely allocates a small fixed amount
+of memory on top of what's requested (for yescrypt it'd be another
+8 KiB for S-boxes, and some more).  Normally, this wouldn't matter, but
+at L1'ish m_cost settings it could easily double or triple the actual
+memory usage for _some_ of the schemes, thereby making the comparison
+somewhat unfair.
+
+Anyway, we can try:
+
+- L1 cache bound: 8 KiB (plus whatever fixed "overhead" there may be),
+along with higher t_cost, roughly to match running times for 1 MiB:
+
+- High throughput user authentication: 1 MiB (at default/optimal t_cost)
+
+- Low throughput user authentication: 16 MiB (scrypt paper's recommended)
+
+- KDF use: 1 GiB (scrypt paper's recommended) or any higher number of GiB
+
+I think it's good to include the 16 MiB and 1 GiB for a direct
+comparison against speeds given in scrypt paper (even though those were
+for suboptimal scrypt code on an older CPU).
+
+For all but "KDF use", only per-machine throughput matters, so only
+include speeds for running as many concurrent threads as the CPU
+supports in hardware.  I think it's best to list these speeds as
+hashes/s throughput for the machine, while not using the hashing
+scheme's own thread-level parallelism feature (provide the parallelism
+externally, like userom.c in yescrypt does).  Other figures may also be
+provided, such as on average and peak memory usage and memory bandwidth
+usage.  Memory allocation overhead may or/and may not be included in
+these benchmarks (ideally, both results would be obtained).  It is
+realistic that some busy authentication servers would use native API
+and skip this overhead.
+
+For "KDF use", include speeds for both multi-threaded and
+single-threaded uses, and do use the hashing scheme's own thread-level
+parallelism feature for the multi-threaded benchmarks.  If the KDF lacks
+this feature, it loses in this respect.  (We can't expect apps like
+TrueCrypt to implement that.)  Some might have the feature in specs, but
+not in code yet - if so, code would need to be written for this
+benchmark.
+
+The simplest thing to report is how long a algorithm takes to run to hash
+for a given amount of memory, so I think we should report that.  However,
+it needs to be interpreted based on what the algorithm is doing.  Assuming
+the algorithm is linear in runtime for the range of memory in the category
+(for example, heavily external DRAM bound), then we can can convert runtime
+to now many MiB or GiB would be hashed in a 1 second runtime, by dividing
+the memory hashed by the runtime.  This let's us compare the memory*time
+cost for a 1 second runtime, and obviously higher is better.
+
+We could, but I think it's fine to compare run times for e.g. 1 GiB.
+
+An important modification to the GiB/s hashed is the expected "average"
+memory usage for a 1 second run.
+
+It doesn't necessarily have to be GiB/s, and "for a 1 second run".  It
+can as well be "milliseconds to compute KDF with m_cost of 1 GiB" and
+"average memory usage" during that computation (will be somewhere below
+1 GiB, and will differ between schemes).
+
+Oh, I see where the problem is: a hashing scheme could be faster than
+another, but also have lower average memory usage, and then it'd be
+unclear if it's better or worse in terms of time-normalized average
+memory usage.  OK, yes, need something like what you propose (in
+addition to the raw data).
+
+Finally, there's memory bandwidth, which should be in terms of MiB or GiB
+per second read/write to DRAM or cache.  Memory bandwidth is the primary
+runtime defense for a lot of the entries, so having high bandwidth is very
+important.  We can estimate memory bandwidth by the total memory hashed
+divided by runtime, times the number of memory accesses on average.  Cache
+adds a complication when estimating external DRAM bandwidth, but so far
+we've been able to guestimate which reads are most likely cached, and
+discount them for external DRAM bandwidth.  For example, for TwoCats, I
+estimate each DRAM location is written on average once, and read on average
+once, the same as Scrypt.
+
+Are these the right metrics?
+
+Mostly, yes - with the correction above.
+
+Oh, also let's use GB/s (powers of 10) for bandwidth figures, even when
+we use KiB, MiB, and GiB for memory sizes.  This weird combination is
+more standard for the industry.
+
+Alexander
+

@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <20140417213210.GA12473@openwall.com>
+Date: Fri, 18 Apr 2014 01:32:10 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 05:10:49PM -0400, Bill Cox wrote:
+I found that 16 KiB block size for TwoCats is quite a bit faster than
+smaller sizes.  Dropping to 4KiB slows it down by 16%.  I think this is the
+main remaining difference in memory bandwidth between TwoCats and Yescript.
+ Alexander uses 1KiB block sizes.  That's better for GPU defense, and I'm
+not surprised Alexander prefers this trade-off.  Being mostly unfamiliar
+with GPUs, I cringe at weakening defense against ASIC attacks, and prefer
+the 16KiB size for its speed.
+
+My preference for 1 KiB (r=8) as the recommended default for yescrypt is
+mostly not because of GPUs.  It's too large a block size to help against
+GPUs anyway: even Litecoin mining with its 128 byte blocks works well on
+GPUs.  (On the other hand, with much higher than Litecoin's m_cost, the
+available concurrency on GPUs would be lower due to limited global
+memory size, and then lower r could reduce the GPU attacker's ability to
+hide memory access latency.)
+
+Rather, it is to increase reliance specifically on RAM as opposed e.g.
+to an array of fast SSDs.  (And when using SSDs for defense, I do
+recommend a higher r accordingly - see the PERFORMANCE-SSD file.)
+
+Also, there's not that much speedup from going to higher r, especially
+not when running multiple concurrent threads (which is the primary case
+yescrypt is tuned for by default, where the concurrency may come from
+either p>1 or from the machine's use of multiple instances e.g. for user
+authentication).  With such setups (not the single thread benchmarks you
+ran for the comparison in this discussion thread), there's slight
+speedup with r=16 (over r=8), and slight slowdown with r=32 and higher.
+
+In yescrypt, pwxform S-boxes require an extra 8 KiB (by default) of L1
+cache, on top of that required by two r-sized blocks.  In TwoCats, you
+don't have that, and you instead have to use larger blocks to use more
+L1 cache in anti-GPU fashion.  So it makes sense that lower r is optimal
+for yescrypt than its equivalent for TwoCats.  It stems from differences
+in design of yescrypt vs. TwoCats, and not only from differences in use
+cases and authors' preferences.
+
+Alexander
+

@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Re: Re: Re: Re: Re: Re: Second factor (was A review per day
+ - Schvrch)
+
+Message-ID: <CALCETrVPK+cFE1ACmjYz3VAaMR7S85_5BJa9y8HA+Y1fd1HXUA@mail.gmail.com>
+Date: Thu, 11 Sep 2014 11:31:46 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: Re: Re: Re: Re: Re: Second factor (was A review per day
+ - Schvrch)
+
+On Thu, Sep 11, 2014 at 11:26 AM, Alex Elsayed <eternaleye@...il.comwrote:
+Alex Elsayed wrote:
+>
+>Mm, with the parallel PAKE we've latched P as a necessary part of the
+>protocol, so _here_ your original idea of passing H(P) to the token, which
+>it uses to encrypt its (internal) value, would not weaken the scheme in
+>the case of a malicious token.
+>>
+>Given token T holding secret X, user U holding password P, and server S:
+>>
+>U -T: H(P)
+>T -U: Y = E(k=X, H(P))
+>T -S: R_t = PAKE(X)
+>U -S: R_u = PAKE(Y)
+>T -U: R_t
+>U: K = R_t ^ R_u
+>
+After I posted the correction to this yesterday, I realized that there's an
+even more optimal approach combining this with my original scheme. It
+satisfies all of the properties you brought up, _and_ the property I'd like
+that the server doesn't even need to know that a token is in use at all
+(permitting a user to add a token to any account they want to) - without
+requiring any local storage on the user's machine.
+>
+Let E( K, M ) be an encryption function with key K and message M
+Let H( M ) be a hash of a message M
+Let sizeof( H( A ) ) == sizeof( K in E( K, B ) ) for all A and B
+>
+Given:
+    Token T holding secret X
+    User U holding password P and pin N
+    Server S
+>
+1.) U and T establish a channel C by executing a PAKE over N
+2.) U sends H(P) to T over C
+
+This step loses the property that a malicious token doesn't weaken
+security over no token at all -- a malicious token can do an offline
+dictionary attack on the password.
+
+I'll try to write up a formal statement of my personal desiderata for
+token-assisted PAKE next week :)
+
+--Andy
+

@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <CAOLP8p4mJ87aGJENLuk=3BmfszEwO0b7LHhOUXxCVCpeQwbX5Q@mail.gmail.com>
+Date: Sat, 22 Mar 2014 23:10:15 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Sat, Mar 22, 2014 at 9:57 PM, Solar Designer <solar@...nwall.comwrote:
+This sounds cool in theory, and I think Jean-Philippe wanted this sort
+of submissions to PHC - not only self-contained schemes like most we've
+been discussing so far, but also generic schemes aimed to replace
+PBKDF2.  (Maybe Catena is a valid example of this.)
+>
+However, how can you keep "stretching" at this higher level while also
+providing a "memory-hard" underlying function?  Wouldn't the stretching
+need to be inside that function, then?  Or would you move the
+memory-hardness to the higher level, too?  (If we treat Catena as such
+higher-level scheme, then it has its memory-hardness at this higher
+level.)  Efficiency (and thus security) would probably suffer, like it
+does in PBKDF2 (and I think in Catena too), but maybe for some use cases
+(what would they be?) that's an acceptable price for having a more
+generic scheme.
+
+The complexity of both of our projects is my main concern about them.
+For example, I would certainly consider Escrypt for any new secure
+remote storage app I might right, but I'd just use the code you wrote.
+ I would not want to write a version in Java, for example, if I avoid
+it.  Same thing with TwoCats.  Also, if there is going to be a winner
+in this level of complex password hashing scheme, I can't think why it
+should not be Escript.  Faster hashing per thread is great, but upward
+compatibility at the application level is critical at this level of
+complexity.  We just don't have the bandwidth to critically review
+multiple schemes of this size.  TwoCats might gain a couple of bits of
+resistance vs Escript against some attacks in the 1 or 2 thread case,
+but I have trouble justifying a whole new scheme of this complexity
+for that.
+
+Catena is much simpler, and has a higher likelihood of being ported to
+various languages.  I was thinking today of how I might include a very
+fast block hash function in Catena, with fewer changes than I made in
+my waywardgeek branch.  If I could just change H_LEN to something
+reasonable, like >= 1KiB, it could be very fast, with minimal changes.
+
+Still, Catena is more complex than something like HKDF, but no so
+complex that it feels more like an application than a password hashing
+function.  It loses security in half a dozen ways, but addressing
+those security issues is what makes our code more complex.  Thus the
+desire for a SkinnyCat - not so much as a reaction to Catena as a
+reaction to complexity that bothers me.  I would drop the cache-timing
+resistant loop first, I think, reverting to something closer to my
+original KISS password hashing scheme.
+
+Bill
+

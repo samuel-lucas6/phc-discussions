@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Makwa is broken given p and q</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;54117F3D.2060304&#64;ciphershed.org&gt;
+Date: Thu, 11 Sep 2014 06:53:49 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Makwa is broken given p and q
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/11/2014 03:21 AM, Steve Thomas wrote:
+&gt;&gt; On September 11, 2014 at 12:57 AM Andy Lutomirski
+&gt;&gt; &lt;luto&#64;...capital.net&gt; wrote:
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; On Wed, Sep 10, 2014 at 8:55 PM, Steve Thomas &lt;steve&#64;...tu.com&gt;
+&gt;&gt; wrote:
+&gt;&gt;&gt; Given p and q you can do: e = 2 ** cost e' = 2 ** cost (mod
+&gt;&gt;&gt; (p-1)*(q-1)) x ** e = x ** e' (mod p*q)
+&gt;&gt; 
+&gt;&gt; This is described (in the CRT formulation) in the Makwa paper.
+&gt;&gt; 
+&gt; 
+&gt; So it was known that you can modulus the exponent and have it run
+&gt; in constant time, in comparison to the cost factor.
+
+Yes.  This exact algorithm is described in the "False Path" section on
+page 13.  He recommends using this trick to compute the 300-ish
+alpha/beta pairs.
+
+A significant weakness in Makwa is that p and q are essentially a
+shared secret key between all passwords using the same p and q, which
+would typically be all the passwords hashed by a particular company.
+Revealing p and q could destroy the security of an entire database of
+passwords.  Once the alph/beta pairs are computed, p and q should be
+securely scrubbed from memory.
+
+However, what's to keep all the major online companies from being
+NSL-ed with demands to hand over p and q to the government before they
+are scrubbed from memory?  Makwa is a dream come true for Big Brother
+governments.
+
+&gt;&gt;&gt; 
+&gt;&gt;&gt; You could pick the cost to be 2 ** 128. Without p and q you
+&gt;&gt;&gt; can't test a password. powConst = powm(2, pow(2, 128),
+&gt;&gt;&gt; (p-1)*(q-1)) hash = powm(password, powConst, p*q) but you could
+&gt;&gt;&gt; just do HMAC(password, secretKey)
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Sorry but even if you came up with the perfect server-specific
+&gt;&gt;&gt; shortcut, HMAC or encryption with a secret key is better.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; If you don't know the secret, it takes 3x longer. vs If you
+&gt;&gt;&gt; don't know the secret, you can't do anything.
+&gt;&gt; 
+&gt;&gt; Huh? I don't think that anyone is proposing using Makwa with cost
+&gt;&gt; 2^128.
+&gt;&gt; 
+&gt; 
+&gt; I was picking an absurd number to prove a point that apparently was
+&gt; known. I guess the escrow should have tipped me off that we don't
+&gt; see eye to eye on what we think is secure.
+&gt; 
+&gt; I stand corrected, not broken, but my opinion is this is bad.
+
+Calling "Escrow" a positive feature of Makwa kind of gave me chills.
+At least the author was quite explicit about how p and q might be used
+by governments that demand a fast path.
+
+I would like Makwa more if we could securely compute n once for every
+user, and make sure that all knowledge of p an q are destroyed.  This
+would simplify implementations a lot, though security would be lower
+in the sense that a single factored number would compromise the whole
+world's password databases.
+
+Short of that, I would want every user to generate p and q locally and
+scrub them from memory, so p and q never leave a smart-phone, for
+example.  In order to log in from multiple devices, the server would
+have to pre-compute alpha/beta pairs, without the benefit of the false
+path - either that or complicate the authentication protocol and have
+the device send alpha/beta pairs to the server.
+
+In my P2P Internet of Things vision, this is less of a problem.  A
+user trying to control his home devices remotely would authenticate
+with his personal home server device, which would authenticate him
+using remote ASIC based Makwa boxes.  Also, remember that Makwa gives
+an ASIC attacker a very large computational advantage vs our PCs, so
+Makwa needs to be built with ASICs from the start.
+
+I still put Makwa in the "other" category.  It is not a memory hard
+password hashing algorithm, and cannot replace Scrypt in many
+applications.  However, it's delegation feature is potentially
+game-changing in applications which don't even exist yet because we
+could not get the security right.  One of our biggest challenges is
+figuring how a toaster's worth of compute power can protect it's
+communication as securely as a mainframe.  Delegation solves a major
+problem.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUEX85AAoJEAcQZQdOpZUZl6MP/2SrtigwOz1a1DdpBlxYPuq8
+8hiwCy4B7kUAbAdITJqnfKORPDQKFgo3d1FhCZO2W5m69VuAKSqPv4IxRMGe6XFj
+SIac9Umh+vCZUQMAhsGK9oWgO+Jykaxrpq3MtFJ8QYmYGx3vKyb5t1uO9ouPkivV
+t82qMx4Xx/AsoNtzfDBP62tLNmL/bnSQRMc8oIUz+jMCjbHqKSsuUgzn3Z+Q3Dfz
+KPYTHqRYvxt7uEYT2Fn/9xH/CEeh6cEmjicFfag0Zzrccsgl5+UP7Qorm5N4fpcO
+HCB78/Okhi8NxYVURXcctYbq8ABlH9/zN/ruw0vyC5ALEQY+tfrSLwW+AZcPXxmN
+JgG1+y+L5fziCIzF/OUclduumvlsPswMXJKM8MLHpxBURHzLDlgrdPO9Dg1ihagG
+21b9ie1I7TczNsvXJ1ottDyy1ovQp/29sLwRtWXvzpKJTR15lAI3sfpp2CpEUPds
+WtYbs+E7nOs6Fn0TWwICFV5iHCIiuOp+h4O0FiuByxeIHteeBu/9utSLCk9QFan4
+4lJeyAGG+QSDmJ3MAugOFxR5xQuNPraOvdbMhS0yVfK8o5IQcfZ0VI5JN51ZUxeX
+APwgEAHFuxD9SnEFE978i1aijdei7vlXKlp4K/8+eCca9/WDjfkji9wuQimbNdZQ
+nvxlo6VGVJtnbG8s/fRf
+=UR0z
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

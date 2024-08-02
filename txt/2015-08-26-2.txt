@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Argon2 version 1.2.1 release
+
+Message-ID: <CAGiyFdcxQtddW0iYB+BSpxmYM=p_ofaYUEj4jzzR1xaVyVdG5w@mail.gmail.com>
+Date: Wed, 26 Aug 2015 12:27:03 +0000
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Dmitry Khovratovich <khovratovich@...il.com>, Alex Biryukov - UNI <alex.biryukov@....lu>, 
+	Daniel Dinu <dumitru-daniel.dinu@....lu>
+Subject: Re: [PHC] Argon2 version 1.2.1 release
+
+Thanks! We're gonna review the changes done, and we'll discuss on how to
+move from this version to the final PHC-winner-Argon2.
+
+
+
+On Wed, Aug 26, 2015 at 2:25 PM Dmitry Khovratovich <khovratovich@...il.com>
+wrote:
+
+Dear everyone,
+>
+We have just finished the reference and optimized implementations of
+Argon2, taking into account comments and advice from the community and the
+PHC members. Major improvements are listed below:
+>
+Specification (v.1.2.1):
+ 1. Argon2 now can process up to 4 TB of memory, and it uses 64-bit values
+to generate the reference block index.
+ 2. The hybrid mode Argon2id is added as optional, where the first half of
+the first pass over the memory has data-independent addressing (like in
+Argon2i), and the other blocks are referenced in the data-dependent fashion
+(like in Argon2d).
+3. The S-box-with-multiply transformation (almost identical to Solar
+Designer's MaxForm) is added to improve the GPU resistance in a new mode
+Argon2ds. It is optional as well, and probably subject to change after we
+test it on GPU.
+>
+Functionality:
+ 1. The entire code has been refactored. We added function descriptions,
+various comments etc.
+2. All the duplicate code has been removed. All the Argon2 modes use the
+same code (the mode is specified as a separate parameter).
+3. The reference code is only twice as slow as the optimized, so the
+optimized part consists of just a few functions that use SSE intrinsics.
+Overall, we have 40 KB of code that covers all the modes and optimizations.
+4. There are special flags that indicate that password, key, or the entire
+memory should be cleared immediately after use.
+5. A user can specify his own memory (de)allocators.
+6. Original PHS() wrapper is still present, but it is now possible to call
+Argon2d(), Argon2i(), etc. with single argument as pointer to context.
+Context is the data structure that holds all the user inputs.
+7. The code has been tested on little-endian machines only. There are
+probably a lot of places where big-endian machines would work differently,
+but we can not identify them all yet.
+>
+Other:
+1. We welcome all the comments, optimizations and suggestions.
+2. The specification source is also given for error correction.
+3. We also welcome GPU implementations that would help to evaluate the
+usefulness of Argon2ds.
+4. There is a small performance drop (about 10%) compared to the previous
+version, but we hope to eliminate it in the future optimizations.
+5. Older versions (1.1 and 1.2) are now in separate folders.
+>
+The implementation can be still found at
+https://github.com/khovratovich/Argon2
+Enjoy!
+>
+Best regards.
+the Argon2 team (Alex, Daniel, Dmitry)
+>
+
+
+

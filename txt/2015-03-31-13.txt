@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <CALW8-7+T-ONmSCYc2xXSFaEbo5vHErvKW-HB+DqrcBHJOQ+ZOA@mail.gmail.com>
+Date: Tue, 31 Mar 2015 15:02:06 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2
+
+Yes, you're right, the code is little-endian only so far (the
+specification implicitly suggest little-endianness in the
+initialization phase). This must be changed, and I will do it.
+
+Dmitry
+
+On Tue, Mar 31, 2015 at 2:53 PM, Solar Designer <solar@...nwall.comwrote:
+Hi Dmitry,
+>
+One other detail I noticed yesterday, but forgot to mention: the current
+Argon2 code appears to be endianness-sensitive, at least here:
+>
+        blake2b_update(&BlakeHash, (const uint8_t*)&lanes, sizeof(lanes));
+        blake2b_update(&BlakeHash, (const uint8_t*)&outlen, sizeof(outlen));
+        blake2b_update(&BlakeHash, (const uint8_t*)&m_cost, sizeof(m_cost));
+        blake2b_update(&BlakeHash, (const uint8_t*)&t_cost, sizeof(t_cost));
+        blake2b_update(&BlakeHash, (const uint8_t*)&version, sizeof(version));
+        blake2b_update(&BlakeHash, (const uint8_t*)&msglen, sizeof(msglen));
+        blake2b_update(&BlakeHash, (const uint8_t*)msg, msglen);
+        blake2b_update(&BlakeHash, (const uint8_t*)&noncelen, sizeof(noncelen));
+        blake2b_update(&BlakeHash, (const uint8_t*)nonce, noncelen);
+        blake2b_update(&BlakeHash, (const uint8_t*)&secretlen, sizeof(secretlen));
+        blake2b_update(&BlakeHash, (const uint8_t*)secret, secretlen);
+        blake2b_update(&BlakeHash, (const uint8_t*)&adlen, sizeof(adlen));
+        blake2b_update(&BlakeHash, (const uint8_t*)ad, adlen);
+>
+Perhaps you're aware of this, and simply didn't improve the code yet.
+>
+Alexander
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+

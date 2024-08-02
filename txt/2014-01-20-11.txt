@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <20140120114045.GA24782@openwall.com>
+Date: Mon, 20 Jan 2014 15:40:45 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Mon, Jan 20, 2014 at 11:37:40AM +0100, Christian Forler wrote:
+I'm not familiar with the Blakerypt's session key approach.
+Catena supports "Keyed Password Hashing". (see
+http://eprint.iacr.org/2013/525.pdf Section 4 page 8) where password
+hash is encrypted by the (IND-CPA) secure AES-CTR mode.
+
+This isn't implemented yet, is it?
+
+For the sake of
+of simplification, it is likely that we switch to Blake2b-CTR encryption.
+
+For CTR mode, it is critical to have unique nonce for each hash
+encrypted in this way.  Where would it come from (would you simply reuse
+the salt?) and how would you guarantee it is unique (normally, it is not
+nearly as critical for 100% of salts to be unique, although indeed this
+is our goal anyway)?
+
+I've been thinking of including a similar feature into escrypt (to allow
+for the secret key to be changed, which isn't possible with a mere local
+parameter included in hashing), but I felt we'd need a block cipher (and
+not turn it into a stream cipher with CTR mode or the like) to avoid the
+issue mentioned above.  Not wanting to depend on an extra crypto
+primitive (unless we'd be building on top of a block cipher anyway,
+which is unlikely), my thoughts even went as far as building a Feistel
+network on top of whatever crypto hash would need to be in the source
+tree anyway (if scrypt compatibility mode is maintained, it'd likely be
+SHA-256).  Obviously, this doesn't make me happy.  I was just toying
+with these ideas, without having arrived at a good builtin solution yet.
+Extra dependency on salts uniqueness is bad.  Dependency on an extra
+crypto primitive for just this little thing is bad (can as well not have
+the feature built in, then).  Building our own block cipher, even if not
+entirely from scratch, is bad (added complexity and food for concerns -
+e.g., is the rounds count sufficient?)  Arguably, this is a (minor)
+reason to build upon AES (and use AES-NI where available), after all.
+
+IMHO we can assume that an adversary that has access to your password
+hashes has also access to your key.
+
+This will vary.  For example, a database backup dump may get compromised
+without a corresponding compromise of the web server's config files.
+
+If we could achieve "perfect security", then sure it'd make sense to
+assume only the worst case scenario and focus solely on that.  However,
+we can't, so it makes sense to consider a variety of scenarios.
+
+Alexander
+

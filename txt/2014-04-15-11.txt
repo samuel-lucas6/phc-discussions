@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] more woes, last woes
+
+Message-ID: <CAOLP8p4oBwOLraUWSs=kE7axTXHDVv-u_Z4OnE+vYSHKzL+C-g@mail.gmail.com>
+Date: Tue, 15 Apr 2014 17:25:19 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] more woes, last woes
+
+On Tue, Apr 15, 2014 at 3:22 PM, Marcos Antonio Simplicio Junior <
+mjunior@...c.usp.brwrote:
+
+Hi.
+>
+I tried to add some strengths to the Lyra2 algorithm. Please feel free to
+edit (or suggest modifications) if you feel it is not clear/fair enough.
+>
+By the way, maybe some "weaknesses  by design" should be explicitly
+mentioned too? I would list that Lyra2 is "only partially resistant against
+cache-timing attacks", for example, in opposition to Catena's listed
+strength.
+>
+BR,
+>
+Marcos.
+>
+>
+Hi, Marcos.  I ran my pebbling algorithm on what I think the Lyra2 first
+loop does.  If I am not mistaken, it generates a DAG with one edge to the
+prior node, and one to a  "reverse" node?  For example, my 16-node graph is:
+
+-   n0                 3 pointers 0
+-   n1                 2 pointers 0
+-   n2                 2 pointers 0
+-   n3      -n0      1 pointers 0
+    n4                 1 pointers 0
+    n5      -n2      1 pointers 0
+    n6      -n1      1 pointers 0
+    n7      -n0      0 pointers 0
+    n8                 0 pointers 0
+    n9      -n6      0 pointers 0
+    n10     -n5      0 pointers 0
+-   n11     -n4      0 pointers 0
+-   n12     -n3      0 pointers 0
+-   n13     -n2      0 pointers 0
+-   n14     -n1      0 pointers 0
+*   n15     -n0      0 pointers 0
+
+I don't allow the second edge to be 1-long, which would be in parallel with
+the edge to the prior node, which is why some are blank.  Edges in parallel
+don't impact pebbling more than just one edge.
+
+If I have the graph right, it does not perform well against my pebbling
+algorithm.  At 1024 nodes, using 128 pebbles, the recomputation penalty was
+only 1.8X (meaning 80% more total computations than normal).  I can provide
+data showing how pebbling proceeds, but basically it fixes pebbles every 16
+places, and tries to avoid recomputations in a greedy fashion.
+
+I think I have to recommend a different DAG architecture than what I think
+Lyra2 is using.  Did I get the DAG right?
+
+Bill
+
+
+

@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Re: BlaMka loses entropy
+
+Message-ID: <CAOLP8p7QSYpvFC-vHS3=c049HCL0-NYhFzfp=f74OwiKb6Lt-A@mail.gmail.com>
+Date: Mon, 19 Oct 2015 12:12:25 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Re: BlaMka loses entropy
+
+On Mon, Oct 19, 2015 at 12:01 PM, Marcos Simplicio <mjunior@...c.usp.br>
+wrote:
+
+Hi, Bill.
+>
+I was about to point out the mistake with a Java snippet we developed to
+check if BlaMka is a permutation for several bit-lengths.
+>
+You were faster than me, though :)
+>
+BR,
+>
+Marcos Simplicio.
+>
+>
+Yeah, I should have better checked my work before posting.  Sorry for
+making so many mistakes.  Here's a simple proof that BlaMka preserves
+entropy:
+
+Let a and b be two 64-bit integers, and let ah and bh be the high 32 bis of
+a and b, while al and bl are the lower 32 bits.  Then the BlaMka function
+inner multiplication step is:
+
+    a' = (a + b + 2*al*bl) % 2^64
+    a' = (ah + al + bh + bl + 2*al*bl) % 2^64
+    a' = (ah + b + al*(1 + 2*bl) ) % 2^64
+
+Given a' and b, we can compute a:
+
+    (ah + b + al*(1 + 2*bl) ) % 2^64
+
+First, subtract b:
+
+    (ah + al*(1 + 2*bl) ) % 2^64
+
+The factor (1 + 2*bl) is an odd integer.  Therefore, it has an inverse mod
+2^64.  Call this inverse bi, and multiply by it:
+
+    (ah*bi + al) % 2^64
+
+We now know al, since ah*bi has 0's for the lower 32-bits, while al has 0's
+for the upper 32 bits.  So, subtract al, and multiply by the inverse of bi,
+which is (1 + 2*bl), to reveal ah.
+
+Bill
+
+
+

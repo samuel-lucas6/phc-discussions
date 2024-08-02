@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TwoCats multiplication chain</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="../../../2014/06/22/5">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140625052241.GA14423&#64;openwall.com&gt;
+Date: Wed, 25 Jun 2014 09:22:41 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sun, Jun 22, 2014 at 03:13:02AM +0100, Samuel Neves wrote:
+&gt; On 06/21/2014 10:06 PM, Solar Designer wrote:
+&gt; &gt; An attack which I think we haven't mentioned yet is speculative
+&gt; &gt; computation of multiple possibilities of the next MUL before a previous
+&gt; &gt; MUL completes.
+&gt; 
+&gt; This may have been considered before, but I couldn't find it on this list. Have you considered modular multiplication
+&gt; instead?
+
+I had not considered it.  Thank you for bringing this up.
+
+&gt; It does a much better job at mixing the bits evenly (and not only from right-to-left), and should be more
+&gt; effective against the kind of attack you describe. The friendliest modulus for CPUs might be 2^n - 1. For example,
+&gt; here's x86 code for multiplication modulo 2^32-1:
+&gt; 
+&gt;     # compute eax * edx mod 2^32-1
+&gt;     mul edx      # edx:eax = eax * edx
+&gt;     add eax, edx # edx*2^32 + eax = (edx*1 + eax) mod 2^32-1
+&gt;     adc eax, 0   # addition above may overflow
+&gt;     # handle special case eax*edx mod 2^32-1 = 2^32-1 = 0
+&gt;     # potentially unnecessary
+&gt;     # a branch could be faster here, since it's quite predictable
+&gt;     sub eax, -1  # CF set on eax != 2^32-1
+&gt;     sbb eax,  0  # always add 1 back, except on 2^32-1
+&gt; 
+&gt; It's a little trickier with SIMD, due to the required shuffling and lack of explicit carries, but I think it could also
+&gt; be made reasonably fast.
+
+While the code above looks fast, it is roughly twice slower than a MUL
+alone - so not a good enough idea for dealing with a potential attack
+that might allow for up to a 2x speedup.  The special case handling
+(last sub/sbb) could probably be omitted, but the "adc eax, 0" results
+in just two possible (non-)changes to eax (either there was carry or not),
+which looks very susceptible to a similar kind of speculative processing
+that we wanted to mitigate.
+
+So while it could be a good idea in terms of bits mixing, I think it is
+not good enough to implement with individual instructions (until a CPU
+gets a single instruction like this, with same latency as MUL alone).
+
+Thanks again,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

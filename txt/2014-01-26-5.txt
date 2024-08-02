@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] Initial (non-proof-read) NeolKDF paper
+
+Message-ID: <CAOLP8p56H5yegsFay2+mM9ZtmRk48mwAS0zjZFWP6Ajqwja89g@mail.gmail.com>
+Date: Sun, 26 Jan 2014 00:43:33 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial (non-proof-read) NeolKDF paper
+
+On Sat, Jan 25, 2014 at 11:53 PM, Dennis E. Hamilton
+<dennis.hamilton@....orgwrote:
+Kibbitzing for a moment:
+>
+If you don't know what the low order bit is, xor of an odd value doesn't guarantee that the result is odd.
+>
+The multiplication is kind of a congruential PRNG step modulo whatever the multiplier word size is.  My experience is that you need both terms of the multiplication to be odd to work well to avoid the poisoning effects of lots of trailing zeros in either multiplication operand.  (How that fits with regard to reversibility is not something I've thought about.)
+>
+Now the problem is that the product is always odd.  I posit this can be cured by shifting the derived product right one bit.  This means you always have a 0 leading bit unless there is enough of the full product to shift a bit in from the higher-order "word" of the full product result.
+>
+I have no idea whether this satisfies the constraints of the situation and whether it mucks with the "randomness."  It is just why you may want to force at least one, maybe both, numbers to odd going into the multiplication.
+>
+ - Dennis
+
+In this case, I'm concerned about not leaking away entropy too fast.
+Even SHA-512 leaks entropy, just too little to measure, since multiple
+inputs hash to the same output.  I'm using the inner loop hash
+function:
+
+    value = value*(mem[prevAddr++] | 3) + mem[randAddr++]
+
+The idea hear is that I'd prefer to compute a permutation of value
+every iteration, similar to what AES does.  With permutations, no
+entropy is lost.  If mem[prevAddr] and mem[randAddr] were replaced
+with a PRNG stream derived only from the password and salt, then this
+would be a true permutation, and it would be entirely reversible.
+Being reversible is undesirable, as it gives attackers trying to
+perform a time-memory trade-off more options for recalculating missing
+data.
+
+For this to work well and not lose significant entropy, mem[prevAddr]
+needs to be highly scrambled relative to value.  With a default page
+size of 4096, I think it will be plenty scrambled, since the last time
+mem[prevAddr] impacted value was 4096 iterations prior.  Page sizes of
+256 passed the dieharder tests, indicated even 256 is far enough away.
+ Originally, I had swapped prevAddr and randAddr, because randAddr is
+on average many times further back in the hashing history, with even
+more mixing relative to value.  Alexander pointed out that by ever
+reading the LSB of mem[randAddr], because I was OR-ing it with 1,
+allows an attacker to use a 31 bit memory rather than 32 bits.  That's
+why I had to put them in this order.  In any case, the same rule
+applies to mem[randAddr].  If it is correlated with value, we lose
+entropy fast.
+
+A final reason for the OR, is that I am uncomfortable without it.
+It's the only non-linear operation in the hash function, and the only
+one that makes me confident that there is no way to mathematically
+compute mem[i] without first computing mem[0 .. i-1].  I can't say
+I've seen any interesting closed form solutions to recurrence
+relations involving all three operators.
+
+Thanks for the discussion!  I think I'll add some of this stuff to the
+paper.  I guess I just put that hash function in there, and left it as
+"Here it is!"  Duh...
+
+Bill
+

@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+Message-ID: <20140205020804.GA21410@openwall.com>
+Date: Wed, 5 Feb 2014 06:08:04 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+Bill,
+
+On Tue, Feb 4, 2014 at 9:22 AM, Bill Cox <waywardgeek@...il.comwrote:
+How pissed will the PHC be if I keep re-submitting improved version?
+
+Not very, if you re-submit not too often.
+
+Can I blame you :-)
+
+Sure.
+
+It's already passed some of the harder dieharder tests, so it looks
+like it will be good enough.  For coding this up for SIMD, I'm
+thinking of doing an 4-way memory interleaved version so that all the
+data in the 1st loop lines up nicely as 128-bit memory accesses.  Is
+this the right approach for making use of SIMD?
+
+Possibly, but there's more (potentially crucial) detail to it.  I'll
+post another message on my experiments with adding tunable SIMD and
+instruction level parallelism to BlockMix.
+
+On Tue, Feb 04, 2014 at 09:42:54AM -0500, Bill Cox wrote:
+There is a problem.  With the multiply-accumulate format for the hash
+function, I can do the whole loop starting with value == 0 ahead of
+time, before knowing value's initial value (poor choice of variable
+name!), and when the initial value is known, I just add it.  So, an
+attacker can start working on the value in the next block as soon as
+the previous value has been computed, defeating the
+multiplication-time hardness.
+
+I need value to feed back through both a multiply and an add to defeat this.
+
+You're right.  I guess you should mostly disregard my earlier comment
+about being friendlier to FMA instructions.  This could be a
+nice-to-have, but it's not something you'd trade anything important for.
+
+In my highly experimental code, I have the FMA applied to S-box lookup
+results (we need rapidly randomly-accessed L1 cache fitting S-boxes in
+order to be no weaker than bcrypt), so it's not susceptible to the
+attack you describe, at least not directly (it might be with degenerate
+S-boxes or if there's a cycle).  When the FMA is all you have there, the
+way you use it affects security more.
+
+Alexander
+

@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] What's your favorite entry so far, and why?
+
+Message-ID: <CAOLP8p5BSWHAcUuG4hfdZeCud5Y-o=ormMpqhVwN_UeWywRwuw@mail.gmail.com>
+Date: Fri, 10 Jan 2014 14:02:35 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What's your favorite entry so far, and why?
+
+On Fri, Jan 10, 2014 at 11:34 AM, Christian Forler
+<christian.forler@...-weimar.dewrote:
+>My only  gripe is that if I'm going to spend 1
+>second on a KDF, I'm going to want to hash a lot of memory.  Script's
+>speed (about 1/4 GB/second on my development machine) should be
+>considered the lower bound on acceptable efficiency, IMO.
+>
+"Of course it is not secure, but look how fast it is!" :-)
+
+Surely security comes first.  It is unclear to me under what
+conditions Catena will be more secure than scrypt.  Catena and any KDF
+hashing L2 resident memory wins in a way that I think is more
+significant than timing attacks: leaked memory, due to swapping,
+hibernation, core dumps, or failure to clear after freeing.  Scrypt
+wins vs FPGA and ASIC attacks due to the memory bandwidth limit on
+FPGAs and ASICs, even if Scrypt could be several times better than it
+is in this regard.  Scrypt security is pretty good.  I'd prefer that a
+successor be clearly capable of winning in all these situations,
+including FPGA and ASIC attacks.  As I said, I think there's no reason
+Catena can't get there.
+
+>There is no reason Catena has to run slowly, and I haven't looked at the
+>code, so I don't know what efficiency changes have been made.  For
+>example, you could run with two rows small enough to fit in L1 cache,
+>and then do a ton of rows, followed by a final round that hashes all
+>memory from all rows 4KB at a time.
+>
+Nope. We are not interested that Catena can not efficiently computed
+without tones of  L1 and L2 cache misses since this also effects
+the performance of GPU implementations.
+
+This is a very interesting point.  Catena, with efficient enough inner
+loop hashing, should be pretty secure against GPU attacks, and going
+to external GDDR5 DRAM just means they're stuck with the same cache
+miss penalties you are.  That's a good thing, because it gives you a
+bunch of cycles to catch up on the hashing.
+
+However, vs FPGAs and ASICs, an attacker can use QDR SRAM from Cypress:
+
+http://www.cypress.com/sync_SRAMs/
+
+An FPGA can have several of these bad-boys off chip, and according to
+Cypress, they're 45X lower latency than DDR3.  I've not checked that
+math, but its an issue to worry about.
+
+Bill
+

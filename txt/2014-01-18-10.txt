@@ -1,0 +1,121 @@
+phc-discussions - cost upgrades (Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations))
+
+Message-ID: <20140118134106.GA14690@openwall.com>
+Date: Sat, 18 Jan 2014 17:41:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: cost upgrades (Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations))
+
+On Mon, Jan 13, 2014 at 06:24:40PM +0100, Christian Forler wrote:
+On 13.01.2014 11:55, Solar Designer wrote:
+I think this is just one of many issues/drawbacks with supporting and
+using hash upgrades.  Another/worse drawback is that area-time cost for
+upgraded hashes is lower than it can be for same-duration new hashes.
+
+The hash upgrading idea would have been great in 1990s, when we were not
+trying to use much memory.  These days, it is not as great.  (Yet I had
+it on my slides from PHDays 2012 and later.)
+
+I respectfully disagree. :-)
+
+Thank you for commenting on this.
+
+To clarify: I still think that being able to upgrade hashes without
+knowing the passwords is a valuable feature, but it does involve
+non-trivial tradeoffs, making the feature somewhat less valuable.
+
+Thanks to Moore's law you have to upgrade your security parameters at
+some point in the future (Just compare a Amiga 2000 vs current COTS PC).
+
+Without CI-updates, todays password hashes will become easy prey for
+future (say 2030) state-of-the-art password-cracking frameworks. It is a
+common wisdom that from time to time security parameters has to be updated
+
+Do you really recommend use todays security parameters in a world where
+computers have both 2^10 times more memory and computational power?
+
+The problem of inactive users will not vanish,
+
+I agree with you on this.  And yes, it's primarily for the inactive
+users, whose accounts are nevertheless still active and/or who
+potentially/presumably are reusing the same or similar passwords
+elsewhere (with those accounts still active, or encrypted data still
+relevant to attackers).
+
+and I think the PHC candidates should address this issue. :-)
+
+If someone were to submit a compute-only candidate (not trying to use a
+configurable amount of memory), then I'd definitely expect it to support
+the (time only) cost upgrades.  Such a candidate would unlikely be
+selected among the "winners", though, maybe unless it targets and "wins
+for" certain low-memory-and-never-growing use cases (do those exist?)
+
+With builtin support for cost upgrades in a memory-hard password hashing
+scheme, ignoring the shortcut wiping idea I had mentioned before for
+now, we have to choose between two non-perfect options:
+
+1. Significantly lower area-time cost of upgraded hashes as compared to
+same-duration newly computed hashes - or, depending on the design and
+interface, even of possible initial hashes as well, as compared to
+same-duration non-upgradable hashes.
+
+2. High granularity of possible hash upgrades - or, depending on the
+design and interface, even of possible initial settings as well.
+
+If the granularity is 2x, then one upgrade gives us AT cost of
+2*Norig^2 = Nnew^2/2 instead of Nnew^2, so twice lower.  Two upgrades
+(2x time each, 4x time total) give us 2*Norig^2+(2*Norig)^2 = 6*Norig^2,
+as compared to (4*Norig)^2 = 16*Norig^2, which would be possible without
+upgrades, so 6/16th of what we could have.  With many upgrades, I think
+this converges to 1/3 of AT cost for non-upgradable hashes.
+
+Higher granularity improves this, but allows only for less frequent
+upgrades.  Could be an acceptable tradeoff, though.
+
+And there's the design and interface issue I alluded to above.  If both
+never-upgraded and already-upgraded hashes are of exact same type (no
+flag is set on upgrade, etc.), then Norig above has to be very small (it
+has to correspond to the quickest hash we're able to compute with the
+specified scheme, anywhere).  This means that even never-upgraded hashes
+suffer from the lower AT cost (than would be otherwise possible for
+their computation time), and the possible initial settings suffer from
+the forcibly higher granularity.  This may be addressed by treating
+never-upgraded and already-upgraded hashes differently, setting a flag
+(encoded along with the hashes) on upgrades, so that the "pipe
+narrowing" and the higher granularity are only enabled when they have to
+be for the already performed upgrade and for possible further upgrades.
+Unfortunately, this adds complexity.
+
+With even more complexity, it is possible to do better: record each
+upgrade's N along with the hash.  Then no extra "pipe narrowings" and no
+higher granularity than is absolutely necessary for the actual upgrades.
+Drawback: even higher complexity.
+
+These are some nasty tradeoffs.
+
+As you're well aware, hash upgrades are also possible without having
+them built into the password hashing scheme.  Yes, this is not as clean
+and is unlikely to be available on specific deployments without needing
+code changes.
+
+Now, to your example with year 2030.  A lot might change by then.
+Suppose PBKDF2' were defined in 1999 to support cost upgrades (and this
+wouldn't even have the drawbacks mentioned above since PBKDF2 is
+compute-only anyway).  This means that technically we could upgrade
+existing PBKDF2' hashes by merely adding iterations now.  Would we do
+that e.g. shortly after PHC concludes (hopefully giving us a good,
+modern password hashing scheme)?  No, if practical on a given deployment
+(and I recognize that it's an "if"), I'd rather wrap those PBKDF2' hashes
+in the modern hash.  Are you guessing that a significantly better scheme
+won't appear by 2030 (to justify the switch) or that e.g. Catena would
+be just good enough not to bother switching?  That's actually quite
+possible, given how bcrypt is still good enough for many uses now.
+
+Overall, I am not sure.  It's a somewhat valuable feature vs. some
+combination of sometimes-lower security and added complexity.  With high
+complexity, there may be no security drawbacks for cases when the
+feature is not used (or hasn't been used yet).  Maybe we should explore
+that option, then see if the added complexity is acceptable.
+
+Alexander
+

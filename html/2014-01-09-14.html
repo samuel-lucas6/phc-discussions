@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="13">[&lt;prev]</a> <a href="15">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="18">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4dpCFmgjxvY0Phfdiy3guQfDyQ9pe0ezbC5JWz=qjHpw&#64;mail.gmail.com&gt;
+Date: Wed, 8 Jan 2014 21:09:39 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+On Wed, Jan 8, 2014 at 7:48 PM, Peter Maxwell &lt;peter&#64;...icient.co.uk&gt; wrote:
+
+&gt;
+&gt;
+&gt;
+&gt; On 8 January 2014 23:46, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+&gt;
+&gt;&gt; RC4 is the perfect example to use, and I disagree about the entropy
+&gt;&gt; ratio.  If you have 20 bits of entropy in a user's password, and 256 bits
+&gt;&gt; of entropy from salt, using RC4 initialized from this 276 bits to generate
+&gt;&gt; 4GB of hash data is a *good* idea.
+&gt;&gt;
+&gt;
+&gt; Only if you're talking about the tiny minority of systems that can afford
+&gt; to use 4Gb of memory that you can guarantee is protected and not ever paged
+&gt; to disk, *per-login*.  If your server needs to handle even 10 logins per
+&gt; second, that's a wee bit of a problem... it wasn't that long ago that I was
+&gt; admining production webservers with 1Gb memory or less.
+&gt;
+
+Catena's framework offers a good solution for this.  Servers that can't
+support the load of compute and memory intensive KDFs have the option of
+offloading to the client.  I am a big fan of "Server Relief Support".  At
+the same time, that does not mean that the KDF has to be compute or memory
+intensive in applications that can't support it.  That's what m_cost and
+t_cost are for.  However, the value of a memory-hard KDF goes up in
+proportion to the memory used.
+
+
+&gt; If you cannot guarantee to protect that entire 4Gb blob leakage then as
+&gt; Poul-Henning pointed out your lack of entropy becomes an issue, i.e. the
+&gt; salt is public and therefore doesn't count towards the entropy so your 20
+&gt; password bits is only 2^20 ~ 1m combinations and an attacker can
+&gt; potentially determine the password from even a small fragment* of that 4Gb
+&gt; keystream with less effort than the memory-hard problem.
+&gt;
+
+I could use the world's best crypt-strength hash or permutation to fill
+memory, and if an attacker gets access to it, he'll have a way to abort
+incorrect password guesses early.  That's why I think we need to perform a
+significant number of initial hashes on the password to create an
+intermediate derived password before writing data derived from it to a lot
+of memory.  If memory leaks to an attacker, and we've done 2048 rounds of
+SHA-256 before filling memory, the attacker will be no better off than if a
+user had bothered to protect his id_rsa private key the hard-coded maximum
+of 2048 rounds of SHA-256.
+
+
+&gt; [*] - in this specific scenario with RC4, it would really need to be
+&gt; near the beginning of the keystream output but the argument generalises
+&gt; better if the filling algorithm is not cryptographically strong.
+&gt;
+
+What argument?  Are people attackers going to invert the hash?
+
+
+&gt; My point is that it's useless to worry about the entropy of the data we
+&gt;&gt; write to memory.  RC4 is already too strong, and a waste of CPU cycles.  So
+&gt;&gt; long as we don't lose significant entropy along the way, any dumb hash that
+&gt;&gt; an attacker has to actually compute is good enough.
+&gt;&gt;
+&gt;
+&gt; As a side issue: RC4 is not generally considered particularly strong
+&gt; these days, there are non-trivial biases in the keystream.
+&gt;
+
+Which is irrelevant for memory-hard KDFs.  Why should we care?
+
+
+&gt; The main question however concerns the feasibility of protecting memory
+&gt; regions that large, or for that matter anything anywhere near that large,
+&gt; when you're filling with password dependent data using an algorithm that
+&gt; can be easily inverted.
+&gt;
+
+Easily inverted?  Not that it matters, but who cares if we can invert a few
+steps of a hash when we have billions of operations needing inverting?
+
+
+&gt; In other words, if - like you said - you're not losing entropy along the
+&gt; way then it implies a permutation, and if it is easy to invert said
+&gt; permutation then an attacker only needs a word or two of memory to
+&gt; undermine your memory-hardness.
+&gt;
+
+There can be weaknesses in a hash function that could potentially lead to
+non-memory hardness.  The hash function has to be considered.  However,
+some basic non-linearity and the property that entropy is not lost during
+hashing (permutations or low collision hashes) is all that's required,
+SFAIK.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

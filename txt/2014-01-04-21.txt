@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <CAOLP8p5JTuooMctmeqKRB=G_abMTk5gJJub2kZm4be-Y4wHsVg@mail.gmail.com>
+Date: Sat, 4 Jan 2014 17:30:00 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 4, 2014 at 3:21 PM, Solar Designer <solar@...nwall.comwrote:
+
+However, by giving attackers extra parallelism (more than you make use
+of), you're letting them reduce the time factor in area*time, maybe by
+some orders of magnitude (at 16 KB "page" size, the attacker will do up
+to 2048 computations in parallel, whereas on a CPU you only do a few).
+>
+
+Good point.  I think I may have to put some throttle on parallelism, as you
+suggest.
+
+
+Your argument is that they'd have to provide more memory bandwidth for
+that.  This is sound reasoning.  Yet you become unnecessarily similar to
+EARWORM in depending on memory bandwidth _instead_ of on a combination
+of die area consumed by memory _and_ bandwidth.
+>
+I think
+we're more likely to hurt ourselves more than an attacker with limits on
+parallel execution.  For example, I know of no recent Android phones or
+Windows laptops that don't have some graphics acceleration ability.
+ Attackers can use GPUs, but so can most users.  GRAM is often faster
+than
+the CPU's main memory.  We could likely get closer to the attacker's
+speed
+using our own GPUs by default.  With the multi-threading layout I'm
+currently using, we could run threads on the GPU to max out GDRAM
+simultaneously with running SIMD instructions on the CPU to max out DRAM
+bandwidth.  GDDR5 has amazing bandwidth, so well tuned implementations
+should use this in the future.  If I max out both my GDDR5 and DDR3
+memory
+busses, good luck to any attacker trying to beat my speed without paying
+as
+much as me for RAM.
+>
+I agree that having a way to tune settings for much greater instruction
+level parallelism could be beneficial.  It's just that having lots of
+parallelism available all the time makes your KDF not sequential
+memory-hard anymore; it makes it only memory bandwidth bound.
+>
+
+I'm convinced.  I'll play with hashing within a page as I you suggested.
+
+Bill
+
+
+

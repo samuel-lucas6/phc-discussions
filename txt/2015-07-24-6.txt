@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CALW8-7K2Lrr=McVb0dGpJg77fp0p3nRSYSkYGc=b9o_jFRmvOA@mail.gmail.com>
+Date: Sat, 25 Jul 2015 00:30:19 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: Bill Cox <waywardgeek@...il.com>
+Cc: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, 
+	Alex Biryukov - UNI <alex.biryukov@....lu>, Agnieszka Bielec <bielecagnieszka8@...il.com>
+Subject: Re: [PHC] Argon2 improvement thread
+
+I totally agree that the code is a bit redundant. If the time permits, I
+plan to refactor the code significantly, and also eliminate the duplicate
+code between 2d and 2i
+
+On Fri, Jul 24, 2015 at 11:25 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I implemented a new Boolean flag in TwoCats as a test, called
+sideChannelResistant.  If set, the entire memory hashing run is
+cache-timing resistant.  If false, it runs in it's hybrid mode.
+>
+While TwoCats is both more feature rich and more complex than Argon2, the
+number of lines of code in Argon2 is quite a bit higher.  I think this
+shows the kind of reduction in code we will see if we implement a flag like
+this for Argon2.  I do not believe there is any good reason to have the
+purely password-dependent version if the hybrid version is available.  The
+hybrid case, if supported, is always preferred, SFAIK.
+>
+This includes all the source used to generate test vectors, without any
+Blake2 code:
+>
+waywardgeek@...wardgeek-glaptop:~/projects/Argon2$ wc -l `< files`
+  228 ./Argon2i/ref/genkat.cpp
+  377 ./Argon2i/ref/argon2i-ref.cpp
+  236 ./Argon2i/opt-sse/genkat.cpp
+  537 ./Argon2i/opt-sse/argon2i-opt-sse.cpp
+  228 ./Argon2d/ref/genkat.cpp
+  347 ./Argon2d/ref/argon2d-ref.cpp
+  236 ./Argon2d/opt-sse/genkat.cpp
+  512 ./Argon2d/opt-sse/argon2d-opt-sse.cpp
+   67 ./Argon2i/ref/argon2i.h
+   59 ./Argon2i/opt-sse/argon2i.h
+   47 ./Argon2d/ref/argon2d.h
+   56 ./Argon2d/opt-sse/argon2d.h
+ 2930 total
+>
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/src$ wc -l *.[ch]
+   32 twocats-blake2b.c
+   32 twocats-blake2s.c
+  428 twocats-common.c
+  186 twocats.h
+   98 twocats-internal.h
+  585 twocats-opt.c
+  231 twocats-ref.c
+   26 twocats-sha256.c
+   26 twocats-sha512.c
+  171 twocats-test.c
+ 1815 total
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

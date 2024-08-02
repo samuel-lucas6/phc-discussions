@@ -1,0 +1,155 @@
+phc-discussions - Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Message-ID: <551D786C.2060101@larc.usp.br>
+Date: Thu, 02 Apr 2015 14:12:12 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Some inputs inline.
+
+On 02-Apr-15 13:20, Bill Cox wrote:
+How this should be done is obviously up to the panel, but here's my
+thoughts anyway:
+
+Milan has the most complete and up to date benchmark suite here:
+
+https://github.com/mbroz/PHCtest
+
+I think we should ask Milan to document how to run the tests in a README,
+and how to generate tables of results, and then require the finalists to
+verify the code and results.  However, I would prefer that the panel also
+require:
+
+- Adding a C-linkable benchmarking PHS interface
+- Enhance their code to conform to this interface
+- Provide parameters to this interface for each “official” benchmark
+
+I think all the authors should be required to fork Milan's github repo and
+submit pull requests for these enhancements.
+
+There are several use cases, and they should be run with different
+parameters to show each algorithm in it's best light. Off the top of my
+head, they include for the memory-hard entries:
+
+- L1 cache bound - 8KiB?
+- L3 cache bound - 4MiB?
+- DRAM bound - 1GiB?
+- Huge hash - 4GiB on multi-core CPU?
+
+I have never cared for the t_cost parameter.  It's use for TMTO defense is
+clever, but I don't trust users to select this parameter based on any valid
+insights.  Is there any reason to benchmark with t_cost other than the
+defaults recommended by the authors?
+
+Well, I see at least two (both open to debate):
+
+1) Users may want to have a fixed amount of memory while raising the
+processing time (that was the original purpose of PBKDF and bcrypt, at
+least)
+
+2) Since t_cost is a user-defined parameter, anyone can configure it to
+a lower or higher level. You may certainly say "but that will not comply
+with what the author's paranoia level believe to be right", but when we
+were discussing what to do with the winner(s), one comment was to "have
+as few open knobs as possible while adopting conservative security
+parameters", so the "correct" minimum t_cost is something that needs to
+be defined too. Well, that unless we are able to say that two schemes
+are just as resistant to attacks (TMTO, cache-timing, garbage-colletion,
+GPUs, ASICs, etc.) with a different number of passes though memory...
+
+
+We should separately benchmark 1 – N threads, where N is the number of
+cores on the machine doing the benchmark.
+
+There are also target platforms:
+
+- AMD 32/64 bit
+- Intel 32/64 bit
+- ARM (Raspberry Pi?)
+
+Someone in the list also mentioned IoT devices (so 8/16 bit architectures).
+
+BTW, in this scenario it would be hard to have a 32x32->64 bit multiplier...
+
+
+GPU targets would be helpful, but I would not want benchmarks based on the
+authors' own attack code.  It should an independent GPU expert who writes
+the attack code.  Is there any way to get a GPU developer involved for this
+purpose?  It's a ton of work, so some company would probably have to
+support this effort.  Maybe Nvidia could be talked into it?
+
+I may sound naive when I say that, but I think that the "authors' own
+attack code" is a good start point, to be later tweaked by the community
+of developers/researchers. Independent or not, a single person will
+likely not provide "the best" attack code, but at least "a good" attack
+code that can be further improved later, and a code having the same
+optimization strategies over which other people can work.
+
+
+
+Similarly, we should have an independent ASIC expert involved for a
+realistic analysis for the estimated cost and performance of the various
+proposed attack ASICs.  My own experience is too outdated.  Could we get
+someone from AMD, IBM, or Intel?
+
+I would like to see three compiled versions for each platform:
+
+- Reference
+- Optimized, but no SIMD
+- SIMD optimized
+
+This is mostly already done.  Milan did a great job getting this all to
+work in a unified framework.  I do not think it is worthwhile benchmarking
+“reference” implementations, but it is useful for verification.
+
+To support all these use cases, I think the benchmarking PHS interface
+should take only:
+
+- use_case: an enum identifying the plot that this benchmark data goes on
+- m_exp:  The memory hashed should be 2^m_exp in bytes
+- max_cores: the max number of CPU cores the algorithm is allowed to use
+- iterations: the number of times the hash function should be run in a loop
+
+The authors would be responsible for picking the best parameters for each
+use.  If a use case or memory size is not supported, the function should
+return an error code rather than crash, so that it wont be included in that
+plot.
+
+The number of iterations parameter could allow algorithms to allocate and
+initialize memory once and reuse it in each iteration.  This can help us
+focus on the difference in algorithm runtimes and reduce noise from
+different memory allocation techniques.  It would be very helpful for
+estimating how well an algorithm performs in the authentication server use
+case, and allow us to more accurately measure the runtime of those L1 cache
+bound hashes.
+
+Lyra2 would need to be modified to have nPARALLEL as a runtime parameter.
+Yescrypt would have to be modified to make the number of rounds a
+parameter.  IMO, it is not useful to claim that a compile-time parameter is
+a “tunable”.  Most users want to run just one compiled version.  The would
+enforce this.
+
+That is perfectly reasonable: so far I think most schemes were worried
+with a "reference code", so further tunning with alternative PHS
+interfaces does not seem too difficult except maybe for some inline
+functions or macros. Should we do that to all parameters listed in the
+pseudocode?
+
+
+Benchmark plots:
+
+We should have plots with axes of runtime and memory used for ranges near
+the selected use case.  I don't think they should be log-log plots – that
+makes the differences to hard to see.  There should be separate plots for
+optimized versions and SIMD versions, and also separate plots for
+single-thread and multi-thread.  This may just be due to my color blindness
+– I do not like charts that have a ton of lines mixing various use cases.
+
+This is a ton of work for the authors, but it's certainly not fair to ask
+Milan to do it all!  It is also not fair to ask analysts to figure out the
+right parameters for every use case.
+
+Bill
+
+

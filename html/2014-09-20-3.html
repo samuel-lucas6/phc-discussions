@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Multiply with CUDA</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="../../../2014/09/21/1">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="../../../2014/09/21/5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140920111412.GC31117&#64;openwall.com&gt;
+Date: Sat, 20 Sep 2014 15:14:12 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Multiply with CUDA
+
+On Fri, Sep 19, 2014 at 07:00:24PM -0500, Steve Thomas wrote:
+&gt; I heard some people talking about multiply being slow on GPUs
+
+Yes, as well as other instructions - in terms of latency.
+
+&gt; but still a little faster than CPUs.
+
+I guess you mean in terms of throughput?  Per multiprocessor vs. per core?
+
+&gt; This is why it's slow on Nvidia cards:
+&gt; 5.4.1. Arithmetic Instructions
+&gt; <a href="http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions" rel="nofollow">http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions</a>
+
+Thanks!  This only talks about throughput, not latency, although latency
+is mentioned elsewhere on this page:
+
+"If all input operands are registers, latency is caused by register
+dependencies [...]
+Execution time varies depending on the instruction, but it is typically
+about 22 clock cycles for devices of compute capability 1.x and 2.x and
+about 11 clock cycles for devices of compute capability 3.x"
+
+It is unclear whether multiply instructions possibly have a higher than
+this minimum latency.
+
+If we have to combine multiple smaller multiplies to build a bigger one,
+the total latency may grow.  (Except when it's merely two separate
+instructions for low 32 and high 32 bits of outputs, which I guess may
+execute in parallel.)
+
+&gt; Some CPUs have a higher latency on the high part.
+
+Yes.
+
+&gt; Intel's Nehalem is 10 vs 3, but most are closer or no difference.
+
+Per GenuineIntel00106A2_Nehalem-EP_InstLatX64.txt, the 10 cycles is only
+for high 64 bits of 128-bit result.  It does not apply for high 32 bits
+of 64-bit result.  In fact, PMULUDQ on Nehalem produces the full 64-bit
+results in 3 cycles (scalar instructions producing 64-bit results are 3
+or 4.8? cycles depending on which instruction you use).
+
+&gt; Newer CPUs can do 64bit*64bit=128bit with a throughput of 1 per cycle and a
+&gt; latency of 3 cycles (<a href="https://gmplib.org/~tege/x86-timing.pdf" rel="nofollow">https://gmplib.org/~tege/x86-timing.pdf</a>).
+
+I recall it's at best 4 cycles for the upper 64 bits (RDX), except maybe
+on low-clocked AMD APUs (would need to double-check), per the files at
+<a href="http://users.atw.hu/instlatx64/" rel="nofollow">http://users.atw.hu/instlatx64/</a>
+
+3 cycles is best for the lower 64 bits of result (RAX).
+
+&gt; When comparing
+&gt; CPUs and GPUs with hash function speeds GPUs are ~10x faster than optimized SIMD
+&gt; CPU code. So we're losing SIMD with multiply so that's a 8x hit. GPUs have a
+&gt; similar hit on speed while doing smaller multiplies which is another ~4x
+&gt; slowdown.
+
+You lost me here.  In what case are we "losing SIMD with multiply"?  Do
+you mean e.g. when we use specifically the 64x64-&gt;128 multiply on CPU?
+
+One of the reasons why I don't use 64x64-&gt;128 in yescrypt is that
+64x64-&gt;128 is not directly available on 32-bit CPUs and in 32-bit mode
+on 64-bit CPUs.  With 32-bit CPUs/mode in mind, it's 32x32-&gt;64 max, and
+we do have SIMD with that.
+
+&gt; Last note, interleaving MULX (umul128), ADCX (_addcarryx_u64), and ADOX
+&gt; (_addcarryx_u64) with VPMULUDQ (_mm256_mul_epu32) might get better performance
+&gt; on CPUs. MULX and VPMULUDQ should be similar in speed since VPMULUDQ can do
+&gt; 4x(32bit*32bit=64bit) but there's 4x more work to do than doing 64bit*64bit=128.
+&gt; Interleaving them should mask some of the latency.
+
+I view potential SIMD/scalar interleaving as implementation detail, as
+long as the hashing scheme provides sufficient/tunable parallelism.
+
+Why do you say that "4x(32bit*32bit=64bit)" is "4x more work" than
+"64bit*64bit=128"?  In terms of die area, I'd expect these to be
+similar, but in terms of latency I'd expect Nx(32x32-&gt;64) to take a cycle
+less (like 3 vs. 4 if both are optimized for lowest real time latency,
+which is what we actually see for these in some CPUs).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

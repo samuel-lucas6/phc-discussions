@@ -1,0 +1,53 @@
+phc-discussions - sub-block memory*depth attacks and countermeasures
+
+Message-ID: <20150924154440.GA28849@openwall.com>
+Date: Thu, 24 Sep 2015 18:44:40 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: sub-block memory*depth attacks and countermeasures
+
+Hi,
+
+Continuing this topic previously discussed in here mostly with Dmitry
+and Marcos.
+
+My current understanding is that scrypt's even/odd shuffling and simple
+reverse order of sub-blocks written (vs. read) achieve a similar
+(limited) effect at increasing the recomputation depth (counted at
+sub-block operations level) for a given ratio of sub-blocks stored
+(assuming attacker's optimal choice of which sub-blocks to store).
+
+It appears optimal for an attacker to store the first few sub-blocks
+that would be needed should the block happen to be referenced later, as
+well as a sparse selection of further sub-blocks, so that the rest of
+the (non-stored) sub-blocks for this block would be recomputed while the
+first few (stored) sub-blocks are being processed (as input for whatever
+new block is being computed).  (As discussed earlier, this is in
+addition to also using a block-level TMTO - that is, some blocks are
+stored in full, and some with some of their sub-blocks missing as
+discussed here.  e.g. every other block may be stored in full, and the
+other half of them with some/most sub-blocks missing, for a slightly
+higher than 1/2 memory usage total.)
+
+Now, here's an idea for a more effective countermeasure:
+
+During normal defensive computation (non-TMTO), read and process the
+sub-blocks of a currently chosen "random" previous block in an order
+that couldn't have been reliably predicted earlier in computation,
+without effectively computing the hashing scheme's state up to this
+block.  That way, an attacker can't make as optimal a choice on which
+sub-blocks to store.  The defender's choice of sub-blocks ordering could
+be an Integerify()-alike on the current block, or it could be e.g. a
+function of the current (sequential) block index, relying on the fact
+that it isn't known in advance at what times (aka new block indices) a
+given previous block would be needed.
+
+I think this could be an enhancement for Lyra2 and yescrypt.  I don't
+have a strong opinion on whether this enhancement is worth the added
+complexity or not.  (Maybe with Lyra2's larger typical block sizes than
+yescrypt's, it is worth it in Lyra2.)  Anyhow, it's too late for this in
+PHC now - yet I wanted to post this to ensure this idea remains free for
+anyone to use at a later time.
+
+Alexander
+

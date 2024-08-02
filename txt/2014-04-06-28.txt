@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Re: Proposed changes to author's code
+
+Message-ID: <1105779457.20140406220114@gmail.com>
+Date: Sun, 6 Apr 2014 22:01:14 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: Bill Cox <waywardgeek@...il.com>
+CC: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Proposed changes to author's code
+
+
+Bill Cox (at Sunday, April 6, 2014, 9:31:59 PM):
+Also, I want to start recording some data for each entry that will
+help in automated testing. ...
+
+never starve a volunteer of information when he wants to work. this is
+the comment i have added to gambit PHS:
+
+/* PHC interface function
+ * in:
+ *   out      - buffer receiving the derived key
+ *   outlen   - size of the desired key in bytes
+ *   in       - password, treated as raw bytes
+ *   inlen    - password length in bytes, 0<=inlen<=151
+ *   salt     - 16 byte salt
+ *   saltlen  - must be 16
+ *   t_cost   - time cost, t_cost>0, t_cost+2 is the number of keccak-f invokations
+ *   m_cost   - in 64 bit words. must be odd, and m_cost<=17*t_cost/4
+ * out:
+ *   retval   - always 0
+ *   *out     - filled with outlen bytes of key
+ *
+ * the derived key is a pseudorandom function of the password and the salt,
+ * but NOT of the length. calling PHS with the same salt and password, but
+ * different outlen will result in one key being the prefix of the other.
+ *
+ * claimed security level is 128 bits.
+ *
+ * IMPLEMENTATION LIMITATIONS
+ * these limitations exist in this implementation, but not fundamental, and
+ * can be easily removed.
+ *   outlen: must be at most 168.
+ *   m_cost: an array of uint64[m_cost] will be allocated using new.
+ */
+
+recommended parameters:
+
+t_cost:
+  14k    for 10ms-ish
+  140k   for 100ms-ish
+  1.4m   for 1s-ish
+
+these are optimized keccak numbers, not the barely optimized version
+included in the submission. it is approx 1/4 as fast.
+
+m_cost can be chosen independently with the given maximum limitation.
+
+
+

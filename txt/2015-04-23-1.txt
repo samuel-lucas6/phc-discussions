@@ -1,0 +1,43 @@
+phc-discussions - (not) protecting password length from side-channels (Re: [PHC] Argon2 modulo division)
+
+Message-ID: <20150423004705.GC31523@openwall.com>
+Date: Thu, 23 Apr 2015 03:47:05 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: (not) protecting password length from side-channels (Re: [PHC] Argon2 modulo division)
+
+On Wed, Apr 22, 2015 at 09:13:21AM -0700, Bill Cox wrote:
+It turns out that there was not a single entry in the competition that is
+power rail analysis resistant
+
+... with respect to password length.
+
+I'm with Thomas on this.  It is futile for PHC candidates to fully
+protect the password length.  (They should, however, make their running
+time _mostly_ independent of password length, and Milan's benchmarks
+confirm that they do.)  Yet the callers may, even with the current
+PHS() API, such as by padding the password as Thomas suggested (and
+preferably also encoding the original password length in there), if they
+are somehow able to perform this padding in a side-channel safe way
+(e.g., before reaching the device where side-channels matter).
+
+Even if the length were not almost always already slightly-leaked in the
+caller, just how would a PHC candidate protect it fully when called with
+a pointer to string and a length?  With something similar to bcrypt's
+key setup, repeating the password until a buffer is full?  That is still
+leaky, even if possibly slightly less so (or not, because the length
+signal is amplified through affecting the read pointer multiple times)
+than e.g. a memcpy() is.  The memory access pattern still varies by
+password length, even if the number of characters read (including
+duplicate reads) is constant.  Permitting PHS() to read from the
+password buffer beyond the provided length would be quite a different
+API, and a rather dangerous one (many callers would not care to provide
+room for the over-read).  It is better to let the paranoid callers pad
+the password input with the current API than to subject everyone to a
+more dangerous API that would only benefit a minority.
+
+A similar issue arises once in a while in discussions around constant
+time string comparison features being added to libraries and languages.
+
+Alexander
+

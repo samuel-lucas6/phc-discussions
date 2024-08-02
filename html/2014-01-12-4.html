@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="../../../2014/01/11/5">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;52D262A4.207&#64;uni-weimar.de&gt;
+Date: Sun, 12 Jan 2014 10:38:44 +0100
+From: Christian Forler &lt;christian.forler&#64;...-weimar.de&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On 11.01.2014 16:09, Steve Thomas wrote:
+&gt; I wanted to get benchmarks to compare a hashing algorithm optimized for
+&gt; a scripting language vs another algorithm that did not consider this.
+&gt; Since I'm familiar with Catena I decided to implement Catena-3-SHA512 in
+&gt; PHP.
+&gt;  
+&gt; Current scripting memory (not so) high vs current Catena:
+&gt; 2 MiB: 544 ms vs 2030 ms (3.73x)
+&gt; 1 MiB: 249 ms vs 1040 ms (4.17x)
+&gt; 512 KiB: 124 ms vs 514 ms (4.13x)
+&gt; 256 KiB: 60.5 ms vs 240 ms (3.96x)
+&gt; 128 KiB: 30.0 ms vs 118 ms (3.94x)
+&gt; Basically scripting memory (not so) high can use 4x more ram than Catena
+&gt; and run in about the same time.
+&gt;  
+&gt; Optimized scripting memory (not so) high vs optimized Catena:
+&gt; 2 MiB: 431 ms vs 995 ms (2.31x)
+&gt; 1 MiB: 195 ms vs 499 ms (2.56x)
+&gt; 512 KiB: 97.0 ms vs 249 ms (2.57x)
+&gt; 256 KiB: 48.5 ms vs 121 ms (2.49x)
+&gt; 128 KiB: 24.0 ms vs 59.7 ms (2.48x)
+&gt;  
+&gt; Catena takes about 2.5 times longer for the same amount of memory, but
+&gt; Catena is much better at defending against attackers that use less
+&gt; memory. Pretty sure it's O(N^2) vs O(N).
+
+Yes, you either stick to the recommended way to compute
+Catena or you get punished due to the strong TMTO.
+
+
+&gt; Test machine: Core2 Quad (Q9300 2.5GHz), PHP 5.3.4 (64 bit), Windows 7
+&gt;  
+&gt;  
+&gt; *** Optimizations ***
+&gt;  
+&gt; Scripting memory (not so) high:
+&gt;         $ja = unpack('V', $x);
+&gt; vs
+&gt;         $ja = unpack('V', substr($x, -4));
+&gt; The optimized version's look ups are aligned to 384 bytes with a
+&gt; $blocksize of 384 bytes vs byte aligned with a $blocksize of 431 bytes.
+&gt; Note both require four SHA512 blocks.
+&gt;  
+&gt; Catena:
+&gt;     for ($c = $garlic; $c &lt;= $garlic; $c++)
+&gt; vs
+&gt;     for ($c = 1; $c &lt;= $garlic; $c++)
+&gt; 2x increase in speed by not calculating the smaller sizes. Note that you
+&gt; could have "minGarlic" and "maxGarlic". To save on calculations and
+&gt; still be upgradeable.
+
+
+For the sake of simplification, we got rid of the minGarlic idea. :)
+But I'm not sure if this was a wise decision. There is a good chance
+that the actual PHC submission will again support minGarlic and maxGarlic.
+
+
+Catena is the only known PHC candidate providing strong
+pseudo-randomness (Adv^$(q) &lt; q^2/2^n-g), so far. Maybe we sacrifice
+this extra level of security for  better performance benchmarks.
+
+Then we have,
+
+H(v[i-1] || v[reverse(i,c)])
+instead of
+H(c || i ||v[i-1] || v[reverse(i,c)]).
+
+Best regards,
+Christian
+
+
+
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="4/1" rel="nofollow" download>signature.asc</a><strong>" of type "</strong>application/pgp-signature<strong>" (552 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

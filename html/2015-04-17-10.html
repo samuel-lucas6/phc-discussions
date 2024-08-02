@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Information theoretic security for delegated hardening
+ was: winner selection</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="11">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150417144118.GB22275&#64;bolet.org&gt;
+Date: Fri, 17 Apr 2015 16:41:18 +0200
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Information theoretic security for delegated hardening
+ was: winner selection
+
+On Fri, Apr 17, 2015 at 06:39:12AM -0700, Bill Cox wrote:
+&gt; This is simpler than Makwa, but I haven't put any thought into attacking
+&gt; it.  Thomas Pornin, what do you think of this again?
+
+I am preparing an implementation and some documentation, to be
+published some time next week.
+
+Roughly put: for Makwa, and for Adam's RSA-based proposal, the core
+hashing operation is computing x^e mod N for input x, a huge exponent e,
+and a composite modulus N (in Makwa, e = 2^w, while Adam uses e =
+2^w-1). Blinding is done by assembling a "mask pair" (a, a^-e), because:
+
+   x^e = (a*x)^e * a^-e
+
+(All computations are done modulo N.)
+So "a*x" is what is sent to the delegation server, and that server
+raises that value to exponent e.
+
+We need a new mask pair for each delegation, so the problem is about
+producing such pairs efficiently, and without leaking information about
+the input x.
+
+In the Makwa specification, I described (and implemented) a scheme by
+which I precompute 300 mask pairs (a_i, a_i^-e), and generate a new mask
+pair by multiplying some of them together (on average half of them):
+
+   a = (prod_{b_i=1} a_i, prod_{b_i=1} a_i^-e)   for random bits b_i
+
+What Adam suggests is starting with a single mask pair (g, g^-e) and
+computing a new mask pair by using (g^b, (g^-e)^b) with a random
+exponent b.
+
+Adam's method can be said to be "information theoretic secure" if b is
+large enough and g is a generator of the subgroup containing inputs,
+because it implies that after blinding, every single element of the
+subgroup may be reached with roughly equal probability for any input, so
+the delegation server (the untrusted system to which you delegate the
+core of the hashing) provably learns nothing from the exchange, even if
+it has unlimited computing power. With my scheme, an evil delegation
+server with unlimited computing power may solve the knapsack problem and
+thus, for each password guess x, test whether that x would lead to a
+value that can be generated from the a_i, and thus filter out bad
+guesses. Note that the attacker would solve a O(2^150) problem for each
+password guess, so when we say "unlimited power" we mean it.
+
+Adam's scheme has an issue here, because for N = pq (and p != q), there
+is no such thing as a generator for all invertible integers modulo N
+(the problem here being that p-1 and q-1 are both even: the order of any
+g modulo N will be at most lcm(p-1,q-1), and that value is lower than
+N/2). However, this is fixed in Makwa, in which we work in the subgroup
+of invertible quadratic residues (the input is always a square), of size
+(p-1)(q-1)/4, and there we can have a generator g (*)(**).
+
+Makwa's delegation, as currently specified, requires about 300
+multiplications per instance. With a 2048-bit modulus, you need the
+exponent b to be 2100-bit or so, so you end up with two modular
+exponentiations that will cost, in total, roughly 16 times as much as my
+implementation (depending on the kind of optimization implemented for
+the modular exponentiations). If you want to speed up Adam's scheme then
+you can precompute (g^2, g^-2e), (g^4, g^-4e), (g^8, g^-8e)... at which
+point you are indeed back to the basic scheme, albeit with 2100 source
+mask pairs instead of 300, thus implying a 7x overhead.
+
+So Adam's scheme and mine are really the same, which has the nice
+property that my implementation already supports Adam's scheme, provided
+that the precomputed (g^(2^i), (g^-e)^(2^i)) values are input as
+"delegation parameters". What needs to be updated is the support code
+that generates these base mask pairs.
+
+
+
+(*) Reliably computing a generator can be hard in all generality. It is
+easy at modulus generation time, if factorizations of p-1 and q-1 are
+known. If the p and q factors are "safe primes" ((p-1)/2 and (q-1)/2 are
+also prime), then g = 4 will work; but generating random safe primes is
+rather expensive. I think I will generate p as p = p1*p2+1 where p1 and
+p2 are two distinct primes of roughly the same size; g = 4 will be a
+generator with overwhelming probability and I can check that at
+generation time.
+
+(**) Note that we ignore non-invertible elements modulo N here.
+Probability that a given input (padded password) is non-invertible is
+about 2/sqrt(N), i.e. 2^-1023, and I am reasonably sure we can neglect
+_that_.
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

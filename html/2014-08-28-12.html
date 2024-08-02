@@ -1,0 +1,277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Re: A review per day - Yescript</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="9">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140828213707.GA4519&#64;openwall.com&gt;
+Date: Fri, 29 Aug 2014 01:37:08 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Re: A review per day - Yescript
+
+On Thu, Aug 28, 2014 at 04:05:32PM -0400, Bill Cox wrote:
+&gt; As promised, here's where I finally say all the things I don't like
+&gt; about Yescrypt.
+
+Thank you!
+
+&gt; Here's my list:
+&gt; 
+&gt; - - It's too complex.
+
+It's definitely more complex than I would have liked it to be.  But I
+have difficulty dropping anything from it to reduce complexity, and I
+have yet more flags to add, including to address your wishes
+(cache-timing resistant initial phase, tunable pwxform rounds).
+
+First on my list to potentially drop is YESCRYPT_PARALLEL_SMIX (keep
+support only for scrypt-style thread-level parallelism), but it sounds
+like you wouldn't like me dropping that.  And Argon authors' analysis
+suggests that such theoretically 1:1 TMTO opportunities are in fact bad
+in practice (need to slow down attack by a factor greater than the
+reduction in memory, if at all possible), especially at very high p.
+
+&gt; - - No cache-timing resistant initial phase has not yet been implemented.
+
+Yes.  Planned for final revision.
+
+&gt; - - OPENMP support is required for current version to run in parallel
+
+Oh, that's a mere implementation detail.  To me, OpenMP-using code is
+cleaner and smaller than pthread-using code, but it's easy to switch it
+to using pthreads in a fork of the tree, or to include both versions, if
+you want to.  I just don't want to add the complexity of including both.
+
+Why do you find it a drawback?  OpenMP has been around for years, and it
+hides some of the complexity and removes room for some potential bugs.
+
+Oh, here's where it can in fact be a drawback: if the app into which the
+code is to be linked is already using some other abstraction layer for
+threads.  But I can't possibly happen to match every possible
+abstraction layer at once.
+
+&gt; - - Like Samuel Neves code, understanding what's going on can be tricky!
+
+In case of yescrypt, is it caused by complexity of what's in yescrypt or
+by the way the code is currently written, in your opinion?
+
+If you have any suggestions on making yescrypt or/and its implementations
+simpler, I'd be happy to hear those!
+
+&gt; - - For t == 0, most of hashing could be done serially, rather than in
+&gt; parallel, though the results need to be loaded in parallel for the
+&gt; final pass.
+
+Is it the "banana attack" you mention below?  I'll re-read it tomorrow.
+
+&gt; The complexity of Yescrypt will make it difficult for other authors to
+&gt; create their own compatible versions.  It also makes cryptanalysis
+&gt; harder.  I certainly have a difficult time reading it and convincing
+&gt; myself it is bug-free.
+
+Unfortunately, yes.
+
+As to cryptanalysis, though, it should be pretty easy to verify
+yescrypt's entropy bypass paths for both password and salt, as well as
+separation of password and salt, from looking at the wrapper functions
+only.  It's analysis of susceptibility to TMTO, etc. that is
+complicated.
+
+&gt; However, I gave it a try.  I may have found a bug, but being Solar
+&gt; Designer's code, I have to admit it is more likely an error in my
+&gt; reading of his code.  The potential bug is on line 433 in
+&gt; yescrypt-ref.c.  For t == 0, with YESCRYPT_RW enabled and parallelism
+&gt; &gt; 1, I think that randomly read/writing 1/9th of memory followed by
+&gt; randomly reading 2/9ths of memory sounds like it would provide enough
+&gt; TMTO defense.  Honestly, I'm not sure smix2 is needed at all for good
+&gt; security when YESCRYPT_RW is set.
+
+I did the math, as well as simulations (see extra/sim-normat*), and
+optimal normalized area-time cost to attacker is achieved at yescrypt's
+current behavior for t=0, with its SMix2 intact and corresponding to
+1/4th of total iteration count (which is 4/3*N).  This is assuming no
+efficiency-improving TMTO exists (one that would reduce the area-time
+cost).  If such TMTO attack exists at t=0, then t=1 or higher would be
+optimal, meaning even more iterations in SMix2.
+
+In other words, the few iterations in SMix2 that are invoked at t=0 are
+there primarily not because of TMTO concerns, but simply because they
+increase the normalized area-time even assuming no TMTO.  Even more
+iterations, beyond this optimal point, would be decreasing the
+normalized area-time, unless an efficiency-improving TMTO exists.
+
+Hence my choice of settings to use at t=0.  Nothing arbitrary there.
+
+Assuming YESCRYPT_PARALLEL_SMIX is set for the below:
+
+&gt; However, it looks like Nloop_rw is
+&gt; set to N/(3*p^2).  It looks like it only does N/(3*p) total random
+&gt; read/writes, followed by N/3 - N/(3*p)) random reads.  Is it supposed
+&gt; to be this way?  This seems OK for p == 2 or p == 3, but what about p
+&gt; == 32?  Why would I want fewer random writes as a total fraction of
+&gt; memory as I increase parallelism?
+
+Everything you describe in here is on purpose.  The random writes exist
+for p&gt;1 at all only to keep yescrypt's absolute TMTO resilience (against
+whatever fixed TMTO attack) for p&gt;1 at p times higher total memory no
+worse than it is for p=1 at correspondingly less memory, with no
+surprising gap.  It would be rather nasty if e.g. going from 1 GB p=1
+to 2 GB p=2 or even to 32 GB p=32 would potentially allow for an
+efficient attack in a smaller amount of memory than on the 1 GB p=1
+hash.  This extra magic with division by p^2 removes that risk.  For
+32 GB p=32, it feels irrelevant as it's unlikely you could find an
+efficient attack at &lt; 1 GB on a 32 GB hash, and as you point out this
+random writes portion becomes almost negligible, but for e.g. 2 GB p=2
+the risk of an efficient &lt; 1 GB attack could be for real.
+
+I first briefly mentioned this detail in here (although I was confused
+by some other important things in that early posting on the subject):
+<a href="http://www.openwall.com/lists/crypt-dev/2013/12/19/1">http://www.openwall.com/lists/crypt-dev/2013/12/19/1</a>
+"When ESCRYPT_RW is set, there's some
+additional magic here, which ensures there's no reduction in "absolute"
+TMTO resistance when going from p=1 to p&gt;1 and increasing N
+proportionally."
+
+This is definitely one of the design decisions that ideally I should
+have explained in the specification document.
+
+&gt; The complaint I have about not forcing parallel computation is
+&gt; basically a banana attack.  If an attacker can instantly flush his
+&gt; memory to disk, and later instantly read it back, then he can do a
+&gt; TMTO, running threads in series rather than in parallel, because no
+&gt; data is exchanged between the threads.  They are all independent.  In
+&gt; the last pass, all memory has to be loaded so that the random read
+&gt; phase can complete in a reasonable time.  The problem with this attack
+&gt; is that the attacker needs the bandwidth from memory to disk to be as
+&gt; high as from the CPU to memory.  On my test machine, I'm able to get
+&gt; about 12GiB/s bandwidth from the CPU to memory.  In theory, my Sata
+&gt; interface is 6GiB/s.  I seriously doubt that having 2 Sata disks in my
+&gt; system would let me do 12GiB/s read/write to them.  However, if I were
+&gt; determined to make this TMTO attack, I might be able to do so with
+&gt; only a 2X increase in time*memory cost for high parallelism values,
+&gt; but I still would need to load it all in memory in the end.  That
+&gt; compares to Scrypt's *reduction* in time*memory cost by 4X, so it's
+&gt; hard to say this is a real concern.  It's more like me beating Solar
+&gt; Designer with a banana :-)
+
+I'll re-read this tomorrow, but for now: I think SATA is 6 Gbps, not
+6 GiB/s.  So you'll need ~10x more interfaces.
+
+&gt; I think Solar Designer errs on the side of over-defending passwords at
+&gt; the expense of too much additional complexity.  I think his mind deals
+&gt; with complexity like this more easily than most of the rest of us,
+&gt; which leads him to make this mistake.  No other entry has gone to such
+&gt; lengths to increase an attacker's power bill slightly when possible.
+&gt; There are more modes and tunables than any other entry, to help defend
+&gt; better in various situations.  He has the VROM mode for authentication
+&gt; servers, and small random-read-writes for Bcrypt-like security.  He
+&gt; has Scrypt compatibility mode, and code to detect any non-Scrypt
+&gt; compatible options, in which case he fixes the PBKDF2-HMAC input
+&gt; collisions.  I hate modes.  They confuse me :-)
+
+I don't think my mind is that special.  It's more like I find yescrypt's
+complexity not so complex for me for the simple reason that I spent a
+lot of time analyzing scrypt and its code, and then designing yescrypt,
+step by step and removing/replacing parts, so I have a good feeling of
+why every part is in there, what we'd miss without it, and how it
+interacts with the rest.
+
+As to having fewer modes, I am likely to create at least one cut-down
+implementation of yescrypt with partial functionality.  I will likely
+exclude support for p&gt;1, YESCRYPT_PARALLEL_SMIX, and ROM from that one,
+keeping only what's relevant for a crypt(3) with no extra inputs.
+I might also exclude scrypt compatibility from it (without support for
+p&gt;1, it wouldn't be full scrypt anyway).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

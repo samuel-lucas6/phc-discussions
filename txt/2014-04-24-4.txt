@@ -1,0 +1,102 @@
+phc-discussions - Re: [PHC] Dumb fast file digest idea...
+
+Message-ID: <CAOLP8p6mHDUef-kqUwF=PuFDcYLqq8gqnp7xi0JAyBGDpzAcsw@mail.gmail.com>
+Date: Thu, 24 Apr 2014 08:47:43 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Dumb fast file digest idea...
+
+On Thu, Apr 24, 2014 at 4:30 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Bill,
+>
+this is not the way the things are done in symmetric crypto. As you see,
+one can invent hundreds of hash functions per day, many of them being very
+fast and seemingly secure.
+>
+
+True, but I'm actually more interested in the approach rather than the hash
+function.  The basic approach is having 2 or more independent low-round
+hashes of the same data, computed with different orders.  Does combining
+them increase security?  If so, what are the best orders, etc.  This is one
+level up from the cryptographic hash primitive.
+
+Sorry about spamming the idea here.  I get dumb ideas all the time, and
+they just die because I do not have time to pursue them.  At least this
+way, I know I've planted the idea where it counts - in the minds of the
+crypto guys who do this stuff full time.
+
+
+However, the cryptanalysis resources are limited, so the entire community
+can properly study only a handful of functions per year. Hence it's
+designer's job to select one (rarely two) of many possible alternatives,
+study it himself, publish the analysis and motivation (10+ pages usually),
+implement it and only then invite the others to look at the design.
+>
+
+It just about killed me writing TwoCats and doing my day job at the same
+time.  I think it is possible that I could become the right guy to write
+such a hash function, but doing it right requires more time than I have.  I
+really appreciate the time you've spent looking at this while it's still in
+the dumb idea stage, but I don't expect to carry this forward with any
+significant effort.
+
+In your particular example, before anyone starts analysing it, you should
+have answered the following questions publicly and convincingly:
+1) why two states (not one, not three?)?
+2) why and which rand_const (why one constant? why here constant? any
+constant?)
+3) why 127-i? (not 2i, not 3i, not pi*i)
+4) why inverse_round?
+5) why low and high (why not xor the two, why not only low, why not only
+high)?
+>
+
+This is why crypto is so fun.  You can do this kind of stuff all day long.
+ I thought of three stages.  If two is secure, clearly it's faster, that's
+why not three.
+
+Actually, I switched to initializing the two Blake2b states the way Lyra2
+does it, and then hacked one of the states by XORing adjacent state values.
+ This was just to insure they start with different states.  I could have
+complemented it or whatever.  I don't think it matters.
+
+Actually, I lowered it to 64 from 128.  This is chosen to fit one
+"super-block" into L1 cache, and for no other reason.  64 makes it 16KiB.
+
+I did the second state with inverse-rounds, from the other end, because it
+becomes the decryption algorithm while the other does encryption, where the
+message is the key.  I thought that was cool :-)  A simple attack on this
+system is to muck with the last block so that the encrypted value of state1
+becomes the initial value of state2.  This will cause the decryption of
+state2 to become state1.  I just check for that in the code and tweak the
+initial values of both of them if this happens.
+
+Low and high was just to combine the states fully.  Blake2b just XORs the
+two, so that would likely be just fine.  However, in the code I wrote
+yesterday, I do the more dangerous thing, and XOR 1024 bits of input at a
+time onto the state, giving an attacker 100% control over the internal
+state of one of the states.  I'd rather start with that and see why it's
+not secure than back off, hoping it's secure, and not understanding why or
+why not.  It's the same thing with 2 vs three states and hashing tracks.
+
+
+Similar questions apply to most of the PHC submissions, in fact.
+>
+Best regards,
+Dmitry
+>
+
+Which is why it's possible to spend a year designing such a beast.  I still
+can't decide if I like my full TwoCats algorithm better than my stripped
+down SkinnyCat.  TwoCats addresses most of the weaknesses Alexander finds
+in most minimal memory-hard hashing algorithms.  SkinnyCat says "I don't
+care!" and leaves all the weaknesses in place, while making it far more
+likely that implementations will be correct.  There are so many dimensions
+to this problem, a person could easily spend his whole life working on it.
+
+Bill
+
+
+

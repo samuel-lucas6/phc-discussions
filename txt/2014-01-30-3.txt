@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <52E9BB2B.1050402@dei.uc.pt>
+Date: Thu, 30 Jan 2014 02:38:35 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On 30-01-2014 01:32, Solar Designer wrote:
+I just recalled that AMD XOP's VPPERM, which is an extension of PSHUFB,
+can be directly used to perform bit reversal.  Like PSHUFB, it operates
+on bytes rather than bits, but it has more special modes, including bit
+reversal (within the bytes, which can also be reversed by the same
+instruction).  (It can even do bit reversal and inversion at once, but
+we probably don't need that.)
+
+Excellent point, I had forgotten about this! The only downside here is
+that moving between general-purpose register and vector registers is
+more expensive on Bulldozer than it is on Intel.
+
+>
+>>it may be an acceptable solution compared to an ad hoc permutation.
+>I agree.
+I've attached a program I wrote, testing bit reversal with VPPERM and
+PSHUFB.  It seems to work fine.  Can the SSSE3 case be optimized further?
+>
+$ gcc bitrev.c -o bitrev -s -O2 -mxop; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1299     504      16    1819     71b bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+$ gcc bitrev.c -o bitrev -s -O2 -mavx; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1427     504      16    1947     79b bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+$ gcc bitrev.c -o bitrev -s -O2 -mssse3; size bitrev; ./bitrev
+   text    data     bss     dec     hex filename
+   1443     504      16    1963     7ab bitrev
+a5a55a5a 2480137f 1e6a2c48 ff33ccaa
+>
+BTW, reusing the value of "sel" that I define for VPPERM also for PSHUFB
+works fine - those extra bits are simply ignored, and the instruction
+appears to be defined to ignore them (so it's probably behavior we can
+rely upon) - but I don't do that in this program just in case (and to
+avoid possibly including a comment on that).  The only savings would be
+in source code, not in compiled code (nor data).
+
+By definition only the most significant bit of each byte is looked at in
+PSHUFB, so it's OK to share the same selection mask. I've additionally
+used PSHUFB to compute the bit reversal of 4-bit values, which should be
+somewhat faster. Here it is:
+
+__m128i bitrev(__m128i x)
+{
+    const __m128i   m = _mm_set1_epi8(0x40); // Bit reversal mask for VPPERM
+    const __m128i sel = _mm_or_si128(m,
+                                            _mm_set_epi8(0x0f, 0x0e,
+0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08,
+                                                         0x07, 0x06,
+0x05, 0x04, 0x03, 0x02, 0x01, 0x00));
+#if   defined(__XOP__)
+    return _mm_perm_epi8(x, x, sel);
+#elif defined(__SSSE3__)
+    const __m128i rev0 = _mm_set_epi8(0x0F, 0x07, 0x0B, 0x03, 0x0D,
+0x05, 0x09, 0x01,
+                                      0x0E, 0x06, 0x0A, 0x02, 0x0C,
+0x04, 0x08, 0x00);
+    const __m128i rev1 = _mm_slli_epi32(rev0, 4); // Same table, shifted
+4 bits
+    const __m128i c0f = _mm_set1_epi8(0x0f);
+    __m128i t1, t2, t3;
+
+    t1 = _mm_shuffle_epi8(x, sel); // reverse bytes
+
+    t2 = _mm_and_si128(t1, c0f);   // x & 0xf
+    t3 = _mm_srli_epi32(_mm_andnot_si128(c0f, t1), 4); // x >4
+   
+    t2 = _mm_shuffle_epi8(rev1, t2); // rev(x)
+    t3 = _mm_shuffle_epi8(rev0, t3); // rev(x)
+   
+    return _mm_or_si128(t2, t3); // combine 4-bit halves
+#else
+    #error At least SSSE3 is required
+#endif
+}
+
+
+

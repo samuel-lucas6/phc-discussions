@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - [PHC] Interdependence of t_cost and m_cost parameters</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="../../../2013/08/12/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CA+aY-u5Qt_=Od7fgqO1vUZr1upC67rSXdgRM196u-nNF2BiwNg&#64;mail.gmail.com&gt;
+Date: Sun, 11 Aug 2013 22:31:28 +0100
+From: Peter Maxwell &lt;peter&#64;...icient.co.uk&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: [PHC] Interdependence of t_cost and m_cost parameters
+
+On 11 August 2013 19:51, Dennis E. Hamilton &lt;dennis.hamilton&#64;....org&gt; wrote:
+
+&gt; I'm always having difficulty understanding the interdependence that might
+&gt; exist between t_cost, m_cost and, to a related degree, also outlen.
+&gt;
+
+In an obvious sense, this is going to vary algorithm-by-algorithm.
+ Hypothetical algorithm A might operate on a trade-off basis between time &amp;
+memory cost while another, B, may be designed in such a manner that the two
+are entirely orthogonal.
+
+I'd suggest the important thing is that the parameters are fully documented
+and an evaluation of potential issues addressed by each designer, e.g. it
+is one thing for a defender to be able to set a memory:calc trade-off, it
+is an entirely different kettle of fish for the attacker to be able to
+change their route of calculation to set the memory cost to nil at the
+expense of increased time (which is usually far preferably for the
+attacker).
+
+
+
+&gt;
+&gt; Here are some considerations I have.  I don't know how these fit with what
+&gt; others assume the interdependencies might be, or whether the
+&gt; interdependencies are simply left wide open, including when and where step
+&gt; functions arise.
+&gt;
+&gt;  - Dennis
+&gt;
+&gt; MY APPRAISAL OF THE SITUATION:
+&gt;
+&gt; It is generally easy to have t_cost be directly related to a linear work
+&gt; factor apart from any step functions that may arise in conjunction with
+&gt; outlen.  Alternatively, a PHS could amortize t_cost when there is some
+&gt; outlen-related timing-step increase.  There is such an increase with
+&gt; PBKDF2, for example.  While the t_cost doesn't have to adjust for
+&gt; differences in terms of processor performance, it would be useful to have
+&gt; the effect be smooth, whatever the relationship is.
+&gt;
+
+Again, I'd suggest this be left to each designer but to be decided upon and
+fully documented.  For example, I would not personally create a t_cost with
+a linear relationship, Moore's law is exponential in growth so it seems
+more natural to pick a logarithmic scale for t_cost.
+
+Similarly, I'm personally not particularly concerned about t_size being
+impacted by outlen as it isn't a data-dependent parameter and, irrc, you
+can have a valid submission to the PHC with a fixed output length of 16
+bytes.
+
+
+
+&gt;
+&gt; Amortizing t_cost against m_cost is tricker.  That is, it is difficult to
+&gt; work out the combinations if m_cost also has step-function costs.  It is
+&gt; also not clear what the difference between m_cost 1 and m_cost 2 might be
+&gt; and whether a given implementation has step functions here too (in which
+&gt; case t_cost could be amortized once again).
+&gt;
+
+Again, would this not vary with each algorithm?
+
+
+
+&gt;
+&gt; Note 1: I am also assuming that, whatever the m_cost is, with the other
+&gt; parameters fixed, the result should be cryptographically unrelated to a
+&gt; result produced for any other m_cost value.  The prospect of t_cost, m_cost
+&gt; password-hash collisions with all other parameters the same must be
+&gt; negligible.
+&gt;
+
+That would seem a sensible stipulation.  Perhaps have the parameters form
+part of the input to the actual password hash function?
+
+
+
+
+&gt;
+&gt; Note 2: A requirement that I have for iterative password-hashing
+&gt; procedures is that I can have a version that will operate with a specific
+&gt; time threshhold and then report the t_cost that was achieved along with the
+&gt; resulting hash.  That becomes the known t_cost value for verification.
+&gt;  I've not considered m_cost in practical cases that have come up.  (Given a
+&gt; threshold t in milliseconds, the resulting t_cost
+&gt; value is one for which the hash is produced in the approximate interval
+&gt; [t, 3t/2].)
+&gt;
+
+Well, m_cost is in a naive manner more amenable, for most algorithms I'd
+imagine the storage space required for m_cost would be easy to calculate.
+ What is less obvious is the implication of using, say 64Mb, for a hash
+calculation... what impact does that have on other parts of the system, do
+we have to start thinking down the line re potential paging issues (parts
+of hash calculation ending up in swap), will the attacker's technology
+improve to handle much larger amounts of memory efficiently/at low cost?
+
+
+
+&gt;
+&gt; Note 3: If I wanted variable m_cost control, I'm thinking that the
+&gt; procedure in (Note 2) would take an m_cost suggestion and that procedure
+&gt; would deliver the t_cost and m_cost values that were used in a generation
+&gt; that satisfied the specified time threshold.  That seems definitely
+&gt; trickier.  Interesting, but trickier.
+&gt;
+
+In a practical sense, it's not particularly tricky: like you intimated, fix
+m_cost at the desired storage requirement then specify your desired
+time-limit and run the hash function enough times to calculate a median
+value for t_cost that centres the execution time around your time-limit.
+
+The problem is understanding the impact on aspects such as CPU cache,
+virtual memory, system bus, number of hash invocations per unit time, what
+else is running on the system, etc, then balancing that against attackers'
+resources.
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150916183554.GA3579@bolet.org>
+Date: Wed, 16 Sep 2015 20:35:54 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Wed, Sep 16, 2015 at 10:03:22AM +0000, Jean-Philippe Aumasson wrote:
+Krisztián asks two important questions, regarding the encoding flexibility
+and parameters ordering. I don't know what's the usual practice to deal
+with those. Can't parameters be in arbitrary order?
+
+The way my draft specifies things, there is a unique encoding for a
+given set of parameters and salt value. This is what I call
+"deterministic". Having a deterministic encoding makes parsing a bit
+easier, and, maybe more importantly, makes tests easier as well: you
+can simply verify that you obtain the expected test vector.
+
+This is not an absolute requirement. Right now, existing formats for,
+say, SHA-256 crypt, are not deterministic, since one can omit or include
+the '$rounds=5000' parameter. This does not apparently prevent password
+verification. In the crypt() API, the returned string is the
+concatenation of the salt string, _as it was received_, and the hash
+output, which rather cleanly tolerates all variants in parameter
+encoding.
+
+
+IF we want deterministic encoding, then a numerical parameter of value
+'1' can only be encoded as '1', not '01' or '001' (or, alternatively,
+can be encoded only as '001', not '01' or '1'; or any other convention
+as long as there is no choice). Otherwise, determinism is not achieved.
+This should answer Krisztián's first question: yes, it is intentional
+that '001' be rejected.
+
+
+Krisztián's second question is about lexicographic order. Still under
+the idea that we want a deterministic encoding, then the parameters
+cannot appear in arbitrary order; a fixed order must be specified.
+However, that order can be specific to each function. In the
+specification, I currently defined that lexicographic ordering of
+parameter names must be used, but any convention is as good as any
+other. If, for aesthetic reasons, it is considered that the normal
+parameter ordering for Argon2 is 'm,t,p' and not 'm,p,t', then it is
+certainly possible to define the encoding format for Argon2 to use
+'m,t,p'.
+
+Defining a systematic rule (lexicographic order) for all hash functions
+potentially helps in writing a generic decoder: each function just has
+to invoke the decoder with a list of parameters to expect; if the rule
+is per function, then the decoder must be invoked with an _ordered_ list
+of parameters. This is not substantially harder, so I'd say that letting
+each function define the ordering of parameters is possible.
+
+
+Of course, if we decide that determinism is not needed or not desirable,
+then both of these questions become irrelevant. However, accepting
+parameters in arbitrary order makes the parser more complex, and we need
+a lot many more test vectors to account for the greater number of
+possible combinations.
+
+
+	--Thomas Pornin
+

@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150723181240.GB2446@openwall.com>
+Date: Thu, 23 Jul 2015 20:12:40 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Thu, Jul 23, 2015 at 09:58:59AM -0700, Bill Cox wrote:
+I'm glad to hear Alexander has benchmarks showing low impact when
+integrating maxform.  That's great news.  Where is the code?  I prefer the
+code to any other description.
+
+Here it is:
+
+http://thread.gmane.org/gmane.comp.security.phc/2767/focus=2840
+
+In there, "I get 23% performance impact for 1 thread, and 6% for 8
+threads.  That's still relative to unmodified Argon2, at 6 un-pwxform
+rounds, 1 GB."
+
+where un-pwxform is the exact same thing I decided to call MAXFORM later.
+
+I think 6% for 8 threads is easily affordable, but 23% for one thread is
+a bit nasty for those users who would somehow run just one
+single-threaded instance at a time.  I also give another reason for
+possibly using a lower MAXFORM rounds count:
+
+"A concern is that when the defensive running time is limited by this
+scalar chain, we're making Argon2 more susceptible to CPU attacks, where
+the attacker would interleave 2+ instances (and more RAM is typically
+available in the system anyway).  This is partially mitigated by us
+being close to bumping into L1 data cache size, but nevertheless it is a
+concern.  For this reason, maybe a smaller default un-pwxform rounds
+count (such as 3 or 4) should be chosen, especially at low (defensive)
+thread counts."
+
+going with those lower rounds counts like 3 or 4 would also almost
+eliminate the single-thread performance impact.
+
+And re-reading that thread made me recall a reason why we might want to
+keep BlaMka along with MAXFORM:
+
+"To increase the latency of tradeoff attacks, I think BlaMka may be used
+(along with an un-pwxform chain like this, which serves its different
+purpose - hardening non-tradeoff latency and providing some anti-GPU)."
+
+OTOH, the MAXFORM chain may also serve to harden the tradeoff latency if
+we have its S-boxes overwritten all the time (such as with the 1 KB
+state array, sliding it over the 8 KB or so S-boxes).
+
+So there's still much work to do on this, which I'd like to help with,
+but the initial results were promising.
+
+Alexander
+

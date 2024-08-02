@@ -1,0 +1,124 @@
+phc-discussions - Re: [PHC] What is "basic cryptography" ?
+
+Message-ID: <CAFZ8o0PTHmmwjSRRW+aO3XZWBJXtDfKKwwF05HsZnxw9FnETVA@mail.gmail.com>
+Date: Mon, 13 Oct 2014 13:27:32 +0200
+From: Philip Ittmann <philip.ittmann@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What is "basic cryptography" ?
+
+Hi Thomas,
+
+I am a PhD student at UCT working with Dr Christine Swart. We've been
+following the PHC mailing list on and off for the whole year. I think MAKWA
+is really cool, but I still need to do some reading before I can talk with
+any authority on its security. I hope it is okay if we reply to your query,
+even though I am still getting into the password hashing field.
+
+On 12 October 2014 16:24, Thomas Pornin <pornin@...et.orgwrote:
+
+In particular, collision resistance implies second-preimage resistance,
+and THAT is good for security proofs, in the following sense: if the
+attacker is given s and h(s, p), and is challenged with finding a
+password p' such that h(s, p') = h(s, p) (that is the normal setup when
+considering an authentication server), then second-preimage resistance
+means that if the attacker succeeds, then he found p' = p; otherwise,
+that would contradict second-preimage resistance. So far so good: if
+second-preimage resistance can be proven (and proving collision
+resistance implies proving second-preimage resistance), then we have
+shown that if an attacker finds a matching password, then he found _the_
+password, meaning that no password entropy was lost in the process: the
+space of potential passwords, already quite small (that's the problem
+with passwords), is not unduly shrunk through some misbehaving of the
+function.
+>
+
+I am not sure this argument as is makes sense -- in particular second
+pre-image resistance normally assumes you already have the original
+password p. The argument would make more sense if it used pre-image
+resistance.
+
+If so, does the following logic appeal to your needs at all? Suppose you
+find a pre-image p' such that h(s,p') = h(s,p), then what is the
+probability that p' is a 'natural' password (i.e., in the password space
+P)? If #P = 2^30, and the hash has 256 bit output, then finding another
+'natural' password which collides with the hash is akin to rolling a 2^256
+sided dice 2^30 times and hoping to roll the value h(s,p). Then, Pr[h(s,p)
+is rolled atleast once] ~= 1 - e^(-2^30/2^257) ~= 0. So, the probability of
+finding a 'natural' password p' != p which collides with p is really low.
+This is assuming that h(s, ) follows a uniform distribution over all
+possible inputs, which may be an invalid assumption.
+
+I think what you want to show is essentially that it's very unlikely that
+there are two passwords p and p' with the same hash, and the probabilistic
+argument supports this as the case.
+
+You can't really prove it using second preimage resistance though, because
+second preimage resistance doesn't say there *aren't* two passwords p and
+p' with the same hash -- it just says that if there are, then given one of
+them it is computationally infeasible to find the other.
+
+In the unlikely even that there *are *two such passwords p and p', then
+there's nothing really to distinguish them from the attacker's point of
+view -- he doesn't know either of them to start, and they'll both work
+equally well as passwords, so there's no way for him to know which one
+actually was Alice's password (beyond the a priori probability distribution
+on the passwords) -- so there's no way to conclude that *if* he finds one
+of them then it must be p.  (If *Alice* finds p', knowing p, then *that* would
+violate second pre-image resistance.)
+
+With password hashing, things are not as easy. The space of possible
+inputs will be a lot smaller, and quite smaller than the apparent size
+of the output space. For instance, a password hashing function may
+produce a 128-bit value, but since there are much fewer than 2^128
+possible passwords (realistically), then not all 128-bit outputs are
+actually possible. In any case, brute force on the input is assumed
+to work (the input is a password). So I could try something like this:
+>
+   Password-hashing function h() will be said to be preimage resistant
+   if it is not feasible, given s and h(s, p) for an unknown p chosen
+   randomly and uniformly in space P, to find p' such that
+   h(s, p) = h(s, p') with average cost less than #P/2 the cost of
+   evaluating h().
+>
+I am not satisfied with that definition for the two following reasons:
+>
+ - This depends on the space of potential passwords. For the definition
+   to be useful, it must hold for all spaces of a given size, and not
+   just "on average". That is, the "average cost of #P/2 evaluations"
+   must be understood as "over all p in P for a single, given P". I
+   fear that such a definition may be defeated by anomalous spaces of
+   passwords that are not realistic in any way.
+>
+ - This definition includes the cost of evaluating h(), i.e. it
+   postulates the lack of any shortcut. Thus, it fails at separating
+   cryptography from engineering.
+>
+>
+I think I understand your concerns with respect to the non-uniformity of
+the password space and how that would affect the distribution of possible
+hash values. But I was wondering if this concern is not dealt with by using
+a uniformly selected  random salt for each password? Wouldn't this allow
+the entire hash output space to be admitted as possible hash values? I
+understand if you fix the salt, that things get sticky, but is that really
+a concern?
+
+
+Does anybody here has an idea on the subject ? Or maybe a reference to
+some existing published work that already covers these questions ?
+>
+The Rogaway and Shrimpton paper which Daniel linked to does look at all
+these considerations (except maybe the non-uniformity of the message
+space?).
+
+
+>
+        --Thomas Pornin
+>
+
+I hope the email helps. I am really enjoying sinking my teeth in the PHC.
+
+Best wishes,
+Philip Ittmann
+
+
+

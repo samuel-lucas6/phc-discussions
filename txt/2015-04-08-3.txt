@@ -1,0 +1,36 @@
+phc-discussions - Re: [PHC] On type aliasing and similar issues
+
+Message-ID: <55249A65.8080304@dei.uc.pt>
+Date: Wed, 08 Apr 2015 04:03:01 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On type aliasing and similar issues
+
+On 04/08/2015 03:37 AM, Alexander Cherepanov wrote:
+AFACT this is implementation-defined in C89 (3.3.2.3) and fully defined in C99 and C11 (6.5.2.3p3). 
+
+Yes, type punning with unions is now OK (though implementation-defined; accessing the wrong member may still trap) in
+C99 and above. What is being dereferenced in the example is the pointer to the union, not the members, so I'm not sure
+strict aliasing's undefined behavior applies. The example could be further improved to demonstrate this:
+
+  #include <stdint.h>
+  #include <stdio.h>
+
+  union U {
+    uint32_t x[2];
+    uint64_t y;
+  };
+
+  extern union U * v;
+
+  void f() {
+    uint32_t * p = &v->x[0];
+    uint64_t * q = &v->y;
+    *p = 17;
+    *q = 42;
+    printf("%u\n", v->x[0]);
+  }
+
+While Clang and recent GCC do what one would hope (print 42), GCC 3.4 and Intel compiler print 17.
+
+

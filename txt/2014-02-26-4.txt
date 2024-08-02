@@ -1,0 +1,27 @@
+phc-discussions - Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?
+
+Message-ID: <20140226094731.GA6365@openwall.com>
+Date: Wed, 26 Feb 2014 13:47:31 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Should we care about "parameter influence" attacks against PBKDF2?
+
+On Wed, Feb 26, 2014 at 01:14:13PM +0400, Solar Designer wrote:
+As you probably realize, hashing of all the input parameters is not the
+only way to prevent this attack.  A final step may (or may not,
+depending on how it's chosen) also prevent the attack.  (Arguably, this
+translates into hashing of the iteration count anyway, via the iteration
+count indirectly affecting the input to this final crypto hash step.)
+
+Here's an example to consider: given two scrypt hashes for the same
+password, salt, N, and r, but for different p, can we test candidate
+passwords faster than we would against the smaller-p one of these two
+hashes?  I think the answer is "no", but I think it is a "no" only
+because of what happens inside the final PBKDF2.  Luckily, PBKDF2
+appears to be OK as it relates to this sort of attacks for differing
+salts, even if the longer salt differs only by addition of a suffix to
+the shorter one.  If scrypt used something other than PBKDF2 for this
+final step, the answer could as well have been "yes".
+
+Alexander
+

@@ -1,0 +1,102 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Message-ID: <20150819012155.GA14760@openwall.com>
+Date: Wed, 19 Aug 2015 04:21:55 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+A minor update on Lyra2 vs. yescrypt CPU/GPU benchmarks:
+
+On Sun, Jul 26, 2015 at 03:47:50AM +0200, Solar Designer wrote:
+Agnieszka has prepared results for these more practically relevant
+settings as well, tuning for roughly same defensive use performance on
+CPU as is achieved with bcrypt cost 5 (traditionally used for bcrypt
+benchmarks).  An optimized defensive implementation of bcrypt on
+i7-4770K achieves ~4300 c/s cumulative for 8 independent processes or
+threads (as would be the case for password hashing on an authentication
+server).  (FWIW, an attack-optimized implementation, with multiple
+instances of bcrypt combined per thread, achieves ~6600 c/s on this CPU.)
+
+Similar defensive use performance of Lyra2 and yescrypt, both with their
+memory (de)allocation overhead kept out of the loop, is achieved at
+around 1.5 MB (or maybe closer to 2 MB for yescrypt).  We chose to test
+both at 1.5 MB.  For Lyra2, this is achieved by setting m_cost=64 (so
+it's 64 rows of 24 KB each).  For yescrypt, it is achieved by setting
+N=2048 r=6 (so it's 2048 rows of 768 bytes each).  (We could also test
+other combinations, like N=1024 r=12, which I expect would work in
+yescrypt's favor in terms of GPU attack resistance.  We could even go
+all the way up to 24 KB for an interesting comparison.  Agnieszka, feel
+free to try those.  Smaller r may be preferable against attacks with
+other devices, such as where Argon team's TMTO attack is relevant.)
+
+Here are the current results:
+
+Lyra2
+
+i7-4770K - 3808
+GeForce GTX 960M - 506
+Radeon HD 7970 GE (*) - 2438
+GeForce GTX TITAN (**) - 1625
+
+yescrypt
+
+i7-4770K - 4736
+GeForce GTX 960M - 416
+Radeon HD 7970 GE (*) - 930
+GeForce GTX TITAN (**) - 1107
+
+Two days later (and yes, I should have posted this in here way sooner
+than now), Agnieszka came up with revised results, IIRC with corrected
+randomization of passwords being tested.  These aren't very different
+from the above.  Nevertheless, here they are:
+
+Lyra2
+
+i7-4770K - 3792
+GeForce GTX 960M - 629
+Radeon HD 7970 GE (*) - 2844
+GeForce GTX TITAN (**) - 1638
+
+yescrypt
+
+i7-4770K - 4736
+GeForce GTX 960M - 419
+Radeon HD 7970 GE (*) - 914
+GeForce GTX TITAN (**) - 1050
+
+Same footnotes apply:
+
+(*) We actually use one GPU in HD 7990 at 1.0 GHz, which is equivalent
+to HD 7970 GE.
+(**) With slight overclocking by the GPU card vendor.
+
+Raw detail:
+
+http://www.openwall.com/lists/john-dev/2015/07/25/21
+
+New raw detail:
+
+http://www.openwall.com/lists/john-dev/2015/07/27/6
+
+As you can see, both are slower on GPU than on CPU, but yescrypt fares
+better, especially on the AMD GCN device.  CPU/GPU speed ratio advantage
+of yescrypt over Lyra2:
+
+4736/416 / (3808/506) = 1.51
+4736/930 / (3808/2438) = 3.26
+4736/1107 / (3808/1625) = 1.83
+
+4736/419 / (3792/629) = 1.87
+4736/914 / (3792/2844) = 3.89
+4736/1050 / (3792/1638) = 1.95
+
+As you can see, these show slightly better advantage of yescrypt.
+
+(BTW, I expect Argon2 as currently defined to perform worse than Lyra2
+at this test.  But this is yet to be seen.  Hopefully soon.)
+
+We have such results now.  I'll post them separately.
+
+Alexander
+

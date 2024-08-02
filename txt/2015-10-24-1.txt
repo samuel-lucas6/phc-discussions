@@ -1,0 +1,47 @@
+phc-discussions - RE: Specification of a modular crypt format (2)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4B43DC2@uxcn10-5.UoA.auckland.ac.nz>
+Date: Sat, 24 Oct 2015 15:06:48 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: Specification of a modular crypt format (2)
+
+Just thought I'd post an update to this, based on the discussion earlier in
+the thread I rewrote the code to avoid gcc's issues, the result ended up
+almost identical to Thomas' decode_decimal() (I didn't look at it when I
+updated my code, it just ended up that way :-):
+
+    for( value = 0, i = 0; i < strLen; i++ )
+        {
+        const int ch = byteToInt( str[ i ] ) - '0';
+
+        if( ch < 0 || ch 9 )
+            return( CRYPT_ERROR_BADDATA );
+        if( value < 0 || value >= MAX_INTLENGTH / 10 )
+            return( CRYPT_ERROR_BADDATA );
+        value *= 10;                                    // Line 19
+        if( value >= MAX_INTLENGTH - ch )               // Line 20
+            return( CRYPT_ERROR_BADDATA );
+        value += ch;
+        ENSURES( value >= 0 && value < MAX_INTLENGTH );
+        }
+
+What's scary about this is that without the unnecessary 'value < 0' condition,
+the STACK analyser still reports it as being problematic:
+
+bug: anti-simplify
+model: |
+  %cmp10 = icmp sge i32 %mul, %sub9, !dbg !37
+  -- false
+stack:
+  - test.c:20:0
+ncore: 1
+core:
+  - test.c:19:0
+    - signed multiplication overflow
+
+Depending on how closely STACK follows gcc's reasoning, if they do perform the
+same analysis then gcc would "see" UB there and decide that it could break the
+code.
+
+Peter.

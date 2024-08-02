@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] HKDF has collisions with different salts
+
+Message-ID: <CAOLP8p4HZQ9rbMG+6y+YD6tJT5ak-tEVxQf50ihh=qgQB_nG+w@mail.gmail.com>
+Date: Fri, 14 Mar 2014 22:33:54 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] HKDF has collisions with different salts
+
+On Fri, Mar 14, 2014 at 9:38 PM, Peter Gutmann
+<pgut001@...auckland.ac.nzwrote:
+This dates back to Abadi and Needham's "Prudent Engineering Practice for
+Cryptographic Protocols", circa 1996 or so.  One of their design principles
+was "every message should say what it means", i.e. there should be no
+ambiguity about interpreting its content.  Take for example SSHv1
+fingerprints:
+>
+  hash( n || e )
+>
+where n and e are the raw values.  This creates an equivalence class of keys
+where you can interpret the composite string 'n || e' as a variety of
+different keys based on which bits you choose to be n and which you choose to
+be e.  So defining an input format that makes it very clear what data belongs
+to which element is critically important.  This can be done either explicitly
+(PBKDF2 does this, with distinct input parameters for the salt, iteration
+count, and secret value), or explicitly (by defining a marshalled format for
+the data for a generic KDF).
+>
+Peter.
+
+The way I insure I've got the data right is by being sure that I could
+parse the binary key material and recreate all the inputs from it.  If
+there's not enough information to do that, you haven't hashed enough
+inputs.  If there are two possible interpretations for a binary
+string, then there are two strings for the same interpretation, and
+thus collisions.
+
+I have to admit that I thought I could get away without hashing the
+salt length, because I passed it to hkdfReset, and I figured it would
+take care of it.  Do'h!
+
+Bill
+

@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Some remarks on Lanarea
+
+Message-ID: <CAOLP8p5UVyRJdCitWnZXKrj+J9Spevh3RCxoE31TJKeRSYxUmQ@mail.gmail.com>
+Date: Wed, 2 Apr 2014 20:10:03 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some remarks on Lanarea
+
+I agree that the GPU resistance would not be enhanced with the random
+branching based on data in the inner loop.  For example, can't we
+rewrite:
+
+13. if (c mod 2) ≡ 0 then
+14. c ← ROL (c, r)
+15. else
+16. c ← ROR (c, r)
+17. end if
+
+as:
+
+c = ROL(c, r-2*(c&1)*r)
+
+and similarly for the rest?  The mod functions on lines 9, 10, and 11
+likely do not run in constant time, and certainly will take highly
+variable time on different CPUs, unless Cr is a power of two.
+
+I think the inner loop has less sequential compute hardness than
+claimed.  For example, consider, line 9:
+
+r = y + h[z] mod m
+
+h[z] does not change during execution of the two inner loops, and y is
+predictable, so we can pre-compute r for all y in parallel.
+Similarly, the next line:
+
+c = r + f[y][z] mod m
+
+can be computed also in parallel, after computing r in parallel.  Line
+11 is the first truly sequential operation:
+
+r = r + f[r][z] mod m
+
+since it does a data dependent read.  I would look for more issues,
+but there seems to be enough that I would rather move on.
+
+The data dependent read does not bother me.  I feel that algorithms
+that run in cache like this one really should do data dependent reads,
+like Bcrypt, since they are likely to gain some runtime hardness from
+cache bandwidth limitation that way, and likely some GPU hardness as
+well, assuming they don't waste all their time on cryptographically
+strong hashes.  On an ASIC, on-chip predictable memory addressing can
+be sped up to bandwidths I don't even want to think about (what comes
+after TiB/s?  PiB/s?), leaving such algorithms reliant on the
+compute-hardness of their hash function, which is generally very low
+(maybe 30X for Salsa20/8, and 100X for most others).  SHA3 would be
+a poor choice for such an algorithm, IMO.
+
+Bill
+

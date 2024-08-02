@@ -1,0 +1,133 @@
+phc-discussions - Re: [PHC] RIG vs. scrypt performance comparison
+
+Message-ID: <20150210144012.GA6804@openwall.com>
+Date: Tue, 10 Feb 2015 17:40:12 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] RIG vs. scrypt performance comparison
+
+Hi Arpan,
+
+Thank you for your clarifications.
+
+On Tue, Feb 10, 2015 at 06:22:37PM +0530, Arpan Jati wrote:
+1) Well, this is just a matter of interpretation of the sentence "Intel
+Core i7-4770CPU with 16GB RAM at 2400 MHz" from page 14 of RIG-v2.pdf.
+English can sometimes be ambiguous, and a sentence can have multiple
+possible interpretations. We have mentioned the setup in a more detailed
+way in code: https://github.com/arpanj/Rig/blob/master/Rig_v2-opt/main.c
+
+GCC v4.9.1 (CFLAGS=-std=c99 -mavx2 -O3 -funroll-loops)
+CPU: Intel Core i7 4770 (Turbo Boost: ON)
+RAM: Double Channel DDR3 16 GB (2400 MHz)
+
+So, the CPU was working at normal Turbo-Boost frequency of 3.9 GHz, without
+throttling during the experiments. The memory speed was specified as it was
+higher than normal of 1366/1600 MHz, albeit having higher latency.
+
+Oh, this is clear now.  (I could have guessed, but somehow did not.)
+One more detail you could want to include: did you build for x86-64 or
+for 32-bit x86?
+
+In the scrypt benchmarks I posted yesterday, it was normal DDR3-1600
+memory (4 sticks, 32 GB total, but this CPU has only two memory channels
+anyway, so I'd expect the same speeds with 2 sticks).
+
+I built yescrypt-0.7.1 (as currently in PHC) and @floodyberry's
+scrypt-jane with these packages' default gcc flags and "gcc version
+4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)" for x86-64.
+
+2) Regarding the benchmarks we did use the reference code initially,
+because in the first version of our submission, we were not using SSE/AVX.
+Secondly, for smaller block sizes, the SSE/AVX implementations tend to
+yield much lesser performance benefits, because of memory
+latency/allocation overheads.
+
+It would have been better to include optimized / SSE benchmarks for scrypt
+too.
+
+The best thing would be to have two graphs with multiple candidates from
+PHC with both the optimized and reference versions as some CPU's especially
+mobile ones may not have SSE/AVX and would need to fallback on the
+reference implementations.
+
+I think there's almost no point in benchmarking the reference
+implementations when there's also an optimized non-SIMD implementation,
+like it's the case in the original scrypt tarball.  The -ref file is
+just for studying it and for testing of other implementations against
+it.  It's not for actual use at all, not even as a fallback.  There's
+-nosse (or -opt in yescrypt) and -sse (or -simd in yescrypt) for actual
+use.  So if you proceed with benchmarks, you should be comparing your
+non-SIMD code against scrypt's -nosse (or/and yescrypt's -opt), and your
+SIMD code against scrypt's -sse (or/and yescrypt's -simd or
+scrypt-jane).  I'd be interested in seeing such benchmark results.
+
+The -opt version in yescrypt is not yet as fully optimized as yescrypt's
+-simd, though.  The blk{cpy,xor} may be fully avoided even in -opt, but
+so far I only did that in -simd, because at this time that's what I care
+about more and because this optimization makes more of a difference on
+overall performance there.  We could want to optimize (ye)scrypt's -opt
+more fully if we want to use it as a baseline for benchmarks.
+
+That said, here are yescrypt's -opt and -ref benchmarks (computing
+classic scrypt) on the same machine I used for yesterday's SIMD
+benchmarks:
+
+-opt:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m2.470s
+user    0m2.212s
+sys     0m0.224s
+
+-ref:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m2.745s
+user    0m2.508s
+sys     0m0.204s
+
+And here's the original scrypt code benchmarked on the same machine,
+same gcc, "CFLAGS = -Wall -march=native -O2 -fomit-frame-pointer", -sse:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m1.801s
+user    0m1.548s
+sys     0m0.224s
+
+-nosse:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m2.728s
+user    0m2.468s
+sys     0m0.240s
+
+-ref:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m7.113s
+user    0m6.808s
+sys     0m0.268s
+
+7 seconds is pretty bad indeed, but not as bad as the almost 12 seconds
+you observed.  Maybe the gcc flags were very different, or something.
+
+I think the original scrypt tarball's -ref is this slow primarily
+because it includes le32dec() and le32enc() right inside salsa20_8(),
+for clarity (to avoid mixing up the different layers), and these are
+going to functions in another source file rather than inlined.
+
+Thanks again,
+
+Alexander
+

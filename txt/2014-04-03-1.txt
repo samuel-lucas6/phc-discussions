@@ -1,0 +1,87 @@
+phc-discussions - A weak password attack against PolyPassHash
+
+Message-ID: <CALCETrXM3oG3Nwt1NjvtmSXqN5P1eZeDT=Qcg+yfpFAK20_k9g@mail.gmail.com>
+Date: Wed, 2 Apr 2014 17:06:19 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>, Justin Cappos <jcappos@....edu>
+Cc: santiago torres <sat417@...dents.poly.edu>
+Subject: A weak password attack against PolyPassHash
+
+On Mon, Mar 24, 2014 at 2:34 PM, Justin Cappos <jcappos@....eduwrote:
+I would like to solicit the community's feedback about an submission to the
+PHC called PolyPassHash.
+>
+This scheme is different than most PHC entries in that it uses a
+threshold-based storage technique to prevent passwords from being
+individually cracked.   To validate a password, one must recover a share in
+a Shamir Secret Store, which necessitates knowing a threshold of correct
+passwords.   (There are extensions to allow passwords to be securely
+validated by a server upon setup and also to support accounts that do not
+count toward the threshold.)
+>
+PolyPassHash gives an exponential increase in the search space an attacker
+needs to explore while only increasing the server's time by a small linear
+factor.   If you take the three passwords that are composed of six random
+characters each and protect them with PolyPassHash, to search the key space
+would take every computer on the planet working together longer than the
+universe is estimated to have existed.   PolyPassHash is about as efficient
+in terms of memory, disk, and CPU time as existing salted secure hash
+techniques.   In fact, PolyPassHash is orthogonal to the secure hashing
+technique and should integrate with (any?) other submission.
+>
+More information about the scheme (including both technical documentation
+and information for a more general audience) is available at:
+https://github.com/JustinCappos/PolyPassHash
+>
+There is also a Python implementation available in that repository and a
+link to the C implementation (by Santiago Torres) which will be submitted to
+the contest.
+>
+I welcome any comments or feedback.
+
+
+First, a question: how do you verify that you've correctly recovered
+the global secret?  If you can't check that, then won't *any* set of
+passwords appear valid?  I'll assume that the server stores a hash of
+the constant term.
+
+
+Second, an attack, based on the observation that the distribution of
+passwords is, in practice, far from uniform:
+
+Suppose that k shares are needed to unlock the database.  Select, at
+random, k users.  For each of them, calculate H(salt, "123456").  Then
+try unlocking the database.  Repeat until you succeed.
+
+As a rough estimate, let p be the probability that a given user
+chooses the password "123456".  Each attempt succeeds w.p. 1/p^k.
+Ignoring the dependence between attempts, the cost of the attack is
+O(p^k) secret share computations.
+
+If the hash function used is expensive, then this can be improved:
+memoize the results of the hash calculations and sample k-tuples of
+users from a distribution with an appropriate bias toward reusing
+users.  I'll let actual attackers do the optimization :)
+
+Mitigating this type of attack may be difficult, unless defenders are
+willing to choose a rather large value for k.
+
+Given that Shamir secret sharing is based on linear algebra, I
+wouldn't be surprised if this attack can be improved, possibly to the
+point that the complexity becomes polynomial in k.  As far as I know,
+the information theoretic argument for the security of Shamir's scheme
+says that, if you don't know k shares, you learn nothing about the
+secret.  In PolyPassHash's case, with reasonably high probability, you
+can guess considerably more than k shares, but they're just hidden
+among a bunch of incorrect guesses.
+
+This sounds awfully like a linear coding problem.  You have a whole
+bunch of guesses of randomish linear combinations of some vectors with
+a special form.  Quite a few of those guesses are correct, but most
+are wrong.  The problem is to identify the ones that are correct.  I
+don't know off the top of my head whether this particular instance is
+in an NP-hard regime or in a polynomial-time regime.  If it's
+polynomial-time, then the attacker has a huge advantage.
+
+--Andy
+

@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140212161619.GA2098@openwall.com>
+Date: Wed, 12 Feb 2014 20:16:19 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Tue, Feb 11, 2014 at 07:47:22AM -0500, Bill Cox wrote:
+VMULPD sure sounds good for 64-bit versions.  I was also toying with
+the idea of 8-way 32-bit float operations, since the history of
+graphics cards seems to show we're headed towards caring a lot about
+32-bit float SIMD more than 32-bit ints.
+
+You might be misinformed.  Even though the published high GFLOPS figures
+for GPUs are often for 32-bit float (whereas the 64-bit float ones are
+2x to 24x lower), GPUs are typically just as good at 32-bit int as well.
+For example, notice how very fast modern GPUs are at cracking MD4 (NTLM)
+and MD5 hashes, which use 32-bit ints (not multiplication, though).
+
+However, multiply latency hardened hashing is likely a poor fit for GPUs
+anyway(*), because GPUs are optimized primarily for high throughput
+rather than for low latency of individual operations.
+
+(*) We may include tunable parameters to make the same hashing scheme
+fit GPUs well, and it may be good to do so, but with settings optimal
+for defensive use of GPUs it won't actually be multiply latency hardened
+against ASICs.  Rather, we will be using the die area occupied by the
+multipliers, which may be non-negligible.
+
+.L3:
+        movq    32768(%rbx,%rdx,8), %rax
+        movl    %ecx, %ecx
+        addq    $1, %rdx
+        orl     $3, %eax
+        imulq   %rax, %rcx
+        addq    -8(%rbx,%rdx,8), %rcx
+        cmpq    $268427264, %rdx
+        movq    %rcx, 65528(%rbx,%rdx,8)
+        jne     .L3
+
+The "movl %ecx, %ecx" I think is used to clear the high 32-bits.  That
+causes a bit of extra latency in the loop:
+
+Oh, right.  The extra latency could be reduced or avoided if you (let
+the compiler) unroll this loop, so that an equivalent of "movl %ecx, %ecx"
+would appear right before "movq %rcx, 65528(%rbx,%rdx,8)" (with another
+distination register instead of %ecx, so that %rcx is still available
+for the movq to memory).  I suggest that you use -funroll-loops for all
+of your benchmarks.
+
+BTW, you might not need the "| 3" when you do 32x32->64.  Your rationale
+for the "| 3" was to preserve entropy, but 32x32->64 is lossless (in
+fact, it's reversible, which might allow for attacks - you might need
+something else instead of the "| 3", perhaps after the multiply, to make
+it one-way).
+
+Alexander
+

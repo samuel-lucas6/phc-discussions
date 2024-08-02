@@ -1,0 +1,76 @@
+phc-discussions - tunable SIMD and instruction-level parallelism
+
+
+Message-ID: <20140213183247.GA6781@openwall.com>
+Date: Thu, 13 Feb 2014 22:32:47 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: tunable SIMD and instruction-level parallelism
+
+Bill, all -
+
+Attached is a standalone program I wrote a while ago to test these ideas:
+
+1. Having SIMD and instruction-level parallelism tunable.  We may have a
+generic implementation that does not (fully) use the parallelism, as
+well as optimized implementations for certain combinations (or ranges)
+of values of these parameters.  This allows us to use future CPUs' wider
+SIMD vectors, etc. while keeping our hashes compatible with older
+implementations, including running on older CPUs.  In this program, I
+use #define's, but they may as well be variables.
+
+2. Separate SIMD lanes ("#define SIMD 4" here) along with separate
+interleaved instruction streams ("#define P 4"), with their inputs
+and/or outputs intermixed before and/or after each block.
+
+This differs from scrypt's BlockMix where the mixing occurs throughout
+the block, but which limits the available SIMD*P width to at most
+512-bit (as long as Salsa20 is used for the mixing like in scrypt).
+
+The mixing once per block is needed since otherwise it becomes possible
+to compute the whole heavy part of the KDF as a few sequential portions,
+one per lane, with the memory needs reduced accordingly (it'll be
+number-of-lanes times smaller).  (This is similar to how scrypt's p>1
+allows for computation with less memory when the parallelism is not
+fully made use of as such.)
+
+For this purpose, as well as to produce a random index when needed,
+mixing at end of block works best.
+
+Mixing at beginning of block may be used when that time would be wasted
+waiting for data (TLB miss, then memory latency), although alternatively
+the next random index may be produced a few sub-blocks earlier (but not
+too early).  (In my testing, the needed before-block delay is roughly
+equivalent to Salsa20/4 on a CPU.  So maybe we can simply have Salsa20/4
+before and after each block, although when SIMD*P is greater than
+512-bit a single Salsa20 becomes insufficient and thus the delay from
+multiple crypto hash invocations becomes larger than is necessary to
+hide the TLB miss + memory latency.)
+
+I think it is sufficient that we mix the lanes once or twice per block.
+I'd appreciate any comments on this.
+
+3. Blowfish-like variable S-boxes accessed from within the BlockMix
+substitute.
+
+4. Reuse of the most recently written blocks for the S-boxes (it's data
+that is likely still in L1 cache anyway).
+
+5. When BlockMix is used for memory filling, like in SMix's first loop,
+the S-boxes may slide onto data already written by the currently running
+BlockMix.
+
+6. And yes, in this experiment I have abandoned scrypt BlockMix's
+shuffling of output sub-blocks, which I think was not justified (or was
+redundant given other data dependencies and high Salsa20 block size):
+
+http://mail.tarsnap.com/scrypt/msg00059.html
+
+It looks like none of the scrypt-inspired PHC candidates discussed so
+far have retained this shuffling.  (Well, we did in non-experimental
+escrypt so far, but it is unlikely to stay for long.)
+
+Alexander
+
+View attachment "sim-mix.c" of type "text/x-c" (5594 bytes)
+

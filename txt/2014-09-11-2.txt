@@ -1,0 +1,27 @@
+phc-discussions - Makwa is broken given p and q
+
+Message-ID: <869155607.54688.1410407753370.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Wed, 10 Sep 2014 22:55:53 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Makwa is broken given p and q
+
+Given p and q you can do:
+e  = 2 ** cost
+e' = 2 ** cost (mod (p-1)*(q-1))
+x ** e = x ** e' (mod p*q)
+
+
+You could pick the cost to be 2 ** 128. Without p and q you can't test a
+password.
+powConst = powm(2, pow(2, 128), (p-1)*(q-1))
+hash = powm(password, powConst, p*q)
+but you could just do HMAC(password, secretKey)
+
+Sorry but even if you came up with the perfect server-specific shortcut, HMAC or
+encryption with a secret key is better.
+
+If you don't know the secret, it takes 3x longer.
+vs
+If you don't know the secret, you can't do anything.
+

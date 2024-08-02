@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140112100247.GA9015@openwall.com>
+Date: Sun, 12 Jan 2014 14:02:47 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 04:42:10PM -0500, Bill Cox wrote:
+On Sat, Jan 11, 2014 at 2:23 PM, Solar Designer <solar@...nwall.comwrote:
+New speed for 1 Salsa20 round and p=32, on idle machine:
+>
+real    0m1.286s
+user    0m39.523s
+sys     0m1.183s
+>
+Not much change here. :-)
+>
+2*3*10*2^30/10^9/1.286 = 50.10 GB/s
+
+Holy cow!  That's serious speed, dude.  The best graphics, FPGA, or
+ASIC attack could not do more than 4-5X better.
+
+... or 7x, if we look at Xeon Phi 7120P's stated 352 GB/s max memory
+bandwidth.  It has 16 GB GDDR5 on board.  What probably mitigates such
+attacks is the high latency and thus the need for prefetch into each
+core's cache, which the sequential nature of scrypt mostly prevents.  An
+attacker could run multiple instances to hide the latency, but only ~7
+instances (2 GB each) would fit on the 7120P.  Well, maybe 7 would be
+enough to reach much greater speed, considering that I got 12.88 GB/s on
+a lower-clocked Xeon Phi with only one instance and no SIMD code.
+
+>In fact, if we were to regard only the Salsa20 rounds as computation
+>that the attacker will need to perform, then even round counts higher
+>than 8 could be more optimal in attack area*time terms, from defender's
+>point of view.  Since GB/s is proportional to memory usage for fixed
+>running time (or actually the other way around), we can estimate AT
+>costs (in arbitrary units) as follows:
+>>
+>48.95 GB/s * 2 rounds = 97.90
+>45.63 GB/s * 4 rounds = 182.52
+>38.03 GB/s * 8 rounds = 304.24
+>30.43 GB/s * 12 rounds = 365.16
+>19.93 GB/s * 20 rounds = 398.60
+
+Imagine that all the lines of code you've written in C for escrypt,
+other than for memory access, will cost an attacker maybe $0.02 per
+core, and that Salsa20/20 will run in maybe 2 clocks instead of 1 for
+Salsa20/1.  This is roughly the case, within maybe 2X in cost and
+clock cycles.  It's pointless trying to make an ASIC attacker's
+arithmetic cost significant in either time or money, so we have to
+focus on memory size and bandwidth.  For defense against ASIC attacks,
+your Salsa20/1 benchmark is the best.  50GB/s!  Nice!
+
+Nice speed, yes, but I'm not so sure that there's only a 2x difference
+in speed between Salsa20/20 and Salsa20/1 in an ASIC that also accesses
+memory, unless it simply bumps into its memory bandwidth on anything
+faster than Salsa20/10.  And I'm pretty sure there's a nearly 20x
+difference between these in an ASIC that only does computation - e.g.,
+if we doubled the number of SHA-256's involved in Bitcoin mining, the
+mining ASIC hash rates would be halved, for same die area, etc. - right?
+
+Yes, we may have Salsa20/N - for any realistic N - in just one clock
+cycle, but this means we run it at a lower clock rate.  For example, how
+many SHA-256 steps are there per pipeline stage in Bitcoin mining ASICs?
+My non-expert gut feeling suggests at most 4.  What's your guess?
+(And yes, we need to reverse-engineer some of them to find out.)  My
+understanding is that with too much sequential work done per pipeline
+stage, we leave much of the logic idle much of the time.  Once signal has
+propagated to further parts of the circuit, the portions of the circuit
+closer to its inputs are idle.  Having less work per pipeline stage
+helps keep all logic busy: by the time the signal has propagated, we
+take it to the next stage and reuse the current stage's logic for the
+next set of inputs.  Now, I admit we can't benefit from a pipeline when
+all we have is one instance of Salsa20/N and our (attacker's) goal is
+solely to minimize latency.  But even then, I don't see why having a
+large number of rounds in one clock cycle would substantially reduce the
+total latency, as compared to having only a few rounds per cycle.
+I think the latency in ns should be similar regardless of how this is
+structured - well, perhaps only slightly lower (like by 10%) with more
+rounds per clock cycle.  Am I wrong?
+
+I think the added latency from having (reasonably) more computation may
+increase the AT cost, by tying up the memory for longer.  This reduces
+our reliance on attackers' memory bandwidth being limited.
+
+Alexander
+

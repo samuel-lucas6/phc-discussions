@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] Should SkinnyCat have memCost and timeCost?
+
+Message-ID: <CAOLP8p4DoYUY3ZXjM2-XErgRio7a1NASSUayNURY2vFNfaJmgQ@mail.gmail.com>
+Date: Sat, 29 Mar 2014 15:43:34 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Should SkinnyCat have memCost and timeCost?
+
+On Sat, Mar 29, 2014 at 12:22 PM, Solar Designer misunderstood, but
+as described above it sounds like timeCost 0 would
+reduce the whole scheme's usage of memory bandwidth accordingly, which I
+find an undesired side-effect.  Set timeCost high enough and attackers
+would even be able to use disks instead of RAM.  No?
+
+Correct.  I've been playing with it a bit, and the sweet-spot for such
+a parameter is when both internal cache and external DRAM bandwidth
+become limiting factors.  So, you loose a bit of either external
+memory written or have to run for a bit longer, but in theory, it may
+gain some runtime hardness.  However, I'm not doing small random reads
+in SinnyCat like I do by default in the second loop of TwoCats, so a
+cache memory architecture designed for only large block reads might be
+far more efficient than a CPU L1 cache.  For example, instead of a
+16KiB cache like we see in our CPUs, have 16 1KiB caches, read from
+them all in parallel, and then just use shift registers to stream
+memory at some insane bandwidth.
+
+>I know this isn't terribly important.  I can probably change it in the
+>"tweaking" phase anyway.  What do you think?  Should a KISS PHS
+>include a time cost parameter?
+>
+I have the same dilemma for a scripting-language friendly KISS scheme
+that I _might_ submit.  Either choice makes sense to me, although I
+think supporting t_cost (via continuing to run for longer after the
+desired amount of memory has been filled) is preferable.  In case the
+way you can support higher t_cost is only as you described above (and
+assuming I understood you correctly), then maybe don't bother. ;-(  What
+you described sounds more like a way to tune computation vs. bandwidth
+usage than a way to tune the time cost.  I'd even say that the effect it
+has on time is a side-effect, and it'd be unfortunate to have people use
+this setting for the sole purpose of achieving the side-effect.
+>
+I understand that you probably tried to keep the number of tunable
+parameters to a minimum, in TwoCats as well.  This may be why you
+arrived at only one parameter where there could have been two.
+>
+Alexander
+
+All true.  Thank for talking me out of the extra timeCost parameter.
+Without the subblock reads, it probably wouldn't help much on AT cost
+against an ASIC anyway, so I added the subblock loop, and then it
+started looking so much like the full TwoCats, that I don't see the
+point.
+
+Splitting the time parameter in two as you suggest would allow TwoCats
+to fill memory more rapidly, increasing the average AT cost compared
+to just one parameter, though not the peak AT cost.  It's a tough
+call, but I'll leave it alone.
+
+I need to resubmit anyway because I failed to retest on your Haswell
+box after making some minor changes, and naturally I introduced a bug.
+ The AVX2 version segvs :-(  I also fixed a couple typos in the docs,
+but nothing significant.  I'll leave SkinnyCat alone.
+
+Thanks again for the advice.
+
+Bill
+

@@ -1,0 +1,55 @@
+phc-discussions - RE: [PHC] Minimal security estimates or guarantees for password hash parameter sets?
+
+Message-ID: <002201ce9700$acd75370$0685fa50$@acm.org>
+Date: Sun, 11 Aug 2013 19:07:18 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Minimal security estimates or guarantees for password hash parameter sets?
+
+I think one wants to make fairly standard security arguments.  
+ 
+If the hash, salt, t_cost and m_cost are all known, the password is vulnerable to brute-force *off-line* attack.  In that case, no matter how good we think PHS is, it is advantage adversary and time to change the password, salt, and other parameters.
+ 
+The best possible argument requires that the hash be indistinguishable from random and that there is no pattern with respect to salt, t_cost, and m_cost.  (That is, different combinations of salt, t_cost, and m_cost should maintain collision resistance, although collisions are not the basic problem.)  There is a standard security game for estimating the strength of such arrangements.
+ 
+There is complete vulnerability to brute-force attack based on the fact that passwords are not uniformly random and that folks reuse passwords (if not individually, collectively).  Now the security game is weaker for the defender.  How much weaker is the question.  
+ 
+All we’re talking about here is demanding a work factor that is brute-force infeasible under the assumption that the password *is* uniformly random in some large space (say 256 bits for now).  In practical situations, the advantage is always to the attacker as soon as the hash, salt, t_cost, and m_cost (along with the algorithm, of course) are disclosed.  
+ 
+It is the prospective disclosure of the hash, salt, t_cost, and m_cost that immediately undermines our efforts here.  The best mitigation of the cost of that disclosure is high-entropy random passwords that are not reused and that limit prospective damage to the single disclosure.  If there is enough work-factor cost to recovery of the password by an adversary (who has cloud-sourcing available), that might buy enough time for the password to be changed (assuming the disclosure of the hash and parameters becomes known quickly.  (This is a good reason for coming up with a password change schedule based on what the estimated time to recovery by a determined adversary is currently, relative to the value of password discovery to that adversary.)  That’s as good as it gets, it seems to me.
+ 
+-   Dennis
+ 
+From: Peter Maxwell [mailto:peter@...icient.co.uk] 
+Sent: Sunday, August 11, 2013 14:39
+To: discussions@...sword-hashing.net
+Subject: [PHC] Minimal security estimates or guarantees for password hash parameter sets?
+ 
+ 
+ 
+Following Dennis Hamilton's thread, "Interdependence of t_cost and m_cost parameters", I had a thought: it is worthwhile specifying a "security estimate" or "security guarantee" for various parameter sets in an algorithm's submission?
+ 
+ 
+We know:
+ 
+i. from sample password data sets, we now have a large corpus of statistical information on historical general user password choice, i.e. a distribution showing density of user passwords by various complexity measures; and,
+ 
+ii. a good idea of how much computing power an attacker can bring to bear for a certain cost, or at least a reasonable estimate thereof.
+ 
+ 
+It should not be overly difficult[*] for algorithm designers to specify for each of a limited number of parameter sets a security estimate/guarantee of the form, "using this set of parameters, roughly x% of passwords would be cracked by an attacker with £y to spend".  Yes, I know that the example statement I've supplied is really a parametric curve, but you get the jist -- supplying the developer that's going to use the password hash with something more concrete to go on.
+ 
+[*] - with some initial assumptions, of course
+ 
+ 
+As long as it is not too onerous a requirement, the designer could potentially specify a minimal password complexity requirement that the target systems must implement to firm-up the estimate.
+ 
+Anyway, just a thought.
+ 
+ 
+Peter
+ 
+ 
+
+
+

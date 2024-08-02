@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150326092947.GA19273@openwall.com>
+Date: Thu, 26 Mar 2015 12:29:47 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 08:11:52AM +0100, Milan Broz wrote:
+I would ask another way - there is already some clone of LUKS support
+in Grub2 bootloader (but take is just an example).
+
+Are the algorithms easily portable without major changes to such environment
+including parallel attributes (no problem if it is run sequentially there)?
+
+Yes, you should be able to build without multi-threading support yet be
+able to compute parallelism-enabled derived keys (sequentially).
+
+It is not major user case (most of Linux distributions uses non-encrypted
+inittramdisk and unlock system device from fully running OS environment.
+But I do not want to close this way for the future.
+
+Makes sense.
+
+Or more generic question: what about embedded world?
+
+PHC seems to be mainly about online services, where you have some big
+Intel server hosting behind it but I would like to not forget about embedded
+systems.
+
+You simply scale down the cost settings accordingly.  yescrypt is
+designed to achieve decent attack resistance even at low settings (of
+course, I mean decent for those settings), including below 1 MB.
+
+Alternatively, there are PHC finalists that are well-suited specifically
+for such uses - that's Pufferfish and maybe POMELO - but yescrypt has
+the advantage of being a single scheme that is well-suited across the
+range from KBs to TBs (and beyond, when relevant).
+
+Lyra2 is less suitable for low sizes like this.
+
+If not embedded, even low-cost Raspberry PI2 have 4 cores
+(and Neon engine capable accelerate e.g. AES).
+(Actually I should run tests there as well perhaps :-)
+
+And yes, people are often using FDE on these platforms.
+
+Moreover Android: it uses dmcrypt but do not utilize LUKS but has similar
+key storage which uses PBKDF2 replaced by scrypt (since 4.4) AFAIK.
+
+yescrypt should work well on those platforms, and adding NEON intrinsics
+is planned.  The specific SIMD operations have been chosen such that
+they're available on NEON too (not only on SSE*/AVX*).
+
+Alexander
+

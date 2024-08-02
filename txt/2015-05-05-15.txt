@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <55490DBF.2030700@larc.usp.br>
+Date: Tue, 05 May 2015 15:36:47 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On 05-May-15 14:54, Bill Cox wrote:
+On Tue, May 5, 2015 at 1:15 AM, Jean-Philippe Aumasson <
+jeanphilippe.aumasson@...il.comwrote:
+
+>FTR, the panel had agreed to accept Argon2 as a PHC candidate, superseding
+>Argon
+>>
+
+Awesome!  I do think this is the right decision.
+
+As for potential tweaks, here's some dumb ideas:
+
+- Argon2d/i are similar.  Can we make it one algorithm that has a flag
+specifying when to switch from cache-timing resistant mode to password
+dependent mode?  That would let one algorithm do both (something I can do
+in TwoCats)
+- Both Argon2d and Lyra2 are too focused on TMTO resistance, to the point
+of running slower than needed.  Cutting the Blake2 rounds in half in Argon
+considerably speeds it up, as does reducing the memory writes in Lyra2.
+This would improve both algorithm's basic defense.
+- Both Lyra2 and Argon2 should use the modified Blake2 round with
+multiplications for improved compute-time hardening
+
+Argon2d is a late-comer and needs more work than Yescrypt or Lyra2, but it
+looks promising to me, if enough tweaks are allowed.  I don't know about
+the other finalists, but the two strong Argon2 competitors are Lyra2 and
+Yescrypt, both of which have already influenced the Argon2 design, I
+think.  I think both the Yescrypt and Lyra2 team would be happy to see the
+best possible solution, which could be Argon2 in the end, if the Lyra2 and
+Yescrypt authors were to cooperate with the improvements to Argon2.
+
+I am a fan of the one-pass model in Argon2.  It could be enhanced into a
+winning algorithm, IMO.
+
+
+I still strongly believe that having a group of winners and a "chimera"
+out of them would probably be the best outcome of the PHC, but the
+future of the winner(s) is for the panel to decide :)
+
+So, in the spirit of contributing: probably Argon2i would be better
+using a Catena-like approach, i.e., instead of having a
+password-independent pseudorandom visitation pattern, it would be better
+to have a fixed and thoroughly analyzed visitation pattern. The
+reasoning is (please correct me if I misunderstood something about the
+algorithm):
+
+1) For legitimate users, part of the PHS's computation time would be
+wasted calculating the indices to be visited, while attackers could do
+so only once and reuse the pre-computed indices in many threads,
+diluting the corresponding costs. To avoid giving more advantage to
+attackers than to legitimate users, the computation of indices should be
+as lightweight as possible (which is a goal in Catena and also in
+Lyra2's first pass).
+
+2) Some salts/parameters will end up leading to weaker visitation
+patterns than others. This is unlikely to be critical in the long run,
+but that would be similar to having "weak keys" in cryptographic
+algorithms. So, if those are avoidable, it would probably be better.
+
+My two cents, at least.
+
+Marcos.
+

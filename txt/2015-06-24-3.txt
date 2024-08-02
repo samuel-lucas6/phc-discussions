@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Anonymous comments about Argon2 and Catena
+
+Message-ID: <CAOLP8p4=QeFUZSUKX2teYYj8CamEOWBGtqaMLPt0P=fmV2=45g@mail.gmail.com>
+Date: Wed, 24 Jun 2015 09:49:28 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Anonymous comments about Argon2 and Catena
+
+On Wed, Jun 24, 2015 at 1:00 AM, Jean-Philippe Aumasson <
+jeanphilippe.aumasson@...il.comwrote:
+
+This is to share comments from a PHC submitter, who wishes to remain
+anonymous:
+>
+------------------------
+Including Argon2 in the competition is good for a fair competition;
+otherwise Catena can win in that category without meaningful competition
+since its competitor RIG was kicked out already.
+>
+
+I agree.  Including Argon2 was the right decision, IMO.  It enhances
+competition.
+
+
+It has been mentioned repeatedly that password information is leaked
+through side channel, but no experiment has been performed to measure how
+many hashes are needed to leak one bit password information in those
+candidates.
+>
+
+SFAIK, we don't have any remaining entries that if implemented properly
+would leak any bits of the password to a cache-timing attack.
+
+The remaining entries perform what should be a side-channel resistant
+initial hash of the password, salt, and other key material to create an
+initial derived key.  It may be possible for bits of this key to be
+extracted through cache-timing, but without the salt, the attacker has no
+ability to derive any bits of the password.  All that the attacker gains is
+knowledge that a given user (who's identity is not revealed by this side
+channel) is authenticating again.  This meta-data is difficult to protect
+in any case, given the overall environment where we embed the password
+hashing algorithm.
+
+The main reason for defending against cache-timing attacks is to prevent an
+attacker who also has the password-hash/salt database from rapidly aborting
+incorrect password guesses.  It's a bit of an odd case, IMO, but the
+Lyra2-style hybrid cache-timing-resistant loop followed by an unpredictable
+addressing loop defends well in this case.  We don't need a purely
+cache-timing-resistant algorithm as a "main" winner, IMO.  They hybrid
+architecture is good enough for real-world use cases.
+
+
+A password may not get hashed many times in practice (KDF is different).
+I checked a cache-timing attack on AES, the number of samples is quite
+large in order to remove the measurement noise ( 17,720 samples according
+to the paper https://cseweb.ucsd.edu/~kmowery/papers/aes-cache-timing.pdf
+) The number of samples may be reduced for password hashing due to the
+larger state size and longer processing time.  Anyway, experiments are
+necessary if we want to know/claim how important the side-channel attack is
+for this competition.
+>
+
+An attacker only needs to see the cache timing once to make use of it to
+accelerate an off-line password guessing attack.  Beyond that, I don't know
+what good seeing the cache timing a million times would do for the
+attacker.  It wont reveal anything about the password.
+
+Bill
+
+
+

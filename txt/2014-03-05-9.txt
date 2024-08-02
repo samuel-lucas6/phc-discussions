@@ -1,0 +1,114 @@
+phc-discussions - Re: [PHC] escrypt 0.3.1
+
+Message-ID: <CAOLP8p6PSPSSOXF3M1AERWReSoAQcW-F8_7a8+-w4sXvoQ4GTw@mail.gmail.com>
+Date: Wed, 5 Mar 2014 18:36:32 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt 0.3.1
+
+On Wed, Mar 5, 2014 at 11:21 AM, Solar Designer <solar@...nwall.comwrote:
+>Scrypt: 0.5 GiB in 1.8 seconds
+>Escript: 1 GiB in 1.4 seconds
+>
+This sounds about right to me.  (I assume you used escrypt in scrypt
+compat mode here.)
+
+Yes, compat mode.  I haven't run any non-compat speed tests yet.
+
+>This is single threaded, and includes memory allocation overhead.  I
+>tried p 1, but it didn't reduce the runtime for some reason.
+>
+Don't forget that in scrypt p>1 increases the total memory allocation
+accordingly.  So e.g. with p=2, you process 2 GiB.  For example, on
+i7-4770K with 4x DDR3-1600 (2 channels):
+
+D'oh!  That explains a lot :-)
+
+$ time ./tests
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+>
+real    0m1.524s
+user    0m1.308s
+sys     0m0.200s
+>
+$ time ./tests
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 8) = 9a 6c 46 65 c4 cc b5 8b 60 53 dd fd 6d 48 bb 3a 71 ba 8f ae b7 dc 35 99 a6 b6 10 fc e3 52 d6 3f df 50 53 bd cd 19 a4 cc 05 85 f7 e5 a5 ae 6e 68 41 a3 47 1a be 86 86 28 2e 07 b2 49 2b 3e f8 6b
+>
+real    0m2.359s
+user    0m14.081s
+sys     0m2.292s
+>
+This is 1 GiB in 1.5 seconds, or 8 GiB in 2.4 seconds.  Both including
+memory allocation overhead.
+
+My i7-3770 does a bit better than this, and I think it's the DRAM
+sticks.  The CORSAIR Vengence sticks apparently make a difference.
+
+Of course, due to the way classic scrypt's thread-level parallelism
+works, the same "8 GiB" result may also be computed sequentially using
+just 1 GiB of memory.  With OMPFLAGS_MAYBE in Makefile commented out:
+>
+$ time ./tests
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 8) = 9a 6c 46 65 c4 cc b5 8b 60 53 dd fd 6d 48 bb 3a 71 ba 8f ae b7 dc 35 99 a6 b6 10 fc e3 52 d6 3f df 50 53 bd cd 19 a4 cc 05 85 f7 e5 a5 ae 6e 68 41 a3 47 1a be 86 86 28 2e 07 b2 49 2b 3e f8 6b
+>
+real    0m10.683s
+user    0m10.453s
+sys     0m0.204s
+
+Yep.  Defeating TMTO that is the first post I read of yours... can't
+remember the forum.  I finally think I managed to get something
+similar in my code, breaking up memory not just by thread, but also by
+"slice", where I join threads every 16th of memory that they write,
+enabling them to access previous slice data from other threads.
+
+>I think keeping compatibility with scrypt is a great idea for escript.
+> Regardless of the PHC, escrypt is a faster and improved scrypt, and
+>as such should see plenty of use.
+>
+I think I'll also release a cut-down version of the escrypt tree, with
+scrypt functionality only (but better performance and more flexible API
+than upstream scrypt's).  In fact, I already had escrypt-lite with just
+this functionality, but so far it only exists in JtR -jumbo tree (for
+cracking of scrypt hashes), and it's a bit out of date as compared to
+scrypt-relevant changes made in escrypt since then.  So I'll need to
+bring it up to date and release it separately.
+>
+And yes, I also intend to keep scrypt compat in escrypt (or whatever
+it'll be called), at least for now.
+
+Excellent.
+
+As to dealing with complexity, I think we can have one-design-fits-most
+(due to tunable sizing), and also have cut-down implementations
+supporting only a subset of tunable settings (or/and narrower ranges).
+For example, an implementation of escrypt intended for Unix crypt(3)
+wouldn't support the ROM, yet hashes computed by it will also be among
+those computable by the full (large and complex) escrypt.
+
+I did a lot of complexity elimination over the last couple of days.
+I'm not sure you would like it.  I now auto-compute blocklen (16KiB
+for large memory, scaling down for smaller), and fix subBlocklen to
+64-bytes.  I also compute the number of multiplies per inner loop and
+the number of times I repeat it based on the t_cost parameter.  I also
+made all the input/output sizes uint8_t's.  The API is now far
+simpler, but there's less control over how the algorithm runs.  I
+think it's worth it... not 100% sure.
+
+>If you're interested in something
+>completely different than scrypt, you're still invited to work on
+>tigerkdf :-p  It's already mostly your and Christian Forler's ideas
+>anyway.
+>
+Thank you for the invitation!  I'd be happy to contribute to TigerKDF
+more, and to do so more directly, but the PHC submission deadline is too
+soon and I still have a lot of work to do on escrypt.  So I am not sure.
+>
+Alexander
+
+The offer still stands, and assuming the PHC will allow it, feel free
+to join the effort even after the deadline for submission.  Assuming
+you find the work worthy, your name belongs on the top spot more than
+mine.
+
+Bill
+

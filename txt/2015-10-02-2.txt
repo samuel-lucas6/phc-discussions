@@ -1,0 +1,30 @@
+phc-discussions - RE: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4B24AD7@uxcn10-5.UoA.auckland.ac.nz>
+Date: Fri, 2 Oct 2015 01:29:32 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Specification of a modular crypt format (2)
+
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+
+>It's hard to guarantee it without seeing a full program but this
+>multiplication very much looks like a signed integer overflow which is
+>undefined behavior (UB).
+
+It's checked a few lines down with 'value >= ( MAX_INTLENGTH / 10 )', where
+'value' is the input to the multiply.  My programming style is to use consts
+as much as possible, so I create the const where it has to be set at the start
+and then check that it was OK before using it.
+
+>The last check seems to be superfluous or at least ineffective.
+
+Paranoid programming, check everything from five different directions if
+possible.  It should actually be stated as an invariant:
+
+  INVARIANT( value >= 0 && value <= MAX_INTLENGTH );
+
+but that throws an exception which I don't want in this case.
+
+Peter.
+

@@ -1,0 +1,106 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <CA+aY-u4RJ4L_sKvNeUMsuh4+QYX=o1wQLsC73LBOW2ONupfsJA@mail.gmail.com>
+Date: Mon, 20 Jan 2014 15:05:38 +0000
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On 20 January 2014 11:19, Solar Designer <solar@...nwall.comwrote:
+
+On Mon, Jan 20, 2014 at 02:13:20AM +0000, Peter Maxwell wrote:
+[...] if we're going to go
+to the bother of replacing the authentication mechanism on various
+services, surely we can do better than client-side password hashing.
+>
+I agree, which is a reason why I think a PHC candidate's builtin "server
+relief" support (if present) should be usable for some more advanced
+than "pass-the-hash" authentication mechanisms.  Ideally, it should fit
+some pre-existing ones.
+>
+>
+​So if we're moving towards a PBKDF that is suitable for, say, SRP then the
+"server relief" part of the PBKDF is pretty much redundant, is it not?
+​
+Have we had a discussion on the PHC candidates in reference to password
+auth'd key exchange mechanisms as yet?
+
+
+
+Instead of efforts being focused on complicated implementations of
+client-side password hashing, the more sensible approach is probably
+mandating a minimum password complexity for which the PHC algorithm can
+be
+considered secure and accompanying that with advice on how to mitigate
+DoS
+and brute-force attacks against the application.
+>
+I think these areas of focus are orthogonal - well, except for us having
+limited resources and potentially focusing on some of these areas too
+much, neglecting the others.
+>
+>
+It's orthogonal in the respect that no matter what password hash was used
+in the Github example, those accounts would still have been compromised.
+ It does however raise the point that if an attacker has access to a
+password db that used suitably weak passwords then the chances are you
+cannot protect against compromise, so in that sense the question is not
+orthogonal.
+
+
+
+
+As to "a minimum password complexity for which the PHC algorithm can be
+considered secure", I think it depends on threat models, assumed
+per-{password, account} costs for certain kinds of attackers, and what
+is meant by "secure".  For practical purposes, the decision-making will
+usually be different: what's a reasonable tradeoff between security and
+usability.  In many cases, this will translate to using password policy
+settings that are below what we'd otherwise define as minimum "secure"
+ones, yet we'd want better password hashing in those cases as well (such
+as to better protect a subset of accounts against a subset of threats).
+>
+>
+So far I've seen a *massive* amount of discussion on memory-hardness and
+what processors can fill memory the quickest, without addressing the more
+fundamental question of what we're considering to be our threat model and
+what we consider secure in that model.  At the moment, we can probably
+compare algorithm against algorithm but that assumption would not be valid
+if someone presents a candidate algorithm that adjusts hardness based on
+password complexity (which can be done but there are problems with the
+approach).
+
+We also cannot answer more fundamental questions like: for a standard
+password db of say 1m passwords, how many more passwords will be protected
+against an adversary with $x resources compared to using bcrypt.  Without
+being able to answer those types of question, how do can you justify the
+winning PHC algorithm?  For someone charged with securing passwords, would
+it be more cost-effective to enforce a strong password policy instead of
+the extra hardware needed for the PHC algorithm?  If my own experience in
+security is anything to go by, risk is the governing factor and I'm not
+seeing any sufficient justification on why a company or institution should
+spend increased hardware resources for storing passwords when you cannot
+measure projected risk reduction.
+
+Anyway, to cut to the chase - we should be able to model performance of
+candidates using a suitably small number of variables and making some
+reasonable assumptions (I'd already started on this last year and if I can
+get a good run of spare time might actually be able to finish it).
+
+
+
+
+I think this is mostly beyond scope of PHC (although these things may
+reasonably be worked on by the same people).  The only portion under
+scope is "per-{password, account} costs for certain kinds of attackers"
+for different defender's cost settings, similar to info included in the
+scrypt paper, but expanded to cover not only ASICs, but also relevant
+pre-existing hardware (that some attackers are likely to use).
+>
+>
+>
+​On the contrary, I think these questions are absolutely core to the PHC:
+how can you ​justify using the winning PHC algorithm otherwise?
+
+
+

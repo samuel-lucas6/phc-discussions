@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Makwa parameter generation
+
+Message-ID: <CAK9dnSxsz61RHsH65UNvjvEg4Q=FZN8n2ummc9bpZ+53=EgcNA@mail.gmail.com>
+Date: Thu, 11 Sep 2014 16:47:25 +0200
+From: CodesInChaos <codesinchaos@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Makwa parameter generation
+
+On Thu, Sep 11, 2014 at 3:54 PM,  <pornin@...et.orgwrote:
+To keep on with security levels as recommended in 2014, we would
+prefer prime factors of at least 1024 bits
+
+It's not that simple. We need a modulus of at least 2048 bits which
+contains no primes smaller than 550 or so bits.
+NFS has cost based on the modulus size, but ECM which can take
+advantage of smaller factors is less efficient, so a 550 bit factor
+should match a 2048 bit modulus.
+We also can use trial division, ECM etc. to eliminate all moduli with
+factors smaller than 250 or so bits.
+
+Now a raw Makwa could run with a huge modulus;
+
+There isn't really a reason to actually use that huge modulus. You can
+use several of those 3000 bit moduli chaining or combining them such
+that the result is secure if at least one of them is secure. It still
+gives an attacker who factors some of them an advantage, but you can't
+avoid that with this generation method.
+
+ - When the modulus is large, classic implementations of the squaring
+   operation (Montgomery multiplication) are no longer optimal; to
+   get the fastest code (and you want to get it, because that's what
+   the attacker will do), you have to switch to more advanced
+   algorithms such as FFT-based multiplication, and that entails
+   considerable development effort. When Makwa uses a 2048-bit RSA
+   modulus, then existing optimized code for RSA can be reused, and
+   that is a good thing; huge moduli deprive us of that advantage.
+
+If you'd use a big modulus, you should be able to optimize it with CRT.
+While you don't know individual primes, you know smaller composite factors.
+
+ - Delegation cost raises with the modulus size (quadratically, if you
+   use Montgomery multiplication).
+
+Why does montgomery multiplication have larger asymptotic cost
+compared to multiplication modulo a power of two?
+I admit that I'm not familiar with the details of montgomery
+multiplication, but doesn't it just double the number of
+multiplication and add some conversion overhead?
+

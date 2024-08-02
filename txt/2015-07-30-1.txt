@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt
+
+Message-ID: <20150730050036.GA16970@openwall.com>
+Date: Thu, 30 Jul 2015 08:00:36 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt
+
+On Tue, Jul 28, 2015 at 07:26:32AM +0000, Jean-Philippe Aumasson wrote:
+Catena, Lyra2, Makwa, yescrypt are PHC's special recognitions. We'll
+deliver packages (specs+code) of their final versions in Q3. Meanwhile,
+minor changes can be made to the algorithms, but we need to agree on those.
+
+@Submitters of C, L, M, y: Do you intend to make any changes to your
+algorithms? If so, which ones?
+
+I am considering these tweaks to yescrypt:
+
+1. A trivial change to how t is updated on hash upgrades.  (In v1, t is
+reset to 0 on the first hash upgrade, to maximize the area-time product
+growth on upgrades - but I've since realized that in some cases, such as
+when t was very high initially, this strategy is not convenient.)
+
+2. Reverse order of sub-blocks to mitigate Argon team's depth*memory
+tradeoff attack (which might be practical at low yet non-negligible
+memory reduction factors like 1/2 or 1/3).  I would then appreciate
+review of the revised algorithm by the Argon and Lyra2 teams, if they
+are willing to.
+
+3. Re-introduction of TMTO-resistant pwxform S-box initialization
+(dropped between v0 and v1 for simplicity of a potential yescrypt-lite,
+while not simplifying the full yescrypt) or/and introduction of S-box
+overwrites in BlockMix_pwxform.
+
+4. A lower Salsa20 rounds count (likely 2 instead of 8) for its use in
+BlockMix_pwxform.
+
+While I am considering these, I will not necessarily make all 4.
+
+The common theme in potential tweaks 3 and 4 (and maybe 2) is that since
+yescrypt wasn't selected as the winner anyway, I don't have to focus on
+allowing for a much simpler yescrypt-lite subset (hopefully, Argon2 with
+MAXFORM will fill that space... although without MAXFORM, it won't).
+It would still be possible to have a yescrypt-lite; it would just be
+slightly more complex than what's possible with the current yescrypt v1.
+
+We'll also need to agree on currently recommended sets of pwxform
+parameters (up to 3 sets), or on one such set.
+
+There should also be improvements to specs and code beyond what I listed
+above, but those would not be changes to the algorithm.  Just clearer
+specification and more robust code with improved APIs.
+
+Alexander
+

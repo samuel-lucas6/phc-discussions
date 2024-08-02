@@ -1,0 +1,60 @@
+phc-discussions - Re: [PHC] Added "lanes" and 3 hash functions as inputs
+
+Message-ID: <CAOLP8p6cVwYr4TxHihzubTZd7jJAmZLzkPa3nmFzY9ru-C3EiA@mail.gmail.com>
+Date: Wed, 19 Mar 2014 07:12:39 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Added "lanes" and 3 hash functions as inputs
+
+On Wed, Mar 19, 2014 at 5:45 AM, Solar Designer <solar@...nwall.comwrote:
+On Tue, Mar 18, 2014 at 07:46:29PM -0400, Bill Cox wrote:
+>I'm still making last-minute upgrades.  I added a "lanes" parameter to
+>the "extended" interface which normally is set to the number of 32-bit
+>ints in the hash function in use.  For SHA256 and Blake2s, it is 8,
+>and for SHA512 and Blake2b, it's16.  This was meant to match the SIMD
+>units on high-end CPUs, but it works against low-end CPUs.  Instead of
+>calculating 8 or 16 lanes in parallel, a low-end CPU can now do just
+>one, if it has no SIMD unit.
+>>
+>The architecture had a pluggable hash function architecture before,
+>but Blake2s was the only option.  I've added three more: Blake2s,
+>SHA256, and SHA512.  Naturally it took some work to make it really
+>easy to add new ones.
+>
+Having the number of lanes tunable is great.  Having it depend on the
+chosen underlying crypto primitive is not great.
+
+Yep.  That's why I changed it to make it tunable.  I am still using
+the width of the hashing function to choose a default, though.  This
+is one of the easiest parameters to automatically choose, and I've got
+a function to auto-guess good parameters, so I'll add this.  However,
+for choosing a default that a whole sales team would use, for example,
+I need a machine independent guess.  I'm having trouble coming up with
+one better than the hash function width.
+
+>I still feel like a pluggable large memory block hash function would
+>be a good thing, but if mine's the only one to do such a thing,
+>there's not really much point.
+>
+Doesn't escrypt have a large block multi-lane hash function like this?
+It's not pluggable, but I'm not sure it needs to be.  For now, it can be
+part of a password hashing scheme.  And yes, I'm still working on
+improving this component in escrypt, and it still needs a name...
+although most likely I'll call it pwxform, for "parallel wide
+transformation", even though it may be scaled down to one 64-bit lane.
+>
+Alexander
+
++1 for pwxform.  That's a good one, IMO.
+
+I'm not sure if there is any benefit in pulling out the memory block
+function as a stand-alone widget.  I did a KISS memory-hard algorithm
+a few nights ago just to see what it would look like, and except for
+the large block hash function, it was very simple.  It had no
+cache-timing attack resistance, no memory leak resistance, and nothing
+tunable except total memory.  However, it seemed like a sweet little
+function.  The memory block function could easily have been shared
+between that and TwoCats.
+
+Bill
+

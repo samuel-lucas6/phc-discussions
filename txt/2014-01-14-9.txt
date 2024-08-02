@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <CAOLP8p5CucrdOD6khfmE-_NU==DiL=nj2xXvg9sB_irz443PXA@mail.gmail.com>
+Date: Tue, 14 Jan 2014 17:28:03 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Tue, Jan 14, 2014 at 5:01 PM, Marsh Ray <maray@...rosoft.comwrote:
+From: Bill Cox [mailto:waywardgeek@...il.com]
+>Serial multiplications force the attacker to compute for a similar amount of time as me.
+>
+>A 32x32 -32 multiply takes 3 cycles, or almost 1ns on my development
+>machine.  By having a single multiply operation in the inner loop that
+>computes hash data along with one or two 1 cycle operations, we
+>can have the multiply delay dominate the runtime.
+>
+The attacker may not care as much as the defender about the absolute latency to achieve a result, only the throughput. So he may be able to utilize deep pipelines better than the defender.
+>
+I only dabble in such things, but let's imagine we had a 40-stage multiplier which could produce a result every single clock at or near the maximum toggle rate for that chip process. How will the proposed designs prevent the attacker from keeping such a pipeline well fed?
+
+The code looks something like this:
+
+v[0] = Hash(password)
+hash = v[0]
+for i = 1 .. memoryLength - 1
+    addr = Rand(i) % i
+    hash = MultHash(hash, v[addr], prevV)
+    v[i] = hash
+    prevV = v[addr]
+
+function MultHash(v1, v2, prevV2):
+    return v1*(v2 | 1) + prevV2
+
+Actually, the % operation would dominate, but I hash a page at a
+time... so assume it costs 0.1 clocks.  The multiply is about a 1ns
+operation, and while it can be pipelined maybe 16 deep, we can't begin
+the next loop until the previous one has computed the new value of
+hash.  This defeats pipelining being able to speed up the loop in any
+way.  Basically, the loop is designed to defeat parallelism.
+
+>The high memory bandwidth caps his ability to integrate and lower costs.
+>
+Is it really the memory bandwidth? Or the random-access latency.
+
+To avoid attacks with external Cypress cache-RAMs, which have low
+latency, I prefer to fill as much memory as rapidly as possible in a
+mode that fills a block of sequential memory locations at a time.
+However, as was pointed out, an attacker may be able to afford higher
+capacity and higher bandwidth than my computer can make use of.  To
+minimize the number of password guessing cores that a single memory
+bank can support, I want high bandwidth.  To make that external bank
+expensive, I want to hash more memory, but since that's proportional
+to bandwidth, I think it makes sense to focus on GB per second we make
+an attacker fill.
+
+>The combination seems to maximize his cost*time.
+>
+The attacker is free to choose whatever hardware configuration he wants, including hardware identical to that of the defender. So we can't really impose costs on the attacker, we can only seek to minimize any advantage he might gain through the use of techniques not available to the defender.
+>
+I know it may sound like I'm being pedantic, but to me these are essential points!
+
+Fair enough.  I was thinking of the cost per guessing core to the
+attacker, which would be about $500 if he used my hardware.  We can't
+make it that expensive for him, though.  The cost per core should
+increase with memory bandwidth, and the time he has to run it should
+be within about 2X of a modern CPU like mine.  I'm currently filling
+2GB in .4 seconds on 2 threads, which perform 0.25B 32-bit multiplies
+in sequence each, and each takes about 0.89ns.  The multiplies take
+.237s alone out of that .4s.  It's close to the best I can achieve I
+think without SSE on my dev machine.
+
+Thanks for the feedback.
+
+Bill
+

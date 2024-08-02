@@ -1,0 +1,166 @@
+phc-discussions - A review per day - Catena
+
+Message-ID: <54147F92.5080900@ciphershed.org>
+Date: Sat, 13 Sep 2014 13:32:02 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A review per day - Catena
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Having Catena make it to the second round is a no-brainer.
+
+There is the "wrapper" algorithm for more securely applying a hash
+function H, and then there is the hash function H.  Catena
+demonstrated so many good ideas in it's "framework" which created a
+high bar for the wrapper functions.  So many of us copied good ideas
+from Catena, that Catena already wins, even if it loses.  I personally
+copied some of my favorite Catena features into TwoCats, including
+garlic, client-independent update, a pluggable hash function,
+bit-reversal combined with Alexander's sliding power of 2 window, and
+server relief.  I only try to copy the best ideas, and so you can
+clearly see that I think Catena has a *lot* of good ideas.  Some of
+the best.
+
+The choice of the Catena team to stick with the full 12-round Blake2b
+function should not be held too strongly against Catena.  Simply plug
+in the Blake2b reduced round function from RIG and Lyra2, and Blake
+becomes faster than Scrypt, though not quite speed competitive with
+Lyra2, TwoCats, or Yescrypt.  Still, to be close to this pack with a
+cache-timing resistant algorithm is impressive.
+
+I personally verified the potential speed of Catena by plugging my old
+NoelKDF hash function into it.  The Catena team was kind enough to let
+me commit my changes in a separate branch in their github repository:
+
+https://github.com/cforler/catena/tree/waywardgeek
+
+I also did some research into pebbling cache-timing resistant
+algorithms.  For those like Catena (and the first half of TwoCats),
+that hash the head of the chain with some value in prior memory, and
+repeat that for the whole runtime, there is a "free" 2X TMTO, where an
+attacker trivially can use half the memory with zero recomputations.
+Having even 2.5X lower TMTO than an unpredictable similar algorithm is
+very difficult.
+
+Catena used an ingenious trick.  Rather than give an attacker a free
+2X TMTO, Catena-3 uses the same memory over again 3 times, giving both
+the attacker and defender a 4X memory reduction compared to the
+computation graph size.  This does result in a 3X lower peak memory *
+time cost to the attacker compared to an unpredictable algorithm like
+Yescrypt, but if cache-timing resistance is that important to you, you
+can have it using Catena for only 3X lower defense against the
+traditional brute-force attack.
+
+It remains to be seen if there is an effective TMTO attack against
+Catena.  Using even 1 fewer memory locations increases recomputations
+considerably.  However, the defense increases somewhat slowly, and by
+a 1/8 memory attack (compared to the 1/4 that Catena starts with),
+Catena starts losing against other algorithms in my pebbling attacks.
+
+One improvement I would suggest for Catena is to embed a sub-Catena
+graph in the first row.  This only increases runtime slightly, but it
+greatly improves TMTO.  Another idea is to plug in Lyra2's ingenious
+sponge construction, perhaps without the extra read and write per
+memory location.  These sorts of tweaks keep Catena competitive in
+cache-timing resistant category.
+
+One gripe:  Catena spends a *lot* of time generating cryptographically
+strong pseudo-random data for filling memory, but then makes it very
+easy to distinguish memory as not random.  This should be fixed in a
+"tweak".
+
+I personally am excited about Lyra2's reduced-round Blake2b function
+which had a very interesting suggestion recently from Samuel Neves for
+introducing better compute-time hardness by incorporating
+multiplications in the hash function.  For Catena, we'd need to remove
+one read and one write in the sponge function, so that it does 2 reads
+and 1 write rather than 3 reads and 2 writes.  If Catena used such a
+sponge, it would make it more difficult, though probably not
+super-hard, to detect that the memory contents are non-random.
+
+ASIC Defense
+- ------------
+
+Catena's ASIC defense depends on recomputations to defend against a
+TMTO attack, and on the resistance of the underlying hash function.
+Assuming Catena is rewarded for offering so many great ideas to the
+other entries by allowing Catena to use the best hash function in the
+competion, then likely as not, we'll be looking at the modified
+Blake2b reduced round with multiplies instead of additions.  This
+should have excellent ASIC computation defense, maybe as low as 2X
+possible speed-up assuming the same process, which is fantastic.  It
+still would have 3X lower time*peak memory, which is what counts in
+all the ASIC attacks I've thought of, but that's the price of pure
+cache-timing resistance.
+
+There are some issues, however.  To start, predictable reads means an
+ASIC attacker can *eliminate* memory read delays from on-chip memory.
+ This is why it is *very* important for these algorithms to have solid
+compute-timing hardening!  Straight Blake2b is likely going to speed
+up 10X or more in an ASIC, and that speedup directly applies to an
+ASIC Catena attack speed per core.  The ability to rely on SRAM
+latency hardening is another reason I prefer the unpredictable algorithms.
+
+Because of predictable addressing, an attacker might benefit from a
+TMTO against Catena.  He can use parallel cores to have recomputed
+data ready when needed.  For a light TMTO, such as using half the
+memory that Catena does, the recomputations required are about 9X
+using my pebbler. 9 times as many cores is no big deal for the
+attacker, since memory may dominate the ASIC area.  Cutting it in half
+may allow nearly twice as many hashing cores per ASIC, with no speed
+penalty.
+
+However, I don't actually believe this will work out.  Those 9 extra
+reads my not take any time (because they are predictable), but they
+will consume power!  So will the 9 recomputations.  Contrary to what
+has been posted in the discussion forum, a TMTO against Catena will
+almost certainly *increase* power, rather than decrease.  Since power
+is likely a significant component an ASIC attacker's budget, more
+likely than not, this attack will not benefit him.
+
+Still, Catena should embed a sub-Catena graph in the first row to
+increase the TMTO penalty.
+
+
+Summary
+- -------
+
+Catena remains my favorite of the cache-timing resistant entries.  I
+think their team deserve a round of applause.
+
+However, I prefer TwoCat's hybrid design over pure cache-timing
+resistant algorithms.  Lyra2, with some improvements in the memory
+filling loop, and Yescrypt, with a cache-timing defense upgrade, would
+also be my preferred algorithms for defending passwords, even if
+cache-timing attacks become a common attack in the wild.
+
+One last thought: Catena innovated heavily in the "framework" area.  I
+believe the eventual winner should be combined with either Catena's
+framework directly, or one motivated heavily from it.  Catena's
+framework can make every password hashing scheme better.
+
+If we pick a winner without enabling it to have a chance to adopt
+Catena's excellent framework features, I will be disappointed.  Of
+course, I already built most of them into my entry :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFH+OAAoJEAcQZQdOpZUZ1P4P/3dWkFBVRnBdA+6qYXEnAvbn
+qmm8cQnaTOFFrjvU0BfcKkwnK6/8NSxVx540zdkCnTIfux22QcePjWWT43e+kTnS
+i+Nr0/k6MDCtAulgD+QT5f6xmNqaALO9EwIvm+t8xYWCp58JDlQvi3O0ZrNwm9Zz
+uuJ4g8qinMW94xvuY6Y61enBGzD8H+hJO4xKAo/zeG5GwQJCDfgiM3L4mgJ4jLnW
+a7PaaINPa1wEUKzRspdXTiCJPrX5MhnNE/9Z9v/KR8UxUwkQENIOy9W9Tuibq26j
+lQ6XsvtEsXW0E7QO9KsRUYnKJ2WBljYOCAtPPX2IxjKqszgQoHZ6wSnN5G8JwP4y
+/rGdsEEpYFNztI+BYhgafsG5Pye5pmtkflYrgSd2qxRzHKwjZdsrGHvTr2apYuax
+nF0wNtkYcckORrP6v8giMoiNM2anrhplY37SIykxEy249KE9giimNO1osXXDXe0z
+IFpaCwsMCJ8IxUsrXcbUeWMOBcWMTJZGjyZHv4Dr8qOFLOzQr0WO5yNDlmub9vnV
+5DjO9/QoWVNVqJCRGeaHmuTRxDDTfvlf3HU9kCjbjxsYUu6Yu7sf6J236zqYg0+z
+RKMNtReHLE948up/xEPmjplCLbROMe66dqGb+Hg+kg0oUKxpmkVISkV+sdy2Gc/Y
+gt+udCsAXQU9nQObBfH9
+=iEY+
+-----END PGP SIGNATURE-----
+

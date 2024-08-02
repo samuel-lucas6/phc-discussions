@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Interest in specification of modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150907105530.GB7152&#64;openwall.com&gt;
+Date: Mon, 7 Sep 2015 13:55:30 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Sun, Sep 06, 2015 at 10:02:28PM +0200, Simon Josefsson wrote:
+&gt; Thomas Pornin &lt;pornin&#64;...et.org&gt; writes:
+&gt; &gt; If the Argon2 authors do not have time for that, I can contribute the
+&gt; &gt; specification and code if needed (I have not written anything to that
+&gt; &gt; effect yet for Argon2, but I did for Makwa, so I believe I can do that
+&gt; &gt; job properly).
+&gt; 
+&gt; I worked on this for scrypt, see
+&gt; 
+&gt; <a href="https://gitlab.com/jas/scrypt-unix-crypt/blob/master/unix-scrypt.txt" rel="nofollow">https://gitlab.com/jas/scrypt-unix-crypt/blob/master/unix-scrypt.txt</a>
+&gt; 
+&gt; and I am interested in working on this for Argon2 too.
+
+I briefly contributed to that too, and I've got additional thoughts on
+this bikeshed since then.  Specifically:
+
+The syntax we introduced for scrypt at the time turned out not to
+accommodate some other encodings people came up with (some may have been
+already in use when we came up with ours), whereas it would have been
+nice to be able to convert any unofficial encoding to/from the official
+one.  The issue is that, for implementation and specification
+simplicity, I chose to treat the salt substring verbatim, passing it
+right into scrypt with no decoding.  Some other people chose to generate
+the scrypt salt as arbitrary binary data and to encode it.  Thus, when
+converting their encodings to the one described at the URL above, we may
+get bad (non-printable or otherwise special) characters in the salt
+substring, making such conversion unusable in general.  So maybe we need
+to use encoded salts, even though this requires us to decode them in
+implementations and to decide on how we handle incorrect salt encodings
+(e.g., characters outside of the base64 alphabet).
+
+If we continue to build upon the traditional crypt(3) alphabet and
+encoding (like the above specification for scrypt does), then I'd also
+like to include a way to represent the numeric parameters in a more
+compact form: let the little-endian encodings be truncated when the
+values are small.  So e.g. instead of:
+
+$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+it would be valid to use:
+
+$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+or if we want to keep the number of '$' characters fixed, then either
+require the '$' delimiters to always be present or maybe introduce '+'
+or '=' for truncation (a character already used in the other base64
+encoding's alphabet, so likely safe to use):
+
+$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+The savings for classic scrypt are small, but with yescrypt's additional
+parameters they are more significant.
+
+(These examples don't yet switch to encoded salts.  I am keeping these
+two topics separate in this message, although obviously if we implement
+both changes then we'd need to merge them in some way.)
+
+There are also some good reasons in favor of using the RFC specified
+base64 encoding, but that's a deviation from what was used traditionally
+and unfortunately it appears incompatible with the truncation feature
+(and moreover it has padding characters, resulting in even longer
+strings).
+
+What do others think on all of this?  Thomas?
+
+&gt; I don't believe it is important to include this in the official
+&gt; specification.  It should be fine to keep it in a separate document, and
+&gt; for a disjoint, or only partially overlapping group of people, to work
+&gt; on that project.  I do agree that a plethora of incompatible formats is
+&gt; a severe pain, but if a number of people now agree on a writeup and
+&gt; starts to experiment, I believe we can get closure on something that
+&gt; should be "good enough" for others to accept.  That said, I'm not
+&gt; opposed to including things in the official specification, if consensus
+&gt; on details can be established.
+
+I think it's desirable for us to arrive at a common approach at encoding
+these things for all PHC-endorsed schemes.  It is less important whether
+this would be part of the specifications for the individual hashing
+schemes or not, although I think that if not right away then it should
+retroactively be added to revisions of those later.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

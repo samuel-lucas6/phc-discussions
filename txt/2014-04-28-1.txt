@@ -1,0 +1,53 @@
+phc-discussions - on timing attacks
+
+Message-ID: <976823917.20140428162534@gmail.com>
+Date: Mon, 28 Apr 2014 16:25:34 +0200
+From: Krisztián Pintér <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: on timing attacks
+
+
+just recently ran into pomelo's explanation of its timing resistance:
+
+Strong against cache timing attack
+Under successful cache timing attack, POMELO can remain strong
+against the attacks using GPU and ASIC/FPGA
+Main reason: The first half of POMELO resist the cache-timing attack
+
+but it is only one example, this is a recurring theme on the list, and
+with other candidates. the argument goes as "we use significant
+stretching before the secret-dependant access pattern, therefore even
+if an attacker can learn enough information early in the second phase,
+he can only bypass that phase, and still has to do a lot of work on
+the first."
+
+this argument misses a crucial point. namely that an attacker might be
+able to learn information that otherwise he could not access at all.
+
+scenario: we can run a task on the same computer, or otherwise can
+listen in on its memory usage patterns (power analysis, etc). but
+otherwise we have no access to either any memory or on-disk databases.
+we can acquire a memory access fingerprint, that is, some
+characteristics of the pattern in which memory is accessed (number of
+cache misses in a time window, access of certain memory locations or
+blocks, etc). this fingerprint is unique to the password/salt
+combination. therefore we can check a password/salt hypothesis by
+running the algorithm against it, and matching to the access
+fingerprint.
+
+granted, this attack is largely thwarted by secret salt. however, in
+some situations, for example in case of server relief, the salt might
+be available to the attacker, while the password hash is not. in
+general, salts are not considered secret, so accessing them or
+guessing them might a possibility.
+
+in short, correlation between secret information and memory access
+patterns not only offers a shortcut, but in fact opens up a new attack
+vector that previously was not present.
+
+no surprise modern crypto primitives/impls don't use secret based
+branching/indexing. just to name a few : chacha20/poly1305, keccak,
+skein/threefish, djb curves. also there is an ongoing effort to
+replace vulnerable aes and rsa implementations.
+
+

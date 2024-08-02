@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Compute time hardness
+
+Message-ID: <20150503152112.GA12645@openwall.com>
+Date: Sun, 3 May 2015 18:21:12 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+On Fri, Apr 03, 2015 at 03:13:06PM +0300, Solar Designer wrote:
+Here's another relevant detail I recalled:
+
+Pentium 4 (some or all of them? not sure) had double-pumped ALU, where
+it could perform ADDs at double the clock rate (so up to 7.6 GHz, at
+stock clocks).
+
+http://www.anandtech.com/show/1611/7
+http://forums.anandtech.com/showthread.php?t=603812
+https://news.ycombinator.com/item?id=8255157
+http://en.wikipedia.org/wiki/NetBurst_(microarchitecture)#Rapid_Execution_Engine
+
+Apparently, this could only execute two dependent ADDs in a cycle if
+they are 16-bit each.
+
+I've just tested.  32-bit dependent ADDs also execute at 2 per cycle at
+least on:
+
+vendor_id       : GenuineIntel
+cpu family      : 15
+model           : 2
+model name      : Intel(R) Pentium(R) 4 CPU 2.80GHz
+stepping        : 7
+
+I tried sequences of 1000 "addl %eax,%eax" and "addl %esp,%eax" and
+"addl %edx,%eax; addl %eax,%edx" and even similar things with SUB and
+bitwise ops.  All give me 2 instructions per cycle, despite of the data
+dependencies between every instruction.
+
+In fact, my CPU clock frequency detection program that correctly works
+on all other x86 CPUs I tested it on (ranging from original Pentium to
+Haswell), prints double the clock rate on Pentium 4 ("5569 MHz" for this
+one).  I guess this can be said to be correct as well.
+
+So it's a reality that ADDs (and indeed bitwise ops) are implementable
+at least twice faster than they are implemented in current CPUs, even
+including all of the overhead that occurs in CPUs as opposed to ASICs.
+
+Repeated dependent MULs run at 15 to 18 cycles/insn on this same P4 CPU
+above.  So it has latency-optimized simple ALUs, but not MUL.  Luckily,
+P4 is of relatively little relevance for running yescrypt or possible
+other MUL latency hardened PHC schemes.  Also, its typical DDR memory is
+slow enough by modern standards that these 15 to 18 cycle latencies
+probably won't be the bottleneck, if everything is tuned for MUL's 3 to
+5 cycle latency along with modern RAM bandwidth.
+
+Alexander
+

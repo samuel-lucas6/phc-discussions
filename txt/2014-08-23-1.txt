@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] What TrueCrypt (probably) wants from the PHC
+
+Message-ID: <20140823160137.GA29247@openwall.com>
+Date: Sat, 23 Aug 2014 20:01:37 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: CipherShed Developers List <devs@...ts.ciphershed.org>
+Subject: Re: [PHC] What TrueCrypt (probably) wants from the PHC
+
+Bill,
+
+Thank you for posting this!
+
+On Fri, Aug 22, 2014 at 05:11:45PM -0400, Bill Cox wrote:
+- - There needs to be a C API for auto-picking any complex parameters
+
+Using machine specific parameters is dangerous for most applications,
+but less so for CipherShed, because users are not supposed to make
+copies of volumes in the first place. You create them on one machine,
+and that's where they live... forever. The correct way to transfer a
+TrueCrypt volume to a new machine is to create a new volume on the
+destination machine, and then copy the files over. The case where
+CipherShed remembers various auto-generated parameters is new, and
+will be controversial. We may want to take the Audit's recommendation
+and encode one or more new parameters in the clear in the volume
+header. I am looking forward to debating this issue with the
+CipherShed developers. However, even if we do offer clear-text
+parameters in volume headers, many of our users will require volume
+headers where we don't. The scenerio where our users get killed if
+they are discovered to even have a TrueCrypt volume is a case we are
+concerned about.
+
+TrueCrypt volumes are currently essentially indistinguishable from
+true random data (with some unfortunate caveats mentioned in the
+audit). Because TrueCrypt has to open volumes with no idea what the
+encryption parameters might be, TrueCrypt currently tries every
+combination of supported encryption and password hash to see if any
+work. That's OK, because it only takes a few milliseconds to do them
+all. However, with multiple memory-hard options, guessing the correct
+one could take too long. In this case, I think Catena's "garlic" could
+work for us. We would have TrueCrypt first try all the old
+combinations and when they fail, we would guess a low garlic level
+appropriate for a mobile phone, and then increase the garlic until we
+either would use more memory than the machine has or run for too long.
+If the password is correct, this should only take about twice as long
+to discover the correct garlic level.
+
+This sounds unnecessarily wasteful.  You could as well actually use
+the too-small-garlic hash values as input to the higher-garlic hash,
+just like Catena itself does internally.
+
+In fact, you can extend this approach to parameters other than memory
+cost.  You can also keep increasing the instruction, SIMD, and thread
+parallelism along with each(?) higher memory cost setting you test.
+(And this does not mean actually running more threads, etc. than your
+hardware supports - indeed, you're not forced to actually make use of
+the parallelism as such on every hash computation.  You'll just use your
+hardware optimally.)
+
+For example, currently you can use:
+
+128 MiB, 128-bit, 1 thread
+1 GiB, 512-bit, 4 threads
+4 GiB, 512-bit, 8 threads
+16 GiB, 512-bit, 16 threads
+
+with each stage's result input to the next stage, until you either hit
+the right password or hit a configured memory limit.
+
+If the KDF has configurable cache-timing attack resistance, you can keep
+it enabled for the first invocation (or two) and disable it for the rest
+(so you get a hybrid scheme as a result, except on the smallest systems).
+
+Another problem is we face because of our no-visible-parameters rule
+is that we can't support a lot of memory-hard hash functions. Therefore:
+
+- - Please choose *one* high-memory usage successor to Scrypt
+
+That's flawed logic.  PHC choosing multiple winners that are suitable
+for your use doesn't mean you actually have to support multiple schemes.
+You can choose just one, irrespective of PHC panel's decision.
+
+There are other good reasons for PHC not to inflate the number of
+winners.  Your reason is just not among those, in my opinion.
+
+Alexander
+

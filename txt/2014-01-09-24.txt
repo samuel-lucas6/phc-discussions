@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] What's your favorite entry so far, and why?
+
+Message-ID: <CAOLP8p5pgXr88j7OdqmwjBVPOAa-LtFFZ=X9AXkFbASm1F9OWg@mail.gmail.com>
+Date: Thu, 9 Jan 2014 08:10:53 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What's your favorite entry so far, and why?
+
+However, on my laptop, for TrueCrypt or my private id_rsa key, I want 2GB,
+not 1.
+On Thu, Jan 9, 2014 at 4:56 AM, Christian Forler <
+christian.forler@...-weimar.dewrote:
+
+On 09.01.2014 04:07, Bill Cox wrote:
+>
+From a theoretical point of view, Catena wins so far.  Avoiding cache
+timing attacks is desirable, and Catena shows how to do it.  I am
+concerned that the authors recommend only 10-ish MB of memory, when
+escrypt can hash 1GB in a second.  Protection in memory-hard KDFs is
+proportional to memory used!  While I'm a fan of the algorithm, if
+Catena were more speed competitive, I would consider it a stronger
+candidate.
+>
+Do you really want to allocate 1GB of RAM on a tablet or smartphone to
+perform the login process? A lot of those devices have less then
+1GB of RAM. In general I'm not convinced that a significant amount of
+useres/admins are not pleased with a login process that
+allocates a huge amount of the systems RAM. On many host, such a
+solution will virtually enforce swapping. Just saying. :-)
+>
+
+That's why Catena's Sever Relief idea makes sense.  The key stretching
+should be matched to the machine it's running on.  For my laptop, I would
+prefer 2GB.  For my phone, maybe 256MB.  On a loaded server, maybe 10MB is
+all it can afford.
+
+We designed Catena to run smoothly on (almost) any modern computer
+without causing extra pain for regular users/admins.
+>
+
+That's awesome, but I think we should not develop for the lowest common
+denominator machine.  Scrypt measures the available RAM and CPU speed and
+picks parameters automatically.  For client-side KDF, I think this is a
+good way to go.
+
+For KDF that runs on my machine, I want a good fraction of a second of KDF
+with maximum memory usage.  I think server admins will appreciate a
+password protection framework that's easy to use, flexible, and stays out
+of their way if needed.  I think the Catena framework sounds like the right
+approach.  My only  gripe is that if I'm going to spend 1 second on a KDF,
+I'm going to want to hash a lot of memory.  Script's speed (about 1/4
+GB/second on my development machine) should be considered the lower bound
+on acceptable efficiency, IMO.
+
+There is no reason Catena has to run slowly, and I haven't looked at the
+code, so I don't know what efficiency changes have been made.  For example,
+you could run with two rows small enough to fit in L1 cache, and then do a
+ton of rows, followed by a final round that hashes all memory from all rows
+4KB at a time.  You could replace memory locations in Catena's rows with
+blocks of memory of significant size, and have randomized edges between
+blocks instead of a single edge between nodes.  You also could also use an
+ultra-fast non-cryptographic hash in the inner loop.  You also could modify
+the graph a bit so that the inner loop could process a user-selectable
+number of hashes in parallel.  That alone makes a 3X speed difference on my
+development machine.  Adding multiple threads is as simple as running N
+copies at the same time, and you could hash memory between them as a
+post-process to force cheaters to keep it all.
+
+Catena seems like a great framework, with an outstanding theoretical basis.
+ However, to be the best KDF, someone has to get dirty in the code and make
+fast.  That person will need to be able to change the algorithm.
+ Optimization can't be done purely as a post-process to the algorithm
+definition.  I haven't looked to see if you guys are doing these things.
+ The only reason I suspect not is the low memory numbers I've read.  10MB
+is just to low for many applications.  1GB/s is easily achieved on modern
+laptops if you do some tuning.
+
+Bill
+
+
+

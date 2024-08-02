@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <20150505134954.GA25458@openwall.com>
+Date: Tue, 5 May 2015 16:49:54 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+On Tue, May 05, 2015 at 01:06:56PM +0200, Dmitry Khovratovich wrote:
+We appreciate the panel's decision.
+
+Argon2 will become even better. We plan to add new features and
+security enhancements in a post-PHC tweak. The tweak will contain:
+
+I think PHC should accept tweaks to finalists, now including to Argon2.
+Otherwise, expecting post-PHC tweaks to the same schemes is a (minor?)
+reason for PHC not to select those schemes as winners, as we'd expect
+fragmentation (e.g., "Argon2 is a PHC winner, but the Argon2 team now
+recommends Argon2+tweaks for actual use").
+
+I hope the PHC panel will agree to accept tweaks, or better yet will
+request specific tweaks from designers, so we won't have to discriminate
+against post-PHC-tweaks-expected finalists.
+
+ - new indexing function, that makes the memory access pattern more
+uniform and also strengthens the TMTO resistance. We are currently
+working out the best solution by
+calculating the penalties for various existing (Bill's distancecubed,
+Solar's sliding window) and our own indexing functions using the
+improved version of the ranking tradeoff algorithm.
+
+Sounds good.
+
+ - new internal permutation that uses integer multiplication for
+hardening and chains the subblocks in the way that maximizes the
+non-tradeoff latency.
+
+Will it also include bcrypt-like rapid lookups?
+
+Will the chaining of sub-blocks be tunable?
+
+I think my suggested MAXFORM chain was almost ready for inclusion, with
+only S-box initialization and overwrites needing to be added.
+It'd avoid the need for you to chain the sub-blocks, so would be more
+scalable (when that parallelism is eventually needed on future CPUs,
+it'd be right there - just decrease the MAXFORM chain length to reduce
+the latency bottleneck and use the parallelism).
+
+We plan to finish these ideas by the end of the month. The design
+rationale will be published, as usual.
+
+Sounds great.  Especially the timing.
+
+Today, however, we are proud to announce a feature for Argon2, that
+makes it suitable for cryptocurrencies. Namely, it enables fast,
+memoryless verification in a non-interactive way. In a concrete
+example, a proof for running 3-pass Argon2 using 2 GB of RAM is only
+500 KB in size and the verifier has to just hash (with Blake2) the
+string of about the same size, i.e. this takes milliseconds.
+
+The full paper is available here
+https://www.cryptolux.org/images/9/95/Fast_memory_hard.pdf , and this
+new feature is described in Section 8. You do not need to know many
+details about Argon2 to read it.
+
+Interesting.  I'll plan to take a look when I have time.
+
+Thank you!
+
+Alexander
+

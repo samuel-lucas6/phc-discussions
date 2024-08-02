@@ -1,0 +1,38 @@
+phc-discussions - Re: [PHC] POMELO fails the dieharder tests
+
+Message-ID: <87fvlroinl.fsf@wolfjaw.dfranke.us>
+Date: Sat, 05 Apr 2014 12:17:18 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] POMELO fails the dieharder tests
+
+Bill Cox <waywardgeek@...il.comwrites:
+
+My fix needed some fixing:
+>
+    // load salt into S
+    for (i = inlen; i < inlen + saltlen; i++)   ((unsigned char*)S)[i]
+= ((unsigned char*)salt)[i];
+    for (i = inlen + saltlen; i < 160; i++) ((unsigned char*)S)[i] = 0;
+>
+This works better.  With the modified, code, POMELO now passes the
+first test, the Birthday test.  This is, I believe, similar to
+Alexander's favorite test of counting collisions in small integers,
+such as 32-bit integer outputs.  Any PHS that passes the Birthday
+test, if then run through a cryptographically strong hash such as
+SHA2, will then pass any test for randomness.  That's why I consider
+it the most important test, since most PHS entries will pass their
+output one last time through a cryptographic hash.  If you pass the
+Birthday test, and use a cryptographic final hash, you're golden so
+far as output randomness goes.
+
+
+Actually, in order to match the spec it should be
+
+    for (i = 128; i < saltlen + 128; i++)
+        ((unsigned char*)S)[i] = ((unsigned char*)salt)[i];
+    for (i = saltlen + 128; i < 160; i++)
+         ((unsigned char*)S)[i] = 0;
+
+I confirm that the birthday test passes after making this fix.
+

@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Memory performance and ASIC attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="5">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;53FF5B21.1090801&#64;ciphershed.org&gt;
+Date: Thu, 28 Aug 2014 12:38:57 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Memory performance and ASIC attacks
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/28/2014 12:28 PM, Marcos Simplicio wrote:
+&gt; Hi,
+&gt; 
+&gt; On the matter of parallelizability: our code does not allow 
+&gt; multithreading basically because we did not have time to implement
+&gt; and test the "p" parameter discussed in the "extensions" part of
+&gt; the documentation. :(
+&gt; 
+&gt; This is about to change, though, since we have been focusing on
+&gt; the "extensions" discussed in the algorithm's proposal (mainly on
+&gt; how to control the memory bandwidth up/down while adding
+&gt; parallelism). AFAIU, the approach adopted in different from those
+&gt; of Yescript and Twocats, as the parallelism is on the memory matrix
+&gt; level rather than on the level of cells. There may be some
+&gt; (dis)advantages when compared to those two, but we will only be
+&gt; able to tell after we finish our tests :)
+&gt; 
+&gt; BR,
+&gt; 
+&gt; Marcos.
+
+Sweet!  Actually, both TwoCats and Yescrypt multi-threading have some
+defense against running threads sequentially rather than in parallel,
+in that there is some hashing between the memory used by different
+threads.  Both make use of SIMD level parallelism and thread level.
+Lyra2 is very efficient for a PHC entry, and your team is doing great
+work so far.  I'm confident you will get this part right :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/1sdAAoJEAcQZQdOpZUZgrQP/0UEpdzUcm2Uy6c9tvk/FIm4
+2BC/ropwpges8r6ueK8Fgr3kiB6O89Sp4s8/c0fg0Og+x1ZERoTJMfQeFjxusiOv
+EifqFI567uXn8Pf0QQSw2ghX0jqtNVi53EYpgbekIdlMqbT2A8/S/ojbwx3eyngu
+hHazdF3fqrEtUJTiLT2MjcmojSqg6daKIMOD5dz1QXifRzVLdzAnP8a0SOMb5t+x
+UWVxPwKUCB6JcusGN1/OaL3mlBh4FbdtZV96dWnT21zNjEyZVdPlLFuj2k8wH91T
+nZudgqwxW1HsXAoXChTWKiRN1ikN623HdAN3ASV0nHWBJ7MqhKSTR32gj/4dJK92
+KS2I8l78dCHLLsQ9jO2sPW66KvwLE+FbxbrsTcFzmsvqjS2+wnsG0RcnWGgEWsnq
+oL/CJbsSlvAHzGMbu1cPqi0Z/Of5Ccv/ndHvSeCwyuEy/mP3Q44UEiu5klWuoVZC
++2NbNnebKi4+YpR0KLa9V9VTFwob5FXvM3CP+lmNtKEHHMdT2ZPSoOKU6ikB64C+
+Y2eAXaAfxDc9OFLr9oAsrxM65oYvO+4M3Y1+WFdw0kxOO9N8Lx5imjLM8ckI3QQS
+Nul1btRlGjk4I4tC4OmANp9+XZfalv3XV6MpoSCYDD9NIVOEzyeBfGJi5DPw+iTI
+B+PX9caDbtmToBbrYFad
+=8sha
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

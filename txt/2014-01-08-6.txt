@@ -1,0 +1,55 @@
+phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <83902.1389222484@critter.freebsd.dk>
+Date: Wed, 08 Jan 2014 23:08:04 +0000
+From: "Poul-Henning Kamp" <phk@....freebsd.dk>
+To: discussions@...sword-hashing.net, Bill Cox <waywardgeek@...il.com>
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+
+In message <CAOLP8p5wwnaOpPGW0rA+Q9nz-jYtKhEL0aujMALuRuG=8zQtRg@...l.gmail.com>
+, Bill Cox writes:
+
+>Thanks for this very interesting link.  Lyra first fills a matrix with hash
+>data which is derived from the password, and then randomly picks a "row"
+>and for each location it updates the hash state from the location's value,
+>and then XORs into the location the next output of the hashing engine.
+
+Two things worry me about the general approach Lyra takes.
+
+My first thought was that this sounds vulnerable to the same issue
+RC4 suffers from:   It takes more entropy to "randomize" it properly
+than is typically available for the purpose.
+
+Lack of entropy is a major issue in any password context, and therefore
+I think it is wise to pay attention to the:
+
+	bits of entropy
+	---------------
+	bits of state
+
+ratio not getting too low.
+
+The second thought is that a large memory footprint, desirable for
+all the reasons the Lyra presentation mentions, vastly increases
+the ways and means to discover what is going on through covert
+channels.
+
+So as a general principle, I'm personally not going to be very
+impressed by claims on the general form:
+
+	"The ${datestructure} can be sized however large you like"
+
+even if it comes with a mathematically proof of ${something}, unless
+it also comes with plan for how it gets initialized with only limited
+entropy being available, and analysis of to what extent the access
+patterns may reveal its state.
+
+Poul-Henning
+
+-- 
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe    
+Never attribute to malice what can adequately be explained by incompetence.
+

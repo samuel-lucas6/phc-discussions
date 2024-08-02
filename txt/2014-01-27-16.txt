@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <20140127232248.GA31152@openwall.com>
+Date: Tue, 28 Jan 2014 03:22:48 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Tue, Jan 28, 2014 at 02:23:40AM +0400, Solar Designer wrote:
+On Mon, Jan 27, 2014 at 04:54:27PM -0500, Bill Cox wrote:
+I was comparing Catena-3 graphs to Alexander's power-of-two graphs,
+and both did well in different areas.  Then I though, how about
+combining them?  So, instead of picking random locations within the
+
+By "random locations", do you mean secret-dependent (leaky) or not?
+
+sliding window, I pick bit-reversal based locations.  This results in
+the hardest to pebble DAGs so far for my pebbling algorithm.
+
+This is good news.  I was going to try the same for the cache timing
+resistant portion of computation in escrypt.
+
+It is curious (and unexpected by me) that bit reversal is better than
+"random" permutation.  I thought of also trying e.g. TEA block cipher at
+changing block size (to match the current sliding window size) and very
+low round count as an alternative to bit reversal.  It could be
+implementable in roughly as many instructions as bit reversal on CPUs
+lacking a bit reversal instruction.
+
+Oh, I guess by "picking random locations" Bill meant not a random
+permutation, but rather scrypt-like random lookups.  Then a reason why a
+bit reversal (or some random permutation) may work better (in certain
+ways) is that it accesses all indices (just in a different order),
+rather than merely ~63% of them.  If so, TEA and the like are also worth
+trying.  And yes, it is trivial to revise TEA for arbitrary block size,
+including odd bit sizes (where the two "halves" differ in size by 1 bit).
+
+Speaking of bit reversal instructions, it appears that we still don't
+have them on x86, not even with planned extensions.  Yet there are such
+instructions e.g. on ARM, Epiphany, AMD GCN (both scalar and vector).
+
+To be more x86-friendly, something crazy like a variable block size
+Feistel cipher using CRC-32 (one instruction on modern x86) as the F
+function might work better.  e.g. 2 rounds might be enough.  Drawback:
+complexity.
+
+Of course, normally this operation won't significantly affect overall
+performance, but at low r (in scrypt terms) it may be measurable, and in
+some cases even r=1 could make sense (perhaps on different hardware
+setups, though? so x86 might be irrelevant).  It just feels bad to waste
+cycles on what would be a no-op in ASIC.
+
+I am just thinking aloud.
+
+Alexander
+

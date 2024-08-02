@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Are password trailing 0's a problem?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="18">[&lt;prev]</a> <a href="20">[next&gt;]</a> <a href="18">[&lt;thread-prev]</a> <a href="20">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p61-QO+Wmd1bGgzAPZtQC9v8TOCHZ-KibN4yzLGGsBCCg&#64;mail.gmail.com&gt;
+Date: Fri, 7 Mar 2014 17:52:45 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 5:27 PM, Dennis E. Hamilton
+&lt;dennis.hamilton&#64;....org&gt; wrote:
+&gt; In place of a c == 1 PBKDF2, I would say HKDF, which does not use an iteration count, is preferable in place of PBKDF2 in TigerKDF.  The key advantage is that HKDF-Extract uses the salt as the key, the password as the message for the pre-hashing.  Trailing 0 bytes in the salt are not so much of an issue.  &lt;<a href="http://www.ietf.org/rfc/rfc5869.txt" rel="nofollow">http://www.ietf.org/rfc/rfc5869.txt</a>&gt;.
+
+I agree, though I still worry about leaking timing information by
+hashing the password as a message.  The hack I just implemented pads
+the password and should run in the same-ish time regardless of the
+length.  I add the password length as a parameter in info, so I think
+that gets around collisions like we see in HMAC.
+
+Is it worthwhile worrying about looping over the password potentially
+revealing it's length?  I currently use a "secure_zero" function I
+copied from Blake2 to clear the password after I hash it, unless the
+user passes a flag saying not to.  That function also loops over the
+password, so to make it more secure from a timing point of view, I'll
+need to pass a padding parameter to it and have it overwrite the
+password over and over until it's written a certain number of bytes.
+
+Even then, the though of a cache-timing attack is worrisome, but I
+don't see how that could reveal a password length to better than a
+cache line - typically 64 bytes.
+
+&gt; In the CodesInChaos case, I see no reason to add in a PBKDF2 with c == 1, although you could use "purpose" in place of the PBKDF2 salt parameter (or use a combination of purpose and salt).
+
+Yeah, PBKDF2 with c == 1 seems lame when you read the code.  I'll
+stick with HKDF for now.
+
+&gt; I think HKDF-Expand has attractive characteristics for expanding keys without compounding the offered iteration count, and that would be particularly apt if you ran a non-trivial iterative PBKDF2 with the same HMAC as the HKDF parts and the required output size to have a PRK for HKDF-Extract.
+&gt;
+&gt;  - Dennis
+&gt;
+&gt; Aside: I think it would be useful for the HKDF "info"/"purpose" parameter to be part of HKDF-Extract too.  Something like HKDF-Extract(salt, IKM || info) -&gt; PRK.
+
+I was surprised that the info parameter is hashed in while expanding
+rather than in extract.  It doesn't matter in my application because I
+do both at the same time, but if I wanted to run a long-runtime
+memory-hard KDF in the middle, it would be annoying to have to keep
+potentially sensitive data in memory until after it completed.  Also,
+if info is very long, I'd hate to have to re-hash it on every output
+block.
+
+Other than that, the HKDF expand loop looks good to me.
+
+&gt; PS: Bill, I still think you have the password-length condition backwards.  When the password is LONGER than think hash-function's block size, it is pre-hashed in HMAC.  It is not pre-hashed for password text not larger than a hash-function block.  But this is solved in HKDF since it is pointless for a salt to be larger than a hash-function block and when the salts used are all the same length anyhow.  I also think that practical but generously-large values of an iteration count will successfully hide the timing of HKDF-Extract in any case.
+
+I originally used a 2000 iteration count in PBKDF2, and I hated giving
+it up, partly because it would insure my KDF were at least as secure
+as the somewhat standard application of 2000 rounds of PBKDF2-SHA-256.
+ However, I need every millisecond for memory hashing, and what I did
+was set c == 1, and spend the saved time hashing some early memory,
+and then overwriting it, so that if memory is leaked later on, an
+attacker still has to do some work before he can detect an incorrect
+password guess.  The scariest part about memory-hard KDFs to me is
+having some of that password dependent memory leaking somehow.  For
+example, I can call mmap and request un-swappable memory, but if my
+KDF is running on a virtual machine and someone takes a live snapshot,
+forget it.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+phc-discussions - Re: [PHC] Multithreading in Argon2
+
+Message-ID: <20151001192244.GA14918@openwall.com>
+Date: Thu, 1 Oct 2015 22:22:44 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Multithreading in Argon2
+
+Hi Dmitry,
+
+Thank you for bringing this up.
+
+On Thu, Oct 01, 2015 at 12:25:07PM +0200, Dmitry Khovratovich wrote:
+Currently Argon2 has the parameter p of the number of internal lanes. For
+given p, Argon2 can handle up to p parallel threads, which are regularly
+synchronized. Currently the number of threads is explicitly set equal to
+the number of lanes, but it is not a strong requirement.
+
+We can imagine that an application may want to choose the number of threads
+in run-time if it feels that the password hashing process initiates too
+many threads in total. Thus we suggest an extension to API (not to the
+specification) that takes distinct inputs for thread number and lane number.
+
+Yes, this is how it should be.
+
+With OpenMP, like my optimized implementations of yescrypt use, this
+happens automatically: the thread count is either detected automatically
+(usually is limited to the number of logical CPUs in the system) or is
+specified via the OMP_NUM_THREADS env var or is further overridden with
+omp_set_num_threads(), which the calling program might use.  OpenMP also
+hides the complexity of allocating (what you call) lanes to threads -
+it's up to the OpenMP runtime library to do that in whatever way it
+deems optimal, which may also be adjusted with some env vars and such.
+
+BTW, it's interesting whether and to what extent OpenMP env vars may be
+used to attack a program executed over a privilege boundary (SUID/SGID
+or otherwise).  So far, I am assuming that multi-threaded builds are not
+for use in such programs, but this may need to be made explicit.
+
+If you use pthreads, which has pros and cons as compared to OpenMP (so I
+don't have strong feelings one way or the other), you need to introduce
+your own way to control the thread count, and your own explicit
+(re)allocation of lanes to threads.  (Yes, it may sometimes be
+preferable to reallocate; in OpenMP, this is called dynamic scheduling.
+But you probably shouldn't complicate your code with that.)
+
+We however advise that during the first password hash generation the number
+of threads be equal to the number of lanes as otherwise this would give the
+cracker an extra advantage. After the hash is stored, the subsequent
+verifications can be done with any number of threads.
+
+I think this is not exactly right.
+
+For KDF use, I think the number of lanes should be chosen to match the
+expected number of threads for subsequent use.  So e.g. if the key is to
+be re-derived on an 8 hardware threads CPU, then 8 lanes should be used
+even if the machine used initially has a different number of hardware
+threads (regardless of if it's smaller or larger than 8).  In practice,
+the machine used initially and the machine expected to be used
+subsequently will often be the same.
+
+For password hashing use, we should use 1 lane currently (and thus only
+1 thread per instance).  The parallelism will come from concurrent
+requests.  As the number of CPU cores grows, or with implementations on
+current many-core devices, we might have to deviate from that in order
+to keep the latency low.  But until/unless we have to, I think we should
+just use 1 and thereby avoid the drawbacks of multi-threaded hash
+computation.  I mean primarily greater sensitivity of password hashing
+throughput to other server load (such sensitivity results from needing
+to synchronize the threads, which becomes inefficient under load).
+
+I recognize that use of multiple threads for computation of one hash
+increases the attacker's memory requirements per instance (even though
+it also decreases the running time by the same factor, to maintain the
+server's throughput, so this isn't an area-time product increase).  This
+might mean the attacker will have to use more distant, more expensive,
+or/and slower memory (and memory bus).  However, I think this effect is
+more profound for KDF use, whereas for password hashing use the improved
+locality of reference for single-lane hashes benefits CPU defenders too
+(as the per instance sizes are on par with those of CPU caches).
+For small lane (and thread) counts (higher than 1), I think the cost to
+defender from thread synchronization on servers under load and from
+higher cache miss rate is likely greater than cost to attacker from
+needing to use larger memories per instance.
+
+It is important to require both numbers to be inputs if they differ. If we
+fixed the number of lanes to some high default value, such as 8, then any
+application that can not support this number of threads will immediately
+give the thread-richer cracker an advantage.
+
+Right.
+
+Moreover, I think hard-coding a number of lanes higher than 1 would
+hamper password hashing use on current systems with not-too-many cores
+(even if there are enough cores to support that number in hardware), as
+per my explanation above.
+
+We welcome the comments as well as discussion of other threading issues.
+For example, is there any need for external thread handlers?
+
+What do you mean by that?
+
+As to "other threading issues", why is the number of lanes currently
+limited to 255?  This is already barely sufficient for Knights Corner
+(which runs up to 244 hardware threads per chip), and will be
+insufficient for Knights Landing (expected to support 288 hardware
+threads).  (And yes, it's those many-core devices where use of multiple
+threads might be worthwhile even with password hashing use.  With proper
+implementation, there isn't expected to be any unrelated load on those.)
+
+Alexander
+

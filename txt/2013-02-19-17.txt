@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <5122F4A8.7010809@bindshell.nl>
+Date: Mon, 18 Feb 2013 19:42:32 -0800
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Any "large verifiers" on the panel?
+
+On 2/18/2013 3:35 PM, Solar Designer wrote:
+On Sun, Feb 17, 2013 at 09:04:33PM -0800, Jeremi Gosney wrote:
+>On 2/17/2013 8:24 PM, Daniel Franke wrote:
+>>If the attacker can obtain a shell under the same uid as the webapp
+>>process and go undetected for a while, then he can ptrace the webapp and
+>>see the passwords as they're being passed into the hashing function.
+>It does not work this way anymore. At least not on modern Linux
+>distributions that enable the Yama LSM, which I'm pretty sure all
+>distributers started doing ~ 3 years back.
+This is wishful thinking.  I'm only aware of Ubuntu doing it.
+>
+Alexander
+
+Hum, so it is. I knew Ubuntu started using it back in 10.10, but I could
+have sworn it was pulled into the mainline kernel as well. Looking
+through LKML, it appears it was only in James Morris' security preview
+for 2.6.36 and was later removed.
+
+But after further digging, it looks like OpenSUSE and SLES have also
+adopted Yama. And Fedora has a new SELinux policy named
+SELinuxDenyPtrace which is enabled by default, which is likely to
+eventually be in RHEL as well. And of course grsecurity also has had
+this functionality for quite a while (Yama is based off of spender's
+work iirc), and it's very common to find grsecurity-patched kernels on
+shared hosting providers. Openwall also has some variant of this
+functionality as well, doesn't it?
+
+Anyway, this all kind of detracts from my original point, which is
+simply that the most common vulnerabilities that lead to password dumps
+have a very high potential of yeilding an unprivileged shell,
+pesudo-shell, or some other method of read-only access to portions of
+the filesystem. And even without the ability to escalate privileges or
+do any other kind of advanced post-exploitation, these basic
+vulnerabilities alone still have the very real potential to compromise
+any server secrets. As was already stated by Peter Gutmann, we can't
+defend against things like ptrace anyway with the PHS. But what we can
+do is ensure the integrity of the PHS is not dependent upon any kind of
+server secrets, such as an encryption key. That's the important thing to
+take away from this thread.
+
+Best regards,
+Jeremi
+

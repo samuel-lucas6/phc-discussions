@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] antcrypt phs_gen_output()
+
+Message-ID: <533D3564.3080706@rub.de>
+Date: Thu, 03 Apr 2014 12:18:12 +0200
+From: Ralf Zimmermann <ralf.zimmermann@....de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] antcrypt phs_gen_output()
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Heya,
+
+you are correct, it uses the prefix as a prefix to the state buffer
+and hashes the whole prefixed buffer to derive more than 64 bytes of
+output (if requested).
+I know that it is unnecessary to call phs_store_derived_state(), e.g.,
+in the case that you request 128 bytes, you will compute a lot of
+SHA512 results you do not need.
+
+But as the call for submissions stated that the code should not be
+optimized for efficiency but be readable, I thought to emphasis that
+it uses the same code as before, so the reader does not need to
+analyze the code twice.
+
+Sorry if this was rather confusing than helpful.
+
+Cheers,
+Ralf
+
+On 04/03/2014 12:12 PM, Steve Thomas wrote:
+>On April 3, 2014 at 5:01 AM atom <atom@...hcat.netwrote:
+>
+>Hey Guys,
+>
+>from antcrypt sources, do I understand this correctly:
+>
+>ctx->state_bytes = some static value based on m_cost 
+>*(ctx->stateprefix) = 1;
+>
+>while (...) { ... SHA512((uint8_t *) ctx->stateprefix,
+>ctx->state_bytes + sizeof(uint32_t), ctx->rehash); ... 
+>*(ctx->stateprefix) = *(ctx->stateprefix) + 1; }
+>
+>In other words, stateprefix will be some fixed value between 1
+>and a very low number, maybe 100? In that case, it's simply a
+>static value an attacker can precompute and it will not take alot
+>of memory.
+>
+
+No, it is doing SHA512(LITTLE_ENDIAN_32(prefix) || state) because: 
+ctx->stateprefix = ((uint32_t*) ctx->state) - 1 and it is given a
+length of "ctx->state_bytes + sizeof(uint32_t)"
+
+I know it looks confusing I had problems too. This is also very 
+inefficient the call to phs_store_derived_state() fills the whole 
+state with SHA512s.
+
+
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. & Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+http://www.emsec.rub.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlM9NV8ACgkQ/N3XAntS/5ZgVQCgvQwnR8TvLoRiTEI1DdF5CXh9
+92MAoMT0EPMIQcrBer+Ihc/Nq55YK04n
+=OEBI
+-----END PGP SIGNATURE-----
+

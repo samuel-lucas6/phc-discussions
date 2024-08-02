@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <CALCETrWdjaJw4hu41mS0rVT9ZbtC-mm_gQdYueO417jOpBzD+Q@mail.gmail.com>
+Date: Tue, 22 Mar 2016 21:08:41 -0700
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] hash encryption
+
+On Mar 22, 2016 8:41 PM, "Solar Designer" <solar@...nwall.comwrote:
+>
+Hi,
+>
+I am planning to release yescrypt 1.0 later this year.  One planned
+feature that stayed on my to-do list so far is builtin support for
+(re-)encryption of hashes.
+>
+One way to do it would be to use a block cipher like AES.  However,
+yescrypt does not normally use any block cipher, and bringing in an
+extra crypto primitive just for this one feature is not great.
+>
+Another way would be to reuse the salt as IV when reusing an already
+available hash function as a stream cipher.  However, this increases
+reliance on salts being unique.
+>
+Yet another way would be to create a block cipher out of a hash, using
+the Luby-Rackoff construction.  This is my current preference.
+>
+Attached is an implementation of a 256-bit block cipher based on
+SHA-256 (which yescrypt has anyway).  I'd appreciate a review.
+
+My recollection of the different security properties of different numbers
+of Luby-Rackoff rounds is a bit vague, but they have nothing to do with
+bits of security or work factor.  Can you justify them?
+
+if (keylen <= 16) {
+if (keylen)
+target = 3; /* 4 rounds, 128-bit security */
+else
+return; /* no key =no encryption */
+}
+
+IMO the error case should not result in the identity function.  Abort or
+memset-to-zero would be better.
+
+Hashing the key length in before the key would avoid needing to think about
+related-key attacks that might lose you one round or so of security under
+some circumstances.  Using a short-key variant as an oracle against a
+long-key variant would be nasty
+
+Otherwise this looks generally reasonable.
+
+>
+Thanks,
+>
+Alexander
+
+
+

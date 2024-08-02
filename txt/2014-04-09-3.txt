@@ -1,0 +1,101 @@
+phc-discussions - Re: [PHC] Gambit review
+
+Message-ID: <CAOLP8p4NhfM0WcEqdkROcCUGMGEfDJVnD-7FZXDLy0zk_P=zbg@mail.gmail.com>
+Date: Wed, 9 Apr 2014 05:18:25 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Gambit review
+
+On Fri, Apr 4, 2014 at 4:58 PM, Krisztián Pintér <pinterkr@...il.comwrote:
+>If you
+>like, I could add your memory pattern to my pebbling algorithm to see
+>how it does.
+>
+that would certainly be very useful, as it might discover some
+weakness. alas, it can not provide a proof for real life sizes. i
+tried to come up with proof, but i'm no math person.
+
+I added a simplified approximation of Gambit to my pebble code, with
+some interesting results.  Rather than XOR-ing onto memory, I modelled
+Gambit's computation DAG as if Gambit overwrites memory, so my results
+would probably require more pebbles if I took the XORs into account.
+The DAGs I modeled had 4 rows, but may be more similar to Gambit with
+5 rows because of the nodes on the first row in Gambit should all be
+zero, and I didn't build nodes for them.
+
+In short, the modified approximation is easy to pebble (exactly zero
+recomputations) down to 1/8th pebbles (relative to a 4-row graph
+size), and then my code fails completely to find any pebbling solution
+for even 1 fewer pebbles.  I was not able to pebble any sized graph I
+tried with 1/8th - 1 pebbles (actually, the boundary is always close
+to 1/8th, but varies by a few - something about the step size maybe).
+
+Most DAG architectures require almost no recomputations down to the
+1/4 size, and then ramp up the pain until by the 1/8th size, there is
+a significant penalty.  For example, Catena is pebbled by my code with
+about a 9X penalty at the 1/8th mark.  My "sliding-reverse" pattern
+can be done by my algorithm with a bit over a 900X recomputation
+penalty.  The strongest I'd tested so far at the 1/8th mark was one I
+call sliding-catena, which is basically sliding-reverse, but with a
+half-sized sliding window.  Gambit seems to be even stronger at the
+1/8th mark, providing the strongest pebbling defense against my
+algorithm that I've tested yet.
+
+One reason Gambit's DAG graph is so hard to pebble below the 1/8th
+mark is that it has short graph edges compared to Catena.  Catena
+edges are on average equal to the row length, while Gambit edges are
+on average 1/2 the row length.  The impact of this is similar to
+running Catena-7 rather than Catena-3 (8 rows rather than 4).  It
+explains both why there is no pebbling resistance between the 1/8th
+and 1/4 memory mark, and why the pain curve is so steep below 1/8th.
+Also, Gambit has a lot more very short edges, which increases pebbling
+difficulty greatly, in my experience so far.  This is one reason I
+opted for the "sliding-reverse" DAG architecture in TwoCats - it also
+has a lot of short edges, though the average is similar to Catena-3,
+twice the length of Gambit's.
+
+Because Gambit XORs over memory, the reality of pebbling Gambit may be
+quite a bit harder.  It may, for example, start showing recomputation
+pain closer to the 1/4 mark.  I haven't done any testing for this.
+Modeling the XORs is not something I've added to my code.
+
+I get a "feel" for pebbling with my pebbling algorithm, but it's only
+an upper bound on recomputations, not a lower bound.  However, my
+feeling for Gambit is that unless the XORs introduce some
+recomputation weakness I haven't found, then it is *very* strong
+against TMTO's below the 1/8th memory mark, very likely the strongest
+cache-timing resistant entry in the PHC at the 1/8th mark.  All of the
+cache-timing resistant algorithms are weak down to about the 1/4 mark,
+but Catena kicks in with 2X penalty just below the 1/4 - 1 mark.
+Gambit may be (not sure, because of the XORs) weak down to the 1/8th
+mark, but then becomes very strong below that, much stronger than
+Catena or TwoCats's first loop at that size of TMTO.
+
+TwoCat's second loop is unpredictable, and does password dependent
+addressing, which makes it difficult for an attacker to gain more than
+about a 10% advantage on time*memory cost in a TMTO attack.  However,
+with cache-timing information, an attacker can abort TwoCat's second
+loop at the start, so only the first loop remains for defense.
+
+In reality, I do not believe any attackers will ever benefit from any
+TMTO against Catena.  Without the XORs, an attacker might be able to
+gain a 2X time*memory advantage against Gambit.  With the XORs, I
+simply don't know, but I suspect it helps eliminate benefits of a TMTO
+attack.
+
+I feel more work needs to be done analyzing the impact of the XORs.
+I'm having difficulty proving to myself that the XORs don't introduce
+a weakness.  I do not think they do, but I'd like to see more
+analysis.
+
+My other thoughts on Gambit vs Catena haven't changed.  Gambit does a
+better job of having memory be undetectably non-random.  Catena uses a
+faster hash function (Blake2b).  Catena also has many advanced
+features fleshed-out, with implementations for the various modes of
+operation, which partly explains the huge impact Catena had on many of
+the other entries (and mine in particular).  However, that has little
+to do with the underlying scrambling algorithm.  Gambit's
+backwards-skipping pattern seems fine to me.
+
+Bill
+

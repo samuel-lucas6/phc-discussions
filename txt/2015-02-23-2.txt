@@ -1,0 +1,65 @@
+phc-discussions - password obfuscation
+
+
+Message-ID: <20150223222810.2794.qmail@cr.yp.to>
+Date: 23 Feb 2015 22:28:10 -0000
+From: "D. J. Bernstein" <djb@...yp.to>
+To: discussions@...sword-hashing.net
+Subject: password obfuscation
+
+A year ago Wired reported that a "Cryptography Breakthrough Could Make
+Software Unhackable":
+
+   http://www.wired.com/2014/02/cryptography-breakthrough/
+
+This article
+
+   * advertised the concept of software obfuscation: your software
+     "could be captured by the enemy, interrogated, and disassembled,
+     but it couldn’t be forced to reveal your secrets”;
+
+   * said that previous obfuscation techniques were at most a "speed
+     bump" ("An attacker might need a few days to unlock the secrets
+     hidden in your software, instead of a few minutes"); and
+
+   * said that a new "obfuscation scheme is unbreakable" and is the
+     "best possible obfuscator" if "a certain newfangled problem about
+     lattices is as hard to solve as the team thinks it is".
+
+This sounds like a great replacement for password hashing: obfuscate a
+program such as "allow access if the input is XYZZY" to obtain a program
+that "couldn't be forced to reveal" the password XYZZY.
+
+Apon, Huang, Katz, and Malozemoff presented an implementation of this
+new obfuscation scheme at the Crypto 2014 rump session (with a limit on
+the "depth" of the obfuscated program, but implementing _any_ of this is
+impressive). They issued a challenge---a 25-gigabyte obfuscation of a
+14-bit password---and said that breaking it was "not feasible".
+
+You might complain that you can't afford 25 gigabytes per obfuscated
+password (and you might wonder what happens to passwords longer than 14
+bits). But if you have only a few passwords and lots of disk space then
+you might not think that this is a showstopper.
+
+My main point in this message is that, contrary to what the Wired
+article might make you think, this "cryptography breakthrough" is much,
+much, much less _secure_ than any normal password-hashing function. So
+please don't throw away PHC!
+
+Concretely, the "Obviouscation team" broke the challenge in 19 minutes
+on a cluster of 21 PCs. I'm a small part of this team. We announced the
+solution on Twitter in October, and have now released the paper and our
+latest software:
+
+   http://obviouscation.cr.yp.to
+
+The original implementation took 4 hours to check a password; our attack
+is 10000 times faster. We gained about 50x from removing redundancies in
+how each password is checked, and another 200x from a meet-in-the-middle
+attack that exploits the matrix structure of this "obfuscation" and ends
+up sharing most computations across passwords---a huge security failure
+that of course wouldn't be tolerated in PHC. The paper also explains
+further speedups, and generalizations to other "obfuscated" programs.
+
+---Dan
+

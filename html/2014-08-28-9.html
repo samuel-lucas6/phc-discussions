@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: A review per day - Yescript</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="../../../2014/08/27/9">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;53FF8B8C.80207&#64;ciphershed.org&gt;
+Date: Thu, 28 Aug 2014 16:05:32 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: A review per day - Yescript
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+As promised, here's where I finally say all the things I don't like
+about Yescrypt.
+
+Here's my list:
+
+- - It's too complex.
+- - No cache-timing resistant initial phase has not yet been implemented.
+- - OPENMP support is required for current version to run in parallel
+- - Like Samuel Neves code, understanding what's going on can be tricky!
+- - For t == 0, most of hashing could be done serially, rather than in
+parallel, though the results need to be loaded in parallel for the
+final pass.
+
+The complexity of Yescrypt will make it difficult for other authors to
+create their own compatible versions.  It also makes cryptanalysis
+harder.  I certainly have a difficult time reading it and convincing
+myself it is bug-free.
+
+However, I gave it a try.  I may have found a bug, but being Solar
+Designer's code, I have to admit it is more likely an error in my
+reading of his code.  The potential bug is on line 433 in
+yescrypt-ref.c.  For t == 0, with YESCRYPT_RW enabled and parallelism
+&gt; 1, I think that randomly read/writing 1/9th of memory followed by
+randomly reading 2/9ths of memory sounds like it would provide enough
+TMTO defense.  Honestly, I'm not sure smix2 is needed at all for good
+security when YESCRYPT_RW is set.  However, it looks like Nloop_rw is
+set to N/(3*p^2).  It looks like it only does N/(3*p) total random
+read/writes, followed by N/3 - N/(3*p)) random reads.  Is it supposed
+to be this way?  This seems OK for p == 2 or p == 3, but what about p
+== 32?  Why would I want fewer random writes as a total fraction of
+memory as I increase parallelism?
+
+The complaint I have about not forcing parallel computation is
+basically a banana attack.  If an attacker can instantly flush his
+memory to disk, and later instantly read it back, then he can do a
+TMTO, running threads in series rather than in parallel, because no
+data is exchanged between the threads.  They are all independent.  In
+the last pass, all memory has to be loaded so that the random read
+phase can complete in a reasonable time.  The problem with this attack
+is that the attacker needs the bandwidth from memory to disk to be as
+high as from the CPU to memory.  On my test machine, I'm able to get
+about 12GiB/s bandwidth from the CPU to memory.  In theory, my Sata
+interface is 6GiB/s.  I seriously doubt that having 2 Sata disks in my
+system would let me do 12GiB/s read/write to them.  However, if I were
+determined to make this TMTO attack, I might be able to do so with
+only a 2X increase in time*memory cost for high parallelism values,
+but I still would need to load it all in memory in the end.  That
+compares to Scrypt's *reduction* in time*memory cost by 4X, so it's
+hard to say this is a real concern.  It's more like me beating Solar
+Designer with a banana :-)
+
+I think Solar Designer errs on the side of over-defending passwords at
+the expense of too much additional complexity.  I think his mind deals
+with complexity like this more easily than most of the rest of us,
+which leads him to make this mistake.  No other entry has gone to such
+lengths to increase an attacker's power bill slightly when possible.
+There are more modes and tunables than any other entry, to help defend
+better in various situations.  He has the VROM mode for authentication
+servers, and small random-read-writes for Bcrypt-like security.  He
+has Scrypt compatibility mode, and code to detect any non-Scrypt
+compatible options, in which case he fixes the PBKDF2-HMAC input
+collisions.  I hate modes.  They confuse me :-)
+
+However, even with these gripes, I believe Yescrypt provides the best
+password defense of any entry the PHC competition.  It's probably the
+strongest password hash ever written for defending against brute-force
+guessing attacks.
+
+It is also the only memory-hard algorithm in the competition that I am
+willing to admit is stronger than TwoCats.
+
+I was hoping to trash Yescrypt a bit more, but I keep re-reading the
+code, and just can't.  It's like trying to track Samuel Neves Blake2
+code.  Good luck with that :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/4uJAAoJEAcQZQdOpZUZc7YQAKMaJWV20cb3/+nbHIzR9ePi
+rtk6JXQ02SwGM3DOwag2yBJEH7448zzE/UsLAFeGMDqoNWl+5BDy7J/54a0Jl6DU
+qmCNPPmWh0Xxag99rstvXTfe1u7cM1GGLn8gPUxP3wnJY4gQJDeCY6drtU5uQto5
+HSb/f4HI59pz205EBQ+8pUaqWsfNkpOcpcj12HoiTYmaHJbs1N+19ec9e9rSW3pL
+zVi5vjOpEsqR86NbgWHV4XpUikRMA6s0abTwWZx96PUGkZJI3ryUMEAiTmJamzxy
++gGV78b4BlkkR6WUglAHmGUQVbu/oVHrOb3iatllkv9XCtR0+3pH0tA/e5sGCzdz
+EOpgyFE1VArlugxW0s34VwcvGUCXY748z5oWCxrwA7vmmvHf3yxkGbLKpucJ/uQr
+Ahmz0T95gfjyIzJYNNl4Dq3RkWBYyKSKlCZ4VY3vSmWX9WAxbrePuJK9GO/3fjkE
+Io6CarI7I6+/3sw99mshwajJdHuU5+haD4zTnBXntfnreLzFA5o7kXlH+Afksx4R
+RnHQtITeii4aU8IgP2iic2hj+9bSb7lE3mJqgA5ghJvpcWjJpIrvkgzKPuqDZvjn
+yFHk/QfmyBYp26K9YttYtqEEHLmaMDNln8U1a+aawT8/2Y6UMLpQMmlFPFimnRq7
+SGDCFSXuiFX1r+Pg9JLz
+=aV3/
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

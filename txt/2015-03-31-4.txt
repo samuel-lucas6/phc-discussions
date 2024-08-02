@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <CAGiyFddRSUEaUO4iMJpWjvBKwjDNjo1i3tLvszBkhWq1E_kJXQ@mail.gmail.com>
+Date: Tue, 31 Mar 2015 10:28:26 +0200
+From: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+I second Hongjun's argument about strong crypto: as-fast-as-possible
+primitives need as few operations as possible, thus short chains of
+operations need be crypto strong. OTOH, password hashing doesn't need
+ultra high speed, thus can afford a high number of operations to
+ensure that, even with suboptimally-secure building blocks, many
+iterations will guarantee collision/preimage/pseudorandomness strength
+etc.
+
+MD5 with 256 instead of 64 rounds would probably be secure, for example :-)
+
+
+On Tue, Mar 31, 2015 at 5:11 AM, Hongjun Wu <wuhongjun@...il.comwrote:
+Dear Alexander,
+>
+First, I'd like to point out that the security of preimage/collision of
+Pomelo (and some PHC Second round candidates) is somehow similar to the
+security of the initialization of stream ciphers, rather than similar to the
+security of hash function in which there is no secret key.
+>
+When I was designing POMELO, the first priority is to ensure that the
+password cannot be recovered due to collision (it follows from my experience
+on the cryptanalysis and design of stream ciphers).  It is the reason that
+the first half operations of POMELO are strictly revertible so as to prevent
+collision, but to achieve diffusion.
+>
+Some confusion/diffusion idea of POMELO partly comes from my stream cipher
+HC (i.e., using expansion and table lookups).  Since its publication in
+2004, HC remains as a very strong cipher.
+>
+Anyway, I will provide more analysis of POMELO in the updated report.
+>
+BTW, I think that it is not necessary to use strong crypto primitive (such
+as strong hash function) in the design of password  hashing scheme,
+especially if we want to process large amount of memory in a fast way.
+Eventually it turns out that a number of second round candidates need to cut
+the round number significantly.   I feel that it is no longer true that
+those PHC candidates are based on strong crypto primitives, although they
+are still very strong.
+>
+Maybe we can now say that most of the second round candidates are no longer
+built on strong crypto primitives (such as strong hash functions or strong
+block ciphers) to achieve their security,  not just POMELO itself.
+>
+Best Regards,
+hongjun
+>
+>
+On Tue, Mar 31, 2015 at 4:15 AM, Solar Designer <solar@...nwall.comwrote:
+>>
+>On Tue, Mar 31, 2015 at 02:08:34AM +0800, Hongjun Wu wrote:
+>3)  A strong hash function is not needed for POMELO.
+>     I believe that POMELO  is much stronger than any existing hash
+>function for the KDF/PH applications.
+>>
+>Most likely it is, but the confidence in it is currently lower than e.g.
+>in SHA-2 family functions.
+>>
+>(For performance reason, a strong
+>hash function has to be sufficiently fast and small.  So even in a very
+>strong hash function, not many operations can be used for processing a
+>message block.)
+>     In the POMELO report, I did not talk much about POMELO against
+>preimage and collision attack. I can explain more in the updated report.
+>     When I was designing POMELO v2,  only the memory hardening security
+>worth my analysis.   The preimage and collision security are trivial.
+>>
+>Of course, it's much easier (in fact, trivial as you say) to achieve
+>preimage and collision resistance in PHC candidates than in fast
+>cryptographic hashes.  The problem, though, is that "much easier" and
+>even "trivial" do not necessarily imply "has been achieved".
+>>
+>If you tried to, I think you would be able to deliberately construct a
+>PHC candidate that would appear OK at first glance, but would not be
+>preimage or/and collision resistant.  Right?  And this might happen
+>unintentionally, too.
+>>
+>Simply speaking, the state size of POMELO is too large comparing to a
+>hash
+>function, and the operations used in a cryptographic hash function
+>(compression function) is much less than that used in POMELO.
+>     Some example: considering SHA-512, there are only 64+64 = 128
+>simple
+>steps to compress a 128-byte message (if we consider message expansion
+>as
+>64 steps); while in POMELO v2, there are about 3*256 = 768 steps when
+>m_cost = 0, t_cost = 0.     In POMELO v2, in order to prevent password
+>hashing being too fast, it is required that m_cost + t_cost >= 5.  It
+>means
+>that POMELO v2 consists of at least 32*256+512 = 8704 steps, far more
+>than
+>that in a compression function of SHA-512.
+>>
+>Simply comparing the number of operations is not convincing enough.
+>For example, what if most of those cancel out, or are reversible, or if
+>there are tiny biases that add up to something significant after so many
+>steps?  This is almost certainly not the case, but until shown otherwise
+>the possibilities are there.
+>>
+>A more realistic risk is issues with how the password and salt inputs
+>are processed early on.  Things like the original bcrypt $2$'s trivial
+>collisions for "ab" vs. "abab", etc.
+>>
+>I think it's reasonable that people want an analysis of POMELO's basic
+>security.
+>>
+>Alexander
+>
+>
+

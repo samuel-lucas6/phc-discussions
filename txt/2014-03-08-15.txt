@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] escrypt 0.3.1
+
+Message-ID: <20140308101108.GA31413@openwall.com>
+Date: Sat, 8 Mar 2014 14:11:08 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] escrypt 0.3.1
+
+Bill,
+
+On Sat, Mar 08, 2014 at 11:51:37AM +0400, Solar Designer wrote:
+This was correct.  In case anyone else (Bill?) wants to experiment with
+this, I've attached the "patch" relative to 0.3.1
+
+Comparing escrypt 0.3.2 against bcrypt on FX-8120:
+
+Defensive bcrypt achieves with one thread:
+
+493.4 c/s real, 493.4 c/s virtual
+
+With 8 threads:
+
+0: 383.8 c/s real
+1: 383.8 c/s real
+2: 383.8 c/s real
+3: 382.6 c/s real
+4: 383.8 c/s real
+5: 384.2 c/s real
+6: 383.6 c/s real
+7: 384.4 c/s real
+
+384*8 = 3072 c/s
+
+(attack speeds are 1.7x to 2x higher than this)
+
+escrypt 0.3.2 with default settings (4x 128-bit SIMD, additional 2x
+parallelism during part of the time from two S-box lookups and two MULs,
+4 rounds):
+
+r=8 N=2^10 NROM=2^0
+Will use 0.00 KiB ROM
+         1024.00 KiB RAM
+'$7X3$86..../....WZaPV7LSUEKMo34.$LI6kBNuKmLenyqBVHkZ1OcjbPbgHkZbYhbpb0.yjka9'
+Benchmarking 1 thread ...
+769 c/s real, 763 c/s virtual (1023 hashes in 1.33 seconds)
+Benchmarking 8 threads ...
+3978 c/s real, 496 c/s virtual (7161 hashes in 1.80 seconds)
+
+Alternatively, with 2 rounds:
+
+r=8 N=2^11 NROM=2^0
+Will use 0.00 KiB ROM
+         2048.00 KiB RAM
+'$7X3$96..../....WZaPV7LSUEKMo34.$BhHR1cq6dGb5EiJbd4VrCz9VN0rzZTnlS6DxwuxgWp5'
+Benchmarking 1 thread ...
+635 c/s real, 635 c/s virtual (1023 hashes in 1.61 seconds)
+Benchmarking 8 threads ...
+3008 c/s real, 377 c/s virtual (3069 hashes in 1.02 seconds)
+
+So we achieve comparable throughput (c/s rate at 8 threads) at 1 MiB and
+4 rounds or at 2 MiB at 2 rounds (of the multiply latency hardened round
+function, with each round having three multiplies, two of them being
+sequential).
+
+Let's compare the number of L1 cache hitting lookups per hash computed.
+For bcrypt, we have:
+
+34000 Blowfish encryptions * 16 rounds * 4 lookups/round = 2176000
+
+For escrypt 0.3.2, we have:
+
+1024 KiB * 2 passes * 16 sub-blocks/block * 4 lanes * 4 rounds * 2 = 1048576
+
+or:
+
+2048 KiB * 2 passes * 16 sub-blocks/block * 4 lanes * 2 rounds * 2 = 1048576
+
+This is twice less... and the twice larger S-boxes don't compensate for
+it, because the relevant GPU attack uses global memory.  I'll need to
+improve this.  Still, it's not bad.  No other PHC candidate mentioned so
+far, except for yours indeed, has anything like it.
+
+Now, in terms of parallelism, in bcrypt there are:
+
+34000 Blowfish encryptions * 16 rounds = 544000 groups of lookups
+
+With escrypt 0.3.2, we have:
+
+1024 KiB * 2 passes * 16 sub-blocks/block * 4 rounds = 131072 groups of lookups
+
+or:
+
+2048 KiB * 2 passes * 16 sub-blocks/block * 2 rounds = 131072 groups of lookups
+
+This is seemingly ~4x worse than bcrypt, but since the relevant GPU
+attack uses local memory, the larger S-boxes compensate for it.  In the
+tests above, the S-boxes were 8 KiB (combined), vs. bcrypt's 4 KiB, so
+we're only ~2x worse than bcrypt in this respect.  This may be easily
+repaired by switching to 16 KiB S-boxes.  With this change, 4 rounds:
+
+r=8 N=2^10 NROM=2^0
+Will use 0.00 KiB ROM
+         1024.00 KiB RAM
+'$7X3$86..../....WZaPV7LSUEKMo34.$2rM5Wa/a3GMrir5BSrY6.w283cSvxM5TYwd8BwfDS/4'
+Benchmarking 1 thread ...
+623 c/s real, 623 c/s virtual (1023 hashes in 1.64 seconds)
+Benchmarking 8 threads ...
+3225 c/s real, 405 c/s virtual (7161 hashes in 2.22 seconds)
+
+This is still similar speed to bcrypt's, but now we're also on par with
+bcrypt in terms of parallelism of the L1 cache hitting lookups (the
+extra parallelism is fully compensated for by larger S-boxes).  The ~20%
+performance hit from L1 cache thrashing is not great, though.  And we
+still need to compensate for the 2x less frequent lookups, since this
+can't be compensated by larger S-boxes (not at these sizes).
+
+I think I should try to make the lookups more frequent, and reduce
+parallelism, when targeting CPUs like this (Sandy/Ivy Bridge, Bulldozer),
+although perhaps Haswell would benefit from having this full parallelism.
+
+Alexander
+

@@ -1,0 +1,102 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <5419C116.2040901@ciphershed.org>
+Date: Wed, 17 Sep 2014 13:12:54 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 09/17/2014 12:36 PM, Steve Thomas wrote:
+>On September 17, 2014 at 4:30 AM Bill Cox
+><waywardgeek@...hershed.orgwrote:
+>
+>However, AntCrypt, OmegaCrypt, and Schvrch all tried to introduce
+>data based branching for GPU defense, and "cyclomatic
+>complexity". I am not sure we've seen this idea implemented well
+>yet, and data-based branching has been considered a no-no for
+>years apparently. However, when 3 authors all invent the same
+>thing, I think we should take a closer look.
+>
+
+Adobe did this for encrypting PDFs 
+(http://esec-lab.sogeti.com/post/The-undocumented-password-validation-algorithm-of-Adobe-Reader-X).
+>
+
+This is why we see these submissions.
+
+P.S. Schvrch is not in this category. As it is not an actual
+branch. In x86 SIMD you do a compare then xor (compare sets it to
+all 1s or all 0s). With GPUs, they would set a conditional variable
+(compare) then conditionally run bitwise invert (one instruction).
+Note that a branch in x86 takes two instructions compare and 
+conditional jump. Both SIMD and GPUs use two instructions with
+neither being a jump.
+
+
+Thanks for the link.  Very cool.
+
+The current implementation is not in this category, but clearly the
+author intended it to be.  He describes branching as cyclomatic
+complexity in the attached paper.  I suspect we'll see something more
+like the others in the next revision.
+
+I read a bit about GPU computation in the face of conditional branches
+here:
+
+http://www.informit.com/articles/article.aspx?p=2103809&seqNum=4
+
+It sounds like in the case of Adobe, they'd have to do a SHA256 for
+all the cores needing to do one, then a SHA384 for another 1/3, and
+finally SHA512 for the remaining 1/3.  This would take longer, though
+not 3X longer, because SHA256 runs faster than SHA512.
+
+So, 3 cases, and a max of 3X longer in Adobe's case.  This is using
+the "divergance" feature, which likely has some overhead.  They also
+support a "prediction" features where every core executes both sized
+of an if statement in sequence, but the effects of thost statements
+are supressed in one or the other block.
+
+I think having very many cases might provide good defense.  I just
+auto-generated over 13,000 hashing functions that do an
+AND/OR/ADD/SUB-XOR-ROTATE.  The problem I see is that each looks very
+similar.  I choose two "mixing" operators which are permutations and
+reversible, and a non-linear operation.
+
+However, a GPU could attack my 13,000 functions is a simple manner.
+They could write a single function that computes which operator is
+used in each place, and then execute the small case statements when
+they are used.  I think this could dramatically reduce the 13,000X
+factor I was hoping for.
+
+There are only maybe 30 different instructions that need to be
+executed, at least if the shift distance is computed rather than
+embedded in the op-code.  I don't see what would stop a GPU from
+taking maybe a 100X speed hit to "interpret" 13,000 different small
+functions in parallel.
+
+Still, if we could put the hurt on GPUs by 10-100X, that's worthwhile.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGcESAAoJEAcQZQdOpZUZdggP/jPZe2WdsVs1Izbx8XnRLzig
+Ix+cmo9ePuV1+1C0LdhhCivX7W46tfrbPWag653sSp/Q0zoj5StbdfosSfsbX3NN
+ap/VVsgKsrlXTjdsSBzpRzCPsGRPCwuDmUUkmdYbw/+y0jMl5flVy30qmJXDrQYC
+ONSxWkXNirGeryqMWQN0MRqS4AXhEKnSqzyzgtS7wIY+AE5Cz52WpO+06x/8m9BO
+rDVlrlPwC78zEck88uSaeA1XJhTsGg2lBXEy5DS21ZreYzb29d00MMBx4mFbYe67
+JaJlgCP6lvcvAO8uHJ/sslNBcIdeV/RuDMjbDw5klG945I3HF9bM+ifeDrJpa1Xv
+jrwQkdluWYu8WCt8FtrxdgiZlQ/gFxl97/+dbBY+nGVe1X8d3ClGug1vYIdr1k7s
+6c7uBw5JM//VUHyRTFkcf1QB3O+R1HzZZmMzaiLbPWzL3tPCAejoTG2wbG4BK3+P
+MqizDKoG8UiQhGarVpPGJ0KtbIel6p28HCQJYUU/Qq3/IQmCNgynzxw2uxCPV1gk
+NYk94YdA5F1ZXOU/kNmfCchipCqilKOq+b0Q4QDTuvdPbYQlvBJszIYYPhKxdkQe
+u1QXsfG4oVFrxi1RNWis2oVjHW7ZZrE+gRSe8Eg/VEgEJFtLSPPqnqeTVySYGbYD
+R8hqhSt1Yi7Y8HOQGstk
+=7Oii
+-----END PGP SIGNATURE-----
+

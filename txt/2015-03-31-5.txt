@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150331092636.GA2141@openwall.com>
+Date: Tue, 31 Mar 2015 12:26:36 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Tue, Mar 31, 2015 at 10:28:26AM +0200, Jean-Philippe Aumasson wrote:
+I second Hongjun's argument about strong crypto: as-fast-as-possible
+primitives need as few operations as possible, thus short chains of
+operations need be crypto strong. OTOH, password hashing doesn't need
+ultra high speed, thus can afford a high number of operations to
+ensure that, even with suboptimally-secure building blocks, many
+iterations will guarantee collision/preimage/pseudorandomness strength
+etc.
+
+I mostly agree with you and with Hongjun on the above.  Yes, we "can
+afford" "to ensure" so that this "will guarantee" (and this is in fact
+trivial compared to the challenges and tradeoffs faced with
+"as-fast-as-possible primitives"), but on its own "a high number of
+operations" does not necessarily "guarantee" those security properties.
+I'm sure this is obvious to you, too.
+
+MD5 with 256 instead of 64 rounds would probably be secure, for example :-)
+
+Perhaps, although since MD5's rounds are not all the same "MD5 with 256
+rounds" is non-specific.  But I get what you mean, and I agree.
+
+For an example of the opposite, and in PHC context, I wasn't necessarily
+being overly paranoid when I tested revisions of what eventually became
+pwxform not only at low, but also at ridiculously high round counts like
+1000000.  In earlier revisions (not what I ended up submitting), at
+round counts like this biases would accumulate arguably too much, so
+yescrypt's V array as a whole would be significantly non-random.  This
+would not affect security of yescrypt as a whole, at least due to the
+strong crypto on the outer layer, but I preferred to avoid it anyway.
+Without strong crypto on the outer layer, and without the Salsa20/8
+invocations at the end of each block, and if someone actually used
+pwxform round counts like this (that's three things that are currently
+false for yescrypt as submitted), this could have been important.  In
+yescrypt as submitted, V passes my randomness tests even at 1 or 1000000
+rounds of pwxform (although this still depends on some initial whitening
+of the inputs, which yescrypt obviously has).
+
+Of course, having biases accumulate is less likely with larger internal
+state (one pwxform lane has just 64 bits of state passing from round to
+round).  In fact, larger internal state is what we have in pwxform too,
+when the rounds count is small (more state gets mixed in at each
+sub-block).  And of course, POMELO uses much larger internal state
+between rounds.  I am merely referring to this example to show that, in
+general, having too many rounds can actually expose problems, and this
+isn't too far away from PHC (has been considered and has affected the
+way yescrypt's pwxform is currently defined).
+
+Alexander
+

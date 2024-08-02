@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <CAOLP8p4Ff3y0q05W68dWjENabX9BSp4y49GGhfFvoLLwydO2Pg@mail.gmail.com>
+Date: Fri, 24 Jul 2015 14:25:06 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Dmitry Khovratovich <khovratovich@...il.com>, Alex Biryukov - UNI <alex.biryukov@....lu>, 
+	Agnieszka Bielec <bielecagnieszka8@...il.com>
+Subject: Re: [PHC] Argon2 improvement thread
+
+I implemented a new Boolean flag in TwoCats as a test, called
+sideChannelResistant.  If set, the entire memory hashing run is
+cache-timing resistant.  If false, it runs in it's hybrid mode.
+
+While TwoCats is both more feature rich and more complex than Argon2, the
+number of lines of code in Argon2 is quite a bit higher.  I think this
+shows the kind of reduction in code we will see if we implement a flag like
+this for Argon2.  I do not believe there is any good reason to have the
+purely password-dependent version if the hybrid version is available.  The
+hybrid case, if supported, is always preferred, SFAIK.
+
+This includes all the source used to generate test vectors, without any
+Blake2 code:
+
+waywardgeek@...wardgeek-glaptop:~/projects/Argon2$ wc -l `< files`
+  228 ./Argon2i/ref/genkat.cpp
+  377 ./Argon2i/ref/argon2i-ref.cpp
+  236 ./Argon2i/opt-sse/genkat.cpp
+  537 ./Argon2i/opt-sse/argon2i-opt-sse.cpp
+  228 ./Argon2d/ref/genkat.cpp
+  347 ./Argon2d/ref/argon2d-ref.cpp
+  236 ./Argon2d/opt-sse/genkat.cpp
+  512 ./Argon2d/opt-sse/argon2d-opt-sse.cpp
+   67 ./Argon2i/ref/argon2i.h
+   59 ./Argon2i/opt-sse/argon2i.h
+   47 ./Argon2d/ref/argon2d.h
+   56 ./Argon2d/opt-sse/argon2d.h
+ 2930 total
+
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/src$ wc -l *.[ch]
+   32 twocats-blake2b.c
+   32 twocats-blake2s.c
+  428 twocats-common.c
+  186 twocats.h
+   98 twocats-internal.h
+  585 twocats-opt.c
+  231 twocats-ref.c
+   26 twocats-sha256.c
+   26 twocats-sha512.c
+  171 twocats-test.c
+ 1815 total
+
+Bill
+
+
+

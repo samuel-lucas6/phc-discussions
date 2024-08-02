@@ -1,0 +1,44 @@
+phc-discussions - Argon2d nit picks
+
+Message-ID: <CAOLP8p6=w7hhAU=XTYBQws1CjnDpuJ0oNLcCOdUk52LV71+xyg@mail.gmail.com>
+Date: Wed, 22 Jul 2015 09:25:10 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Argon2d nit picks
+
+Now that it's the winner, it's time to point out minor flaws.  I did a
+quick read through the reference code, and some of the opt code.  Here's my
+notes:
+
+Argon should return an error code when output MAX_OUTLEN (currently 2^32
+- 1).  Currently, it fills only MAX_OUTLEN bytes, and returns success.
+Similarly, return error codes for msglen, noncelen, secretlen, adlen, and
+m_cost when they are too long.  What is ad?
+
+Rename msg to passwd or password.  There is no way to know that msg means
+the password otherwise.
+
+What is ad?  If it is not clear just reading the code, that's a problem.
+
+Why is the max secret size 32?  Why not be variable, like the password?
+
+Line 321: comment is out of date.  Minimum t_cost is now 1: //minimum
+t_cost =3
+
+Code should be reformatted to conform to a popular standard.  For example,
+this is not cool:
+
+    }
+    else prev_index = BLOCK(lane, slice, i - 1);
+
+Argon2d borrows more from TwoCats than I realized, such as 4 sync points
+for multi-threading, in addition to the 1-pass architecture.  I approve :-)
+ It should also borrow they hybrid model, unifying Argon2i and Argon2d.
+
+Optimized and reference code do not clear any secret parameters, making it
+vulnerable to garbage collector attacks.
+
+Bill
+
+
+

@@ -1,0 +1,77 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150721193757.GA4345@openwall.com>
+Date: Tue, 21 Jul 2015 21:37:57 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 improvement thread
+
+The Argon team -
+
+Congratulations on winning the competition!
+
+Personally, I attribute this success largely to you managing to strike
+the right balance that the diverse PHC panel members could agree on
+Argon2 as the (basis for) the winner.  That's great.
+
+On Tue, Jul 21, 2015 at 07:39:16AM +0000, Jean-Philippe Aumasson wrote:
+Argon2 will be the basis for the final PHC winner. What should be change to
+make it better than it is now?
+
+The designers proposed an optional update:
+* "smarter non-linear indexing (...) in order to flatten the memory usage
+over time"
+
+I support this tweak, although I haven't reviewed it yet - I have only
+read the relevant announcement in here.  In fact, Bill and I were
+advocating making a change in this area.
+
+* BlaMka (from Lyra2) instead of BLAKE2b
+see
+http://permalink.gmane.org/gmane.comp.security.phc/3008
+https://github.com/khovratovich/Argon2/blob/master/Argon2.pdf (chap 3)
+
+Solar Designer proposed to integrate MAXFORM in Argon2d.
+
+I still do propose this.  In fact, whether the final Argon2 gains a
+MAXFORM chain or not will most likely determine whether I recommend it
+for password hashing use in libc crypt(3) and such or not.  As Argon2 is
+currently defined (whether 1.0 or 1.2), it is not good enough as a
+universal replacement for bcrypt, IMO.  I think it's very important that
+we correct that.
+
+Then, if/once Argon2 gains a MAXFORM chain, the switch to BlaMka may
+possibly be reverted, for simplicity.  I have no strong opinion on this.
+The MAXFORM chain can provide far greater multiply latency hardening.
+
+This needs more work to arrive at a specific proposal, ensuring minimal
+differences between the i and d flavors (ideally, we'd have a similar
+chain in i as well, just without the password-dependent S-box lookups),
+and overwrites of the (initially highly sensitive) S-box contents (one
+idea I have is to reuse the existing intermediate write of 1 KB to
+state, which is currently wasteful on systems with write-through caches -
+at least we'd put it to use, increasing the amount of state that a TMTO
+attacker would need to deal with).
+
+Dmitry, Alex - what do you think on this?  How do we cooperate on it best?
+
+Bill Cox proposed (in his yesterday's email):
+"- A hybrid Argon2i/Argon2d (Argon2id?), where some initial fraction of
+memory hashing is done in a cache-timing independent manner, followed by
+unpredictable addressing to improve off-line attack resistance.  If this
+fraction were a parameter, it would unify Argon2i and Argon2d into one
+algorithm.
+
+I also support unifying the two, with a parameter.  As to making it
+tri-state (or beyond) rather than binary, I have no strong feelings.
+
+- Improved GPU resistance, similar to Yescrypt"
+
+This fits under my MAXFORM chain proposal.
+
+The selected tweaks should make Argon2d and/or Argon2i better but without
+changing too much the original design (none of the above suggested changes
+would).
+
+Alexander
+

@@ -1,0 +1,133 @@
+phc-discussions - Re: Native server relief support for password hashing in browsers
+
+Message-ID: <lbhi56$1dj$1@ger.gmane.org>
+Date: Sun, 19 Jan 2014 14:04:32 -0800
+From: Alex Elsayed <eternaleye@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Native server relief support for password hashing in browsers
+
+Poul-Henning Kamp wrote:
+
+In message
+<3E7F59A0-A69C-45EF-9D39-68622DA14C7D@....com>, Larry
+Bugbee writes:
+
+>>Will the submissions be designed so client-side assistance will be
+>>practical?
+
+Is client-side assistance without a secure tunnel ever practical ?
+
+I spent a lot of time researching this some years back, and concluded
+that it wasn't worth it.
+
+It may be my lack of imagination, but every scheme I came up with,
+required strong privacy for the connection, or the NSA[1] would be able
+to deduce the password given a small-ish number of session taps.
+
+Without going into too much detail, I don't think the salt should
+be revealed to the client and the eavesdroppers, so we cannot involve
+the client in anything from the point in the algorithm where the
+salt is mixed in.
+
+I think detail may well be warranted here - salt is a public parameter.
+
+Any algorithm along the general scheme:
+
+a = password
+for i in N:
+a = crypto_graphic_hash(a)
+[...]
+
+Would allow some fraction of N to be offloaded to the client, but this
+is a lot less useful than you'd think.
+
+If the number of rounds we ask the client to perform is constant,
+a trivial replay is possible.
+
+If we ask for a variable number of rounds, you can always use a
+recorded session with a lower round-count to replay into a higher
+asked-for round-count (hint: OPIE and S/KEY)
+
+To work around that, we could ask the client to throw half the
+entropy away:
+
+a = password
+for i in N:
+a = crypto_graphic_hash(first_half_of(a))
+[...]
+
+If the hash were wide, something like SHA512, that *may* be defensible
+behaviour:  Given the lack of entropy in real-world passwords, the
+actual loss of entropy is limited, but it makes me feel very, very
+uncomfortable doing so.
+
+It should not be overlooked that the client and server do in fact
+have a shared secret, even though the server does not keep it around
+in readble form.
+
+I think this is a key insight, but which isn't sufficiently leveraged by 
+what you suggest. In particular, this is basically the same assumption an 
+augmented PAKE makes - as I posted in another mail, SRP is a particularly 
+instructive example of that, by providing a trivial construction that 
+permits nearly-full server offload (you still have to do the SRP modular 
+arithmentic) without requiring a secure channel (at least, it does if salt 
+is considered a public parameter).
+
+It would be possible to modify the above algorithm to something
+like:
+
+a = password
+b = make_integer_from(cryptographic_hash(a)):
+for i N + b:
+a = cryptographic_hash(a)
+[...]
+
+And hand the client a random number X, and have it perform a
+hardly predictable number of rounds, maybe ((X * b) mod (N + b)) or
+similar.
+
+The server would have to store b along with the password for this
+to work.  The parameters can probably be tuned so that it only
+leaves a real replay opening, if the server happens to ask for the
+same X again.
+
+But would it be worth the extra complexity ?
+
+Only if you can *always* mandate client-assist, will there be any
+benefit of the "make botnets work for it" type, and I think what
+little benefit that might give is better handled by ratelimiting
+attempts at the server side.
+
+I disagree - this isn't an either/or proposition. In particular, I can see a 
+good deal of value in having server-relief by optional under normal 
+circumstances, but under high load (slashdotting, attempted DOS via 
+expensive password verification) or situations that normally would trigger 
+ratelimiting (multiple failed attempts in a short period of time) server-
+relief could be made mandatory _on demand_.
+
+That provides a very useful type of flexibility - under normal 
+circumstances, even legacy clients which do BASIC auth with JS disabled will 
+work; but when push comes to shove clients who are willing to share the load 
+get priority.
+
+If you need to enter passwords over a non-private channel, you
+want to use *real* one-time-passwords (S/KEY or OPIE) you don't
+want some "ersatz" which gives you security "most of the time",
+but which fails fatally without any indication, if some bonehead
+somewhere f**ks up the implementation.
+
+Or use an augmented/verifier-based PAKE, which as I noted above is very 
+similar in its problem domain.
+
+So my conclusion was that client-assist is not worth it.
+
+I'm willing to be convinced otherwise, but it wont be easy.
+
+Poul-Henning
+
+[1] We now know that's where Eve works.
+Eve's a pretty common name, I think she works in more places than just the 
+NSA...
+
+
+

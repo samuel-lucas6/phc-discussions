@@ -1,0 +1,31 @@
+phc-discussions - Deliberately GPU-friendly password hashes?
+
+Message-ID: <878urnowmb.fsf@wolfjaw.dfranke.us>
+Date: Thu, 03 Apr 2014 00:38:52 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Deliberately GPU-friendly password hashes?
+
+I think I've at least glanced at all 24 entries now and it doesn't look
+like there are any which are intended to be friendly to defensive GPU
+use. I think this is an unfortunate omission.
+
+I just realized there's a pretty straightforward variation on EARWORM
+which would serve this purpose well. Just replace AESRound with some
+Salsa20 rounds (or some other ARX round function) interleaved with
+multiplies by values read from the arena. Tune the ratio of Salsa20
+rounds to multiplies such that you're making nearly full use both of
+computation cores and of memory bandwidth at the same time. Increase the
+chunk length in order to cover the higher memory latency and you're in
+business.
+
+Even though this wouldn't change EARWORM's specification very much, it
+would be enough of a shift in its security goals that I feel it would be
+dishonest to try to pass this off as a "tweak"; it would really be a
+different entry. If the panel decides to reopen the call for submissions
+as was discussed back in December, then I'll take advantage of the
+opportunity. Otherwise, well, I guess there's not going to be any law
+that says the password hashes in the PHC portfolio are the only the ones
+you're allowed to use. I think this is a situation that the BLAKE2 folks
+would find familiar :-).
+

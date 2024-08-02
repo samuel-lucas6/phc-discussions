@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20131231054532.GA20850@openwall.com>
+Date: Tue, 31 Dec 2013 09:45:32 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Tue, Dec 31, 2013 at 09:23:21AM +0400, Solar Designer wrote:
+On Tue, Dec 31, 2013 at 08:23:57AM +0400, Solar Designer wrote:
+If your "pages" do not correspond to a whole number of physical pages,
+you'll run into false sharing between your threads when they happen to
+write into the same page.  This can truly kill performance, and this
+effect and its worst case extent won't be easily predictable.  Slowdowns
+by many orders of magnitude are possible.
+
+http://en.wikipedia.org/wiki/False_sharing
+
+Correction: normally, false sharing refers to accesses to the same cache
+line rather than merely the same page.
+
+This 20 year old paper:
+
+http://research.microsoft.com/apps/pubs/default.aspx?id=69629
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.17.3255&rep=rep1&type=pdf (PDF)
+
+says in the abstract: "False sharing occurs when processors in a
+shared-memory parallel system make references to different data objects
+within the same coherence block (cache line or page)", so it does
+include "page" as an option in the definition.  However, I doubt that
+modern CPUs use pages rather than solely cache lines as a "coherence
+block", so it could be a slightly different yet related issue.
+
+Here's when and how I first ran into the issue in 2010:
+
+http://openwall.info/wiki/internal/gcc-local-build#Parallel-processing-with-GCC
+
+"Unfortunately, reducing N such that the array would fit in the L1 data
+cache prevented automatic parallelization from working.  What could the
+reason for this be?  I actually tried forcing the compiler into
+parallelizing the loop even for smaller values of N by using OpenMP
+directives, and the performance was poor - all 8 threads running, but so
+slowly that there was no advantage overall.  Apparently, this slowness
+was caused by cache coherence overhead.  I expected this problem to occur
+with multiple threads accessing the same cache line.  My test results
+demonstrated that it was worse than that: if a thread wrote to a given
+page of memory, accesses to that entire page by other threads would be
+slow (entry thrown out of TLBs maybe?)  I did not spend time to confirm
+(or disprove) this guess via the CPU's performance counters, though.
+
+The problem did not occur for read-only accesses [...]"
+
+For a non-artificial program where this issue occurred as well, read the
+"Long story short [...]" paragraph further on the same wiki page.  I ran
+into (what felt like) this same issue several times since then, testing
+on different machines (and CPU types), with the same workaround working.
+
+Alexander
+

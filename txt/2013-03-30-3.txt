@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Suggestion: API should include a verifier function
+
+Message-ID: <20130330055218.GA22531@openwall.com>
+Date: Sat, 30 Mar 2013 09:52:18 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Suggestion: API should include a verifier function
+
+On Fri, Mar 29, 2013 at 06:36:57PM -0700, Tony Arcieri wrote:
+So upon further reflection, I really think the threat model of PHC is: the
+attacker has the password hash.
+
+Yes, that's the primary threat model for password hashing schemes.
+It's not the only one, though.  We're also going to consider whether a
+proposed password hashing scheme leaks data via timings, etc.
+
+If you can solve that problem,
+
+We can't fully solve the problem of offline attacks on password hashes,
+we can only mitigate it by making attacks less efficient - and that's
+the primary goal of PHC.
+
+the issue of timing attacks should be irrelevant
+
+After the attacker has the hashes, yes.  However, despite of this being
+the primary threat model we're considering under PHC, we also need to
+consider properties of the password hashing schemes that are relevant
+before the hashes are leaked/stolen.  This includes possible timing leaks.
+
+(I think this was e.g. Solar Designer's point)
+
+No, my point was that timing attacks on direct hash comparison are
+beyond scope of PHC at least until we get close to publishing a
+portfolio of password hashing schemes for actual use (some time in
+2015?), and at that point we may include shared (rather than per PHC
+submission) code to do such comparison well (if we choose to).
+
+During our review of different password hashing schemes, it'd be a
+distraction to consider how each scheme's authors would implement hash
+comparison and what issues would be present there (e.g., "==" vs. "^").
+This can well be shared code for maybe 90% of the submissions, except
+for some exotic ones where verification amounts to more than direct
+comparison.  For those exotic schemes, if we get any proposed under PHC,
+I agree that we need a verifier API early on, and we need to analyze
+such verifiers before our selection of finalists.
+
+Like I said before, timing attacks on password hashing schemes
+themselves (not their verifiers) are nevertheless within scope of PHC
+(for all schemes, including those that would only need direct hash
+comparison rather than a more advanced verifier).  Thus, we're going to
+consider this sort of issues (e.g., "==" vs. "^") when reviewing PHC
+submissions.  It's just that direct hash comparison code should not be
+part of a PHC submission.
+
+I still think a verifier API is probably a good idea, regardless? If
+nothing else, I think a separate verifier API is a good cryptographer <=>
+end user interface ;)
+
+Sure.  It's just beyond scope of early stages of PHC, except for
+potential exotic submissions.
+
+Alexander
+

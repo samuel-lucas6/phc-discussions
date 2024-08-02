@@ -1,0 +1,101 @@
+phc-discussions - Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation
+
+Message-ID: <CAOLP8p4GvrjKTjoFdvOXkEBU=t=+Xwk3QYEpjTUOCTDer3S7QA@mail.gmail.com>
+Date: Fri, 22 Aug 2014 14:20:37 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation
+
+On Fri, Aug 22, 2014 at 1:50 PM, <Stefan.Lucks@...-weimar.dewrote:
+
+On Fri, 22 Aug 2014, Bill Cox wrote:
+>
+ OK, then all the hybrid designs are *not* cache timing resistant.
+>However, they all happen to be better at *defending the password* than any
+>of the cache-timing resistant algorithms, even when the attacker has
+>cache-timing data.
+>>
+>
+Do they?
+>
+
+Yep.  Benchmarked them myself :-)
+
+Two-loop hybrid algorithms generally lose 1/2 of their runtime and 1/2 of
+their memory requirement with cache timing data, for a 4X lower resistance
+to brute force attacks with cache timing data.  I only claim TwoCats is
+1/16th as strong as Catena against brute-force guessing with cache timing,
+if all else were equal.  However, all else is not equal!
+
+For example, Lyra2 does a modified round of Blake2b for it's memory-filling
+hash, which is still far stronger (and slower) than needed, IMO.  That's 12
+times faster than Catena's full 12-round Blake2b hash for filling memory.
+Yescrypt's custom wide-trasform-thingy smokes in a way that only a genius
+at SIMD level code optimization could achieve.  Running that thing in
+parallel will fill up any server's memory bandwidth, while coming close to
+filling L1 and L3 bandwidth at the same time.  None of the cache-timing
+resistant algorithms are capable of efficiently busting out of cache in any
+efficient manner, much less filling any RAM bandwidth.
+
+The end result is that the presented hybrid algorithms fill several times
+the memory in half the time compared to the cache-timing resistant
+algorithms.  This is not an inherent limitation in cache-timing resistant
+algorithms.  With "tweaks" that I hope some of them will adopt, they could
+easily run 10X faster or more.  I hope to badger some of them into it :-)
+
+I was wrong in a post above about speeding up Catena.  You can't do 100
+Blake2b pipes in parallel, computing the same password hash, unless you are
+doing a massive TMTO against it.  In that case, many recomputations can be
+done in parallel.  This likely can  lead to an effective TMTO attack
+against Catena, as the article suggests.  Kudos to the author for finding
+this!  Such a TMTO against a hybrid design will run into memory bandwidth
+problems, because even if there are 100 computations that can be done in
+parallel, the data in the second loop will be scattered unpredictably
+through RAM, causing a memory bottleneck.  Predictable addressing enables
+an attacker to mostly eliminate that botttleneck to on-chip cache.
+
+
+The very least the adversary can see from the hybrid designs is if the
+password is the same (same data access pattern) or has been changed
+(completely different data access pattern). This doesn't immediately help
+to find the password, but it can still be useful information ...
+>
+Stefan
+>
+
+I agree.  Leaking meta data like this could be quite harmful.  I just think
+that we should not forget that defending the password is important.  I'd
+say it's Job #1.
+
+The presented cache-timing resistant entries all run out of gas before
+busting out of L3 cache into significant amounts of DRAM, so it makes sense
+to talk about ASIC attacks against them with integrated memory.  Intel
+processors have a 15 cycle latency:
+
+http://www.sisoftware.net/?d=qa&f=ben_mem_latency
+
+On a custom ASIC, we can take advantage of the predictable addressing to
+completely eliminate the latency.  In addition, we can cut the operations
+done in Blake2b by around 10X in delay with custom data paths, and our data
+paths can be twice as wide as we have on Intel processors today.  With some
+hand waving, I'd say that's about 4 ASIC clocks vs 15 +3*12*2 for a full
+random L3 access followed by a full 12 rounds of Blake2b.  That's about
+87X.  Given some other opportunities for speed ups I haven't covered, I
+think trying to speed these algorithms up 100X in an ASIC sounds reasonable.
+
+In comparison, the hybrid entries take cache architecture into account, and
+have almost no L3 cache latency problems.  This is because they read 1K to
+16K blocks, large enough to allow the prefetch hardware to do it's thing.
+An ASIC attacker is going to see little improvement.  At the same time, the
+simpler hash functions can be done by the ASIC in 1 clock (except for the
+multiplication chains in two of them), but they are done in only 1 to 3
+clocks on the CPUs tested.  Yescrypt in particular goes the extra mile
+doing lot's of very small random L1 cache reads, like Bcrypt, which will be
+very hard to speed up on an ASIC.  Designing an ASIC that can speed up
+Yescrypt by 2X is not a job I would sign up for!  Now saving on power is
+another matter...
+
+Bill
+
+
+

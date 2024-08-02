@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Scrypt can have highest time*average memory cost</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140329184823.GA2885&#64;openwall.com&gt;
+Date: Sat, 29 Mar 2014 22:48:23 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Scrypt can have highest time*average memory cost
+
+On Sat, Mar 29, 2014 at 01:01:36AM +0400, Solar Designer wrote:
+&gt; However, what if we normalize for defender's time per hash computed?
+&gt; When we do that, it turns out that scrypt reaches its highest normalized
+&gt; AT cost at 2*N (just the way it's defined), but yescrypt (yes, that's
+&gt; the new name) reaches the highest normalized AT cost (1.5 that of
+&gt; scrypt) at 4/3*N (and it drops to 4/3 of scrypt's at 2*N), and other
+&gt; schemes where the entire arena is randomly accessed while being filled
+&gt; (no sliding-power-of-2) potentially/theoretically reach the highest
+&gt; normalized AT cost (twice that of scrypt!) at N (no need for SMix's
+&gt; second loop at all, then - it only hurts this potential/theoretical
+&gt; highest normalized AT cost).
+&gt; 
+&gt; When I say potential/theoretical, I mean that in those cases (unlike in
+&gt; current yescrypt) other factors appear, which may negatively affect the
+&gt; AT cost to real-world attackers: non-uniform distribution of accesses
+&gt; (allowing for potentially beneficial use of 2+ types of memory with
+&gt; different access speed or/and area or/and dollar cost), maybe slightly
+&gt; fewer different memory locations being read.  I previously wrote about
+&gt; those issues.  There are a few other considerations as well, including
+&gt; peak memory usage cost to defender (which the defender must provide
+&gt; capacity for, including for the worst case of highest concurrency and
+&gt; most unfortunate (de)sync).
+
+Regarding "maybe slightly fewer different memory locations being read",
+I just ran simulations similar to:
+
+<a href="http://www.openwall.com/lists/crypt-dev/2013/11/25/3">http://www.openwall.com/lists/crypt-dev/2013/11/25/3</a>
+
+Specifically, I made the program stop at 4/3*N for the
+sliding-power-of-2 algorithm.  I also made it stop at 1.5*N for the
+modulo division (and for a trivial alternative of it called "wrap"
+here), just out of curiosity.  I already had the hit rate percentage
+output at time N (inbetween the two loops) in the previous program
+revision (and that's the optimal stop point for the modulo division).
+
+The new results show that sliding-power-of-2 achieves a hit rate of 69%
+at its optimal stop point (4/3*N), whereas scrypt achieves only 63% at
+its 2*N time, whereas the modulo division achieves only 50% at its
+optimal stop point of N, and it achieves ~69.7% at 1.5*N (beyond
+sliding-power-of-2's optimal stop point).
+
+So comparing these algorithms, sliding-power-of-2 is actually best in
+terms of hit rate, even with the earlier stop (than what I was testing
+before).  It is plausible that Bill's cubed distribution would work
+better yet, though.  I did not try it yet (and don't have time to do
+that now).
+
+classic
+B' = 292735ce775aaef5
+t_cost = 2097152
+at_cost1 = 1073741824 at_cost2 = 549755813888 at_cost = 550829555712
+at_cost1/t = 512 at_cost2/t = 262144 at_cost/t = 262656
+total: nhits=663284 (63.26%) mhits=9
+
+loop1_pow2(N2 = N/1)
+loop1: nhits=595349 (56.78%) mhits=10
+B' = d9247fb08f9e807c
+t_cost = 2097152
+at_cost1 = 183251937963 at_cost2 = 549755813888 at_cost = 733007751851
+at_cost1/t = 87381 at_cost2/t = 262144 at_cost/t = 349525
+total: nhits=882412 (84.15%) mhits=13
+
+loop1_pow2(N2 = N/3)
+loop1: nhits=595349 (56.78%) mhits=10
+B' = 89be57ce3a548730
+t_cost = 1398101
+at_cost1 = 183251937963 at_cost2 = 183251763200 at_cost = 366503701163
+at_cost1/t = 131072 at_cost2/t = 131072 at_cost/t = 262144
+total: nhits=724167 (69.06%) mhits=11
+
+loop1_wrap(N2 = N/1)
+loop1: nhits=456640 (43.55%) mhits=24
+B' = b7283d0ff61c6599
+t_cost = 2097152
+at_cost1 = 274877644800 at_cost2 = 549755813888 at_cost = 824633458688
+at_cost1/t = 131072 at_cost2/t = 262144 at_cost/t = 393216
+total: nhits=830413 (79.19%) mhits=24
+
+loop1_wrap(N2 = N/2)
+loop1: nhits=456640 (43.55%) mhits=24
+B' = d2070a62b8aaaadd
+t_cost = 1572864
+at_cost1 = 274877644800 at_cost2 = 274877906944 at_cost = 549755551744
+at_cost1/t = 174762 at_cost2/t = 174763 at_cost/t = 349525
+total: nhits=689410 (65.75%) mhits=24
+
+loop1_mod(N2 = N/1)
+loop1: nhits=524257 (50.00%) mhits=21
+B' = 2365d32db26bfc21
+t_cost = 2097152
+at_cost1 = 274877644800 at_cost2 = 549755813888 at_cost = 824633458688
+at_cost1/t = 131072 at_cost2/t = 262144 at_cost/t = 393216
+total: nhits=855632 (81.60%) mhits=22
+
+loop1_mod(N2 = N/2)
+loop1: nhits=524257 (50.00%) mhits=21
+B' = 53d65e2fe1ff8ddd
+t_cost = 1572864
+at_cost1 = 274877644800 at_cost2 = 274877906944 at_cost = 549755551744
+at_cost1/t = 174762 at_cost2/t = 174763 at_cost/t = 349525
+total: nhits=730298 (69.65%) mhits=22
+
+For exact definitions of these algorithms, see the program at the URL
+above.  It has not changed except for the lower iteration count in the
+second loop in some of these tests (marked with "N2 = N/3" and "N2 =
+N/2" as appropriate).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20151011054108.GA10616@openwall.com>
+Date: Sun, 11 Oct 2015 08:41:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: Massimo Del Zotto <massimodz8@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+On Thu, Oct 08, 2015 at 10:00:53AM +0200, Massimo Del Zotto wrote:
+I have been shuffling a bit through the CL forum and I'm quite sure I
+missed something.
+Anyway, I have reached that conclusion (about instruction latencies being
+basically 0) reading this/posting:
+https://community.amd.com/thread/170261
+
+Thanks.  Also useful is the other thread referenced from there:
+
+https://community.amd.com/message/1302341#1302355
+http://pc.watch.impress.co.jp/img/pcw/docs/453/941/23.jpg
+https://community.amd.com/servlet/JiveServlet/showImage/2-1302355-1568/16workitems.png
+
+And 2620_final.pdf page 12 (on which and how many instructions can
+issue per cycle), 19 (comparison against VLIW, but it mentions that GCN
+has "Vector back-to-back wavefront instruction issue").  It's important
+that only 1 VALU instruction can issue per cycle, which means that it
+has to be for a 64-item wavefront (yet apparently to one SIMD unit)
+rather than just for one SIMD unit's width of 16, or otherwise there
+would have been no way to fully utilize the hardware.
+
+Quoting, for those who don't feel like following the link:
+
+RealHet, 2015 Apr 18
+Hi,
+
+This example is absolutely correct, it can harvest the peak performance of
+the gpu, yet it uses the same register for everything:
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+
+My understanding is that this requires at least 4 wavefronts, of 64
+work-items each.  So at least 256 per CU.  Any fewer than that, and we
+start wasting pipeline stages or/and SIMD units.
+
+The latency is effectively 0 as it relates to instruction scheduling by
+the compiler, but it is still 4 cycles in hardware, as well as in terms
+of requiring parallelism to hide it.  It's just that this parallelism
+isn't seen in the instruction stream (that's good, as otherwise we'd end
+up wasting instruction cache space on explicit interleaving of
+instructions from multiple instances of our algorithm, like we actually
+have to when optimizing for modern CPUs).
+
+In another comment, realhet says:
+
+"Also there is a slow double precision instruction which takes 16 clocks."
+
+2620_final.pdf page 44 says:
+
+"32-bit Integer MUL/MULADD @ DPFP Mul/FMA rate"
+
+So it seems that when we need wider than 24-bit multiplication (like we
+do in yescrypt), we may incur 16 cycles latency.  (This says "rate"
+rather than "latency", though.)
+
+Page 45 shows how LDS has twice fewer banks (32) than could potentially
+be accessed by the SIMD units otherwise (64), so runs at "1/2 WAVE/CLK"
+(two quarter-waves total coming from two groups of two SIMD units each).
+This isn't about latency, but rather about LDS only having 1/2 of the
+throughput that could potentially be needed by LDS-bound kernels.
+
+From the discussion you linked:
+
+gautam.himanshu, 2012 May 11
+Actually only a quad-wavefront(16 work-items) can run parallely on a
+Compute Unit. All these extra work-items are introduced, so hide the
+latencies of memory i/o for data as well as **code**.
+
+This comment is not authoritative, and looks wrong to me, even with
+"Compute Unit" corrected to mean "SIMD".
+
+My current understanding is that each SIMD unit needs to run a 64-item
+wavefront, split across the 4 pipeline stages.  For 4 SIMDs/CU, we need
+4 times that.
+
+It seems GCN also switches to a different wavefront at every instruction
+anyway.
+
+So you need 4 wavefronts to use the 4 SIMD units.
+
+Alexander
+

@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <52DA6237.1020601@bindshell.nl>
+Date: Sat, 18 Jan 2014 03:15:03 -0800
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On 1/18/2014 1:47 AM, Solar Designer wrote:
+There's no problem with saturating the memory bandwidth for password
+hashing on busy web servers.
+
+I think I'm inclined to disagree with this. But that's not to say you
+are necessarily wrong.
+
+First, I think it's a bit too broad of a statement. It's hard to say
+what a "webserver" is now, or what it will be in 10 years. For a
+traditional webserver where you're just serving pages off disk, then
+yes, there's technical justification for saturating the memory bus. But
+large websites especially make heavy use of in-memory caching and
+key-value stores like Redis, mod_mem_cache, memcached, etc, and a
+function such as this could very likely have a negative impact on
+performance.
+
+Now one my say that a large site would likely have the financial
+resources to run dedicated caching servers, or dedicated authentication
+servers, or whatever. And that's probably true. It's not hard to scale
+up and scale out when you have money. But what I'm concerned about is
+how well this will scale down. Which leads me to my second concern: a
+webserver may not even be running on dedicated hardware. Webservers
+running on a hypervisor with other memory-intensive virtual machines, or
+even an oversubscribed hypervisor where virtual machines do not have
+dedicated cores, could become problematic as well.
+
+So that's why I'm not so sure we can make a blanket statement like this.
+
+Additionally, I think the "convincing folks" part of Peter's statement
+is the key.  Even if we do have sufficient technical justification for
+saturating the memory bus, convincing users that it's totally cool to do
+so is another story. Gaining widespread adoption will already be our
+biggest challenge regardless of the function we select as the winner,
+and a function that saturates memory bandwidth may be an even harder sell.
+

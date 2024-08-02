@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] An additional PHS API to include a string?
+
+Message-ID: <20140831144042.GY12888@brightrain.aerifal.cx>
+Date: Sun, 31 Aug 2014 10:40:43 -0400
+From: Rich Felker <dalias@...c.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] An additional PHS API to include a string?
+
+On Sun, Aug 31, 2014 at 10:26:10AM -0400, Bill Cox wrote:
+- String encoding for the output is fine, but you must also mind 
+the input. Password hashing is about hashing passwords (duh), and 
+passwords tend to be sequences of characters. Invariably, any 
+password hashing function begins by converting a sequence of 
+characters into bytes. C-based implementations often assume that 
+the conversion has already been done, but this is a known source
+of bugs; famously, one widespread implementation of bcrypt had
+trouble processing non-ASCII characters, and I saw the same bug in
+PGP 5.5 code (because of assumptions on the signedness of the
+'char' C type).
+
+I've written Unicode-32 to UTF-8 before.  It is a bit
+tricky.
+
+The other direction is slightly tricky if it's your first time, but if
+you follow the BNF and implement based on a DFA rather than naive bit
+hacks, it's hard to get wrong. The direction you described (UTF-32 to
+UTF-8) is quite trivial: for each valid range of UTF-32, there's a
+fixed sequence of steps with no loops or other complex logic to
+produce the output bytes.
+
+I did a ton of automated testing vs the reference version
+before I believed it worked.  This is not something that belongs
+directly in the core of a password hashing function, as it's more
+complicated than some of them, and highly error-prone.
+
+I agree with you here, but for different reasons, mainly that the
+source encoding will vary a lot by application. For C applications on
+Unix-like systems (e.g. system logins) it's almost surely to be in
+bytes already, but you can't impose a particular encoding at this
+level; it's up to the system/configuration and there are still people
+insisting on using their backwards Latin-1 and whatnot. For web apps,
+the source is likely in whatever encoding is preferred by the language
+used to write the app, and hopefully the language has a working method
+for converting to UTF-8.
+
+I think the implementations should assume the conversion has already
+been done, and that the password is now simply key material in an
+unsigned array of bytes which can include any value, even 0's.
+
+I disagree about including '\0' bytes. Supporting them in some places
+is a vulnerability waiting to happen, since they're likely to be
+interpreted as end-of-string in other contexts. If the bindings for
+the calling language use a byte-array that's capable of representing
+embedded '\0' bytes, they should check for '\0' bytes and return an
+error (or throw an exception, as appropriate for the language) before
+passing the string on to the underlying hashing implementation.
+
+Support for Microsoft's legacy Unicode-16 is something I would not
+want to take on, but I'd vote in favor of supporting UTF-8 and
+Unicode-32 formats.
+
+Do you meant UTF-16 or UCS-2? The latter is trivial to support, but I
+think the former is what's needed for a number of language bindings,
+and not significantly more difficult.
+
+We cannot ignore the non-Western world; thus, ISO-8859-1 
+("latin-1") encoding is not appropriate. We have to embrace 
+Unicode, which means UTF-8, UTF-16 or some other encoding. 
+Unfortunately, humans have been extremely creative with regards to 
+writing systems, which means ambiguity (e.g. even a simple "é" 
+character has several possible decompositions in code points). 
+Therefore, it seems best if any implementation of a password 
+hashing function, in a language where strings are strings (i.e. 
+almost all of them except C and C++), takes care to apply strictly 
+defined and unambiguous encoding rules.
+
++1
+
++1, but I don't think this is easy. For example depending on the
+application, this may involve Unicode normalization forms, and I don't
+think processing them belongs at this level; it's complex and
+error-prone. Do you have ideas on the matter?
+
+Rich
+

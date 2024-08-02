@@ -1,0 +1,47 @@
+phc-discussions - blakerypt sequential memory-hard function
+
+Message-Id: <D2E018D8-1AC9-48DB-89F5-338A6DDA8744@touset.org>
+Date: Tue, 3 Dec 2013 18:54:22 -0800
+From: Stephen Touset <stephen@...set.org>
+To: discussions@...sword-hashing.net
+Subject: blakerypt sequential memory-hard function
+
+Hey guys,
+
+I’ve been working on my own submission to the PHC. It’s not quite ready yet, but I’ve finished the sequentially memory-hard function portion of the algorithm and I wanted to solicit some feedback.
+
+	https://github.com/stouset/blakerypt
+
+The premise is based off of scrypt, but with an important distinction. Whereas scrypt bases the random mixing of the ROM on the hashes of the password itself, this algorithm takes a secret “session key” whose successive iterations are used to determine the indices for random mixing. This way, cache accesses can’t be “fingerprinted” in order to quickly test candidate passwords.
+
+So, where does the secret session key come from? It’s not in the code yet, but it will be derived from the salt and an actual secret “master key”. This way, each password (really, each unique salt) has a unique ROM mixing order.
+
+This introduces a problem for rotation of the master key, though. The session key is core to the algorithm, and can’t be easily removed. However, a clever derivation of the session key from the master key and salt can allow the master key to be rotated. If the session key is calculated as:
+
+	k_m     = {0,1}^128 // master key
+	iv      = {0,1}^128 // random IV
+	counter = {0,1}^128 // 
+
+	k_s = MAC(k_m, counter) ⊕ iv // derive the session key
+
+	salt = iv || counter // store the iv and counter as the salt
+
+To re-key, calculate:
+
+	k_m’     = {0,1}^128 // new master key
+
+	k_s      = MAC(k_m, counter)  ⊕ iv   // re-derive the original session key
+	counter’ = counter + 1               // increment the counter
+	iv’      = MAC(k_m', counter') ⊕ k_s // derive a new IV
+
+	salt’ = iv’ || counter’ // store the new counter and IV as the salt
+
+This way, rotating the master key keeps the same password hash, but changes the salt. The session key remains the same.
+
+Let me know your thoughts!
+
+— 
+Stephen Touset
+stephen@...set.org
+
+

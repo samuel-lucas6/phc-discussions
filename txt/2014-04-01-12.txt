@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] Doubts about AntCrypt floating-point use
+
+Message-ID: <CAOLP8p5X2jDuaCaX_rfzL3Ls61X9iGXFb_6BSYbKX8c+WhRyLQ@mail.gmail.com>
+Date: Tue, 1 Apr 2014 17:34:16 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Doubts about AntCrypt floating-point use
+
+On Tue, Apr 1, 2014 at 5:21 PM, Poul-Henning Kamp <phk@....freebsd.dkwrote:
+In message <CAK9dnSxe1WppG-dL09zDVymn-AnDrher2d8GXbjfczzRncKp7A@...l.gmail.com>
+, CodesInChaos writes:
+>
+>>I expect the floating point use to be very non-portable.
+>
+Were it just floating point, but it is actually trignometic functions,
+sin(), cos() and tan().
+>
+Never mind that they are hard to implement in hardware, they
+are almost as hard to implement i software.
+>
+Almost all trig functions uses approximations and therfore it is
+very common, amost expected, to see differences in the last bit of
+the mantissa between different implementations or even the same
+implementation on different platforms, compilers etc.
+>
+Using trig functions is almost guaranteed to be a total killer
+for password portability, including across operating and hardware
+upgrades to the intended computer.
+>
+>
+Poul-Henning
+>
+(Disclosure:  PHC panel member.)
+>
+--
+Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+phk@...eBSD.ORG         | TCP/IP since RFC 956
+FreeBSD committer       | BSD since 4.3-tahoe
+Never attribute to malice what can adequately be explained by incompetence.
+
+Well, I just said I'd hold off picking on poor AntCrypt, since it's
+not the guy's fault he picked a name starting with A, but...
+
+Clearly he'll have to change his functions to eliminate the trig.
+Either that or provide software versions that always yield the same
+result.  He did say that he may want to update the function list in
+the "tweak" period, so I think he should be allowed to move away from
+the trig stuff, and maybe floating point all together, and replace
+them with more portable simple one-line functions like the ones he
+has.
+
+That said, while the pseudo-random function sequence may frustrate
+current GPUs (does it?), it wont be a problem for FPGAs and ASICs that
+will simply compute each in parallel and have a mux on the output to
+select which one is next.  Also, the author may be mistaken about how
+large floating point operations are in silicon now days.  A 64-bit
+multiplier is at least half the size, if I'm not mistaken, of a
+floating point multiplier with a 64-bit mantissa.  Multiplications are
+good, though.  With the limited memory (32 KiB is suggested), it also
+is a target for the multi-CPU thingies.
+
+Apologies to the author... sorry, you were at the top of the list.
+
+Bill
+

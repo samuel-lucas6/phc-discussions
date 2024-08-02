@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Message-ID: <54525D1B.7090206@uni-weimar.de>
+Date: Thu, 30 Oct 2014 16:45:31 +0100
+From: Jakob Wenzel <jakob.wenzel@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+On 30.10.2014 10:55, Bill Cox wrote:
+Hi, Jacob.  This is a nice analysis.
+
+Hi Bill,
+
+Thank you!
+
+You misread TwoCats.  It is easy to do, which is one reason I wrote
+SkinnyCat, which indeed is vulnerable to both GC and WGC attacks. 
+However, TwoCats has strong defense against both.  I would argue that
+TwoCats has the strongest GC and WGC defense of all the entries.
+
+The attacks for skinnycat are clear. For twocats, we totally agree that
+it is strong against GC attacks (we just misread that the early memory
+within twocats is always overwritten). But, regarding WGC attacks, we
+still see the attack as described in the paper. According to our
+definition of a Weak Garbage-Collector Attack an algorithm is
+vulnerable, if it maintains a function $F$ with $y = F(pwd)$, where the
+value $y$ is later used in the hashing process. Thus, $y$ has to remain
+in memory during the time until it is used again at the end.
+
+For twocats (and skinnycat), the value $y$ is given by PRK, which is
+initialized with the password. PRK is later used in the function
+addIntoHash(PRK, state). Thus, it has to remain in memory and can be
+used by a WGC adversary to filter password candidates as described in
+the paper.
+
+Did we misunderstood something?
+
+By default, Catena runs with minGarlic == maxGarlic == 18.  In this
+mode, Catena does not begin to overwrite memory derived from the
+password until it has finished filling memory.  During this entire time,
+H(H(key material)) is present in memory.  If Catena tries to use too
+much memory, this memory might get swapped to disk.  If Catena is
+running continuously, as it might on an authentication server, with
+lambda == 3, there is about a 1 in 4 chance that a cold-boot attack, DMA
+attack, or forced hibernation, will reveal H(H(key material)).
+
+
+For Catena-BRG, this is indeed an attack which succeeds with a chance of
+$1/(lambda+1)$. Thanks for pointing this out! We will recommend to use
+Catena-BRG with MinGarlic = 1 in the next version of our submission
+paper to thwart this attack.
+
+When considering Catena-DBG (our new instance using a double-butterfly
+graph), such an attack succeeds only with probability of
+	1/((lambda*2(logn-2))+2logn-1),
+which leads to a much stronger resistance in this case. Therefore, we
+plan to recommend MinGarlic = 1 for Catena-BRG and MinGarlic=MaxGarlic
+for Catena-DBG. What do you think?
+
+Best regards,
+Jakob (on behalf of the CATENA design team)
+
+
+-- 
+Jakob Wenzel
+Research Assistant
+Chair of Media Security (Prof. Lucks)
+Bauhausstraße 11 (Room 217)
+99423 Weimar
+

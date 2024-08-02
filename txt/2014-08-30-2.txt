@@ -1,0 +1,110 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <20140830045038.GA10594@openwall.com>
+Date: Sat, 30 Aug 2014 08:50:38 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - TwoCats
+
+On Fri, Aug 29, 2014 at 03:12:47PM -0400, Bill Cox wrote:
+On 08/28/2014 09:27 PM, Solar Designer wrote:
+Have you actually checked TwoCats vs. defense-optimized bcrypt
+running on the same CPU when exhausting the machine's capacity
+(e.g., 8 independent concurrent hash computations on your i7-3770),
+in terms of frequency of those small random lookups?
+
+I haven't benchmarked bcrypt yet.  I don't know enough about the code
+to know if I'm running the latest SSE optimized version, etc.
+
+There's no "SSE optimized version" of bcrypt, especially not for
+defensive use, for good reasons.
+
+However, from the first run above, I'm doing 2.8B 16-byte random reads
+per second on Ivy Bridge.
+
+Sounds pretty good, but there are more factors to consider.  You need to
+compare the number of random reads per second when running the maximum
+number of threads (for independent instances of TwoCats, and ditto for
+bcrypt).  And you need to consider parallelism available in bcrypt vs.
+in TwoCats - how soon are the results of those random reads required?
+
+Here's a relevant posting I made when testing what became yescrypt:
+
+http://thread.gmane.org/gmane.comp.security.phc/959/focus=1009
+
+I've made some revisions to pwxform based on this kind of testing,
+included in yescrypt as submitted.
+
+And then you need to factor in how soon their results are needed
+(the available parallelism, compare it against bcrypt's four S-box
+lookups) and the total size of your equivalent of bcrypt S-boxes
+(if 4x larger, then you probably have 4x more room for parallelism
+while staying the same as bcrypt in terms of GPU resistance).
+
+I just looked at bcrypt again (your OpenWall version).  If I'm reading
+this accurately, it does 64 pseudo-random reads of 4 bytes each in
+each call to BF_ENCRYPT.
+
+Yes.
+
+I don't see any writes to the S-boxes during
+the compute intensive phase.  Is that right?
+
+No, it writes 8 bytes per BF_ENCRYPT.  Each iteration of the variable
+cost loop starts with the S-boxes completely overwritten by the previous
+iteration.
+
+I think a round should be doable in a clock cycle
+
+Yes.
+
+without any memory accesses using an async SRAM,
+
+You're the expert here.  I can only say that a round is doable in a
+single clock cycle with memory accesses, as has been implemented in
+FPGAs already.  The addresses may be computed at the beginning of this
+cycle, or at the end of the previous cycle.  Yes, combining both
+computation and memory lookups on the same cycle limits clock rate.
+Some 2-cycle designs might be faster, if 2x more memory is available.
+
+or possibly even synthesizing the S-boxes to gates.
+
+No, the S-boxes are variable and they keep changing.
+
+How fast does bcrypt do random reads?
+
+According to that posting I referenced above, it's:
+
+2176000*3072 = 6.7 billion/s per FX-8120 chip
+2176000*493 = 1.1 billion/s with 1 instance (with other cores idle)
+
+That's for defensive-use bcrypt code, which is what's relevant here.
+
+So your "2.8B 16-byte random reads per second on Ivy Bridge" is very
+good if it's for 1 thread, but not good enough if it's for entire chip.
+And you also need to compare the available parallelism vs. bcrypt's.
+
+As I had mentioned, the results of such testing were one of my
+reasons to keep yescrypt's default pwxform rounds count no lower
+than 6, or alternatively I'd need to reduce instruction-level
+parallelism.  I think you did not include such criteria when
+deciding on the amount of work to do along with the main arena
+reads/writes in TwoCats.  You simply wanted to maximize your memory
+bandwidth usage, well and the number of sequential MULs, which is
+related, but not exactly it.
+
+I did simply maximize bandwidth.  I did not worry about keeping the
+SIMD unit's pipeline full.  The penalty for CPUs without a SIMD unit
+would be too high, IMO.
+
+That's true, which is why I need to make the instruction-level and SIMD
+parallelism settings runtime tunable.
+
+SinnyCat, which is always single-threaded, hashes 1GiB in 0.23s, using
+no SIMD instructions at all (-m64 -mtune=generic).  TwoCats should run
+well on low-end CPUs.
+
+Great!
+
+Alexander
+

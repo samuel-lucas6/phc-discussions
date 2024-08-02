@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+Message-ID: <CA+aY-u6ghpim=0k5iZ6PwDaXe2ZBMe82HNaag7wWeLf+wMxdXQ@mail.gmail.com>
+Date: Sat, 5 Apr 2014 15:57:02 +0100
+From: Peter Maxwell <peter@...icient.co.uk>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Mechanical tests (was: POMELO fails the dieharder tests)
+
+On 5 April 2014 15:34, Poul-Henning Kamp <phk@....freebsd.dkwrote:
+
+>
+>
+​[snip]​
+
+>
+>
+We are not, we are in the business of making sure that entropy is
+not lost, and we do not care if an algorithm spits out 100 bits
+with full entropy or 1000 bits each with only 1/10th bit of entropy.
+>
+
+​So, essentially, we're looking for injective mappings?​  That, in theory
+at least, should be easy enough to check by hand for a specific algorithm.
+
+
+
+
+>
+So one of my ideas for "mechanical tests" was to use compressors
+as measurement entropy, and run sanity-checking test along the
+general scheme of:
+>
+        Generate_test_data file1
+        candidate_algorithm < file1 file2
+        gzip -9v file1 file2
+>
+Any algorithm where file2.gz can be smaller than file1.gz is toast.
+>
+
+
+That won't tell you whether you lose entropy but rather whether a series of
+results tested is amenable to a specific compression algorithm.
+
+If the result of a single password hash has low hamming weight and
+compresses easily, it tells you nothing about whether the password hashing
+function is an injection (if it is an injective mapping then you're
+guaranteed not to have collisions).
+
+In a very contrived example, a password hash function operating on, say, an
+input space that is strictly much smaller than the output space can still
+be injective yet have all its output populate low hamming weight elements
+of the output space.  You could measure as many samples as you wish, find
+they all compress well, but yet have not lost entropy or be in any danger
+of the function creating a collision.
+
+
+

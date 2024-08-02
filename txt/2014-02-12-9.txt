@@ -1,0 +1,42 @@
+phc-discussions - Interleaved attack on random access KDFs (Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs)
+
+Message-ID: <20140212174213.GA2246@openwall.com>
+Date: Wed, 12 Feb 2014 21:42:13 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Interleaved attack on random access KDFs (Re: [PHC] Interleaved attack on cache-timeing-resistant KDFs)
+
+On Tue, Feb 11, 2014 at 05:13:20PM -0500, Bill Cox wrote:
+Instead of having
+several MiB of expensive on-chip cache for every guessing core, an
+attacker simply interleaves the memory for many guesses in parallel.
+
+While predictable access pattern makes this sort of interleaving
+especially attractive, it is also possible - and might be practical -
+with random access, like scrypt's or bcrypt's.  This is like turning
+the table: instead of random access to the KDF's lookup table (in
+external memory), we get semi-sequential/interleaved access there, but
+we pay for it by having random access to other parts of the state
+(hopefully in faster local memory) of the many instances of the KDF
+being computed in parallel.  We need to have so many parallel instances
+that we get many to advance in their computation per each memory lookup,
+even though most may be stalled waiting for data (since it's not their
+turn yet).  With small values of N (in scrypt terms), this may be
+practical.  We need on the order of N^2 parallel instances per device
+(where a "device" is something with its local cache and/or local memory,
+e.g. one CU in AMD GPU, rather than an entire GPU).  With bcrypt's
+256-element S-boxes, this appears impractical e.g. on current GPUs (not
+enough local memory to have enough parallel instances to make this
+practical), even though it's sufficient to satisfy any of the 4 S-box
+lookups for the instance to proceed a bit.  Also, it'd take some
+non-trivial algorithm to efficiently and quickly identify which
+instances can proceed to run on each turn.  (I am not sure that an
+efficiently enough algorithm even exists, except for small N.)  If you
+start with N=2 and then proceed to consider slightly higher values, it
+is easy to see that for small N this is practical, but it is unclear at
+what N it becomes impractical.  It could differ between pre-existing
+chips (256 already impractical?) vs. ASICs made for this specific attack
+(256 still practical?)
+
+Alexander
+

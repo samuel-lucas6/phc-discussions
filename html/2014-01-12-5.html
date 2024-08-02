@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140112100247.GA9015&#64;openwall.com&gt;
+Date: Sun, 12 Jan 2014 14:02:47 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+On Sat, Jan 11, 2014 at 04:42:10PM -0500, Bill Cox wrote:
+&gt; On Sat, Jan 11, 2014 at 2:23 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt; New speed for 1 Salsa20 round and p=32, on idle machine:
+&gt; &gt;
+&gt; &gt; real    0m1.286s
+&gt; &gt; user    0m39.523s
+&gt; &gt; sys     0m1.183s
+&gt; &gt;
+&gt; &gt; Not much change here. :-)
+&gt; &gt;
+&gt; &gt; 2*3*10*2^30/10^9/1.286 = 50.10 GB/s
+&gt; 
+&gt; Holy cow!  That's serious speed, dude.  The best graphics, FPGA, or
+&gt; ASIC attack could not do more than 4-5X better.
+
+... or 7x, if we look at Xeon Phi 7120P's stated 352 GB/s max memory
+bandwidth.  It has 16 GB GDDR5 on board.  What probably mitigates such
+attacks is the high latency and thus the need for prefetch into each
+core's cache, which the sequential nature of scrypt mostly prevents.  An
+attacker could run multiple instances to hide the latency, but only ~7
+instances (2 GB each) would fit on the 7120P.  Well, maybe 7 would be
+enough to reach much greater speed, considering that I got 12.88 GB/s on
+a lower-clocked Xeon Phi with only one instance and no SIMD code.
+
+&gt; &gt;&gt; In fact, if we were to regard only the Salsa20 rounds as computation
+&gt; &gt;&gt; that the attacker will need to perform, then even round counts higher
+&gt; &gt;&gt; than 8 could be more optimal in attack area*time terms, from defender's
+&gt; &gt;&gt; point of view.  Since GB/s is proportional to memory usage for fixed
+&gt; &gt;&gt; running time (or actually the other way around), we can estimate AT
+&gt; &gt;&gt; costs (in arbitrary units) as follows:
+&gt; &gt;&gt;
+&gt; &gt;&gt; 48.95 GB/s * 2 rounds = 97.90
+&gt; &gt;&gt; 45.63 GB/s * 4 rounds = 182.52
+&gt; &gt;&gt; 38.03 GB/s * 8 rounds = 304.24
+&gt; &gt;&gt; 30.43 GB/s * 12 rounds = 365.16
+&gt; &gt;&gt; 19.93 GB/s * 20 rounds = 398.60
+&gt; 
+&gt; Imagine that all the lines of code you've written in C for escrypt,
+&gt; other than for memory access, will cost an attacker maybe $0.02 per
+&gt; core, and that Salsa20/20 will run in maybe 2 clocks instead of 1 for
+&gt; Salsa20/1.  This is roughly the case, within maybe 2X in cost and
+&gt; clock cycles.  It's pointless trying to make an ASIC attacker's
+&gt; arithmetic cost significant in either time or money, so we have to
+&gt; focus on memory size and bandwidth.  For defense against ASIC attacks,
+&gt; your Salsa20/1 benchmark is the best.  50GB/s!  Nice!
+
+Nice speed, yes, but I'm not so sure that there's only a 2x difference
+in speed between Salsa20/20 and Salsa20/1 in an ASIC that also accesses
+memory, unless it simply bumps into its memory bandwidth on anything
+faster than Salsa20/10.  And I'm pretty sure there's a nearly 20x
+difference between these in an ASIC that only does computation - e.g.,
+if we doubled the number of SHA-256's involved in Bitcoin mining, the
+mining ASIC hash rates would be halved, for same die area, etc. - right?
+
+Yes, we may have Salsa20/N - for any realistic N - in just one clock
+cycle, but this means we run it at a lower clock rate.  For example, how
+many SHA-256 steps are there per pipeline stage in Bitcoin mining ASICs?
+My non-expert gut feeling suggests at most 4.  What's your guess?
+(And yes, we need to reverse-engineer some of them to find out.)  My
+understanding is that with too much sequential work done per pipeline
+stage, we leave much of the logic idle much of the time.  Once signal has
+propagated to further parts of the circuit, the portions of the circuit
+closer to its inputs are idle.  Having less work per pipeline stage
+helps keep all logic busy: by the time the signal has propagated, we
+take it to the next stage and reuse the current stage's logic for the
+next set of inputs.  Now, I admit we can't benefit from a pipeline when
+all we have is one instance of Salsa20/N and our (attacker's) goal is
+solely to minimize latency.  But even then, I don't see why having a
+large number of rounds in one clock cycle would substantially reduce the
+total latency, as compared to having only a few rounds per cycle.
+I think the latency in ns should be similar regardless of how this is
+structured - well, perhaps only slightly lower (like by 10%) with more
+rounds per clock cycle.  Am I wrong?
+
+I think the added latency from having (reasonably) more computation may
+increase the AT cost, by tying up the memory for longer.  This reduces
+our reliance on attackers' memory bandwidth being limited.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

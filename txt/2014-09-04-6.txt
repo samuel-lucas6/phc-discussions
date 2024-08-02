@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Cryptographically strong salt is not overkill
+
+Message-ID: <54084054.4090502@ciphershed.org>
+Date: Thu, 04 Sep 2014 06:35:00 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Cryptographically strong salt is not overkill
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/04/2014 01:58 AM, Brandon Enright wrote:
+On Thu, 4 Sep 2014 00:45:29 +0200 Thomas Pornin <pornin@...et.org>
+wrote:
+
+>On Wed, Sep 03, 2014 at 05:37:27PM -0400, Bill Cox wrote:
+>>If any salt generator that produces data that is
+>>distinguishable from random data makes it into CipherShed, I
+>>will be pretty pissed off. Don't forget that some users have a
+>>valid need to store the salt in plain-text without letting an
+>>attacker know that it is in fact not just random data.
+>
+>I'll still stand by my assertion. A cryptographically strong
+>PRNG is overkill for a salt.
+>
+>[...] However, the need for strong randomness does not come from
+>the saltness, but from the other, completely orthogonal
+>constraint coming from your specific scenario.
+
+
+Even in Bill's scenario a cryptographically strong salt isn't
+needed. Usually the notion of something being "cryptographically
+strong" involves the PRNG resisting an attacker gathering long
+sequences of successive output.
+
+For a 128 bit salt, all that's needed is that for a given seed,
+there is no distinguishing attack utilising only 128 bits of the
+PRNG output. Even many poor PRNGs are indistinguishable from random
+when you only have the first 128 bits of their output (e.g.
+Mersenne Twister).
+
+Brandon
+
+I should also mention that we store the password hash in plain text,
+and that it must also be undetectably non-random.  We discussed this
+on this list, and I think the majority consensus was that password
+hashes should have this property, because some users use password
+hashes for key generation, and some keys need this property.
+Certainly CipherShed's do.
+
+I only brought this up because people writing salt generation or
+password hashing code should probably take these user's needs into
+account.  It is the safe thing to do.  I think Thomas got it right in
+his code.  The comment just made me think that other authors on this
+list might get it wrong.  Please don't!
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUCEBQAAoJEAcQZQdOpZUZ7WwQAKZEOeXnE2jgP9H/5Kr6+ia0
+/f9PjRgNWPyafAkSqvcW+F3Fhu2SLNLk6K3wtC+gX5m8a4vhK9TvKcQ62JIZ4uZg
+O4hP860NZvTVO2m7lu3yMWO8QBfvzWWkYAmmOAS8Yadegl0tZS1CYSrP5H6JXAM2
+AaZWqnnKSicqIDT3CkC0dXSYmi8TpuxC1hVMbpiQvVQ1sjj8Yxjnr73rPf3505mQ
+F3C74Qzr+6l81gyMEG8eEt8MtkWt/6TcsQrJgVtb3tKQ4DQN1N4alX2gUkSMgAbE
+Eg3gKpduoQMhP32QEYIqC0XLb64B/WXBnMuN2wp9FwnuKvIob/uDwLMrUEetvOEX
+F2ILoMT0pcdYQhjZ6E1x6xlR6HLViBmvERMgzvV5SpYPM8R6b7GENRvoNu0tlACy
+tto+usVSMxzFCrYRz/MOn+kYFdKMbSfeq+GD/4co4HzD2oEPj/MDrX2s/P/v8G3U
+fhAN3W3eg1HxVm2IyPdx3JqtDu+9TNZCIdYOI48l3nTJVXQv0nYkdqqeAd7rTttm
+eBCRZApTtDKZsmV/FJkTFpVHVA8MmdkP/RnzSiSvHXQJDVNi6EceJIDzk5RsLqNW
+p/gSiyKJ/uqEFucVOuUvUhyy/PBOemxySs7zikGUJYXRS90nfI+RPtGKf6BkXnHb
+qAXy4uReextHM2ZYA60K
+=peHs
+-----END PGP SIGNATURE-----
+

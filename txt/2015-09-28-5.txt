@@ -1,0 +1,115 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <CAAyV7nHyBTiu-h4_=TNZReRpYbaRJ39kCM9GkGXJTPfgjqQBdA@mail.gmail.com>
+Date: Mon, 28 Sep 2015 15:03:24 -0400
+From: Anthony Ferrara <ircmaxell@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+Alexander,
+
+On Sun, Sep 27, 2015 at 6:47 PM, Solar Designer <solar@...nwall.comwrote:
+On Sun, Sep 27, 2015 at 09:40:50AM -0400, Anthony Ferrara wrote:
+>So my overall suggestion is make it easier on the developer using the
+>API, rather than the one writing it. After all, there are going to be
+>FAR more people writing a salt string then there will be writing the
+>backend implementation. Optimize for the greater use-case...
+>
+Here's an idea in the above context:
+>
+We can have our crypt()-like API accept both compact and human-friendly
+"setting strings", but output only compact encodings.  This takes care
+of making it easy for application developers to generate new hashes via
+languages' existing crypt() API without waiting for a new API to be
+introduced.  It also prevents such application developers from
+influencing the actual encoding (order of parameters seen in final
+encodings, etc.)  For example:
+>
+crypt("password", "$7X$logN=14,r=8")
+>
+as well as e.g.:
+>
+crypt("password", "$7X$p=1,r=8,N=16384")
+>
+could return something looking like:
+>
+$7X$B5$Pwm/zQAIhEVTKlaoJSA7TQ$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+Of course, crypt() would also return the same string if called as:
+>
+crypt("password", "$7X$B5$Pwm/zQAIhEVTKlaoJSA7TQ")
+
+I guess my point here is more why does the compact encoding need to
+exist? Why can't the encoding that was passed in be returned (assuming
+it was valid in the first place)?
+
+And is there really a need for a compact encoding in the first place?
+I guess I always prefer explicitness over byte savings. Even in the
+worst case situation where you're storing billions of passwords,
+you're talking about saving perhaps 20 gigabytes out of a total of at
+least 100gb. Yes, 20% is not insignificant, but even 20gb is a trivial
+amount of data to basically any system (especially one with billions
+of users).
+
+With PHP's password_hash()/password_verify() API, the human-friendly
+parsing would need to be enabled in password_hash(), but not
+(necessarily) in password_verify().  Currently password_hash() accepts a
+numeric $algo, but maybe we simply need to introduce PASSWORD_ANY (any
+better name for it?) and have the actual choice made by a $setting
+string that will follow.
+
+So password_verify() will accept any arbitrary crypt() hash. That way
+you pass in whatever, and it will confirm it for you.
+
+password_hash() acts as a format-generator, a high-level API to
+generate that setting string so you don't have to.
+
+So I would forsee (with sane defaults for interactive usage):
+
+    $hash = password_hash($password, PASSWORD_ARGONI);
+
+And if you wanted to specify parameters, they would go into the options array:
+
+    $hash = password_hash($password, PASSWORD_ARGONI, ["logN" =15]);
+
+The actual salt will be generated for you, as well as the string put
+together. Whichever format it wants to generate doesn't matter to the
+outside, that's all abstracted away.
+
+The password_verify would accept any valid hash (so a migration path
+to upgrade in-place could be implemented).
+
+The one question I have is if we want to do a first-order
+approximation of "cost" with an algorithm, so individual engineers
+(the target of said API) don't need to learn about the individual
+parameters and the tradeoffs. So we can say "use cost 10, but try 11
+or 12 and see the runtime to see if it's OK for your server), and have
+that cost value be derived into the appropriate settings for the
+algorithm for that "cost". I don't know if this is a good idea or not,
+just something I've been thinking about.
+
+Remember, the target for password_* is normal web developers, not
+security experts. They will not understand the tradeoffs that the
+algorithms make (whether they should or not is irrelevant, they
+won't). That's why password_* aims to be a high-level abstraction, not
+just a re-invention of crypt (it serves a different consumer).
+
+Then we could also have an API for decoding compact to human-friendly
+strings, but it would mostly be used for debugging and such, and it
+wouldn't need to already be in place for apps to start using the new
+hashes.  And yes, potentially needing something like this for debugging
+is a drawback of not using a human-friendly encoding everywhere.
+
+Yeah, that's my feeling. We're not talking about saving a huge amount
+of storage space here. Even the largest websites in the world would be
+saving on the scale of test of gigabytes. Small enough that it feels
+like a micro-optimization to me. I'd rather the entire thing be human
+readable.
+
+But that's just my view. And I could very well be wrong here (or be
+missing something).
+
+Thanks
+
+Anthony
+

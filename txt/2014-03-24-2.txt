@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] Transforming hash to different cost setting
+
+Message-ID: <CAOLP8p7o_YUqDEcOuz_iEO4QQO_mWVNWMvGjMrTLpLFx5OWifA@mail.gmail.com>
+Date: Sun, 23 Mar 2014 22:30:34 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+On Sun, Mar 23, 2014 at 1:06 AM, Jeremy Spilman <jeremy@...link.cowrote:
+1) Constant cost for each round
+2) Fully deterministic from the current round number (baked into the PHF)
+like Catena
+3) Defined externally but globally for all passwords (e.g. a static array of
+cost parameters for each round)
+4) Defined explicitly in the hash serialization (possibly unique per
+password)
+>
+Each trade-off some flexibility in controlling the cost for simplicity. IMO
+#2 or #3 are good options.
+
+I came to the same conclusion when trying to come up with a decent way
+to integrate memory-hard password hashing into TrueCrypt.  It's
+tricky, but your options #2 and #3 are the two I still consider good
+solutions.
+
+As Bill/Solar point out, the other trade-off to increasing cost by slapping
+on additional rounds is latency increasing faster than cost, up to 3x as
+much. Adding a second round with the same cost parameters increases cost and
+latency equally. But adding a second round with "better" cost settings means
+the first round is "wasting" latency using the wrong cost settings. Alex
+says it better;
+>
+>Another/worse drawback is that area-time cost for upgraded hashes is lower
+>than
+>it can be for same-duration new hashes.
+>
+>
+So this raises the question of whether we should actually have two different
+integers allowing us to change cost both ways. Just one example way to do
+this... assuming approach #2 or #3 above, serialize two integers;
+>
+- A 'r1' parameter indicates the 'starting round'
+- A 'r2' parameter indicates the 'ending round'
+>
+When you are upgrading all your hashes in your database offline, you
+increase 'r2'. When the user successfully logs in, you can then change 'r1'
+and 'r2' arbitrarily, possibly making 'r1' = 'r2'. This means you'll only
+need to use the less efficient method until the next time the user
+successfully logs in after you've done an offline upgrade.
+
+I think Catena already does exactly this scheme.  I implemented
+"garlic" exactly this way when adding Catena's garlic function to my
+PHS.
+
+I think the trade-offs are more complexity, and a signal of how recently the
+user has logged in -- both embedded in the hash serialization, as well as
+through timing the login latency. You could hide both the serialized
+indicator as well as the timing attack at the cost of even more complexity
+and some loss of flexibility. To exploit the timing attack would require a
+number of invalid login attempts to a valid username, which you want to
+defend against in any case.
+
+I hadn't even realized this leaks how long it has been since a user
+logged in.  Simply keeping any sort of memory or time cost parameter
+alongside salt has this same problem.
+
+Sometimes the last time the user logged in is public information anyway. But
+if you need to protect this, I think you can at least decrease the latency
+delta through careful choice of cost parameters. If you start at 5/5
+(meaning a single round at cost '5') and increase all hashes offline to be
+5/7 (consecutive rounds at 5, 6, 7) then you want to find the single round
+(8/8?) which matches the latency of 5/7 as closely as possible. But this may
+be difficult or impossible in practice due to 8/8 having completely
+different resource contention than 5/7... but that's the whole point.
+>
+Solar discussed a lot of this under the 'cost upgrade' thread. But if we all
+stopped writing just because Solar said it earlier, the list would be a
+whole lot quieter! :-)
+>
+Thanks,
+Jeremy
+
+And reading everything guys like Solar have posted would spoil the fun
+of reinventing it!
+
+Bill
+

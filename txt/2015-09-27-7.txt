@@ -1,0 +1,53 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150927224748.GA23214@openwall.com>
+Date: Mon, 28 Sep 2015 01:47:48 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Sun, Sep 27, 2015 at 09:40:50AM -0400, Anthony Ferrara wrote:
+So my overall suggestion is make it easier on the developer using the
+API, rather than the one writing it. After all, there are going to be
+FAR more people writing a salt string then there will be writing the
+backend implementation. Optimize for the greater use-case...
+
+Here's an idea in the above context:
+
+We can have our crypt()-like API accept both compact and human-friendly
+"setting strings", but output only compact encodings.  This takes care
+of making it easy for application developers to generate new hashes via
+languages' existing crypt() API without waiting for a new API to be
+introduced.  It also prevents such application developers from
+influencing the actual encoding (order of parameters seen in final
+encodings, etc.)  For example:
+
+crypt("password", "$7X$logN=14,r=8")
+
+as well as e.g.:
+
+crypt("password", "$7X$p=1,r=8,N=16384")
+
+could return something looking like:
+
+$7X$B5$Pwm/zQAIhEVTKlaoJSA7TQ$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+Of course, crypt() would also return the same string if called as:
+
+crypt("password", "$7X$B5$Pwm/zQAIhEVTKlaoJSA7TQ")
+
+With PHP's password_hash()/password_verify() API, the human-friendly
+parsing would need to be enabled in password_hash(), but not
+(necessarily) in password_verify().  Currently password_hash() accepts a
+numeric $algo, but maybe we simply need to introduce PASSWORD_ANY (any
+better name for it?) and have the actual choice made by a $setting
+string that will follow.
+
+Then we could also have an API for decoding compact to human-friendly
+strings, but it would mostly be used for debugging and such, and it
+wouldn't need to already be in place for apps to start using the new
+hashes.  And yes, potentially needing something like this for debugging
+is a drawback of not using a human-friendly encoding everywhere.
+
+Alexander
+

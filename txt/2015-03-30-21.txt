@@ -1,0 +1,217 @@
+phc-discussions - Re: [PHC] Argon2
+
+Message-ID: <CAOLP8p7bRNjFsy6T5gGCwzKMFg_dgtaaqQrEjh-kv-D=cbgPJQ@mail.gmail.com>
+Date: Mon, 30 Mar 2015 13:16:04 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Argon2
+
+I have not looked carefully through the code, but I just ran a benchmark on
+my machine from the git code.  It is very competitive speed-wise, and
+multi-threaded, making Argon2d (not Argon2i) the 3rd algorithm that I feel
+has potential as an Scrypt upgrade for applications that need 1GiB hashing
+in < 1 second, assuming that with minimum t_cost it is secure in the other
+required ways.
+
+Quick summary of my benchmarks I ran today.  This is a 4GiB benchmark with
+6 threads (matching my cores - optimal for all 3), and minimum t_cost:
+
+Yescrypt (with 2 out of 3 PWXFORM rounds commented out): 0m0.668s
+Argon2: 0m0.746s
+Lyra2: 0m1.126s
+
+Please feel free to correct me if I made mistakes!  However, these results
+fit well with my expectations from what I've read so far.  They pass my
+smell test.  There is some random variation in the runs.  Sometimes Argon2
+is faster than Yescrypt, but it seems that more often Yescrypt is faster.
+Note that Argon2i will be quite a bit slower, likely suffering the usual
+2-3X speed penalty that we expect from cache-timing resistant algorithms.
+This is why I prefer Argon2d for FDE applications.  Should I try to find
+the time to review Argon2d?  Is Argon2d in the running, or only the revised
+version of the original Argon?  I would rather focus on Argon2d, as I do
+not feel the original Argon is competitive in either security or speed.
+
+Here's a 1-thread run on my beastly 3.5 GHz Xeon(R) CPU E5-1650 v2 (best of
+3 runs):
+
+waywardgeek@...wardgeek:~/temp/Argon2/Argon2d/opt-sse$ time ./argon2d
+-threads 1 -logmcost 20 -benchmark
+Argon2d 1 pass(es)  1024 Mbytes 1 threads:  1.99 cpb 1990.49 Mcycles
+ 0.5968 seconds
+
+
+real 0m0.599s
+user 0m0.538s
+sys 0m0.060s
+
+It runs fastest on my machine with 6 threads, probably because I have 6 CPU
+cores.  Here's a 4 GiB hash with 6 threads:
+
+waywardgeek@...wardgeek:~/temp/Argon2/Argon2d/opt-sse$ time ./argon2d
+-threads 6 -logmcost 22 -benchmark
+Argon2d 1 pass(es)  4096 Mbytes 6 threads:  0.62 cpb 2474.90 Mcycles
+ 3.7161 seconds
+
+
+real 0m0.746s
+user 0m2.752s
+sys 0m0.967s
+
+This is _very_ respectable performance!  A 4 GiB hash in under 1 second is
+quite usable for a LUKS decryption on boot for my own needs.
+
+For comparison, here's Yescrypt running it's PHS function on 1GiB, but with
+1/3 of the number of rounds as usual.  This is, if I am not mistaken,
+roughly equivalent in complexity to 2 Blake2b rounds:
+
+waywardgeek@...wardgeek:~/temp/yescrypt-v1/yescrypt/yescrypt-0.7.1$ !!
+time ./phc-test
+PHS("\xa8\xf1\xe0\x6c\x8a\x7f\x00\x00\x00\xc0\x7e\x6d\x8a\x7f\x00\x00\x98\xfd\x5e\x6d\x8a\x7f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x6d\xaa\x40\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+"\x73\x61\x6c\x74", 0, 17) = Allocating 16788480 memory
+Allocating 1073753088 memory
+"\xe0\x75\x0e\x14\xdc\x78\xf9\xcf\x28\xd8\x45\xce\x3d\x8c\xc0\x53\xc2\x3a\xa4\x4d\x63\x4e\x62\x08\xba\xc3\x46\x29\xd1\xd0\xef\x6d"
+
+real 0m0.551s
+user 0m0.494s
+sys 0m0.056s
+
+This is only slightly faster than Argon2's 1-thread case.  Here's Yescrypt
+running on 6 threads:
+
+waywardgeek@...wardgeek:~/temp/yescrypt-v1/yescrypt/yescrypt-0.7.1$ time
+./phc-test
+PHS("\xa8\x71\x4a\x7a\x24\x7f\x00\x00\x00\x40\xe8\x7a\x24\x7f\x00\x00\x98\x7d\xc8\x7a\x24\x7f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x6d\xaa\x40\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+"\x73\x61\x6c\x74", 0, 19) = Allocating 67176448 memory
+Allocating 4295034880 memory
+"\x3a\x2d\xef\x92\x08\x1f\x9f\x19\xc6\x86\x8b\xd2\xc8\xcf\x53\x36\x66\x94\x0c\xf5\xe3\x45\xb8\x05\xd8\x60\x85\x84\xe0\x53\x5e\x1b"
+
+real 0m0.668s
+user 0m3.041s
+sys 0m0.639s
+
+The runtimes are fairly similar.  I also ran SSE-optimized Lyra2 with 1 GiB
+on one thread:
+
+waywardgeek@...wardgeek:~/temp/Lyra2-v3/Lyra2/src$ time ../bin/Lyra2
+password salt 64 1 5465
+Inputs:
+Password: password
+Password Length: 8
+Salt: salt
+Salt Length: 4
+Output Length: 64
+------------------------------------------------------------------------------------------------------------------------------------------
+Parameters:
+T: 1
+R: 5465
+C: 2046
+Parallelism: 1
+Sponge: Blake2
+Sponge Blocks (bitrate): 12 = 768 bits
+Memory: 1073413440 bytes
+------------------------------------------------------------------------------------------------------------------------------------------
+Output:
+
+K:
+84|e8|9|93|a5|6c|7e|1c|3b|7e|42|4e|3d|8a|7e|e0|b0|f4|fa|6e|7b|23|db|a1|9|2c|f|fa|fc|9|ed|23|1f|8d|e9|ad|6d|88|35|22|a9|3b|c8|97|90|cf|2a|23|a6|ea|a4|57|4b|6|4d|3b|48|2d|de|f6|f4|5f|f1|2|
+------------------------------------------------------------------------------------------------------------------------------------------
+
+real 0m0.857s
+user 0m0.783s
+sys 0m0.072s
+
+Here's Lyra2 running with 6 threads:
+
+waywardgeek@...wardgeek:~/temp/Lyra2-v3/Lyra2/src$ time ../bin/Lyra2
+password salt 64 1 $((4*5460))
+Inputs:
+Password: password
+Password Length: 8
+Salt: salt
+Salt Length: 4
+Output Length: 64
+------------------------------------------------------------------------------------------------------------------------------------------
+Parameters:
+T: 1
+R: 21840
+C: 2046
+Parallelism: 6
+Sponge: Blake2
+Sponge Blocks (bitrate): 12 = 768 bits
+Memory: 4289725440 bytes (IMPORTANT: This implementation is known to have
+issues for such a large memory usage)
+------------------------------------------------------------------------------------------------------------------------------------------
+Output:
+
+K:
+4c|f6|ae|14|f5|df|8|19|9|7c|5|b5|59|8a|6|9d|8|f0|81|c8|24|35|93|4a|85|c|bb|16|d4|42|6|29|ae|ae|73|a4|e2|7b|32|66|23|37|ab|ca|bf|b9|b9|88|18|90|db|5|52|8d|8e|16|0|75|35|8a|5a|36|6e|1e|
+------------------------------------------------------------------------------------------------------------------------------------------
+
+real 0m1.126s
+user 0m5.099s
+sys 0m1.064s
+
+
+
+
+On Mon, Mar 30, 2015 at 3:18 AM, Dmitry Khovratovich <khovratovich@...il.com
+wrote:
+
+Dear all,
+>
+Our team would like to present Argon2,  which summarizes the state of
+the art in the design of memory-hard functions.
+>
+Argon2 is a streamlined and simple design. It aims at the highest
+memory filling rate, which is on par with the fastest PHC candidates
+(close to 0.6 cycles per byte per pass on a 1.8 GHz CPU), while still
+providing good defense against tradeoff attacks.
+>
+Argon2 effectively uses multiple computing units. We designed a
+special permutation-based mode of operation to parallelize the
+computation of Argon2 and still resist tradeoff attacks (sequential
+computation, like in scrypt, is no longer possible/beneficial).
+>
+The internal cryptographic permutation (part of the block-generating
+compression function) was optimized for simplicity (two Blake2b rounds
+on a larger state) and resistance to tradeoff attacks (it can not be
+computed iteratively and memoryless).
+>
+We tried to pre-fix as many parameters as possible so that the users
+get fast and secure design out of the box with no need for special
+tuning. Those who now what they are doing, certainly can adjust the
+design to their own needs (choose another permutation, block size,
+etc.).
+>
+Cryptographers can be interested in the new 8192-bit permutation we
+designed, a security proof for the parallel mode of operation, and an
+extension to Blake2 that enables arbitrary length outputs.
+>
+Argon2 has two variants: Argon2d and Argon2i. Argon2d is faster and
+uses data-depending memory access, which makes it suitable for
+cryptocurrencies and applications with no threats from side-channel
+timing attacks. Argon2i uses data-independent memory access, which is
+preferred for password hashing and password-based key derivation.
+Argon2i is slower as it makes more passes over the memory to protect
+from tradeoff attacks (3 passes by default comparing to 1 default pass
+in Argon2d).
+>
+Both Argon2d and Argon2i can be tested in PHC benchmarking frameworks,
+as the standard PHC API is provided. To benchmark either of them on
+your own machine, run a makefile in a
+corresponding "opt-sse" folder and run the executable with option
+"-benchmark".
+>
+Webpage: https://www.cryptolux.org/index.php/Argon2
+Specification: https://www.cryptolux.org/images/0/0d/Argon2.pdf
+Implementation: https://github.com/khovratovich/Argon2
+>
+Comments are welcome.
+>
+--
+Best regards,
+Dmitry Khovratovich
+>
+
+
+

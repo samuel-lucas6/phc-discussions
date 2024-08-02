@@ -1,0 +1,43 @@
+phc-discussions - RE: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <001901cf3a57$d8f4a070$8adde150$@acm.org>
+Date: Fri, 7 Mar 2014 14:51:57 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Are password trailing 0's a problem?
+
+Whoa!
+
+I missed that the first time.  
+
+CodesInChaos is sort of saying that HMAC-SHA1 is not very collision resistant.  
+
+Of course, all that happened was computation of SHA1 on 65-byte printable inputs until the result is a 20-byte output that has only the codes for printable ASCII characters.  These two would have the same HMAC result when used as a key.
+
+I don't think that has any impact on PBKDF2 as a password-based key derivation, where collisions are not so much of a problem so long as finding any key, whether or not the one used originally, is seriously difficult.  That is, it's still a long way from demonstrating collisions to being able to find a particular one.
+
+It does make pre-hashing an attractive precaution though.
+
+ - Dennis
+
+-----Original Message-----
+From: CodesInChaos [mailto:codesinchaos@...il.com] 
+Sent: Friday, March 7, 2014 08:50
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+[ ... ]
+But it means that there are trivial collisions and even second
+pre-images (add a 0 byte at the end, if the original key was shorter
+than the block size, this won't have any effect).
+
+As an example with nice printable characters in both passwords:
+
+`plnlrtfpijpuhqylxbgqiiyipieyxvfsavzgxbbcfusqkozwpngsyejqlmjsytrmd`
+and `eBkXQTfuBqp'cTcar&g*` have the same PBKDF2-HMAC-SHA1 hash (no
+matter the salt or the number of iterations).
+
+I found those with a CPU and unoptimized code. One of our GPU hashing
+friends could easily find a similar pair for PBKDF2-HMAC-SHA-256.
+
+

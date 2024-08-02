@@ -1,0 +1,33 @@
+phc-discussions - Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C738A3452D4@uxcn10-tdc06.UoA.auckland.ac.nz>
+Date: Thu, 3 Apr 2014 03:04:35 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+Bill Cox <waywardgeek@...il.comwrites:
+
+>Data dependent branching doesn't seem to buy as much ASIC resistance as some
+>PHC submitters seem to think, IMO.  
+
+Nor do data-dependent ops, which came up in a private discussion some time ago
+(and were quickly shot down).  Imagine something like (in simplified form):
+
+  switch( x & 3 )
+    {
+    case 0: x ^= y; break;
+    case 1: x += y; break;
+    case 2: x -= y; break;
+    case 3: x <<<= y; break;
+    case 4: puts( "WTF" );
+    }
+
+The idea is that this is difficult to pipeline since each op is data-
+dependent, however if you use speculative execution and run each step in
+parallel (easy on an FPGA/ASIC) and then discard all the ones that weren't
+needed, you lose any advantage you've gained.
+
+Peter.

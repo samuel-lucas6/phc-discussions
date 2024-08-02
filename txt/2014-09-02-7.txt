@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <5405B3E1.1060702@ciphershed.org>
+Date: Tue, 02 Sep 2014 08:11:13 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Here's how Solar Designer would PWN any machine asking for a password
+that uses the current version of Schvrch.  Here's the top of the PHS
+function:
+
+int PHS(void *out, size_t outlen,
+        const void *in, size_t inlen,
+        const void *salt, size_t saltlen,
+        unsigned int t_cost, unsigned m_cost)
+{
+    int statelen = 256, j;
+    uint64_t state[256] = {0};
+    uint64_t memcost;
+    memcost = (m_cost + 1) * statelen;
+    uint64_t * memstate;
+    uint64_t rounds = 4, i;
+
+    memmove(&state[0], in, inlen);
+
+There is *no* input checking.  As I said for POMELO, this *must* be
+fixed.  Without it, we simply pass inlen 256, and a custom made
+password that has a return instruction encoded in it.  We overwrite
+the return address with our own value embeded in the password, and
+when this function returns, it returns to any known address we like.
+In Linux, this would typically be some function in libc, such as the
+"system" command, which can execute arbitrary commands.
+
+I do believe that basic input checking should be part of the reference
+design.  It tells us what valid parameters are, which impacts
+cryptanalysis.  It also reduces the chance of mistakes like this
+escaping into the wild.
+
+I know that there is a guy doing python wrappers for PHC entries using
+the PHS function.  If he puts that live on a server anywhere, we can
+own that server.  POMELO has this problem, too.  I do not consider
+fixing this optional.
+
+For such a small program, there are a lot of attack opportunities.
+When I read in the paper that the author considers it secure because
+it retains the password entropy, I stopped reading.  There may be some
+very cool math there, but the implementation needs a lot work.
+
+Until these devastating attacks are fixed, I consider Schvrch
+dangerous to use.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBbPdAAoJEAcQZQdOpZUZjT0P/0Os2o3z8ZCeTgzNKzBGuvsz
+31AuhDRdr14tWHSgUlf44zC95q93nmFO5HArVik6bW1gO1FAxnRjt3Cp7uQ7IOfr
+8AUDMoFOWdC/dizderlaoD+y3I9XxyGxs1cQ9jEuMudIYHwDKiYO9d3tsfJfylX3
+67DuSeS4I6cIYmoXSF4F2VHdQC8ZnqHXPO1aDrK3+7b0heR5hJsm0ZT8pL1tT3Np
+IpWH4P5fDOSdxYZsd+2eVV8cqAeId9pjqQ9obuaBfhMwi6tbDZBV3I9c+5s5cHJs
+u7QCVae0C6AMuVvqdP6dPA7xYXbO7FlE7ZMk3hM+gTdOVrDSKyXqULSYJzf5ehfk
+IOrDVA1i8AA55To9gcCNiwuigLX8MTwkC7WUpkIAkiqBXFJfhRWMOoyt74KjhrIk
+/eDXGuDftZNNeb7YnYlfQ8BJWgPv0v36gqULbrqxmHkdzbEW5Cy4TzNruTc4AcRH
+vWILP8/d0Sclowd8J2agMULaik8Ulb6y4hvrfjlMi+zIMUvfk3svZBr45cqbs2QF
+OgRDE2FOOMWWHaTWbaLAfATdB6p58IPAgwqAX7/MFR8cosdhrCQwUEnQsBgyIQ9h
+S7+fkeUZwpTdIkphNES1LyIjPczqWJc+8cWIyJ1XwM366Aisp6hZ0V4QEKP5I7kp
+J4Y/b9uSzKz2scJ1B1P2
+=tRKh
+-----END PGP SIGNATURE-----
+

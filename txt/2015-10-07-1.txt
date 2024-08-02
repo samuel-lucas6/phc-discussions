@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <CALWCaoYG7SaY4YP1BECCHcUZRBWj+gX5a_ngOkCts0+QSXVLug@mail.gmail.com>
+Date: Wed, 7 Oct 2015 09:29:09 +0200
+From: Massimo Del Zotto <massimodz8@...il.com>
+To: Solar Designer <solar@...nwall.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+I agree.
+I have been told on the AMD CL forum (by 'realhet', who appears very
+proficient and up to date with GCN ASM) that GCN has no instruction
+latencies (i.e. it can consume a result in the instruction immediately
+following), probably a nice implication of the instructions being processed
+in 4-clock 'ticks'.
+This is mildly contrasting with my experience but since I go through the CL
+compiler, I'm inclined to believe him/her.
+
+More important things in the immediate.
+I am in the process of signing a contract with a local company so I'm
+taking a few days off further development until I have their answer.
+In the meanwhile, I will try to think at a plan of action for further
+testing.
+
+Have a nice day,
+Massimo
+
+
+2015-10-06 22:48 GMT+02:00 Solar Designer <solar@...nwall.com>:
+
+Massimo,
+>
+On Tue, Oct 06, 2015 at 01:27:00PM +0300, Solar Designer wrote:
+In fact, it doesn't make any sense to waste an entire CU on one hash,
+yet keep the S-boxes in global memory.  You have 64 KB of local memory
+per CU, enough for several yescrypt's.  Have you tried keeping the
+S-boxes in local memory?
+>
+(For bcrypt, which is in many ways similar to pwxform, but uses 4 KB
+S-boxes, it is more optimal to keep them in local memory on GCN.)
+>
+I think you happen to achieve decent performance (compared to other
+results for yescrypt on GPU) at all because the S-boxes are actually
+loaded from the same CU's cache.  Well, the cache is 16 KB (and there's
+also L2) - enough for the 8 KB S-boxes - but you certainly can do better
+by simply keeping the S-boxes in local memory.
+>
+I was wrong in the above - while writing it, I forgot that while you're
+wasting the entire CU on one yescrypt hash in one wavefront, you're
+probably running many wavefronts to hide the global memory and
+instruction latencies.  With this, you might in fact be achieving same
+or better performance than with keeping the S-boxes for a few instances
+in local memory yet incurring the local memory and instruction latencies
+all the time.  Still, I think there's much room for improvement, and we
+need to know performance for S-boxes in local memory to have a baseline.
+>
+Alexander
+>
+
+
+

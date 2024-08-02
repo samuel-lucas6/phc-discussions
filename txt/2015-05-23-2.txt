@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] optimized Parallel
+
+Message-ID: <1616063284.109721.1432365471740.JavaMail.open-xchange@oxuslxltgw07.lxa.perfora.net>
+Date: Sat, 23 May 2015 02:17:51 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] optimized Parallel
+
+On May 22, 2015 at 8:00 PM Solar Designer <solar@...nwall.comwrote:
+>
+Hi,
+>
+I don't know why Steve isn't posting this in here himself, but he
+tweeted a few days ago that he produced an optimized implementation of
+Parallel with SHA-256 as the underlying hash function. (This is
+slightly different from the PHC submission, which uses SHA-512, but
+since Parallel is in the same category with PBKDF2, it's OK - not a
+tweak. The submission does mention that the hash function can be
+changed.)
+>
+
+I was going to post this here when it's fully done with both SHA256 and SHA512.
+This currently just calculates the work value. You need to do key =
+hash(hash(salt) || password), parallelHash = hash(hash(work || key)), and
+upgrades. I plan on having Parallel-SHA256 fully done soon and Parallel-SHA512
+by Monday (I'm lazy it's just copy paste and a few changes). I also plan on
+doing a slightly less optimized version that compiles to a lot smaller
+executable.
+
+I never meant for Parallel to only use SHA512, but I did clarify this before the
+deadline for tweaks.
+
+
+Steve - why did you choose to switch to SHA-256 for this, though?
+>
+
+I already had a working SIMD version of SHA256.
+
+
+<Sc00bzTFinally got around to finishing an optimized version of Parallel.
+I'm getting 6.2 MH/s SHA256 on a Q9300:
+https://github.com/Sc00bz/Parallel
+>
+<@Sc00bzTOh right I still need to get around to writing the make file. Also
+it takes 12 CPU core-minutes to compile in VS2013
+>
+The code does indeed look optimized: includes interleaving and SIMD, all
+the way up to AVX-512 with ternary logic intrinsics.
+>
+
+VS2013 takes 12 CPU-minutes but GCC 4.9.2 is fast. I think VS2013 is slow
+because it poorly handles inlining a thousand functions passed into template
+functions.
+
+I added support for Linux just grab a copy and run make. The resulting
+executable is large because it detects at run time what SIMD version to run with
+your CPU.
+
+Sadly I haven't tested if AVX512 even compiles since nothing supports it. Well
+GCC 5.1 does but I'm not going to attempt compiling GCC again. It's a nightmare.
+
+
+P.S. It would be nice if someone could benchmark the AVX broadcast versions.
+Just change PARALLEL_SHA256_FUNC_{AVX,AVX_XOP,AVX2,AVX2_XOP,AVX512} to
+PARALLEL_SHA256_FUNC_{AVX,AVX_XOP,AVX2,AVX2_XOP,AVX512}_B. My guess is it's
+slower which is why it's not used. Actually I'll just make a benchmark version
+to run all versions you CPU can handle. So I guess don't worry about it :).
+

@@ -1,0 +1,110 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <20140910031543.GA30911@openwall.com>
+Date: Wed, 10 Sep 2014 07:15:43 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+On Tue, Sep 09, 2014 at 03:45:28PM -0400, Bill Cox wrote:
+On 09/09/2014 01:36 PM, Bill Cox wrote:
+I just started it up on my testing server (yes, my son's MineCraft 
+server).  With your patch it does up to 3,100-ish hashes/second, 
+slightly below what your processor does.  It has mined 1,388 BSTY
+so far.  I'm rich! :-P
+
+Sorry to disappoint you, but it appears they have another nasty bug in
+there (and probably more).  It looks like some systems (all 64-bit?)
+mine a different blockchain from 32-bit ones (which are apparently the
+majority, due to Windows binary wallet).  I reported it and provided
+some detail, so I hope they'll figure this out and deal with it somehow.
+
+I did verify, after they already launched the coin, that on my 64-bit
+Linux build their wallet's integrated yescrypt code produces the same
+hashes as my standalone yescrypt code does after I introduced their
+now-known bug to the SHA-256 call (uses salt instead of "Client Key").
+So it appears the new bug, yet to be discovered, is somewhere outside of
+the yescrypt code in the wallet, yet somewhere within the wallet code
+tree.
+
+I notice they cast pointers to structs containing the wallet's uint256
+class to (char *) when invoking yescrypt, and I'm told "others do the
+same", yet I suspect this may be the culprit.  It'd surely fail on
+little- vs. big-endian, as it would be too inefficient to implement
+uint256 as having same layout despite of underlying integer types'
+endianness.  I guess it might fail for 32-bit vs. 64-bit "long" as well.
+
+Also, I doubt all of the many people having edited the wallet code are
+aware of C strict aliasing uses, but luckily (char *) is a special case.
+With the different-typed uses from different source files and without
+link-time optimization, this should happen to work as far as C strict
+aliasing violations are concerned.
+
+Whatever.  Dirty stuff, and not enough pre-launch testing.
+
+I did a quick comparison of TwoCats and Yescrypt when doing 2MiB
+hashes.  Yescrypt maxes out my machine at about 3,100 hashes per
+second using 8 threads, which gives the best performance.  TwoCats
+maxes out at about 3,800 similar sized hashes on 3 threads with 2
+multiplications per inner loop, which gives the best performance.
+However, Yescrypt is doing something like 2.3 memory read/writes per
+location vs TwoCat's 2.  The difference is basically in the noise.
+
+Yeah.  To add one more number, yescrypt with pwxform rounds count
+reduced from 6 to 2 does 4400 hashes per second on the same i7-4770K
+where it does 3400 hashes per second with the default of 6.  I guess
+this might correspond to more than 3800 on your machine. ;-)  But I
+think the default usually works better, since it provides much more
+compute latency hardening:
+
+6*3400/(2*4400) = 2.3 times more hardening
+
+BTW, did you enable AVX when building yescrypt?  This wasn't part of the
+BSTY wallet patch I posted (need to add -mavx or -march=native).  Not
+that it makes a lot of a difference on Ivy Bridge, though, where SIMD
+MOVs are implemented via register renaming (IIRC), but it might help a
+bit.  Optimal code for yescrypt does not need any MOVs within pwxform
+round on plain SSE* anyway.  It's just that compilers may produce some.
+
+I wonder about the choice not to bust into external DRAM.  This size
+hash could fit between 4 and 8 2MiB cache RAMs on a high-end ASIC
+(same process as my CPU).  Had they used 32MiB or more, the ASIC might
+need high-speed external DRAM interfaces, and these things are tricky
+to get right, significantly complicating an ASIC effort.
+
+Yeah, but unfortunately verification time is a concern for cryptocoins.
+
+Yes, YACoin is already at 8 MiB and growing, but I would not be
+surprised if eventually the verification times for it become
+unacceptable and it has to be abandoned or forked, especially as the
+number of transactions grows.  I am no expert in this, though.  With no
+expert involved, 2 MiB for BSTY felt like a safer bet.  Besides, I am
+interested in having yescrypt at 2 MiB attacked, as that's the setting
+relevant for some other uses. ;-)
+
+This leaves room for improvement in another yescrypt-based coin, e.g.
+introducing very slowly growing N (much slower than in YACoin,
+especially considering that YACoin's trivial modification of scrypt is
+TMTO-friendly and yescrypt in native mode is not).
+
+Still, there's probably no more than about a 10X speed improvement for
+a very high-end ASIC vs my CPU (4 cores running 25% faster).  That's
+really fantastic ASIC defense.  I wouldn't expect to see such a
+high-end ASIC for this application for a long time.
+
+We'll see.  I agree there may eventually be ASICs for yescrypt at this
+memory size.  With a fast enough bus, they may even use external DRAM to
+pack more 2 MiB instances per ASIC than would otherwise fit on die.
+
+It is possible
+that this system will succeed at distributing the hashing load (and
+mining profits) evenly among users, which would be very cool.  It
+seems a lot more fair to let anyone running a client be on essentially
+the same level as everyone else.
+
+The usual concern here is botnets.  But maybe that's sort of fine:
+provides incentive to use botnet nodes' computing power for mining
+rather than e.g. for password cracking. ;-)
+
+Alexander
+

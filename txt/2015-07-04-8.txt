@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <CAOLP8p6RdjO8sHEr408bkO+A46PiFq8_=jooD_UzNPRXLgt3zw@mail.gmail.com>
+Date: Sat, 4 Jul 2015 11:22:03 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+On Sat, Jul 4, 2015 at 9:06 AM, Solar Designer <solar@...nwall.comwrote:
+
+On Sat, Jul 04, 2015 at 03:56:57AM -0700, Bill Cox wrote:
+random ROM (maybe 512MiB), and a fairly small RAM (20KiB).
+[...]
+Defeating GPU attacks is with the large ROM.  Scrypt achieves parity
+somewhere around 4MiB.  This would be much larger, maybe 512MiB.
+>
+We shouldn't compare RAM vs. ROM sizes like that.  RAM is per instance,
+ROM is shared.  Having a 512 MB ROM will, on its own, have only small
+impact on performance on modern GPU cards.  For example, on a card with 4
+GB RAM, it leaves 3.5 GB for the instances' "RAMs", thereby
+reducing concurrency to 7/8 of what would be possible without a ROM.
+
+The expected performance is thus somewhere in the range of 7/8 to 1 of
+what it would have been without a ROM.
+>
+
+Why is shared access to ROM where each process needs to read random blocks
+from ROM faster than shared access to read/write RAM?  Aren't both I/O
+bandwidth limited?  Why would RAM bandwidth be lower?
+
+The ROM block hash needs to be fast to fill the memory bandwidth.  I would
+use a 2-round Yescrypt hash (or something even faster) in this case.  Small
+rapid unpredictable read/writes to the small RAM are also needed to defeat
+today's GPUs, but Yescrypt already has this.
+
+Against ASICs, the memory bandwidth and compute time hardening will be the
+main limiting factors, I think.  I see no difference between using a large
+ROM with a small RAM vs just a large RAM in an ASIC attack.  Both are
+probably going to be memory bandwidth limited, and read speeds are
+comparable to write speeds.  Am I missing something?
+
+To defeat GPUs via a large ROM, you need to make it larger than the GPU
+cards' RAM sizes, so some ROM accesses will have to go over PCIe
+(transferring ROM blocks from other GPU cards' RAM or from host's RAM).
+>
+
+That's one way, but it means most laptops and cheap desktops will not be
+useful for mining.  Basically, our CPUs are already paid for, as are a lot
+of our GPU cards.  To make CPU based mining useful, we need the power
+consumption per hash to be on par with the power consumed in the GPU.  My
+GPU sucks down 350W, more than my CPU.  It is not clear to me whether GPUs
+are significantly more power efficient when the speed limiting factor is
+graphics memory bandwidth.  With Yescrypt's further GPU defense, I think it
+would be fine.
+
+
+And yes, someone might want to introduce a cryptocoin based on yescrypt
+with ROM enabled.  Maybe its ROM size should even grow over time, e.g.
+starting at 28 GB (4 GB higher than what current top GPU cards use, and
+4 GB lower than what fits in current desktop systems) and doubling every
+few years or something... and eventually this might favor HPC clusters
+with fast interconnect or something.
+>
+
+The very large ROM has a big advantage in that defends against botnets.  I
+think botnets are one of the scariest attack vectors against
+crypto-currencies.  However, I'm not currently attempting to defeat
+botnets.  I'm trying to enable regular laptop based mining.
+
+Currently, the fastest interconnect solution for bandwidth/dollar I can
+find are using Achronix FPGAs.  The bandwidth is amazing.  However, you
+can't get the data out of the DRAM banks any faster than DRAM regular
+speed.  Even if the network delay was zero, and even if it cost zero, I
+don't see how to build a network of distributed ROM nodes where there is
+enough benefit to an attacker to bother.  He's still ROM port bandwidth
+limited, which is no faster than if he were RAM port limited.  After all,
+they're probably the same chips.  The only difference is the ROM case is
+all reads, while the RAM case has writes.
+
+What am I missing?
+
+Bill
+
+
+

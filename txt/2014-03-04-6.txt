@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] wider integer multiply on 32-bit x86
+
+Message-ID: <20140304055827.GA8564@openwall.com>
+Date: Tue, 4 Mar 2014 09:58:27 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] wider integer multiply on 32-bit x86
+
+On Tue, Mar 04, 2014 at 04:04:30AM +0000, Samuel Neves wrote:
+Poly1305 used the full x86 64-bit mantissa [1, Section 4]. So did
+curve25519 [2]. According to Agner Fog, the floating-point and integer
+multipliers in the Pentium III share the same circuitry (and the
+floating-point multiplication has one extra cycle of latency), so the
+only advantage here would appear to be register usage. Register renaming
+does help there.
+
+So if I do a MUL, immediately save EDX:EAX to other registers, and
+follow that with another similar MUL, the second MUL would be able to
+proceed out-of-order, before the first one completes, correct?  (As long
+as there's no data dependency between the two MULs, indeed.  Only the
+same ISA registers used, which a renamer might resolve.)
+
+By the way, in the 63x63 -63 case the floating-point unit would
+actually be computing the most-significant bits of the product, not the
+least-significant.
+
+Good point!  When the full result fits in 63 bits, we can as well treat
+this as the 63 least-significant bits, and in fact this is what fistpll
+gives us.  However, yes, being able to obtain the most-significant bits
+may be more interesting, because they're not easily available otherwise.
+
+This could be used to compute the xor of both product
+halves relatively quickly, with the integer multiplier computing the
+lower part, while the floating-point multiplier would compute the higher
+part. Like so (warning: not thoroughly tested, but seems to work):
+
+This is very cool!
+
+            "fldcw   %4\n\t" // Only needed for setup, really
+            "fildll  %1\n\t"
+            "fildll  %2\n\t"
+            "fmulp     \n\t"
+            "fldt    %3\n\t"
+            "fmulp     \n\t"
+            "fistpll %0\n\t"
+            : "=m" (high)
+            : "m" (a), "m" (b), "m" (twom63), "m" (ctrl)
+        );
+        return high ^ ((a * b) & 0x7FFFFFFFFFFFFFFFULL);
+
+Unfortunately, the (a * b) here corresponds to 3 MUL instructions, for a
+total of 5 MULs (of various types) for this function.  Luckily, I think
+those 3 can proceed in parallel, so the total latency is not bad, and
+this can keep the multiplier pipeline busy.
+
+To be honest, though, I don't think using floating-point is worth it.
+
+Yeah.
+
+Alexander
+

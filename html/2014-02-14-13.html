@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="12">[&lt;prev]</a> <a href="../../../2014/02/15/1">[next&gt;]</a> <a href="12">[&lt;thread-prev]</a> <a href="../../../2014/02/26/6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5cJgfx_vXBvtZNTVj+++g5ajZjYccPKQE8m=FWS_O1sw&#64;mail.gmail.com&gt;
+Date: Fri, 14 Feb 2014 13:52:04 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 10:21 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; Maybe try precomputing the random address one iteration in advance.
+&gt; In bcrypt, there are 4 S-box lookups, which means that computation (on
+&gt; results of first 2 lookups) doesn't have to start (or be stalled) until
+&gt; all 4 lookups are issued.  So you have a little bit of room for
+&gt; parallelism too, without necessarily becoming worse than bcrypt.
+&gt;
+&gt; Alexander
+
+I wrote a file called fasthash.c which incorporates a lot of these
+ideas.  I do 4 scalar multiplication hashes in a loop with SSE
+instructions that do a simple XOR/ADD hashing of 8 32-bit lanes (256
+bits), reading from "from" and "prev" and writing to "to".  On my Ivy
+Bridge processor using SSE4.1, this is a decent match, where the
+memory bottleneck is just kicking in while the multiplication hardness
+is still taking most of the loop time.  I randomized "prev" reads as
+you suggested, and most of the caching issues go away, though there is
+about a 20% speed penalty when hashing 256 bits at a time before
+switching the prev address.  I made the randomization length tuneable,
+so it is possible to make most of the 20% penalty go away.  I also do
+a SHA256 hash on the 8 lanes every 64 blocks - if I do it more often,
+the SHA256 begins to hurt runtime.
+
+On my machine, the inner loop before any of these upgrades did 13GB/s
+bandwidth on one thread (factoring out the memory allocation
+overhead), matching the best I've been able to do combining multiple
+threads and SSE in the past.  The loop time was about 64% longer than
+a single multiply instruction, so it's a bit worse than before, but I
+think this is a fair trade-off.
+
+After the upgrades, I take some hit for the SHA256 and some for the
+tunable random read lengths.  It does about 10.25GB/s when using no
+randomization in the prev reads, which isn't too bad.  It's doing 2GB,
+doing 1 read and 1 write, in .39 seconds.
+
+I tried making the multiply chain tunable relative to the SSE hashing.
+ Putting a loop around the scalar multiplication loop slowed it down,
+so we make this tunable in the same loop, I'd probably instantiate
+multiple versions of the loop with different numbers of multiplies and
+select which one to run.
+
+With memory allocation overhead, it runs in .47 seconds, which is
+8.5GB/s, and about 50% multiplication time hardened, which isn't too
+bad, though the old one was about 2/3rds compute hardened, and hashed
+2GB in 0.72 seconds, or 5.5GB/s.  With 256 bit random reads it takes
+closer to .6s.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

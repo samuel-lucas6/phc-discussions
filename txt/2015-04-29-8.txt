@@ -1,0 +1,77 @@
+phc-discussions - Fastest algorithm shootout with threads...
+
+Message-ID: <CAOLP8p4i+LApD64j1DiTcX2qy2q8163GUJOt7W=DhhOarcOHYw@mail.gmail.com>
+Date: Wed, 29 Apr 2015 15:47:35 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Fastest algorithm shootout with threads...
+
+Just for fun, I added -p support for TwoCats.  I still win the speed
+competition :-)
+
+In short, here's the best runtimes, when choosing num threads for highest
+speed at hashing 1GiB:
+
+TwoCats                103 ms
+Argon2d-sse            143 ms
+Yescrypt-2pw-sse       147 ms
+Lyra2-sse              212 ms
+
+Yescrypt does 33% more I/O operations than TwoCats, and uses OpenMP rather
+than pthreads, and uses a 1KiB block size compared to TwoCat's 16KiB block
+size.  This explains the difference in speed.  Lyra2 does a lot more I/O
+operations than TwoCats, explaining it's bandwidth-limited speed.
+Argon2d-sse also uses a 1KiB block size, and in addition, it calls 16
+reduced Blake2b rounds rather than 12 like Lyra2.  I think this explains
+why it's running slower.
+
+Should both Yescrypt and Argon2d to use my distance-cubed distribution?
+Argon2d uses a uniform distribution, and Yescrypt uses a
+sliding-power-of-two distribution.  This would enhance Argon2d's TMTO
+defense and Yescrypt could probably not run the second loop at all when
+t_cost == 0.  That would make Yescrypt-2pw-sse nearly as fast as TwoCats
+when running with enough threads.
+
+These runs filter out some noise using the -r10 (run 10 times) flag.  I
+still ran it 3 times and picked the lowest.
+
+Argon2d-sse
+-----------------
+
+$ ./tst-argon2d-sse -p6 -m1045000 -r10 -t0
+8 32 1045000 0 173 1041464
+
+$ ./tst-argon2d-sse -p12 -m1045000 -r10 -t0
+8 32 1045000 0 143 1041372
+
+Yescrypt-2pw-sse
+------------------------
+
+$ ./tst-yescrypt-2pw-sse -p6 -m17 -r10 -t0
+8 32 17 0 175 1044532
+
+$ ./tst-yescrypt-2pw-sse -p12 -m17 -r10 -t0
+8 32 17 0 147 1044208
+
+Lyra2-sse
+-------------
+
+$ ./tst-lyra2-sse -p6 -m43700 -t1 -r10
+8 32 43700 1 212 1044536
+
+$ ./tst-lyra2-sse -p12 -m43700 -t1 -r10
+8 32 43700 1 236 1044544
+
+TwoCats
+------------
+
+$ ./tst-twocats -p6 -m20 -t0 -r 10
+8 32 20 0 103 1044860
+
+$ ./tst-twocats -p12 -m20 -t0 -r 10
+8 32 20 0 117 1044908
+
+Bill
+
+
+

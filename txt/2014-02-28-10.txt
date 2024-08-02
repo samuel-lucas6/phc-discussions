@@ -1,0 +1,34 @@
+phc-discussions - Overwriting early hashing memory
+
+Message-ID: <CAOLP8p48NAG-wXzDzQBahE=jZEUtorA=2HyThTdgiNdL=UUJqQ@mail.gmail.com>
+Date: Fri, 28 Feb 2014 10:16:14 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Overwriting early hashing memory
+
+Here's a significant advantage catena has over Scrypt that I only
+thought of this morning:
+
+Catena overwrites all of it's memory 3 times, while Scrypt never does.
+ Even if memory leaks to an attacker, there's a good chance it will
+not be the first row memory, meaning an attacker will still have to
+spend considerable time before he can abort a password guess.
+
+I feel that memory leaks are the most significant attack we should
+worry about in a memory-hard KDF.  It's a bigger threat than
+cache-timing attacks, IMO.  Catena does a better job defending against
+them.  Can we do better?
+
+If every time we finished writing 3X more memory than in the previous
+pass, we could memmove the last 2/3rds over the first 1/3rd, erasing
+the memory filled in the first 1/3rd runtime so far.  It would mean we
+take 50% longer to fill the same memory, which is really bad, but we
+can choose 5X to overwrite the first 1/5th, or 9X to overwrite the
+first 1/8th.
+
+This is a super-simple upgrade to my algorithm, and I think I'm going
+to do this.  I just don't know how much overwriting initial memory is
+worth.  Is it worth running 50% longer, or only 3% longer?
+
+Bill
+

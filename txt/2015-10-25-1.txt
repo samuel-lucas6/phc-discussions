@@ -1,0 +1,35 @@
+phc-discussions - RE: [PHC] RE: Specification of a modular crypt format (2)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C73F4B44461@uxcn10-5.UoA.auckland.ac.nz>
+Date: Sun, 25 Oct 2015 01:44:47 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] RE: Specification of a modular crypt format (2)
+
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+
+>convert char to int before sanity checking it or after?
+
+That one's almost always redundant, I just use it as the companion to
+intToByte(), which isn't (mostly a cast is OK, under MSVC in debug builds you
+get runtime traps unless you explicitly mask to 8 bits).
+
+>But what is clear without any tools is that the "if" at line 20 is
+>superfluous. By successfully passing the previous "if" we know that "value >=
+>MAX_INTLENGTH / 10" is false.
+>
+>== value < MAX_INTLENGTH / 10         (with integer division)
+>== value <= MAX_INTLENGTH / 10 - 1    (with integer division)
+>== value <= MAX_INTLENGTH / 10 - 1    (with exact division)
+>== value * 10 <= MAX_INTLENGTH  - 10
+>== value * 10 < MAX_INTLENGTH  - 9
+>== value * 10 < MAX_INTLENGTH  - ch
+
+Ah, very nice!  OTOH I like to be totally explicit in my code (thus the
+ENSURES() postcondition at the end, and there are REQUIRES() preconditions at
+the start that aren't part of the code I posted), so you can look at the code
+and see that the condition is explicitly checked for rather than having to sit
+down and think through the maths.  I'll add that as a comment to the code
+though to help anyone auditing it.
+
+Peter.

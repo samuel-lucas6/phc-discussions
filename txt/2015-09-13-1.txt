@@ -1,0 +1,53 @@
+phc-discussions - Re: Argon2 code review
+
+Message-Id: <9851D931-155A-4C7B-94E3-4DF557ED51B6@gmail.com>
+Date: Sun, 13 Sep 2015 07:39:09 +0300
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.com>
+Cc: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: Argon2 code review
+
+Thanks! 
+
+We'll take care of these issues!
+
+Dmitry
+
+On 11 Sep 2015, at 17:27, Jean-Philippe Aumasson <jeanphilippe.aumasson@...il.comwrote:
+
+Quickly looked at the Argon2 code at https://github.com/khovratovich/Argon2. Some very basic comments below:
+
+* use more standard directory structure, e.g. s/Source/src
+
+* enable highest warning level in the makefile
+
+* better use `fopen_s`  than `fopen` on windows
+
+* fix warnings and errors when compiling with clang, e.g.
+Source/Core/argon2-core.cpp:272:27: warning: comparison of 0 unsigned expression is always false [-Wtautological-compare]
+        if (MIN_AD_LENGTH context->adlen) {
+            ~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~
+Source/Test/argon2-test.cpp:69:40: error: use of undeclared identifier '__rdtscp'
+                        start_cycles = __rdtscp(&ui2);
+
+
+* fix relevant issues found by cppcheck:
+[Blake2/blake2b.cpp]: (information) Too many #ifdef configurations - cppcheck only checks 12 of 13 configurations. Use --force to check all configurations.
+[Core/argon2-core.h:65]: (error) Buffer is accessed out of bounds: v
+[Core/argon2-core.h:73]: (error) Buffer is accessed out of bounds: v
+[Core/argon2-core.h:85]: (error) Buffer is accessed out of bounds: v
+[Core/argon2-core.cpp:1]: (information) Skipping configuration 'memset_s' since the value of 'memset_s' is unknown. Use -D if you want to check it. You can use -U to skip it explicitly.
+[Core/argon2-opt-core.cpp:176] -[Core/argon2-opt-core.cpp:177]: (warning) Possible null pointer dereference: instance - otherwise it is redundant to check it against null.
+[Core/argon2-opt-core.cpp:238] -[Core/argon2-opt-core.cpp:239]: (warning) Possible null pointer dereference: instance - otherwise it is redundant to check it against null.
+[Core/argon2-ref-core.cpp:93] -[Core/argon2-ref-core.cpp:94]: (warning) Possible null pointer dereference: instance - otherwise it is redundant to check it against null.
+[Core/argon2-ref-core.cpp:154] -[Core/argon2-ref-core.cpp:155]: (warning) Possible null pointer dereference: instance - otherwise it is redundant to check it against null.
+[Core/kat.cpp:93]: (error) Resource leak: fp
+[Core/kat.cpp:107]: (error) Resource leak: fp
+[Core/kat.cpp:125]: (error) Resource leak: fp
+[Test/argon2-test.cpp:88]: (warning) %d in format string (no. 1) requires 'int' but the argument type is 'unsigned int'.
+[Test/argon2-test.cpp:355]: (warning) %d in format string (no. 3) requires 'int' but the argument type is 'unsigned int'.
+(information) Cppcheck cannot find all the include files (use --check-config for details)
+
+
+
+

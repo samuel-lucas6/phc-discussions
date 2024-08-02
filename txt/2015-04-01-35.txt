@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Compute time hardness
+
+Message-ID: <20150401212120.GA16874@openwall.com>
+Date: Thu, 2 Apr 2015 00:21:20 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+On Wed, Apr 01, 2015 at 10:20:42PM +0200, Dmitry Khovratovich wrote:
+There is also a PhD thesis on the topic http://infolab.stanford.edu/pub/cstr/reports/csl/tr/94/617/CSL-TR-94-617.pdf
+
+Thank you!
+
+But anyway, as 32-bit multiplication is equivalent to a sum of 16 (average) addends, it can not be more than 4x slower given sufficient area (which we have).
+
+What are you averaging here?  I think we shouldn't.  I think it's 32.
+
+So I think it's 1 AND + 5 ADD.  And we shouldn't ignore that feeding
+each input bit to 32 ANDs probably requires buffers.
+
+In that PhD thesis you referenced above, see page 136 (page 151 in PDF).
+It shows the summation network corresponds to 49% of total delay in
+their chosen multiplier.  In fact, it says: "The delay effects of the
+other pieces of a multiplier are at least as important as the summation
+network in determining the final performance."
+
+On page 126 (141), there's a comparison of delays in their different
+designs, with the fastest at 2.6 ns (I think for 0.6 um process) and
+their "optimal" one (for which the 49% figure applied) I think at 3.0 to
+4.0 ns.  (I'd need to read the thesis closely to find out exactly which
+variation was talked about later.)  This data is also given in a table
+on page 119 (134).
+
+For comparison, pages 100-101 (115-116) show delays for carry-save
+adders as function of load capacitance.  These start at 30 to 130 ps and
+go up to 60 to 230 ps for load of 100 fF, and further to 300 ps to 1400
+ps for load of 1000 fF.
+
+I'm no expert, but I guess the load on adders in a Blake2b circuit
+wouldn't be the highest (by far), but even if we pick 300 ps (for the
+fastest CSA under the worst circumstances), it's still 2600/300 = ~8
+times slower than the fastest multiplier.  That's for 53x53, but OTOH
+we didn't have to assume the highest load on the adder.  Per page 97
+(112), driving another CSA may be only 25 fF, so 40 times lower than the
+worst case we've (unnecessarily) used above.  The delays at 25 fF are
+40 ps to 150 ps.  Even for the slowest CSA (why?!), this would give us
+2600/150 = 17 times slower multiply than add.  For the fastest, it'd be
+2600/40 = 65 times, which honestly feels weird given that we're
+comparing against their fastest multiplier (is the load on adders, etc.
+within the multiplier so much higher? maybe it is).
+
+Of course, actual capacitance values, etc. will be very different in
+modern chips.  But I think this shows in what range the ratios between
+multiply and add may be, even today.
+
+I think your "it can not be more than 4x slower" is overly optimistic.
+I think Bill's 8x for 32x32 is about right.
+
+Thanks again for the helpful reference!
+
+Alexander
+

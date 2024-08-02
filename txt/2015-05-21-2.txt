@@ -1,0 +1,117 @@
+phc-discussions - Re: [PHC] GPU vs CPU benchmarks for Makwa
+
+Message-ID: <20150521141029.GA26573@bolet.org>
+Date: Thu, 21 May 2015 16:10:29 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU vs CPU benchmarks for Makwa
+
+On Thu, May 21, 2015 at 05:03:39AM +0100, Samuel Neves wrote:
+I think this is underselling the fact that the GPU code is entirely
+"portable" C, whereas the CPU code is highly optimized assembly. I
+don't know the AMD toolchain enough to know whether this makes any
+difference, but on old CUDA I vaguely recall getting a ~15k/s ->
+~30k/s performance boost from switching from C to inline PTX assembly
+on a few key routines. So there is some potential for the GPU to get a
+modest advantage factor, I think.
+
+The AMD toolchain is, let's say, uninspiring (I got it to miscompile
+code sometimes, and also to brutally segfault). The concept is that you
+write a "kernel" in sort-of C code, that gets compiled at runtime (you
+can save and reload the resulting binary, as an option, but the
+principle of OpenCL is still to normally recompile at runtime). In the
+AMD toolchain, when targeting a GPU, the compilation first produces what
+AMD calls "IL" as "intermediate language" (roughly the equivalent of
+NVidia's PTX), which gets then translated to assembly for the actual
+device, something that AMD calls "ISA" (as "instruction set
+architecture").
+
+AMD IL is documented there:
+   http://developer.amd.com/wordpress/media/2012/10/AMD_Intermediate_Language_%28IL%29_Specification_v2.pdf
+
+AMD ISA (for "Southern Islands" GPU, like the HD 7990) is described in:
+   http://developer.amd.com/wordpress/media/2012/12/AMD_Southern_Islands_Instruction_Set_Architecture.pdf
+
+Since OpenCL is meant to allow support of heterogeneous systems, they
+voluntarily keep the developer away from that. You are supposed to write
+"plain C" and let the OpenCL runtime do its magic, so that optimal
+performance on a wide range of architectures is achieved (this does not
+actually work well, or even at all, but that's another debate(**)).
+Correspondingly, there is no supported method for inline assembly. There
+are some reports that you _can_ use asm() statements that the AMD tools
+will use, and that way you might include some hand-written statements in
+the IL (not the ISA). However, this is completely undocumented, and, in
+particular, it is unclear how you would specify constraints so that the
+compiler maps C-level variables to registers and back.
+
+Another method would be to go straight for the compiled kernel format,
+which is supported as an option by OpenCL; in the case of AMD GPU, this
+appears to be some kind of ELF object, but not fully documented. Some
+people are trying to write such an assembler:
+   http://openwall.info/wiki/john/development/GCN-ISA
+but, as far as I know, this is not completely usable yet.
+
+
+Nevertheless...
+
+While you do not get to _write_ assembly, you can observe it. When you
+build the kernel, you can add some options (as a string), one of them
+being "-save-temps", which triggers the writing down of some files,
+containing, respectively, the kernel quasi-C code, the IL, and the ISA.
+With these files, you can see what the compiler produced from the C
+code, in particular the chosen sequence of instructions, as well as the
+"register spilling" situation. This leads to an uncomfortable by still
+workable optimization method, by which you tweak the C code until the
+compiler happens to produce the sequence of opcodes (ISA) that you
+would have written yourself (if the tools had allowed it).
+
+In the case of my code, I duly verified that the sequence of opcodes
+really is what it should be. In my fastest implementation (with 31-bit
+words), I get this sequence (repeated 67 times, with varying source
+registers) for the inner loop:
+
+  v_mul_hi_u32  v132, v13, v88
+  v_mul_lo_u32  v140, v13, v88
+  v_add_i32     v68, s[82:83], v68, v140
+  v_addc_u32    v69, vcc, v69, v132, vcc
+  v_mul_hi_u32  v132, s27, v86
+  v_mul_lo_u32  v140, s27, v86
+  v_add_i32     v68, s[84:85], v68, v140
+  v_addc_u32    v69, vcc, v69, v132, s[82:83]
+  v_addc_u32    v69, vcc, v69, 0, s[84:85]
+  v_and_b32     v132, 0x7fffffff, v68
+  v_lshr_b64    v[68:69], v[68:69], 31
+  v_add_i32     v68, vcc, v130, v68
+
+which is what I wanted. We see the two 32x32->64 multiplications
+(v_mul_hi_u32 and v_mul_lo_u32), the 64-bit additions (v_add_i32 and
+v_addc_u32, for carry propagation), and the masking and shifting to get
+back to 31-bit words. Note that opcode latency is not an issue for GPU
+(that one, or even GPU in general) because the hardware will interleave
+kernel executions; so results from an opcode can be used by the next
+opcode with no penalty.
+
+If I were to write assembly manually, I would not do any better, so the
+current implementation is as good as it can get. Inline assembly would
+not help here (a smarter representation of integers might help, but
+that's a completely different issue(**)). A consequence is that I think
+it is fair to compare my OpenCL code with optimized assembly for the
+CPU: because my OpenCL code _is_ optimized assembly, albeit done
+indirectly, through a C-based interface, which increased optimization
+_effort_, but did not, in that case, decrease final performance.
+
+
+	--Thomas Pornin
+
+
+(*) When you compile OpenCL code for a CPU with SIMD instructions like
+SSE2 opcodes, you have to use the "vector types" explicitly (like
+'uint4'); otherwise, the compiler will not automatically vectorize the
+code, which means that optimal code for the GPU and for the CPU will be
+distinct at the OpenCL level. While the _concept_ is fine, actual
+implementations are not up to the task right now.
+
+(**) I am not entirely convinced that FFT-based multiplication would not
+be worth a try here, though I am quite hazy on the details and in
+particular how modular reduction would intervene here.
+

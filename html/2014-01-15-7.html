@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A must read...</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5iFNiPx2KvxqFBkRJMpskigcf8gcRm9fQfO_6h2dv=GQ&#64;mail.gmail.com&gt;
+Date: Wed, 15 Jan 2014 06:42:40 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Wed, Jan 15, 2014 at 2:38 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Tue, Jan 14, 2014 at 10:01:24PM +0000, Marsh Ray wrote:
+&gt; Predictable lookups defeat this approach.  With predictable lookups,
+&gt; we're relying almost exclusively on memory bandwidth for the time
+&gt; factor.  Not even on memory latency anymore.  That's only one constraint
+&gt; for the attacker, out of possible 3 constraints mentioned above.  This
+&gt; is a major drawback of Catena, etc.
+
+Hi, Alexander.  Thanks for suggesting this idea in the first place,
+and I hope you don't mind me using it.  What should we call this sort
+of time-hardening using multipliers?  I'm thinking "sequential
+compute-hardened", "sequential time-hardened", "sequential
+multiply-hardened" or somthing like that.
+
+I don't see how reading from unpredictable RAM locations helps.  Maybe
+my pseudo-code is hiding the loop dependencies.  Here's the actual
+current first loop (I switched from using the word "page" to "block"):
+
+    PBKDF2_SHA256(c-&gt;threadKey, c-&gt;threadKeySize, c-&gt;salt, c-&gt;saltSize, 1,
+        (uint8 *)(void *)c-&gt;mem, c-&gt;blockLength*sizeof(uint32));
+   uint32 *toBlock = c-&gt;mem + c-&gt;blockLength;
+    uint32 *fromBlock;
+    uint32 hash = 1;
+    uint32 prevFromVal = 0;
+    uint32 i;
+    for(i = 1; i &lt; c-&gt;numBlocks; i++) {
+        fromBlock = c-&gt;mem + (uint64)c-&gt;blockLength*((i + (Rand(i) % i)) &gt;&gt; 1);
+        uint32 j;
+        for(j = 0; j &lt; c-&gt;blockLength; j++) {
+            uint32 fromVal = *fromBlock++;
+            hash = hash*(fromVal | 1) + prevFromVal;
+            *toBlock++ = hash;
+            prevFromVal = fromVal;
+        }
+    }
+
+Note that fromVal does depend on the secret.  To begin to compute hash
+= hash*(fromVal | 1) + prevFromVal, we need to let the previous
+computation for hash finish, and it takes ~1ns (0.89ns on my dev
+machine).  Even though fromVal can be waiting in advance for the
+multiplication to start, we still have to let the old value of hash
+propagate through the multiplier to get the next value of hash.  I do
+not believe that this can be sped up with anything other than a faster
+multiplier.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

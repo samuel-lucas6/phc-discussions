@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="../../../2015/09/05/1">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="../../../2015/09/05/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p6_wUZnGQ=_H3dmbE8iXGyKQEbdPD9d+hPmBA9dvAvQNg&#64;mail.gmail.com&gt;
+Date: Fri, 4 Sep 2015 16:51:31 -0700
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Fri, Sep 4, 2015 at 4:34 AM, Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+wrote:
+
+&gt; I think you're mistaken in squaring the difference factor: area is the
+&gt; same but the time differs, so cost is only 3.5x (or how much?).
+&gt;
+
+It goes as the square for external DRAM bandwidth limited ASIC attacks.
+For an on-chip RAM 4MiB ASIC attacks, it depends on the
+computation-hardness * hashing speed.  TwoCats has about a 2X better
+compute-time hardness for L3 caching than Argon2ds, and about a 3.5X better
+memory hashing speed.  I did more accurate benchmarks below, but the actual
+memory * time difference was very close to 9.1X.
+
+I assume MAXFORM will be used in the final Argon2d, and that speed
+improvements will get it to the point that it can hash 4MiB in 2.5ms.  I
+assume this below.  This is decent speed, though I happen to be comparing
+to an algorithm that is about 3X faster, and need to argue that Argon2 is
+better.
+
+For on-chip hashing, Argon2d without any multiplies would not be latency or
+bandwidth bound, but computation bound.  The attacker can run Bake2b maybe
+16X faster, and Argon2's free 8x parallelism increases that to 128X faster
+for the attacker.  This is worse than Scrypt, but this was the case for
+Argon2d v.1.1.  You guys have upgraded the algorithm, improving it's
+defense a lot.  The Blake2 version with multiplications will leave the ASIC
+attacker with a maybe a 4X speed improvement in computation speed, but the
+free 8X from parallelism increases that to maybe 32X benefit to the
+attacker.  That's not terrible, but with MAXFORM, I estimate the attacker
+will be limited to about 4X faster.  TwoCats limits the attacker to about
+2.6X faster, assuming the same speed multipliers on the ASIC and CPU.
+
+Here's some more benchmark numbers I ran.  I'm using Argon2, not Argon2ds
+but I think this will be pretty close once Argon2ds is tuned up a bit:
+
+Argon2d memory for 1.2ms hash: 2200 KiB
+Serial multiplies: 2200*96 = 211,200
+ASIC attacker speed using 1ns multipliers: 0.211ms
+area-time product: 0.465 s-KiB
+
+TwoCats memory for 1.2ms hash: 8192 KiB
+Serial multiplies: 526336
+ASIC attacker speed using 1ns multipliers: 0.526ms
+area-time product: 4.31 s-KiB
+
+It looks like TwoCats will have about 9X improved time-area defense, when
+we take into account the multiplication chains.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

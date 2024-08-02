@@ -1,0 +1,30 @@
+phc-discussions - Re: [PHC] The EARWORM password hash
+
+Message-ID: <20131231043510.GA19233@openwall.com>
+Date: Tue, 31 Dec 2013 08:35:11 +0400
+From: Solar Designer <solar@...nwall.com>
+To: Daniel Franke <dfoxfranke@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] The EARWORM password hash
+
+On Sat, Nov 16, 2013 at 02:11:28PM -0500, Daniel Franke wrote:
+Yes, my optimized implementation contains prefetch instructions. I get
+about a 5% performance hit if I comment them out.
+
+I've since added the prefetch instructions to our escrypt tree, and I am
+seeing much more of a speedup from them - more like 20% (6000 c/s to
+7300 c/s in the test with 112 GiB ROM on 2 MiB pages) - and that's even
+without one-ahead indexing like you had implemented (I haven't tried
+adding that yet).  This is with scrypt's r=8 or similar, so ~1 KiB V
+element size.  The first one or a few cache lines needed by BlockMix
+might not be fully prefetched in time, but the following ones probably are.
+
+I am also using the non-temporal hint for prefetches from the "ROM"
+(unlike from the "RAM", which is much smaller and may reasonably have a
+significant portion of it in L3 cache).  This hint helps a bit on some
+machines, but makes no difference on others.  (If you only have the
+"ROM", you probably don't need it.  We need it because we have RAM+ROM,
+and don't want the "ROM" to throw any portions of "RAM" out of caches.)
+
+Alexander
+

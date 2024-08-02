@@ -1,0 +1,51 @@
+phc-discussions - Re: [PHC] Re: Mechanical tests
+
+Message-ID: <87y4zjmssl.fsf@wolfjaw.dfranke.us>
+Date: Sat, 05 Apr 2014 16:21:14 -0400
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Mechanical tests
+
+Peter Maxwell <peter@...icient.co.ukwrites:
+
+Ok, to avoid this being an intractably long evening, please define
+"entropy".​
+
+(This email will probably be a lot easier to read if you TeX it)
+
+Let $x$ be a random variable ranging over a subset of $\{0,1\}^*$. I
+haven't said anything yet about how $x$ is distributed.
+
+By the entropy of $x$ (for which I'll use the usual notation $H(x)$,
+but don't confuse $H$ for a hash function!), I mean
+$$\sum_{y \in \{0,1\}^*} -Pr[x = y] \cdot \log_2(Pr[x = y]).$$
+
+For some $n$, Let $$F : \{0,1\}^* \rightarrow \{0,1\}^n.$$
+
+By the entropy of $F$'s output, I mean
+$$\sum_{y \in \{0,1\}^n} -Pr[F(x) = y] \cdot \log_2{Pr[F(x) = y]}.$$
+
+Obviously, it's the case that
+$$H(F(x)) \leq \max(n,H(x)),$$ with equality holding iff $F$ is
+injective over the support of $x$.
+
+Now, for the remainder of this discussion, let's suppose that $x$'s
+probability distribution is the one from which users choose their
+passwords. For the sake of arugment, let's say that $H(x) = 64$.
+
+For $F$ to be a good password hash, it's necessary (but not
+sufficient) that $n \geq H(x)$ and that $H(F(x)) \approx H(x)$.
+
+Now suppose that $n=640$, and that each bit of $F$'s output is
+i.i.d. such that $$\forall b \in[0..640),\ Pr[F(x)_b = 1] =
+0.0129869.$$ So, each bit $F(x)$ carries one tenth of a bit of
+entropy, because $$\log_2(0.0129869) + log_2(0.987013) = -0.1.$$
+
+In this case $H(F(x)) = 64$, so $F$ might be an acceptable password
+hash. However, $F$ is a terrible KDF, because if I truncate $F$'s output
+in order to obtain a 128-bit key, what I really have is a 12.8 bit key,
+even if I choose an exceedingly strong password as input. $F$ fails the
+mathematical definition of a weakly-secure KDF because an adversary can
+with high probability distinguish $F(x)$ from a uniformly-random 640-bit
+string by counting its Hamming weight.
+

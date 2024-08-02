@@ -1,0 +1,27 @@
+phc-discussions - Gambit code
+
+Message-ID: <171406525.184182.1397489182859.open-xchange@email.1and1.com>
+Date: Mon, 14 Apr 2014 10:26:22 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Gambit code
+
+I noticed you reference https://cryptocoding.net/index.php/Coding_rules in
+your paper and tried to followed "use separate types for different types of
+information". The reason you are suppose to do that is so you get a
+compiler error. You are just typedef-ing them as uint8_t of some length.
+That means they are all the same type with a fancy name on them. This is
+why file gambit.cpp, line 19 compiles:
+(uint8_t*)salt
+instead of:
+(salt*)salt
+
+Just noticed a bug file gambit.cpp, line 115:
+memset(mem, 0, sizeof(uint8_t)*cost_m);
+should be:
+memset(mem, 0, sizeof(uint64_t)*cost_m);
+
+
+Huh I was going to say you missed the part on cryptocoding.net about bounds
+checking, but there is no part about that.
+

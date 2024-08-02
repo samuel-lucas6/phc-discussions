@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Message-ID: <20150421031546.GA18623@openwall.com>
+Date: Tue, 21 Apr 2015 06:15:46 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Dmitry,
+
+On Tue, Apr 21, 2015 at 05:33:18AM +0300, Solar Designer wrote:
+On Mon, Apr 20, 2015 at 11:08:42PM +0200, Dmitry Khovratovich wrote:
+To increase the latency of tradeoff attacks, I think BlaMka may be used
+(along with an un-pwxform chain like this, which serves its different
+purpose - hardening non-tradeoff latency and providing some anti-GPU).
+
+If using BlaMka, why extra xform chain?
+
+Oh, there's one more reason: then you don't need to chain your BlaMka's.
+BlaMka will be to harden the tradeoff latency only, and the scalar chain
+will be to harden the non-tradeoff latency only.
+
+Mostly for the anti-GPU.
+
+Also, in pwxform I tried to maximize the per-bit latency (so that one
+round's highest latency output bits are needed by the next round early).
+I haven't looked into how optimal or not BLAKE2b's rotate counts happen
+to be in this respect (and adjusting them may be bad).
+
+Finally, I suspect the extra chain might allow for a higher number of
+sequential multiplies than BlaMka for the same Argon2 performance.  The
+instruction issue rate for scalar units may be higher than for SIMD, and
+the multiply-hardening rounds may be more closely packed together in
+un-pwxform than in BlaMka.  (I think TwoCats might have had this sort of
+advantage over yescrypt, although this was in part because TwoCats had
+only multiplies, and not S-box lookups, on the scalar chain.)
+
+Alexander
+

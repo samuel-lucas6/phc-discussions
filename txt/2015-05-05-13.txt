@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+Message-ID: <CAOLP8p6LhjNznCZ0M6csB0-NxXAKdffexN3zG2Vrrd+Yb44oDw@mail.gmail.com>
+Date: Tue, 5 May 2015 09:57:01 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Maximising Pseudo-Entropy versus resistance to Side-Channel Attacks
+
+On Mon, May 4, 2015 at 5:03 AM, <Stefan.Lucks@...-weimar.dewrote:
+
+On Thu, 30 Apr 2015, Bill Cox wrote:
+>
+ On Thu, Apr 30, 2015 at 5:43 AM, <Stefan.Lucks@...-weimar.dewrote:
+>>
+>
+       As an example, let the password hashing function H1 be ten times
+>faster than H2, i.e., if Mallory's costs for H1 are be ten times
+>      higher than his costs for H2 (for the same budget on the defender's
+>side). Ten times faster sounds like a big deal, doesn't it?
+>>
+>>
+>Mallory's cost will be 100X higher in this case.  Memory*time defense
+>goes as the square of the runtime.  So, that's 6.64 additional bits of
+>strength, not 3.32.
+>>
+>
+No! Say H2 runs in 1 second allocating 10 MB, while H2, allocating the
+same 10 MB is ten times faster 0.1 second. If the defender is willing to
+wait 1 second, for either H1 or H2, H1 could then allocate 100 MB.
+>
+cost for H1: 100 sMB (seconds * Megabyte)
+>
+cost for H2: 10 sMb (sconds * Megabyte)
+>
+So the pseudo-entropy for H1 is 3.32 bit larger than the pseudo-entropy
+for H2, not 6.64.
+>
+Stefan
+
+
+Sorry, your math is still wrong.  Mallory gets a 100X benefit.
+
+The attacker is almost certainly memory bandwidth limited.  If he had 10X
+faster RAM, he'd run 10X faster.  Therefore, H1 not only fills 10X more
+memory, it takes 10X longer for Mallory to fill it.  The increase in cost
+to Mallory is 100X.
+
+There is a rare case when Mallory may be compute-time limited, but most
+algorithms did not build in any compute-time hardening.  Only TwoCats,
+Yescrypt and Argon had any compute-time defense in the beginning.
+
+Another case is where H1 does 10X more memory access than H2, in which case
+Mallory's cost goes up by 10X, not 100X.  The case of Lyra2 is like this,
+since Lyra2 is heavily memory bandwidth limited.  I know that TMTO defense
+is important to the Lyra2 team, but to make it more competitive, I still
+recommend reducing it's I/O operations per memory location.  The right
+number is close to 1 write and 1 read on average.  Scrypt does this, as
+does TwoCats and Argon2d (not Argon2i).  Yescrypt does an extra 1/3X more
+I/O operations, to solidify it's TMTO defense vs Argon2d and TwoCats, both
+of which do have a trivial TMTO that benefits Mallory slightly (maybe 15%
+in memory*time).
+
+I did some password entropy estimates recently and found that the median
+password in 10-million-combos can be guessed with about 13.5 million
+guesses on average, or about 23.7 bits of strength.  6.4 bits is quite
+useful given the low entropy we see in passwords.
+
+While I want there to be a winner capable of solid side-channel defense
+(meaning maybe Argon2i needs to get rid of it's mod operation), there also
+needs to be a winner capable of strong off-line cracking defense, and that
+means password-dependent memory access.  If there were to be just one
+winner, it should have to be a hybrid architecture, IMO.  Lyra2 is an
+option.  TwoCats didn't make it to the second round, but it actually can be
+run in cache-timing resistant mode with a flag, though to make it more user
+friendly, I should expose this knob properly.
+
+Bill
+
+
+

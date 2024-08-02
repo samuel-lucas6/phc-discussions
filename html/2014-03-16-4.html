@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Large memory block hash primitives?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="../../../2014/03/18/1">[next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4=zae9X89jhKkL9SGkWJ1L9V9LROQCmadZ7-ddiHoeKg&#64;mail.gmail.com&gt;
+Date: Sun, 16 Mar 2014 14:36:33 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Large memory block hash primitives?
+
+I am considering splitting out the large block hashing algorithm in
+TwoCats as a primitive function on it's own, which could be passed to
+the higher level password hashing frameowrk.  I think Scrypt and
+related memory hashing schemes could be implemented with such a
+pluggable large block hashing function.
+
+A large block hash function in my world looks like:
+
+    Block hash2Blocks(SecureHash H, uint8 key[], Block block1, Block
+block2, uint32 blocklen,
+        uint32 subBlocklen, uint8 lanes, uint32 repetitions)
+
+where Block is large block of memory, typically 1KiB to 16KiB in my
+tests, and H is a cryptographic hash function such as SHA256 or
+Blake2s.  Key is matched in block-length of the hash function H, so 32
+for SHA256 and Blake2s, and 64 for SHA512 and Blake2b.  This function
+takes two large blocks, hashes them together, updates the key, and
+returns the new large block.  Blocklen is just the block length in
+bytes, and subBlocklen is the length of pseudo-random sub-block memory
+accesses, which should be equal to blocklen if password dependent
+memory addressing is avoided.  Lanes is a parallelism parameter meant
+to match the SIMD units on modern processors, and should be 1 for code
+that does not support SIMD units.  Repetitions unfortunately needs to
+be passed into the large block hash function to increase hammering L1
+cache in a world where write-through caches are common.  The block is
+only written on the last repetition of block hashing.
+
+A key feature of hash2Blocks is that it may implement a custom fast
+non-cryptographic hash function for hashing memory, and only call H at
+the end.
+
+Another large block hash that is common takes just one block and
+returns a new hashed block:
+
+    Block hash1Block(SecureHash H, uint8 key[], Block block, uint32
+blocklen, uint32 subBlocklen, uint8 lanes)
+
+Given these two large block primitives, I think I could implement
+Scrypt, Catena, Escrypt, and TwoCats - all the memory hard frameworks
+I've looked at.  I'm tempted to label them the way we do in our C APIs
+with PBKDF2.  Something like:
+
+    Hash2Blocks_Catena
+    Hash2Blocks_Script
+    Hash2Blocks_TwoCats
+
+Hash2Blocks_Catena and Hash2Blocks_TwoCats would take any hash
+function primitive, while Script uses Salsa20/8.
+
+One reason to consider large block hashing primitives is there may be
+some good ones embedded in hashing frameworks such as Escript that
+could be useful on their own.  Catena, in particular, could benefit
+from a richer set of large block hashing primitives rather than
+settling for 64-byte primitives that suffer from substantial
+cache-miss penalties for large memory sizes.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

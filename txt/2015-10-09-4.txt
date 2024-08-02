@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <5617158A.6090205@openwall.com>
+Date: Fri, 09 Oct 2015 04:16:58 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-09-28 14:12, Thomas Pornin wrote:
+static inline unsigned
+
+inline is not in C89.
+
+EQ(unsigned x, unsigned y)
+{
+	return (((-(x ^ y)) >8) & 0xFF) ^ 0xFF;
+}
+>
+static inline unsigned
+
+ditto.
+
+GT(unsigned x, unsigned y)
+{
+	return ((y - x) >8) & 0xFF;
+}
+>
+[skip]
+static size_t
+to_base64(char *dst, size_t dst_len, const void *src, size_t src_len)
+{
+	size_t olen;
+	const unsigned char *buf;
+	unsigned acc, acc_len;
+>
+	olen = (src_len / 3) << 2;
+	switch (src_len % 3) {
+	case 2:
+		olen ++;
+		/* fall through */
+	case 1:
+		olen += 2;
+		break;
+	}
+	if (dst_len <= olen) {
+		return (size_t)-1;
+	}
+	acc = 0;
+	acc_len = 0;
+	buf = (const unsigned char *)src;
+
+Such casts are a probably for C++ compatibility...
+
+[skip]
+static const char *
+from_base64(void *dst, size_t *dst_len, const char *src)
+{
+	size_t len;
+	unsigned char *buf;
+	unsigned acc, acc_len;
+>
+	buf = (unsigned char *)dst;
+	len = 0;
+	acc = 0;
+	acc_len = 0;
+	for (;;) {
+		unsigned d;
+>
+		d = b64_char_to_byte(*src);
+		if (d == 0xFF) {
+			break;
+		}
+		src ++;
+		acc = (acc << 6) + (unsigned)d;
+
+...but this one seems entirely redundant:-)
+
+-- 
+Alexander Cherepanov
+

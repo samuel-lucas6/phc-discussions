@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C7372388308@uxcn10-6.UoA.auckland.ac.nz>
+Date: Sat, 8 Mar 2014 00:56:31 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+Taylor Hornby <havoc@...use.cawrites:
+
+>I'm amazed the designers of PBKDF2 either didn't realize it, or knew about it
+>published it anyway. I'm also amazed that I never knew about it until now.
+
+I'm pretty sure the designers of PBKDF2 knew about it because I remember grumbling
+about it at the time:
+
+  /* If the key size is larger than tha SHA data size, reduce it to the
+     SHA hash size before processing it (yuck.  You're required to do this
+     though) */
+
+Or maybe it was the designers of HMAC that I grumbled to, it was a long time
+ago.  In any case the solution is to hash the marshalled data block that the
+password is part of rather than the raw password, so you've got length
+information included in the password.  This is what e.g.TLS-PSK does:
+
+  uint16	otherSecretLen
+  byte[]	otherSecret     -- DH value for DHE-PSK, zeroes for pure PSK
+  uint16	pskLen
+  byte[]	psk
+
+Peter.

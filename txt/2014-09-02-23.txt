@@ -1,0 +1,164 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <5405FBE7.5060201@ciphershed.org>
+Date: Tue, 02 Sep 2014 13:18:31 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+
+
+On 09/02/2014 11:23 AM, Samuel Neves wrote:
+On 09/02/2014 02:13 PM, Bill Cox wrote:
+>However, if you want to have some fun, I think there is an even
+>more serious attack that can be done which is worse than any of
+>these that I've pointed out today.  If you want a fun challenge,
+>examine the stir function carefully from the point of view of an
+>attacker.  For example, data only flows from low bits to high
+>bits.  The value of the low 8 bits out in no way depend on the
+>upper 7 bytes of any word of state.  There may be a devastating
+>module 256 attack here.  This is why people use ARX
+>(add/rotate/xor) operations in secure hashes. POMELO uses these,
+>plus unpredictable memory reads, frustrating my more serious
+>attacks.  Schvrch has no rotate.  I suspect there is a very cool
+>attack that can be made that takes advantage of this.  Have fun
+>:-)
+
+This is not correct. The comparison operation takes into account
+all bits of its operands, thus making the conditional negation
+dependent on the upper bits of words as well. This does not have as
+fast diffusion as a rotation, for instance, but diffusion from most
+to least significant bits does occur.
+
+You can alternatively represent stir's inner loop as follows:
+
+const uint64_t x = state[(j+3)%256]; const uint64_t y =
+state[(j+2)%256]; const uint64_t c = (x^((x^y)|((x-y)^y))) >63; 
+carry ^= state[(j+1)%256] ^ (c - 1); state[j] ^= carry; carry +=
+mixer;
+
+This way it might be easier to see how differences propagate from
+higher bits to lower bits.
+
+
+I mostly agree.  I have been trying a modulo 4 attack, without success
+on the stir function.  It's not the comparison function that's the
+problem, though.  It's the addition of the mixer value.  However, when
+m_cost is 0, and stir is only called once to hash the original inputs,
+the mixing is so poor that we can determine if a guess is wrong in
+constant time, independent of t_cost.
+
+Here's some fun.  I replaced the evolved and revolve code with a
+hacked version.  Here's the originals and their "hacked" versions:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+	uint64_t i;
+	uint64_t carry = 0;
+	int j;
+		
+	for(i = 0; i < rounds; i++)
+	{
+		for(j = 0; j < statelen; j++)
+		{
+			if(state[(j+2)%statelen]>state[(j+3)%statelen])
+				carry ^= state[(j+1)%statelen];
+			else
+				carry ^= ~state[(j+1)%statelen];
+
+			state[j] ^= carry;
+		}
+	}
+}
+
+void hackedRevolve(uint64_t *state, int statelen, uint64_t t_cost)
+{
+    uint64_t i;
+    uint64_t carry = 0;
+    int j;
+
+    for(i = 0; i < t_cost; i++)
+    {
+        for(j = 0; j < statelen; j++)
+        {
+            carry ^= state[(j+1)&(statelen-1)];
+            state[j] ^= carry;
+        }
+    }
+}
+
+void evolve(uint64_t * state, int statelen)
+{
+	int i, j;
+	
+	for(i = 0; i < (statelen * 2); i++)
+	{	
+		for(j = 0; j < (statelen); j++)
+		{
+			if(state[(j + 1) % statelen] state[(j + 3) % statelen])
+				state[j % statelen] ^=  state[(j + 1) % statelen];
+			else
+				state[j % statelen] ^=  ~state[(j + 1) % statelen];
+			
+			if(state[(j + 2) % statelen] state[(j + 3) % statelen])
+				state[j % statelen] ^=  state[(j + 2) % statelen];
+			else
+				state[j % statelen] ^=  ~state[(j + 2) % statelen];	
+			
+			if(state[(j + 3) % statelen] % 2 == 1)
+				state[j % statelen] ^=  state[(j + 3) % statelen];
+			else
+				state[j % statelen] ^=  ~state[(j + 3) % statelen];	
+		}
+	}
+}
+
+void hackedEvolve(uint64_t * state, int statelen)
+{
+	int i, j;
+	
+	for(i = 0; i < (statelen * 2); i++)
+	{	
+		for(j = 0; j < (statelen); j++)
+		{
+            state[j % statelen] ^=  state[(j + 1) % statelen];
+            state[j % statelen] ^=  state[(j + 2) % statelen];
+            state[j % statelen] ^=  state[(j + 3) % statelen];
+		}
+	}
+}
+
+No matter what sequence you call evolve and revolve, or what
+parameters, you get almost the same answer when doing the same calling
+hackedRevolve and hackedEvolve.  If you print the min of the each
+state value or it's complement, you get the same results!
+
+The problem is that the comparison functions are having their results
+compressed into 256 bits used to control this complementing of the
+state variables.  They aren't being mixed into the state variables at
+all, other than to complement them or not.
+
+I am not 100% convinced that stir is secure yet...
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBfvjAAoJEAcQZQdOpZUZdsgP/3/MhKLpStIXAXGMcn0tE3kR
+iXPbpYgXJRn1hZ+KkMetdeQvak+9z+mRwSLqohkeZj60U/YFgsBiVheK2I2Gdinu
+mN/HtxskawfIw1JQYAHRSpeg0LZg6zN7D3logJSi/WNqMALKyhIEElVTjq2GYIer
+GAHqEpLO1TKKHFSsUojJPxA62bzw3WZJi41hMgvriWoY9BZSy+RnB+IRIMrTkSwM
+sj8xi2Z5GDFxsKUiip6ijM7cbWSInGwmddp0IvgLGz0ibGE/FGw6PaGpAew6oDEn
+xYZV5slaCJRoUmaKo0Ri0Vl0qo+5UG0aQo5w1FiKOtS0P4wrMC8F/kELXLM0Ckdc
+J6EuA+gTD3+8RGv6ixl22dP+uHhjBMDWMZ/mSZ2Cw2Sw+47IaJGI+wDhzoz84DEi
+vCfgGqsR+ZsMfWBwZZUee5F/7agprgYd6OtgI1pZFnNNQy6/x6BFhlOae6V0ADTA
+UyF1c9mE1nHSwFTw5OTR5jwl4+9Di3tMtb/TBWDlWWOw3pVXcDwUxwbOoVF0UijT
+38WdNrxFIjLzb1zKfmesrM2jmdY001qWXjTyBPG26UABR3H/gj/zfPq6eluAd+BV
+LPD8+i9kk/oIHNGRUd8GHI1Ui3/Uoh7KkFcMwXjDVYnopBWGKV6SAzpOiqY3rF7u
+6bD2U7FnbpBwMhMhkEln
+=x8MZ
+-----END PGP SIGNATURE-----
+

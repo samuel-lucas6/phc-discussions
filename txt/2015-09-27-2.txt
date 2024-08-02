@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <CAAyV7nExuRSS0n0LnpcB9ssaFC6Bq_RfsGmV-bs8wLBP6iftuQ@mail.gmail.com>
+Date: Sun, 27 Sep 2015 09:40:50 -0400
+From: Anthony Ferrara <ircmaxell@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+All,
+
+On Thu, Sep 24, 2015 at 9:32 PM, Solar Designer <solar@...nwall.comwrote:
+On Mon, Sep 07, 2015 at 01:55:30PM +0300, Solar Designer wrote:
+>If we continue to build upon the traditional crypt(3) alphabet and
+>encoding (like the above specification for scrypt does), then I'd also
+>like to include a way to represent the numeric parameters in a more
+>compact form: let the little-endian encodings be truncated when the
+>values are small.  So e.g. instead of:
+>>
+>$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>it would be valid to use:
+>>
+>$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>or if we want to keep the number of '$' characters fixed, then either
+>require the '$' delimiters to always be present or maybe introduce '+'
+>or '=' for truncation (a character already used in the other base64
+>encoding's alphabet, so likely safe to use):
+>>
+>$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>The savings for classic scrypt are small, but with yescrypt's additional
+>parameters they are more significant.
+>
+BTW, an even more compact encoding of numeric parameters is possible,
+
+Please, can the encoding be kept human-readable? Going with one-off
+encodings does look elegant, but it makes the implementation
+significantly more error prone.
+
+People are even confused by the fact that the salt-boundary in bcrypt
+occurs mid-character (leading to only 4 possible character values for
+the last salt character).
+
+Instead, can we focus on readability? For parameters that have well
+defined defaults, simply don't require that parameter to be specified.
+For those that don't have well defined defaults, then always require
+them. Yes, it is a little bit more parsing overhead on the crypt()
+implementation, but it greatly reduces the overhead on the calling
+code. Especially for those building wrappers (which happens all the
+time).
+
+I do like the approach of specifically identifying parameter that was
+brought up in the other thread. Something along the lines for scrypt:
+
+    $7$n=14;r=8;p=1$ALotOfSalt$Hash
+
+But since p=1 could reasonably be default, the following is identical:
+
+    $7$n=14;r=8$ALotOfSalt$Hash
+
+Whether a parameter is power-of-2 or base 10 would depend on the
+algorithm. Also, please don't define the parameter order as rigid.
+It's simple enough to implement arbitrary order, so why put arbitrary
+restrictions?
+
+So my overall suggestion is make it easier on the developer using the
+API, rather than the one writing it. After all, there are going to be
+FAR more people writing a salt string then there will be writing the
+backend implementation. Optimize for the greater use-case...
+
+Just my $0.02
+
+Anthony
+

@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <20140409122725.GA19070@bolet.org>
+Date: Wed, 9 Apr 2014 14:27:25 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+On Wed, Apr 09, 2014 at 10:25:27AM +0000, Peter Gutmann wrote:
+This is how existing crypto protocols like TLS and CMS do it, typically you
+denote the operation via some diversifier, e.g. TLS uses "CLNT" and "SRVR"
+(actually for the MAC, but a similar thing)
+
+I'll beg to differ here.
+
+In TLS (see section 6.3 of RFC 5246), the symmetric keys are derived from
+the "master secret" with a single PRF call:
+
+
+   When keys and MAC keys are generated, the master secret is used as an
+   entropy source.
+
+   To generate the key material, compute
+
+      key_block = PRF(SecurityParameters.master_secret,
+                      "key expansion",
+                      SecurityParameters.server_random +
+                      SecurityParameters.client_random);
+
+   until enough output has been generated.  Then, the key_block is
+   partitioned as follows:
+
+      client_write_MAC_key[SecurityParameters.mac_key_length]
+      server_write_MAC_key[SecurityParameters.mac_key_length]
+      client_write_key[SecurityParameters.enc_key_length]
+      server_write_key[SecurityParameters.enc_key_length]
+      client_write_IV[SecurityParameters.fixed_iv_length]
+      server_write_IV[SecurityParameters.fixed_iv_length]
+
+
+Thus, TLS exhibits the "output splitting" behaviour. Now, the PRF itself
+is defined as a concatenation of HMAC outputs; however, each HMAC will
+typically use SHA-256 (in TLS-1.2) for 32 bytes of output. With a cipher
+suite based on AES-128 and HMAC/SHA-256, the two encryption keys will be
+the result of a split of a single HMAC output.
+
+
+Exactly.  I'm not sure if this is explicitly recorded anywhere, but
+it's certainly part of the crypto folklore that you don't use the same
+PRF output to generate keys for different purposes.
+
+"Folklore" is probably the right term: old wisdom whose actual roots are
+lost in the mists of Time. In the random oracle model, output splitting
+is "obviously" safe. In fact, as Dmitry indicates, the "non-splitting"
+method really is the definition of a new PRF, whose output is split; so
+the dichotomy between splitting and non-splitting is not ultimately a
+real one.
+
+Now I am ready to accept the idea that when the "PRF" is not a true PRF
+(i.e. demonstrably deviates from the ideal construct of a PRF, as for
+instance Merkle-Damgard hash functions with the "length extension
+attack")(*), then all constructions using that not-PRF are not
+equivalent and some may be weaker than others. However, I don't thing it
+can be boiled down to a simple rule of "don't split the output". It
+really depends on the details of the shortcomings of the not-PRF.
+
+
+	--Thomas Pornin
+
+(*) I also admit that I am here skipping over a lot of details, since a
+random oracle, a PRF and a hash function are not the same thing. Please
+fill in the blanks. The core idea is that output splitting SHOULD be
+safe, and if it is not then it is a (demonstrable) weakness of the PRF.
+

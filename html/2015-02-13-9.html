@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150213220211.GA12585&#64;openwall.com&gt;
+Date: Sat, 14 Feb 2015 01:02:11 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard functions
+
+On Fri, Feb 13, 2015 at 11:36:58AM -0800, Bill Cox wrote:
+&gt; Interesting analysis.
+
+Yes, and helpful!
+
+&gt; Also, while Lyra2 uses one Blake2
+&gt; reduced round (a good choice, IMO), Yescrypt uses 6 of it's new round
+&gt; function.  When using Yescrypt in production, I can easily change 1 line
+&gt; and improve it's performance greatly for single-threaded applications.
+&gt; Lyra2 is already using only one round, and I will not have that flexibility.
+
+In the tweaked yescrypt submission, I describe yescrypt's pwxform rounds
+count as one of the "tunable parameters (currently compile-time)",
+called PWXrounds.  (FWIW, I recently performed testing that the current
+tweaked yescrypt meets my randomness tests of the V array even with
+PWXrounds = 1.  As well as with 1000000, to take another extreme.)  I am
+hoping that, unless there are objections, we'll provide a runtime way to
+tune and encode these parameters (perhaps with some limitations on the
+possible values, to reduce complexity of optimized implementations) in
+an extended API.
+
+&gt; In your generic attack, for TMTO &gt; 1/2, for each new value computed, a
+&gt; significant percentage of all prior values must be recomputed, leading to a
+&gt; computation effort proportional to N^2, where N is the number of original
+&gt; computations without a TMTO.
+
+If I am reading this right, there's an overall memory*computation
+reduction when using 1/2 of memory (meaning this attack is likely of
+practical value to GPU implementations), almost no change for 1/3, and
+an overall increase for memory reduction to below 1/3.  And given
+excessive computing resources, it is possible to do much better due to
+the much slower increase in depth penalty.
+
+&gt; I like that your Table 6 does not claim
+&gt; improved memory*time based on tree depth, and instead simply reports both
+&gt; recomputations and depth.
+
+I like this too.  It is useful to be able to consider these separately.
+
+&gt; However, Table 6 is heavily dependent on N,
+&gt; which is not stated.  For very large N, even the 1/3 TMTO attack will have
+&gt; very high recomputations.  Maybe state N?
+
+My understanding is that the algorithm on the previous page roughly
+corresponds to yescrypt's SMix1, so N = T.  (yescrypt's SMix2, which is
+where t comes into play, is different in that its writes are random
+rather than sequential.)  I guess g() is assumed to provide r_i
+uniformly distributed in the range 0 to i-1, with no specific pattern.
+
+When analyzing yescrypt in this way, it should be taken into
+consideration that its Wrap() function is different: it provides uniform
+distribution over a (moderately smaller) moving (and growing) window
+instead.  In my simulation (see extra/sim-at-output.txt, loop1_pow2), it
+hit 56.78% different elements vs. simple uniform random (modulo
+division) hitting 50.00%, and the highest number of hits per element is
+twice lower.  Maybe this will make yescrypt's SMix1 more resistant to
+TMTO, especially relative to its lower claimed pre-TMTO area-time cost
+of N^2 / 3 (this is what I use for deciding on SMix2's iteration count
+at t = 0).
+
+And of course SMix2 will add to that (probably a lot).
+
+In extra/sim-tmto.c, I include a TMTO attack on SMix2's random
+read-writes (at p = 1), but it assumes scrypt's original SMix first loop
+rather than yescrypt's SMix1 above.  (OTOH, as specified it corresponds
+to t = 2 rather than t = 0.  I forgot to include a newer revision of
+that program adjusted for t = 0.)  It would be helpful to come up with
+TMTO attacks on the full yescrypt's SMix1 and SMix2 combined, and put
+the results in some table.  Naturally, it is expected that together
+SMix1 and SMix2 will work better than individually.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

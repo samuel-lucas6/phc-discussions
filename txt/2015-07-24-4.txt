@@ -1,0 +1,129 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150724154338.GA1859@openwall.com>
+Date: Fri, 24 Jul 2015 17:43:38 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Dmitry Khovratovich <khovratovich@...il.com>,
+	Alex Biryukov - UNI <alex.biryukov@....lu>,
+	Agnieszka Bielec <bielecagnieszka8@...il.com>
+Subject: Re: [PHC] Argon2 improvement thread
+
+Dear Argon team,
+
+Thank you for commenting on the proposed changes!
+
+On Fri, Jul 24, 2015 at 04:00:50PM +0200, Dmitry Khovratovich wrote:
+So far we support most of the API and minor corrections to the scheme that
+do not change its functionality and do not make it more complex.
+
+Do you view merging 2d and 2i into one API, with a parameter to choose
+one or the other, as an API change that you support?
+
+Complexity, as we see it, is one of the greatest enemies of security.
+
+We're in agreement on this.
+
+However, I think we should consider complexity not only of each one
+scheme individually, but also overall across currently deployed systems.
+If Argon2 is suitable for fewer use cases, this means that other schemes
+are to be used for those, which in turn means greater complexity across
+multiple systems.
+
+=============MAXFORM============
+
+The proposed MAXFORM modification as in
+http://article.gmane.org/gmane.comp.security.phc/2838 adds a  64-bit
+transformation with a large number of S-box lookups that runs in parallel
+to the primary 8192-bit transformation P.
+
+The motivations behind this new transformation are to reduce the
+parallelism and that certain number of sequential S-box lookups slows down
+the brute-force on GPU on some settings.
+
+The parallelism (or latency) control is also helpful against ASICs.
+
+With S-box overwrites, this also improves Argon2's TMTO resilience.
+
+The negative effect of this addition is fourfold:
+ - new transformation, conceptually different from the other blocks in the
+scheme
+ - scheme becomes more complex and more difficult to analyze
+ - increased exposure to side-channel attacks
+ - wider gap between Argon2d and Argon2i, getting two schemes rather than
+one.
+
+Yes, although I think we can work on narrowing this gap again,
+especially because the parallelism control is also useful for 2i.
+Specifically, we might come up with a variation of MAXFORM for use in 2i
+(only) where the multiply-add-XOR operations would remain
+input-dependent, but the S-box lookups would be replaced e.g. with
+sequential reads (or some other input-independent order of reads).
+
+Clearly, adding this type of structure requires careful analysis and clear
+benefits. We would like to evaluate the effect of this update on the actual
+GPU performance with various memory requirements. Thanks to Alexander, we
+already know that the performance impact on CPU is not so large.
+
+If there is anyone volunteering to code and benchmark Argon2d with and
+without this update on some GPU likely to be used by a cracker, we would be
+happy to assist. For instance, the GPU performance should be compared for
+Argon2d with and without this update using 4 KB, 64 KB, 1 MB, 64 MB, and 1
+GB of RAM.
+
+I expect that Agnieszka, CC'ed here, will work on Argon2 on GPU as part
+of her GSoC project with us (although only 1 month of it is left).  And
+yes, since Argon2 is still a moving target, she will have to experiment
+with several revisions of it.
+
+What revision of Argon2 should Agnieszka start with?  1.2 aka v3?
+Including the not-yet-approved by the panel BlaMka?
+
+Given the significance of the change, we consider it premature to integrate
+without proper evaluation.
+
+It is definitely premature to integrate - IMO, not so much because of
+lack of proper evaluation on GPUs, but mostly because we haven't yet
+defined how the S-boxes would be initialized and overwritten.  I am
+willing to work on defining that (and already have some ideas on it,
+which I haven't fully expressed yet).
+
+=========================Hybrid scheme===
+
+It has been proposed to add another version of Argon2, which is a
+combination of Argon2d and Argon2i. In more details, the first half (or so)
+of the memory should be filled with data-independent addressing, and the
+rest with data-dependent addressing. The motivation is to reduce the
+side-channel leakage for 1-pass Argon2d  at the cost of reduced tradeoff
+resilience and the overall latency. The drawback of this proposal is
+threefold: 1) yet another primitive 2) the side-channel leakage is reduced
+but not removed, which still restricts the use case. 3) the tradeoff
+becomes more favourable to the attacker.
+
+Clearly, such update would make sense only for 1- or 2-pass Argon2d, since
+for 3 passes and more Argon2i comes into play. We think that the drawbacks
+currently outweigh the positive effect, in particular we are concerned of
+the fact that the scheme is weaker than both existing variants in some
+scenarios. Still, it can be possible to include it as a possible extension,
+though not recommended by the designers but available to those who
+desperately want such a scheme.
+
+In "Clearly, such update would make sense only for 1- or 2-pass Argon2d,
+since for 3 passes and more Argon2i comes into play." you appear to have
+been thinking of TMTO only.  In practice, for some attackers I'd expect
+2i to be weaker than 2d (or the hybrid) even for more than 3 passes.
+Especially if 2d (and the corresponding portion of the proposed hybrid)
+gains MAXFORM and 2i does not (or at least doesn't gain the
+input-dependent S-box lookups, which it obviously can't have).
+
+===================================
+
+We would be happy to see more discussion on these topics, in particular
+from the panel members who have not expressed their opinion yet.
+
+Ditto.
+
+Thanks,
+
+Alexander
+

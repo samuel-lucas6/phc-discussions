@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20151006102700.GB8848@openwall.com>
+Date: Tue, 6 Oct 2015 13:27:00 +0300
+From: Solar Designer <solar@...nwall.com>
+To: Massimo Del Zotto <massimodz8@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+Hi Massimo,
+
+Thank you for your work on this, and for your comments.
+
+On Tue, Oct 06, 2015 at 11:04:24AM +0200, Massimo Del Zotto wrote:
+The rationale is very simple: I have 64 WIs and I have to load (2+2)*4
+ulongs ({PWXRounds|S_ROUNDS}=6 consecutive times).
+Therefore, loading in two steps as I do gives me 8 ulongs from s0 across
+the different chunks, then s1.
+As the chunks are independently processed, the fact they are scattered
+isn't very relevant in this context. I have those 64 work items and 64
+bytes to load so there's no much choice in how much memory a WI can load:
+they just map right.
+
+Yes, but why waste all 64 work-items on one yescrypt hash computation?
+You could as well load in uint's rather than bytes, and have 2 or 4 (or
+more) yescrypt's across those 64 WIs, no?  (And you could also spend
+fewer WIs per yescrypt instance, for up to the obvious 64 yescrypt's in
+64 WIs, in which case you wouldn't need any communication via local
+memory, but that's not necessarily more optimal.)
+
+As a side note, I was surprised to see unaligned loads as I understand they
+have (had?) considerable performance implications on some CPUs... when
+they're legal operations in the first place.
+
+Do you see unaligned loads somewhere in yescrypt?  There shouldn't be any.
+
+I might try loading ushorts and I have tried loading uints but the OpenCL
+compiler emitted something... not very pretty. Loading uints was
+considerably slower to me - what should I load instead?
+
+When you tried uints, did you adjust your use of the work-items
+accordingly, so that you'd have more instances of yescrypt in the 64?
+
+Those operations get dispatched anyway.
+
+Yes, but you're not limited to computing one yescrypt hash in there.
+
+In fact, it doesn't make any sense to waste an entire CU on one hash,
+yet keep the S-boxes in global memory.  You have 64 KB of local memory
+per CU, enough for several yescrypt's.  Have you tried keeping the
+S-boxes in local memory?
+
+(For bcrypt, which is in many ways similar to pwxform, but uses 4 KB
+S-boxes, it is more optimal to keep them in local memory on GCN.)
+
+I think you happen to achieve decent performance (compared to other
+results for yescrypt on GPU) at all because the S-boxes are actually
+loaded from the same CU's cache.  Well, the cache is 16 KB (and there's
+also L2) - enough for the 8 KB S-boxes - but you certainly can do better
+by simply keeping the S-boxes in local memory.
+
+On coalescing: that's a good question. AMD claims GCN to have no coalescing
+but they also claim the best access pattern is to have "stride 1 [bytes]"
+across WIs
+
+What makes you think it's "1 [bytes]"?  That would be weird.
+
+Alexander
+

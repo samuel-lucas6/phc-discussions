@@ -1,0 +1,298 @@
+phc-discussions - Re: [PHC] Re: A review per day - Yescript
+
+Message-ID: <53FFB56F.80301@ciphershed.org>
+Date: Thu, 28 Aug 2014 19:04:15 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: A review per day - Yescript
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/28/2014 05:37 PM, Solar Designer wrote:
+On Thu, Aug 28, 2014 at 04:05:32PM -0400, Bill Cox wrote:
+>As promised, here's where I finally say all the things I don't
+>like about Yescrypt.
+
+Thank you!
+
+>Here's my list:
+>
+>- - It's too complex.
+
+It's definitely more complex than I would have liked it to be.  But
+I have difficulty dropping anything from it to reduce complexity,
+and I have yet more flags to add, including to address your wishes 
+(cache-timing resistant initial phase, tunable pwxform rounds).
+
+First on my list to potentially drop is YESCRYPT_PARALLEL_SMIX
+(keep support only for scrypt-style thread-level parallelism), but
+it sounds like you wouldn't like me dropping that.  And Argon
+authors' analysis suggests that such theoretically 1:1 TMTO
+opportunities are in fact bad in practice (need to slow down attack
+by a factor greater than the reduction in memory, if at all
+possible), especially at very high p.
+
+I really would prefer that you keep YESCRYPT_PARALLEL_SMIX, and
+YESCRYPT_RW.  Reading an unpredictable prior location and mixing it
+into the state is the best way to defend against Scrypt's current TMTO
+problem.
+
+>- - No cache-timing resistant initial phase has not yet been
+>implemented.
+
+Yes.  Planned for final revision.
+
+For my purposes, I could live without it.  TwoCats' first half uses
+predictable addressing, and as much as I do worry a bit about timing
+attacks for TrueCrypt-like applications, I also worry about someone
+building an ASIC that tears through the first half too fast.  The
+multiplication chains are probably the only thing that would give them
+trouble, but those are optional in TwoCats.
+
+>- - OPENMP support is required for current version to run in
+>parallel
+
+Oh, that's a mere implementation detail.  To me, OpenMP-using code
+is cleaner and smaller than pthread-using code, but it's easy to
+switch it to using pthreads in a fork of the tree, or to include
+both versions, if you want to.  I just don't want to add the
+complexity of including both.
+
+Why do you find it a drawback?  OpenMP has been around for years,
+and it hides some of the complexity and removes room for some
+potential bugs.
+
+It's not really a drawback now days.  I do worry that OpenMP is not
+doing a good job starting and merging your threads though.  When I run
+TwoCats in Ubuntu 14.04, it runs at almost the same exact speed every
+time.  Yescript gives me more variation in runtime.  I worry OpenMP is
+the culprit.
+
+Oh, here's where it can in fact be a drawback: if the app into
+which the code is to be linked is already using some other
+abstraction layer for threads.  But I can't possibly happen to
+match every possible abstraction layer at once.
+
+Well, now that you point it out, this is an issue, too :-p
+
+>- - Like Samuel Neves code, understanding what's going on can be
+>tricky!
+
+In case of yescrypt, is it caused by complexity of what's in
+yescrypt or by the way the code is currently written, in your
+opinion?
+
+Both.  See example below.
+
+If you have any suggestions on making yescrypt or/and its
+implementations simpler, I'd be happy to hear those!
+
+Try and just think dumb :-)
+
+>- - For t == 0, most of hashing could be done serially, rather
+>than in parallel, though the results need to be loaded in
+>parallel for the final pass.
+
+Is it the "banana attack" you mention below?  I'll re-read it
+tomorrow.
+
+Yes.
+
+>The complexity of Yescrypt will make it difficult for other
+>authors to create their own compatible versions.  It also makes
+>cryptanalysis harder.  I certainly have a difficult time reading
+>it and convincing myself it is bug-free.
+
+Unfortunately, yes.
+
+As to cryptanalysis, though, it should be pretty easy to verify 
+yescrypt's entropy bypass paths for both password and salt, as well
+as separation of password and salt, from looking at the wrapper
+functions only.  It's analysis of susceptibility to TMTO, etc. that
+is complicated.
+
+True enough.  I'll look forward to your reduced functionality of
+Yescrypt as well.  It should be a lot easier to grasp.
+
+>However, I gave it a try.  I may have found a bug, but being
+>Solar Designer's code, I have to admit it is more likely an error
+>in my reading of his code.  The potential bug is on line 433 in 
+>yescrypt-ref.c.  For t == 0, with YESCRYPT_RW enabled and
+>parallelism
+>>1, I think that randomly read/writing 1/9th of memory followed
+>>by
+>randomly reading 2/9ths of memory sounds like it would provide
+>enough TMTO defense.  Honestly, I'm not sure smix2 is needed at
+>all for good security when YESCRYPT_RW is set.
+
+I did the math, as well as simulations (see extra/sim-normat*),
+and optimal normalized area-time cost to attacker is achieved at
+yescrypt's current behavior for t=0, with its SMix2 intact and
+corresponding to 1/4th of total iteration count (which is 4/3*N).
+This is assuming no efficiency-improving TMTO exists (one that
+would reduce the area-time cost).  If such TMTO attack exists at
+t=0, then t=1 or higher would be optimal, meaning even more
+iterations in SMix2.
+
+In other words, the few iterations in SMix2 that are invoked at t=0
+are there primarily not because of TMTO concerns, but simply
+because they increase the normalized area-time even assuming no
+TMTO.  Even more iterations, beyond this optimal point, would be
+decreasing the normalized area-time, unless an efficiency-improving
+TMTO exists.
+
+Hence my choice of settings to use at t=0.  Nothing arbitrary
+there.
+
+So, you divided the number of memory elements N by 3*p^2, where p is
+the parallelism, to determine how many unpredictable writes to do, and
+this happens to be the optimal solution to your time*cost maximization
+under a TMTO attack...
+
+This is why it's hard to read your code!
+
+I spent a lot of time thinking, "Why did he do that?", when reading
+your code.  I can usually see it pretty quickly, but I actually am far
+more experienced at reading complex code than most people.  There's
+simply nothing wrong with your coding style or methodology, so long as
+the reader is a genius :-)
+
+I don't expect you to change the code in any way... maybe put in a
+comment about the N/(3*p^2) thing?  I actually have worked with a few
+guys who see the code as self-documenting, almost regardless of the
+complexity.  I've just been working with a guy who in theory is a
+college student at Frankfurt University who is incredible.  He helped
+us work out how to upgrade older TrueCrypt installs cleanly to a new
+CipherShed install.  Getting it right involves understanding complex
+inter-relationships between 100 different pieces of code.  He's been
+putting in very helpful comments for the rest of us :-)
+
+If indeed this Rocki Hack really is this good as a college student,
+someone should get hold of him quick, and rope him into a software
+security career somewhere.
+
+Assuming YESCRYPT_PARALLEL_SMIX is set for the below:
+
+Yep.  I'm doing benchmarks at the moment with Yescrypt through the PHS
+interface.  I just set the parallelism #define to 4, which is optimal
+on my test machine.
+
+>However, it looks like Nloop_rw is set to N/(3*p^2).  It looks
+>like it only does N/(3*p) total random read/writes, followed by
+>N/3 - N/(3*p)) random reads.  Is it supposed to be this way?
+>This seems OK for p == 2 or p == 3, but what about p == 32?  Why
+>would I want fewer random writes as a total fraction of memory as
+>I increase parallelism?
+
+Everything you describe in here is on purpose.  The random writes
+exist for p>1 at all only to keep yescrypt's absolute TMTO
+resilience (against whatever fixed TMTO attack) for p>1 at p times
+higher total memory no worse than it is for p=1 at correspondingly
+less memory, with no surprising gap.  It would be rather nasty if
+e.g. going from 1 GB p=1 to 2 GB p=2 or even to 32 GB p=32 would
+potentially allow for an efficient attack in a smaller amount of
+memory than on the 1 GB p=1 hash.  This extra magic with division
+by p^2 removes that risk.  For 32 GB p=32, it feels irrelevant as
+it's unlikely you could find an efficient attack at < 1 GB on a 32
+GB hash, and as you point out this random writes portion becomes
+almost negligible, but for e.g. 2 GB p=2 the risk of an efficient <
+1 GB attack could be for real.
+
+Makes sense.
+
+I first briefly mentioned this detail in here (although I was
+confused by some other important things in that early posting on
+the subject): http://www.openwall.com/lists/crypt-dev/2013/12/19/1 
+"When ESCRYPT_RW is set, there's some additional magic here, which
+ensures there's no reduction in "absolute" TMTO resistance when
+going from p=1 to p>1 and increasing N proportionally."
+
+In general I would prefer that the code documented any magic :-)
+
+This is definitely one of the design decisions that ideally I
+should have explained in the specification document.
+
+And in the comments.
+
+>The complaint I have about not forcing parallel computation is 
+>basically a banana attack.  If an attacker can instantly flush
+>his memory to disk, and later instantly read it back, then he can
+>do a TMTO, running threads in series rather than in parallel,
+>because no data is exchanged between the threads.  They are all
+>independent.  In the last pass, all memory has to be loaded so
+>that the random read phase can complete in a reasonable time.
+>The problem with this attack is that the attacker needs the
+>bandwidth from memory to disk to be as high as from the CPU to
+>memory.  On my test machine, I'm able to get about 12GiB/s
+>bandwidth from the CPU to memory.  In theory, my Sata interface
+>is 6GiB/s.  I seriously doubt that having 2 Sata disks in my 
+>system would let me do 12GiB/s read/write to them.  However, if I
+>were determined to make this TMTO attack, I might be able to do
+>so with only a 2X increase in time*memory cost for high
+>parallelism values, but I still would need to load it all in
+>memory in the end.  That compares to Scrypt's *reduction* in
+>time*memory cost by 4X, so it's hard to say this is a real
+>concern.  It's more like me beating Solar Designer with a banana
+>:-)
+
+I'll re-read this tomorrow, but for now: I think SATA is 6 Gbps,
+not 6 GiB/s.  So you'll need ~10x more interfaces.
+
+That makes my banana pretty limp.
+
+>I think Solar Designer errs on the side of over-defending
+>passwords at the expense of too much additional complexity.  I
+>think his mind deals with complexity like this more easily than
+>most of the rest of us, which leads him to make this mistake.  No
+>other entry has gone to such lengths to increase an attacker's
+>power bill slightly when possible. There are more modes and
+>tunables than any other entry, to help defend better in various
+>situations.  He has the VROM mode for authentication servers, and
+>small random-read-writes for Bcrypt-like security.  He has Scrypt
+>compatibility mode, and code to detect any non-Scrypt compatible
+>options, in which case he fixes the PBKDF2-HMAC input collisions.
+>I hate modes.  They confuse me :-)
+
+I don't think my mind is that special.  It's more like I find
+yescrypt's complexity not so complex for me for the simple reason
+that I spent a lot of time analyzing scrypt and its code, and then
+designing yescrypt, step by step and removing/replacing parts, so I
+have a good feeling of why every part is in there, what we'd miss
+without it, and how it interacts with the rest.
+
+As to having fewer modes, I am likely to create at least one
+cut-down implementation of yescrypt with partial functionality.  I
+will likely exclude support for p>1, YESCRYPT_PARALLEL_SMIX, and
+ROM from that one, keeping only what's relevant for a crypt(3) with
+no extra inputs. I might also exclude scrypt compatibility from it
+(without support for p>1, it wouldn't be full scrypt anyway).
+
+Alexander
+
+I look forward to that cut down version.  Anyway, Yescrypt is an
+awesome piece of work.  I hope the PHC judges have the sense to select
+it as the Scrypt successor.  That would make my job recommending the
+right password hash for CipherShed simple.  If the Scrypt successor is
+chosen from Microsoft's picks... well, there's still Scrypt!  Not only
+that, but the best Scrypt implementation happens to be... Yescrypt!
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/7VsAAoJEAcQZQdOpZUZkZQQAIlRt2YP1XrCJrDcRt8bgiKS
+KHLUbLTw09yF6LqdfkW9CFLn35+1geWSezNYEjilPxKzxGl+toJYKvK51r8jI1Pi
+6skuVMlfo+MNHj43ZC5PQyzRtfuBNQAiW8lFsqz+N86Rx1Zi2wrFcrmq7lmosxJP
+5JGWJkEdKpz3BntkowOEPSZReEPo8F1UZVb4xT0C2M+Nj5EGHIIaOnGmfW33O/mf
+sSfqbGGfX9f3/kmJajxTfqjUvqprf61/M2OBxm64LCzB4hqOKRVh8KSj+P2FoJVu
+DvDDWq0I0WTFE697jGDVKl/DiM/RUOVuYtVynnZZaQ3UossDxvZinICyBRpgQemQ
+9eRm0WxjxQSBhUkmp/Dy8y5LCM3dh6/HF/D6fr8HwjlTFkDRbgVKomX/lP+/LRaD
+KWCZawulmpSHmYLu9L6IXxDCgr/kf3eTd0AtXjoEUFJzhPJbgWCPmAJeNcB1T9ZP
+77H1Lq2Y64zCBKUkxSdt+RtHRZ0tiDZJXJhW2KlS0l4039DhBs8CfW94sFWEQ10G
+PZO0UYxsDhP2SyplcrRXwOa64xIEa320IkwiCfzeAmrBji8iQoxVNcwOanFH8gJI
+HR6LLxiDZhf17O1HndaryvNBgpDZOBCtIDeo3J5le9kmc/slcp/Zw3BFfPwZcWbE
+MA5sWV4HiC3V4OMNYfqF
+=apGI
+-----END PGP SIGNATURE-----
+

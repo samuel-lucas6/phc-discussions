@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Argon2 using memset still
+
+Message-ID: <55DF3F6E.9020301@dei.uc.pt>
+Date: Thu, 27 Aug 2015 17:48:46 +0100
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Argon2 using memset still
+
+On 08/27/2015 05:33 PM, Bill Cox wrote:
+g++ has a habit of optimizing calls to memset away.  I doubt that Argon2
+succeed in it's attempts to clear memory.  I copied this function from
+Blake2:
+>
+/* prevents compiler optimizing out memset() */
+static inline void secure_zero_memory( void *v, size_t n )
+{
+  volatile uint8_t *p = ( volatile uint8_t * )v;
+  while( n-- ) *p++ = 0;
+}
+
+Since Argon presumably clears larger amounts of data than BLAKE2 has to, it might be more convenient to use the
+alternative implementation for this:
+
+  static void secure_zero_memory( void *v, size_t n ) {
+    static void* (* const volatile memset_s)(void*, int, size_t) = &memset;
+    memset_s(v, 0, n);
+  }
+
+memset_s is, of course, also a C11 function that is guaranteed to have the semantics we want here.  But not available
+anywhere interesting yet, as far as I know.
+
+

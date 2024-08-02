@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] Why protect against side channel attacks
+
+Message-ID: <20150625071908.GA2553@openwall.com>
+Date: Thu, 25 Jun 2015 10:19:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Why protect against side channel attacks
+
+On Wed, Jun 24, 2015 at 07:12:16PM +0000, Greg Zaverucha wrote:
+Some of the recent discussion has again turned to whether side-channel resistance is worthwhile.
+
+If worthwhile is defined as "worth the time, money, or effort spent; of
+value or importance" (definition from a dictionary), then I say it is
+worthwhile.
+
+Unfortunately, that is not the question.
+
+The question is whether cache timing resistance is worth a likely
+significant reduction in security against offline attack.
+
+And my answer to that question is: it depends.
+
+Suppose you use password hashing function X in many products and services, in a range of contexts (on mobile devices, PCs, servers, in VMs, etc...).  Now suppose that cache-timing attacks against X are shown to be practical,
+
+For purposes of hash function choice for a given application, we should
+assume that unless the hash function is specifically declared to be
+timing-safe, it is not, and the attack may be practical.  So this would
+be no news to us.
+
+someone has released an attack tool, and it's in the news under the name PasswordBleed, and someone has even made a logo for it.  The tool needs the salt and username.  It works by observing the cache access pattern of a victim process/VM, which narrows down the search space to a set of passwords small enough to attack online (i.e., the tool re-computes the hashes for passwords in a dictionary and compares their access patterns to the observed pattern, those that are close are kept). So no breach has occurred and no hashes were leaked.
+
+What you describe above sounds like primarily a publicity attack, on
+hash X or/and on the particular company, not an attack that would
+aim to result in compromised passwords.  Yes, it may happen, and it is a
+concern for us.
+
+(I realize that in most systems the salts aren't public, but I think we all agree that X should not get weaker if the salt is known).
+
+Ideally it shouldn't, but we got a tradeoff here.  Pick your poison.
+
+How do you respond/recover in this situation?
+
+By explaining how the attack does not apply where it does not, and by
+switching to hash function Y where use of hash function X was not
+appropriate.  (Like I said, no news in this.)
+
+And yes, I see how it is an argument for a large company wishing to
+standardize on use of just one hash function without thinking of it on a
+case-by-case basis to simply choose the otherwise weaker function Y for
+all uses right away.  That's the unfortunate reality.
+
+Which passwords were compromised?
+
+If function X was not misused where it shouldn't have been, none at all.
+
+Even if it was, most likely none at all as well, but like you say you
+wouldn't know for sure.
+
+I think the only way to be sure is to have all users change their passwords (and replace X), unless you can have confidence that at no point an attacker had the opportunity to observe the side channel.
+
+Yes.  You shouldn't have misused X in scenarios where the side channel
+is observable by an attacker and salts are available to the attacker.
+
+But the attack leaves no trace, and would likely only affect operation of the system in a very minor way.  Against this type of attack, storing the password in the clear would have been better (since at least it would *require* a breach of the password file).
+
+With salts in the same "password file", hash X is no worse than
+plaintext.  I admit it can become worse if salts are given out to the
+attacker who has side-channel access - most realistically, for
+client-side hashing on a device where the attacker controls another
+sandbox.  This is a case where use of hash X is likely inappropriate.
+
+Now suppose X was side-channel resistant, and consider an algorithmic advance for cracking X.  Suppose a slow-memory attack was demonstrated, and suddenly the attacker hash rate goes up by 10x.  In this case the response is much easier - since you can be sure that only accounts where the hashes leaked need password resets.  The unbreached hashes can be re-hashed with updated parameters for X, or with a new algorithm Y.  There's a period when the defense in the event of a breach is lower than desired, but a breach must occur for it to be a risk.
+
+You assume there will promptly appear "a new algorithm Y" that is
+side-channel safe, yet avoids the attack:defense ratio improvement.
+This might not be the case.
+
+It might be that a 10x ratio like this, for specific kinds of attack
+hardware, will be demonstrated shortly after PHC ends, and will persist.
+
+To summarize, hashing with a function that has side channels introduces a new attack vector, and can put passwords at risk even without a breach.
+
+Unfortunately, yes.  I think Krisztian was first to put it that way in
+discussions in here a long while ago.
+
+PS - I think the attack tool described would work equally well against a design like Lyra2 that only does password-dependent accesses part way through the computation.
+
+Yes, and we had discussed that aspect too.
+
+Hybrid designs mitigate the early-reject attack, but not the new attack
+vector on client-side hashing.
+
+On a related note, side-channel safe hashes do not mitigate another
+attack on client-side hashing anyway: precomputation.  Is this one
+somehow safe from PasswordBleed publicity attacks?  I think it is not.
+
+Alexander
+

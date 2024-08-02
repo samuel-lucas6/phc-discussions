@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] Catfish and public key hash
+
+Message-ID: <704005033.2828552.1396481761236.JavaMail.root@larc.usp.br>
+Date: Wed, 2 Apr 2014 20:36:01 -0300 (BRT)
+From: mjunior@...c.usp.br
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Catfish and public key hash
+
+Hi there 
+
+I would say that if the attacker needs more than 2x the amount of memory used by the defender to get less than a 2x speed-up, then the attacker is wasting resources: he/she could simply use two cores to get the same throughput... Unless the attacker model considers a limitation in number of cores, which does not seem to be the most common case. 
+
+BR, 
+
+Marcos Simplicio. 
+
+----- Mensagem original -----
+
+De: "Bo Zhu" <bo.zhu@...terloo.ca>
+Para: discussions@...sword-hashing.net
+Enviadas: Quarta-feira, 2 de Abril de 2014 16:22:24
+Assunto: Re: [PHC] Catfish and public key hash
+
+Hi Steve,
+
+Thanks for pointing that out.
+It's a well-known optimization method.
+
+But [speed-ups only if a large memory is present] isn't one of the
+features that PHC wants in order to thwart the attacks based on
+ASICs and GPUs, right? :)
+And in this case, knowing p and q, the look-up tables can be much
+smaller.
+
+Best,
+Bo
+
+On Wed, Apr 2, 2014 at 2:48 PM, Steve Thomas < steve@...tu.com >
+wrote:
+
+An attacker with more memory can calculate the public key hash
+faster
+than
+
+the defender even if the attacker doesn't have p and q.
+
+
+# initial work (done only once)
+
+for j = 0 to 2 ** 16
+
+short_cut[0][j] = pow_mod(generator, j, N)
+
+for i = 1 to BIT_SIZE_N / 16
+
+for j = 0 to 2 ** 16
+
+short_cut[i][j] = pow_mod(mem[i-1][j], 2 ** 16, N)
+
+
+# calculating the public key hash
+
+num = short_cut[i][exponent & 0xffff]
+
+exponent = exponent >16
+
+for i = 1 to BIT_SIZE_N / 16
+
+num = mul_mod(num, short_cut[i][exponent & 0xffff], N)
+
+exponent = exponent >16
+
+return num
+
+
+if BIT_SIZE_N is 1024 then with 1024 / 8 * 2 ** 16 * (1024 / 16)
+bytes of
+
+memory (512 MiB) the attacker only needs to do 63 multiplies mod N.
+Using
+
+less than 3.5 GiB you can get it down to 53 multiplies mod N.
+
+
+

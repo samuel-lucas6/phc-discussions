@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Re: Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p7Rtrs=H8CnU4v+wLDaM_F2KUF3vMVXhzjCBWmt-4-K-A@mail.gmail.com>
+Date: Thu, 2 Jan 2014 11:30:58 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Initial hashing function. Feedback welcome
+
+I think how much memory a memory-hard KDF can fill per second is likely
+it's most important performance metric.  However, to really benefit from
+memory-hard KDF, you need to run for longer than many servers can afford.
+ This is why I think client side KDF is important.
+
+A maxed out server may only have 1ms per user for KDF to spare.  There's
+some advantage in maxing out memory vs doing SHA-256 even at 1ms, but it's
+not large.  As you hash longer with a memory hard function, the cost to an
+attacker goes up because he'll need to match your memory in addition to
+running longer.  Just doing more SHA-256 hashes makes him run longer, but
+does not increase his hardware cost.  By the time you hash for a second,
+the memory hard KDF has a huge cost penalty to an attacker who builds
+custom ASICs.  That cost penalty is proportional to the bandwidth of the
+KDF, which is why this metric is so important.
+
+We can increase memory bandwidth with multiple threads, up to a point.  On
+my machine, that point seems to be 2 threads for my current version of
+keystretch.  After that, there's little point in having more CPUs involved,
+IMO.  Maybe we could have them do SHA-256 hashes, but that wont
+significantly increase the cost to an attacker.
+
+
+On Thu, Jan 2, 2014 at 10:02 AM, Peter Maxwell <peter@...icient.co.uk>wrote:
+
+>
+>
+>
+On 2 January 2014 14:44, Bill Cox <waywardgeek@...il.comwrote:
+>
+>>
+>>
+>Running multiple copies of memmove shows my system seems to handle about
+>23GB/s of memory bandwidth.  Two copies of keystretch achieve about 13GB/s.
+> It's not maxing out memory bandwidth, but it's getting there...
+>>
+>
+Surely you do not want to max-out memory bandwidth, that's more a problem
+than a benefit is it not?  For example, password checks are but a small
+proportion of what an average web-server must do.
+>
+>
+>
+>
+
+
+

@@ -1,0 +1,88 @@
+phc-discussions - Re: Dumb idea of the day: Public key crypto based on random permutations
+
+Message-ID: <CAOLP8p6svseUUMwGTmNCQcVrot2gFoDJ6Gtp+_UBz--EiUZX7w@mail.gmail.com>
+Date: Sat, 15 Aug 2015 10:07:03 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: Dumb idea of the day: Public key crypto based on random permutations
+
+Cripes!  I meant to reply to the list.  This system as I wrote it is
+trivial to break.  Alice publishes m*A, where A is her secret, but Eve can
+reverse the computation just doing Finv(A) - 1.
+
+Samuel Neves has given me some extensive pointers and I have week or so of
+reading to do :)
+
+It is still interesting, at least to me, because other choices of F do seem
+to create secure crypto systems.  In particular for Edwards curves, for d
+== -1, the function F is = Sqrt[2] EllipticF[ArcSin[x], -1].  However, I
+can't do the modular arithmetic on this!  An easier example is crypto on
+the unit circle (setting d == 0).  In this case, the function F(x) =
+ArcSin(x).  I still can't compute this with modular arithmetic.
+
+Bill
+
+On Sat, Aug 15, 2015 at 6:12 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+This is what my code from last night does... I think!  This is too simple
+and obvious to be new, yet too useful to work.  Can one of you guys debunk
+this quickly for me before I get too excited?  I coded it in 56 lines of
+attached Python, and it seems to work.  Attack away!
+>
+In short, I think I figured out how to create simple and fast public key
+protocols based on the security of random permutations and no other
+assumptions.  If true, I think this would be a big deal.  I seems like it
+will be faster than elliptic curves, requiring no more bits, and also
+appears to be post-quantum secure when the random permutation is.  The
+algorithm is super-simple, easily in the realm of what we can prove secure.
+>
+The following construction allows us to turn just about any random
+permutation from n bits to n bits into an addition operator, suitable for
+abelian group addition.  Let F(x) be a random permutation of n-bits, such
+as AES.  Define the @ operator as follows:
+>
+    a @ b = Finv(F(a) + F(b))
+>
+This seems to be real addition.  From Wikipedia, here are the 5 properties
+I have to prove to show that this creates an abelian group:
+>
+- Closure
+Since F is a random permutation, there is a value o = Finv(1).  Consider
+the sequence:
+>
+    a, a @ o, A @ o @ o, A @ o @ o @ o, ....
+>
+This sequence goes through all combinations of F(a) + k, for any k, before
+applying Finv.  Since it's a random permutation, Finv also goes through all
+values.
+>
+- Associativity
+Obvious from definition of a @ b
+>
+- Identity element
+The identity element is i = Finv(0).  a @ i = Finv(F(a) + F(i)) =
+Finv(F(a) + F(Finv(0))) = Finv(F(a) + 0) = a
+>
+ - Inverse element
+The inverse of element 'a' is Finv(-F(a)):
+>
+    a @ -a = Finv(F(a) + F(-a)) = Finv(F(a) + F(Finv(-F(a)))) = Finv(F(a)
+- F(a)) = Finv(0) = o
+>
+- Commutativity
+We have to show (a @ b) @ c = a @ (b @ c):
+>
+    (a @ b) @ c = Finv(F(Finv(F(a) + F(b))) + F(c))
+        = Finv(F(a) + F(b) + F(c))
+        = Finv(F(a) + Finv(F(F(b) + F(c))))
+        = a @ (b @ c)
+>
+That should prove it works.  However, just because it's an abelian group
+based on random permutations doesn't prove it's secure.  Where are the
+holes?
+>
+Bill
+>
+
+
+

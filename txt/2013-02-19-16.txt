@@ -1,0 +1,36 @@
+phc-discussions - RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E0903752A@TK5EX14MBXC286.redmond.corp.microsoft.com>
+Date: Tue, 19 Feb 2013 03:22:20 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+CC: "Dennis E. Hamilton "
+	<IMCEAMAILTO-dennis+2Ehamilton+40acm+2Eorg@...rosoft.com>
+Subject: RE: [PHC] Coding of the in[inlen] array for PHS( )
+
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org]
+
+I am going to risk over-stating the obvious just to make certain that I, as a
+newcomer, am on the same page about what the tacit understanding is
+concerning what PHS( ) effectively operates on.
+
+Thank you :-)
+
+This is definitely something that needs to be addressed by the final stage of the PHC. But it's probably not urgent to finalize it now.
+
+We might look at the history of the RADIUS authentication protocol. It handles username and password data for a variety of clients and servers.
+
+RFC 2058 https://tools.ietf.org/html/rfc2058#page-21 didn't define or recommend an encoding for strings.
+RFC 2865 https://tools.ietf.org/html/rfc2865#section-9 defined distinct 'text' and 'string' types "Text contains UTF-8 encoded 10646 characters and String contains 8-bit binary data." Presumably this change was made to encourage interoperability, the IETF tends not to invoke ISO 10646 or Unicode lightly.
+
+How about this wording:
+
+"The function must be well-defined for all sequences of octets supplied to the password input. Length constraints should be clearly defined parameters of the algorithm and should generate an error result if violated. Password inputs with embedded NUL (0x00) byte values are allowed and are treated as significant (even trailing NULs).
+
+However, to promote interoperability callers are strongly encouraged to supply character data in the form of a sequence of minimal-length UTF-8 encoded ISO 10646 characters (not including any NULs trailing or otherwise) whenever practical. Note that this specification declines to recommend a specific Unicode normalization form in the hope that implementers will do the right thing.
+
+Case-folding of password inputs is strongly discouraged, i.e., passwords should always be treated case-sensitively."
+
+- Marsh
+
+

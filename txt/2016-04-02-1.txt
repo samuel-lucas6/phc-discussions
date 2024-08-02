@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160402012719.GA25533@openwall.com>
+Date: Sat, 2 Apr 2016 04:27:19 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 10:46:07PM +0300, Solar Designer wrote:
+I am considering side-stepping the issue: instead of arbitrary {key,
+keylen}, accept only an exactly 32-byte key.  If an application wants to
+use a human-friendly string, it will need to derive the key first, such
+as with another invocation of yescrypt, which is what would have been
+recommended anyway.  This should work great for network services
+implemented as persistent processes,
+
+This is what I implemented now, including a revision of yescrypt
+(accepting the optional encryption key; otherwise compatible with what
+we had before) and a persistent network service using it.
+
+Also, I fixed the number of rounds at 7, for simplicity and since it's
+not known how good or not the source material for the key was.  At this
+setting, the performance overhead is around 0.2% at 2 MB (which is
+nearly the smallest m_cost relevant for such use), and less than that at
+higher m_cost.
+
+I've attached the revised encryption code.
+
+There's also a new API call:
+
+/**
+ * yescrypt_reencrypt(hash, from_key, to_key):
+ * Re-encrypt a yescrypt hash from one key to another.  Either key may be NULL
+ * to indicate unencrypted hash.  The encoded hash string is modified in-place.
+ *
+ * Return the hash pointer on success; or NULL on error (in which case the hash
+ * string is left unmodified).
+ *
+ * MT-safe as long as hash is local to the thread.
+ */
+extern uint8_t * yescrypt_reencrypt(uint8_t * __hash,
+    const yescrypt_binary_t * __from_key,
+    const yescrypt_binary_t * __to_key);
+
+As discussed, uint8_t will need to change to "unsigned char", or for
+hash encodings, which use 7-bit chars only, possibly to "char" for ease
+of use along with <string.hfunctions (which generally want "char" and
+result in warnings on "unsigned char").
+
+but maybe not so great for typical
+web apps in PHP, where it might hamper adoption of this feature (will
+need either persistent storage of the derived key or repeated key
+derivation in each new process).  So I am still undecided.
+
+There's another option: provide a fast KDF specifically for such use
+(perhaps just HMAC with a personalization string), and clearly document
+that its input key must be high-entropy.
+
+Alexander
+
+View attachment "sim-encrypt.c" of type "text/x-c" (1220 bytes)
+

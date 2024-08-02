@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213235102.GA8613@openwall.com>
+Date: Fri, 14 Feb 2014 03:51:02 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 05:36:26PM -0500, Bill Cox wrote:
+I just tested the impact of unpredictable lookups on NoelKDF's hash
+function.  Instead of hashing:
+
+    value = value*(*prev++ | 3) + *from++;
+    *to++ = value;
+
+I tried:
+
+    value = value*(*prev++ | 3) + *(from + (value & mask));
+    *to++ = value;
+
+This makes the next "from" address unpredictable and dependent on the
+next value of value (I really need to rename this).  It slowed down
+single-threaded hashing of 2GB from 0.76 seconds to 2 seconds.  If
+instead of unpredictable, all I need is pseudo-randomized, I got about
+0.95 seconds when I replaced *from++ with *(from + (*prev & mask)).
+
+It looks like there is a penalty to pay for unpredictable lookups.  Is
+(*prev & mask) enough to cause problems for GPUs, or since *prev is
+calculated many cycles earlier, do I really need (value & mask)?
+
+In order to have any assurance of being no weaker than bcrypt, you do
+need (value & mask).  I am surprised that you're seeing this much of a
+performance impact given that the random lookup and the multiplication
+can proceed in parallel (right?)
+
+You can try using value from the iteration before and see if this
+reduces the performance impact.
+
+I think custom ASICs could eliminate the delay caused by using either
+(value & mask) or (*prev & mask) when reading out of on-chip cache.
+It just needs the value at this address by the time the 3-cycle
+multiply finishes.  I was surprised that (value & mask) caused my Ivy
+Bridge CPU so much grief.  I thought 3 cycles would be enough to do
+the mask operation and load from L1 cache.  Apparently not...
+
+I am also surprised.  Are you sure your "mask" is small enough that this
+fits in L1 cache?  Are you sure the data was already in L1 cache?
+
+>What I currently do for GPUs is to allow for memory sizes as low as
+>1MB,
+>
+How is this something you do "for GPUs"?
+
+Knowing almost nothing about GPUs, I assumed they had at least 1MB of
+cache per core... this is obviously wrong, so I'll change it to KB
+instead of MB.  Is this fine enough, or should I have the user specify
+the block size and number of blocks instead?
+
+I don't know what you're trying to do (support defensive use of GPUs or
+be GPU-unfriendly, or support both modes via different settings), but in
+general I think block size needs to be tunable.
+
+It's interesting how we come to different solutions based on what we
+know... I'm still not completely sold on doing randomized lookups
+within a block if it slows the defender down 20-30% for addresses
+computed much earlier, and 2X for addresses computed just in time.
+
+This doesn't have to be that way.
+
+This wont slow down FPGA and ASIC based attackers at all, but it will
+hurt the defender... just my point of view coming from a world where
+FPGAs and ASICs are the most important things in life :-)
+
+This is true.
+
+Note that we don't have to make those lookups as small as bcrypt's.  What
+matters is them not being predictable too much in advance (more than they
+are in bcrypt) and how frequent they are (the number of such lookups per
+e.g. 1ms hash computation).  If we can make e.g. 128-bit SIMD random
+lookups as frequently as bcrypt does its 32-bit lookups, that's actually
+better than bcrypt.  Perhaps we'd need 2+ interleaved SIMD instruction
+streams to achieve that rate.  I think we should try.
+
+As to multiply latency hardening, it may be part of those same chains,
+or like I mentioned it may also be a separate scalar chain.  That way,
+having some parallelism in the random lookups chains won't reduce the
+multiply latency hardening for the block computation as a whole.
+
+However, I do see your point were we should be better than bcrypt in
+most real-world situations.  I've read criticism of Scrypt compared to
+bcrypt for very low memory applications.  I just have trouble
+empathizing with a sys-admin who can't even allow for 1ms and 1MB for
+authentication.
+
+Well, current NoelKDF at 1ms and 1 MB might well be worse than bcrypt in
+terms of GPU attacks.  As we know from YAC (which accesses memory in
+128-byte chunks, just like Litecoin), the threshold might be at around 4 MB.
+The multiply latency hardening probably makes NoelKDF protected from
+GPUs at lower memory size per instance, but we wouldn't know this reliably
+until we've tried implementing and running a NoelKDF cracker on GPUs.
+
+Also, we should consider not only sysadmins, but OS distro defaults,
+for systems which are meant to run on older machines and/or in VMs,
+including potentially tiny ones.
+
+When I think of harnessing GPUs for authentication, I
+imagine many cores per user authentication and high values of pepper,
+rather than 1 tiny wimpy core for a whole password hash.  It just
+seems a bit cheapskate-ish to me, but I really don't know anything
+about the world of high volume traffic data centers.  If they're
+really that cheap, it seems to me they should be doing the
+server-relief thing.
+
+We can find and discuss plenty of excuses, but in PHC our job is to
+improve upon previous state-of-the-art, and this includes bcrypt and it
+being suitable for low durations and low memory needs.
+
+It is important to be able to show that our new password hashing scheme
+is not a downgrade from bcrypt.
+
+Alexander
+

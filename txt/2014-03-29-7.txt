@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Should SkinnyCat have memCost and timeCost?
+
+Message-ID: <20140329162253.GA2287@openwall.com>
+Date: Sat, 29 Mar 2014 20:22:53 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Should SkinnyCat have memCost and timeCost?
+
+On Sat, Mar 29, 2014 at 11:54:07AM -0400, Bill Cox wrote:
+It's been a couple of wonderful days since submitting TwoCats, and
+since then, I've only found a couple of typos in the paper.  I'm
+getting real work done again at my day job :-)
+
+I envy you. ;-)
+
+There is only one minor issue nagging at me: the stripped-down subset
+of TwoCats called SkinnyCat takes only a memCost parameter, not both a
+memCost and a timeCost.  For compute-time hardening in SkinnyCat, I
+would repeat the inner block hash loop 2^timeCost times rather than
+using multiplication chains.  TwoCats, being the full featured
+version, does both.  The idea is that repeatedly hashing the same
+small block of memory that fits in L1 cache over and over before
+moving to the next block is hard for an attacker to speed up, because
+our L1 CPU caches are fast.  It also would allow SkinnyCat to be used
+in low memory situations where long runtimes are still desired.
+
+This specific approach to using timeCost sounds weird to me.  Maybe I
+misunderstood, but as described above it sounds like timeCost 0 would
+reduce the whole scheme's usage of memory bandwidth accordingly, which I
+find an undesired side-effect.  Set timeCost high enough and attackers
+would even be able to use disks instead of RAM.  No?
+
+I actually thought of controlling yescrypt's time cost solely via the
+pwxform rounds count (thus, within BlockMix rather than at a higher
+level such as in SMix), but decided not to for the reason given above.
+The pwxform rounds count should also be tunable (in the full-featured
+implementations), but that's for other reasons: it changes the balance
+between computation (along with L1 cache lookups) and memory bandwidth
+usage, which may be desirable to tune as well.
+
+On the other hand, many users are likely to get confused with 2 cost
+parameters, and there is already some compute time hardness in
+SkinnyCat due to it's high external memory bandwidth.  It also adds
+complexity to SkinnyCats, which is antithetical to it's design goal.
+
+I know this isn't terribly important.  I can probably change it in the
+"tweaking" phase anyway.  What do you think?  Should a KISS PHS
+include a time cost parameter?
+
+I have the same dilemma for a scripting-language friendly KISS scheme
+that I _might_ submit.  Either choice makes sense to me, although I
+think supporting t_cost (via continuing to run for longer after the
+desired amount of memory has been filled) is preferable.  In case the
+way you can support higher t_cost is only as you described above (and
+assuming I understood you correctly), then maybe don't bother. ;-(  What
+you described sounds more like a way to tune computation vs. bandwidth
+usage than a way to tune the time cost.  I'd even say that the effect it
+has on time is a side-effect, and it'd be unfortunate to have people use
+this setting for the sole purpose of achieving the side-effect.
+
+I understand that you probably tried to keep the number of tunable
+parameters to a minimum, in TwoCats as well.  This may be why you
+arrived at only one parameter where there could have been two.
+
+Alexander
+

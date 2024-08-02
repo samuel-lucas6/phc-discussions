@@ -1,0 +1,34 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140208082134.GA9003@openwall.com>
+Date: Sat, 8 Feb 2014 12:21:34 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Sat, Feb 08, 2014 at 12:00:30PM +0400, Solar Designer wrote:
+As an option, you might want to reuse the operations and the constant
+used in Mersenne twister's initialization:
+
+#define NEXT_STATE(x, i) \
+	(x) = 1812433253U * ((x) ^ ((x) >30)) + (i);
+
+where "x" is the current state (32-bit) and "i" is the iteration number.
+
+There's a lot of additional info here:
+
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+
+including 64-bit and SIMD twisters (not just implementations of the
+32-bit MT19937).
+
+Also, see init_by_array() in:
+
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/CODES/mt19937ar.c
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/VERSIONS/C-LANG/mt19937-64.c
+
+This function uses different constants, and has an init_key[] input -
+this might fit your needs better.
+
+Alexander
+

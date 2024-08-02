@@ -1,0 +1,105 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard
+ functions
+
+Message-ID: <54DE7016.3090701@larc.usp.br>
+Date: Fri, 13 Feb 2015 19:43:50 -0200
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic memory-hard
+ functions
+
+Hi, again.
+
+Some considerations inline.
+
+BR,
+
+Marcos.
+
+On 13-Feb-15 17:36, Bill Cox wrote:
+Interesting analysis.  I actually wrote code yesterday almost the same as
+your generic attack.  It's a good algorithm.  I have some comments:
+
+- Yescrypt is the fastest remaining entry in the PHC, not Lyra2.  Lyra2 is
+the second fastest.  They are the only 2 entries that are faster than
+Scrypt.
+
+Well, maybe we did something wrong in our benchmarks then, because our
+implementations are comparisons done in v2 are faster than Yescrypt with
+minimal parameters for both functions, both with 1 thread and with
+multiple threads...
+
+However, these benchmarks refer to yescrypt v0. Are your comments
+referring to v1?
+
+
+What data do you have showing Lyra2 is faster?  In particular, for a given
+amount of memory hashed, Lyra2 is always slower than Yescrypt, even on one
+thread, and when Yescrypt's multi-threading option is used as intended,
+Yescrypt can be several times faster.  Also, while Lyra2 uses one Blake2
+reduced round (a good choice, IMO), Yescrypt uses 6 of it's new round
+function.  When using Yescrypt in production, I can easily change 1 line
+and improve it's performance greatly for single-threaded applications.
+Lyra2 is already using only one round, and I will not have that flexibility.
+
+I agree that going below 1 round in Lyra2 is not a great option, but I'm
+not sure about the mixing ability of yescrypt's dedicated function when
+compared with Blake2. I mean, for a internal of 1024 bits, 1 round of
+Blake2 ensures that every bit of the internal and external states depend
+on every input bit. Does yescrypt's function do the same? (note: this is
+really a question, not a "provocation" of any sort). Because if it does
+not, then in theory Blake2 could be reduced even more to match
+yescrypt's diffusion capabilities (although personally I would not
+recommend it).
+
+
+- You're notion of "memory*time" cost in this paper is wrong, leading to
+bizaar and wrong conclusions about Lyra2
+
+I did not check the article in detail, but in Lyra2's v2 document we did
+try to take into account Dmitry's attack (as originally described):
+
+1) We got a ~16 times slow down with minimum time_cost = 1 (the minimum
+parameter) for a 1/2 TMTO, even when exploring parallelism (end of
+section 5.1.4); and
+
+2) We could not see a way to make it much scalable with a high value of
+time_cost, especially because its TMTO resistance grows very fast with
+this parameter (section 5.1.4.1)
+
+Probably we will have to cross-check the results with this new analysis
+(or, better, implement it!), though.
+
+
+You claim Lyra2 has a time*memory cost of 0.28 when using a 1/4 memory
+TMTO.  Here's what GPU attackers think that means:  they use 1/4 the
+memory, and they will only have to do 12% more computations.  Yet you say
+the wandering phase for a 1/4 TMTO requires 1876X more computation.  There
+is simply no way you found a 0.28X memory*time attack against Lyra2 by any
+normal use of the memory*time metric.
+
+What you found is that recomputations can be done in parallel.  While this
+parallelism can help an attacker, time is not equal to the computation tree
+depth.  This depth is simply the theoretical minimum latency for
+recomputing a value, assuming infinite computation resources and power.
+
+Your generic attack is a good algorithm.  I think I can improve it, but I
+have not yet tried this.  At some point, we may discover that there are
+several rows referring to a previous row R which we keep having to
+recompute.  Instead of making all those new rows have high recomputation
+cost, leading to several of them being kept in memory, we can decide
+instead to store R.  The point where we should do that should not be too
+hard to track.
+
+In your generic attack, for TMTO 1/2, for each new value computed, a
+significant percentage of all prior values must be recomputed, leading to a
+computation effort proportional to N^2, where N is the number of original
+computations without a TMTO.  I like that your Table 6 does not claim
+improved memory*time based on tree depth, and instead simply reports both
+recomputations and depth.  However, Table 6 is heavily dependent on N,
+which is not stated.  For very large N, even the 1/3 TMTO attack will have
+very high recomputations.  Maybe state N?
+
+Bill
+
+

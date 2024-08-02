@@ -1,0 +1,264 @@
+phc-discussions - Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt
+
+Message-ID: <20151004114737.GA27147@openwall.com>
+Date: Sun, 4 Oct 2015 14:47:37 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Finalizing Catena, Lyra2, Makwa, yescrypt
+
+On Thu, Jul 30, 2015 at 08:00:36AM +0300, Solar Designer wrote:
+I am considering these tweaks to yescrypt:
+[...]
+2. Reverse order of sub-blocks to mitigate Argon team's depth*memory
+tradeoff attack (which might be practical at low yet non-negligible
+memory reduction factors like 1/2 or 1/3).  I would then appreciate
+review of the revised algorithm by the Argon and Lyra2 teams, if they
+are willing to.
+
+3. Re-introduction of TMTO-resistant pwxform S-box initialization
+(dropped between v0 and v1 for simplicity of a potential yescrypt-lite,
+while not simplifying the full yescrypt) or/and introduction of S-box
+overwrites in BlockMix_pwxform.
+
+Out of the above, after having experimented with various (unpublished)
+revisions, I am now leaning towards "introduction of S-box overwrites in
+BlockMix_pwxform" only.  It may eliminate the need for the rest of the
+above.  Here's why:
+
+"Reverse order of sub-blocks" sounds easy, but it appears to achieve
+quite little (in an attack, storage of just a few sub-blocks per
+not-fully-stored block appears sufficient to undo most of the added
+recomputation latency) and it results in Integerify() having to be
+defined differently than scrypt's (use first vs. last sub-block), so
+this complicates the spec (if classic scrypt support is also included).
+On top of this, my testing shows slight performance impact from the
+reversed order of sub-block writes.  Going for scrypt's sub-block
+shuffling (which would have allowed to keep Integerify() common) appears
+to achieve about as little, but results in a couple of special cases to
+specify for when pwxform block size isn't same as Salsa20 block size.
+(They are the same with yescrypt's current pwxform defaults, but making
+this the only case would lose much of yescrypt's low-level scalability.)
+
+S-box overwrites in BlockMix_pwxform may defeat the same kind of attacks
+that sub-block shuffling would try to mitigate.  The overwrites would
+not directly deal with those attacks - the "pipelining" would still work
+just as well - however, having to store or/and recompute (portions of)
+the S-boxes may introduce enough extra storage needs or/and extra
+latency that the attacks would not be worthwhile overall.  Per Dmitry's
+analysis, for yescrypt with r=8 (as recommended) only 1/2 and 1/3 memory
+reductions were a concern (with 1/4 having a computation penalty of over
+1000 times), so a 3x increase in storage and latency product for
+mounting those attacks appears sufficient to make them ineffective.
+
+S-box overwrites in BlockMix_pwxform may also eliminate the (potential)
+need for "TMTO-resistant pwxform S-box initialization".  TMTO resistance
+at that level (where an attack would have allowed a GPU-like device with
+otherwise too little local memory per instance, like 4 KB instead of
+8 KB, to operate reasonably efficiently) may also be achieved through
+having the S-box contents gain extra data dependencies early on as the
+main SMix1 runs, rather than during S-box initialization.
+
+Also, I realized that current pwxform unnecessarily under-uses the
+write port(s) to L1 cache.  On typical CPUs, there are two read ports
+and one write port to L1 cache, whereas current pwxform does almost
+exclusively reads (with the only writes being to the current output
+block, as well as implicitly through function calls and occasional
+register spilling).  I was concerned about write-through L1 caches found
+in some CPUs.  However, testing on Bulldozer (which has write-through L1
+along with a smaller write coalescing cache) shows that sequential
+writes are OK (and that random writes are not OK).  It does behave
+slower than Intel CPUs with write-back L1, but not unacceptably so
+(except with random or otherwise non-sequential writes, which I am not
+going to use).  I was also concerned about that cached data being
+written out to memory once in a while, thereby wasting memory bandwidth.
+However, even if this is happening, I am not seeing it result in much of
+a yescrypt speed reduction (testing on Bulldozer, Sandy Bridge,
+Haswell), so probably it isn't happening a lot and/or not at times when
+yescrypt demands that bandwidth.  It is a typical enough case (working
+on some local and some global data simultaneously) that CPUs optimize
+it.  And yes, this also means that Argon2's 1 KB of temporary state is
+probably OK (albeit wasteful since it didn't have to be just temporary,
+but could affect next block's computation).
+
+Here's what I am able to fit within +/-10% of yescrypt 0.7.1's
+performance (mostly as tested for max threads at 2 MB per independent
+instance, but also tested with other memory sizes and single thread):
+
+Option 1: reduce PWXrounds from 6 to 5, but introduce a third S-box
+(thus, e.g. 8 KB to 12 KB total) and rapid S-box writes inbetween rounds
+(writing to the third S-box, which is inactive for reads at that time,
+and then rotating the 3 S-boxes at each sub-block).  This means that 12
+gather loads (6 rounds times 2 gather loads) are replaced with 10 gather
+loads and 4 sequential stores.  (Counted in sub-block sized operations.)
+The total L1 bandwidth usage increases by a factor of 7/6, and the GPU
+local memory attack resistance by a factor of 3/2*5/6 = 5/4 (even
+assuming the stores are somehow free, which they are not).  Drawbacks
+are that multiplication latency hardening decreases to 5/6, and that
+GPU(-like) global memory attacks (if the S-boxes would be put in global
+memory anyway) might become up to 6/5 times faster (again, assuming the
+sequential and perfectly coalesced stores are somehow free).
+
+A question is whether such rapid writes are in fact needed.  We make
+great use of the L1 cache write ports, but in terms of defeating
+sub-block and S-box TMTO attacks we probably don't need the writes to be
+this rapid.  With the example settings above, we write 4x more data to
+the S-boxes than to the output block (so we use 5x the current write
+bandwidth overall).  In other words, with 1 KB blocks (r=8) we fully
+replace the 12 KB S-box contents per every 3 blocks written.  To defeat
+the sub-block TMTO attack it would probably be enough to write as much
+data into the S-boxes as we write into the output block (although it
+matters what data we write: how quick it is to recompute given what
+other data, or vice versa), and to defeat TMTO attacks on the S-boxes
+it'd probably be enough to overwrite and entangle the S-boxes just once
+(yet do it early on).
+
+Anyway, with this combination of settings performance on Haswell is same
+or slightly better as before (e.g. 5% better for the 2 MB test), and
+performance on Bulldozer is same or slightly worse than before (e.g. 8%
+worse for the 2 MB test).  This is without using AVX2.  (These changes
+should make AVX2 more of a help, which is both good and bad.)
+
+I haven't tested that yet, but I think this will also work well for
+using L2 cache with AVX2-optimized pwxform settings and implementation
+on Haswell, where previously 64 KB worked well (would be 96 KB now).
+
+Valid PWXrounds settings for this design are "a power of 2, plus 1", so
+e.g. 2, 3, 5.  This is to avoid having to check/mask the write offset
+against the limit too frequently (can't hit the limit in most places),
+and to skip the S-box write after the last round (which is followed by a
+write to the block).
+
+Option 2: since the above means introduction of "pwxform context"
+anyway, it now becomes straightforward to add similar handling of a
+larger S-box, targeting L2 cache.  Reduce PWXrounds from 6 to 4,
+introduce a third small S-box (thus, e.g. 8 KB to 12 KB total) like
+above, and introduce a 128 KB S-box also including the smaller 3
+S-boxes as its part.  Have the rest of the larger S-box (beyond the
+12 KB holding the smaller S-boxes) lazy-initialized during the main SMix
+operation (keep the current bitmask in the pwxform context).  Unlike the
+above, perform only two S-box writes per sub-block: one write to the
+currently inactive small S-box (which gets activated at next sub-block,
+like above), and one write to the remainder of the large S-box.  (This
+means maintaining a sequential write offset for the larger S-box, and
+masking it for writes to the smaller S-box.)  These are the extra
+actions in two of the four rounds.  In two other rounds, the extra
+actions are cache line sized random lookups against the large S-box.
+Alternatively, random lookups against the large S-box are performed in
+all four rounds, which Haswell manages but the other two CPUs not so
+well.  This looks something like:
+
+#define PWXFORM_ROUND_READ \
+	r = EXTRACT64(X0) & m; \
+	PREFETCH(S + r, _MM_HINT_T0) \
+	PWXFORM_SIMD(X0, x0, s00, s01) \
+	PWXFORM_SIMD(X1, x1, s10, s11) \
+	PWXFORM_SIMD(X2, x2, s20, s21) \
+	X0 = _mm_add_epi64(X0, *(__m128i *)(S + r)); \
+	X1 = _mm_add_epi64(X1, *(__m128i *)(S + r + 16)); \
+	X2 = _mm_add_epi64(X2, *(__m128i *)(S + r + 32)); \
+	PWXFORM_SIMD(X3, x3, s30, s31) \
+	X3 = _mm_add_epi64(X3, *(__m128i *)(S + r + 48));
+
+#define PWXFORM_ROUND_RW(Sw, w) \
+	r = EXTRACT64(X0) & m; \
+	PREFETCH(S + r, _MM_HINT_T0) \
+	PWXFORM_SIMD(X0, x0, s00, s01) \
+	PWXFORM_SIMD(X1, x1, s10, s11) \
+	PWXFORM_SIMD(X2, x2, s20, s21) \
+	X0 = _mm_add_epi64(X0, *(__m128i *)(S + r)); \
+	X1 = _mm_add_epi64(X1, *(__m128i *)(S + r + 16)); \
+	PWXFORM_SIMD(X3, x3, s30, s31) \
+	X2 = _mm_add_epi64(X2, *(__m128i *)(S + r + 32)); \
+	X3 = _mm_add_epi64(X3, *(__m128i *)(S + r + 48)); \
+	*(__m128i *)(Sw + (w)) = X0; \
+	*(__m128i *)(Sw + (w) + 16) = X1; \
+	*(__m128i *)(Sw + (w) + 32) = X2; \
+	*(__m128i *)(Sw + (w) + 48) = X3;
+
+#define PWXFORM_START \
+	{ \
+		PWXFORM_X_T x0, x1, x2, x3; \
+		__m128i s00, s01, s10, s11, s20, s21, s30, s31; \
+		uint32_t r; \
+		PWXFORM_ROUND_RW(S, w) \
+		PWXFORM_ROUND_READ \
+		PWXFORM_ROUND_RW(S2, w & Smask) \
+		w += 64; \
+		PWXFORM_ROUND_READ \
+		{ \
+			uint8_t * Stmp = S2; \
+			S2 = S1; \
+			S1 = S0; \
+			S0 = Stmp; \
+		} \
+	}
+
+#define PWXFORM_END \
+	{ \
+		if (__builtin_expect(!(w & (w - 1)), 0)) { \
+			m |= w - PWXbytes; \
+			if (w == Sbytes) w = Sinit; \
+		} \
+	}
+
+#define PWXFORM \
+	PWXFORM_START PWXFORM_END
+
+(PWXFORM_END may be skipped in places where it is known the condition
+can't be true, such as on odd iterations of an unrolled loop.)
+
+This requires attackers to either provide 128 KB of (semi-)local memory
+per instance, or transfer that data off-chip.  The latter approach would
+increase the attack chip's external bandwidth needs by a factor of 2.5.
+(We had 1 read and 1 write per block, so 2 total.  Now we also have 2
+reads and 1 write to the large S-box, so 5 total.  In fact, in the
+Haswell-enabled variation pasted above, it's 4 rather than 2 reads from
+the large S-box, so 7 total, and a 3.5x increase.)
+
+The choice of 128 KB is since it's how much L2 cache we have per thread
+on many modern CPUs.  Bulldozer could do more (1 MB L2 per "core"),
+Knights Corner/Landing would probably need less (256 KB per 4 threads,
+so 64 KB).  128 KB works great on Haswell, but is a few percent slower
+than 64 KB on Sandy Bridge; I don't know exactly why (maybe something to
+do with when L1 lines also have to be present in L2, although neither
+CPU has L2 forcibly inclusive of L1, as far as I could find).
+
+Haswell runs this so great that we could keep PWXrounds = 5 rather than
+go for 4.  Older CPUs sort of need 4.
+
+Putting L2 cache to use while also doing smaller lookups from L1 is
+great, but this has some drawbacks: a further reduction of PWXrounds
+(where the move from 8 KB to 12 KB barely compensates for it in terms of
+anti-GPU, and the reduction in multiplication latency hardening is only
+maybe compensated for by L2 cache latency hardening), PWXrounds becomes
+inflexible (it sort of has to be 4, or maybe 5 if we re-add one simple
+pwxform round after these 4 rounds with extras), and overall this looks
+specialized rather than elegant (even though it is still quite flexible
+in terms of being able to tune the widths and sizes to fit a wide
+variety of future devices).
+
+So what do we prefer - the more elegant option 1 (with crazy frequent
+S-box writes, because we can?) or the more extensive option 2?
+
+As a more conservative alternative to either of these, it may also be
+reasonable to keep PWXrounds at 6 while introducing the third small
+S-box, with not-so-frequent writes, but this appears to run slightly
+slower than the version with 5 rounds and the crazy writes.  Given that
+we can have the crazy writes for less performance cost than 1 round on
+current CPUs, perhaps we should?  Also, "one write per round" might be
+more elegant than "one write after PWXrounds/2 rounds".
+
+Introduction of the third S-box, besides being good for anti-GPU on its
+own (1.5x larger total almost for free, except on Bulldozer-alikes), is
+closely related to enabling the writes.  Without it, the writes would
+have to be to an S-box currently active for reads as well, which reduces
+(defensive) implementation flexibility (in particular, it wouldn't let
+register-starved architectures compute fewer lanes at once, only needing
+to sync once per sub-block; allowing this is a deliberate design goal).
+
+Sorry for the long message.  I'd appreciate any comments, to any part of
+the message (as I understand most of us wouldn't have time to comment on
+the whole thing at once).
+
+Alexander
+

@@ -1,0 +1,48 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <20140314114247.GA27682@bolet.org>
+Date: Fri, 14 Mar 2014 12:42:47 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+On Fri, Mar 14, 2014 at 12:11:05PM +0400, Solar Designer wrote:
+Thank you for your opinion.  Does this imply that you'd like the PHC to
+introduce a new scheme that would use CPU only (not RAM)?
+
+Actually, I expect PHC to ultimately provide a portfolio of "deemed
+good" schemes, somewhat like eSTREAM (and unlike AES or SHA-3). In
+particular, there are extra features that any specific algorithm may or
+may not provide, e.g. the ability to increase the work load (iteration
+count) without having access to the source password, or a "fast path"
+allowing much faster computation of a given hash if a specific secret
+key is known. Or even more advanced features such as the ability to
+delegate computation to an external untrusted system. Some candidates
+may appear to be extremely good in the CPU+RAM tunable usage area while
+lacking some of these extra features, so a portfolio will probably be a
+more appropriate result.
+
+It also implies that there is room for improvements for CPU-only (or
+CPU-and-small-RAM-only) schemes. E.g. with bcrypt you cannot increase
+the iteration count in an "offline" way (you have to start again from
+the source password), there is no "fast path", the output is 192 bits
+only, the input password length is limited (nominally 56 bytes, in
+practice more often 55 or 51 characters, depending on the implementation
+library),... PBKDF2 avoids some of these issues (e.g. it does not limit
+input or output length) while adding a few extra ones (PBKDF2+SHA-256 is
+GPU friendly; computing time is proportional to the output length;...).
+
+Now it is very fine that some PHC candidates will use RAM and be tunable
+in that respect. This is a research area that is in need of deep
+exploration, and there are contexts where gobbling up RAM by the
+gigabyte is the right thing to do for password hashing (e.g. when
+deriving the symmetric key for disk encryption).
+
+
+I don't think that there will be ONE winner. I don't thinkg that there
+should be one and only one winner (unless the winner is my scheme, in
+which case I am all for it, of course).
+
+
+	--Thomas Pornin
+

@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] Re: Mechanical tests
+
+Message-ID: <CAOLP8p6=h=4XugrSp2B5Xb25K2wNQc6H3qXjMm4vzE9YaZ_cqA@mail.gmail.com>
+Date: Mon, 7 Apr 2014 06:00:21 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Mechanical tests
+
+On Mon, Apr 7, 2014 at 2:58 AM, Christian Forler
+<christian.forler@...-weimar.dewrote:
+On 05.04.2014 17:53, Poul-Henning Kamp wrote:
+ [...]
+>>
+>I'm not defending POMELO in any way, I havn't even looked at it yet.
+>>
+>I'm just pointing out that while dieharder is a damn good too for
+>what it is designed for, it is not designed for what we're trying
+>to do here.
+>
+>
+A common use-case for a password hashing schemes is password based key
+derivation. Cryptographers assume that keys to be random. This
+assumption is crucial for the security of almost all cryptographic
+schemes. Therefore, (for an adversary) the output of a good password
+hashing scheme should be indistinguishable from random. Hence, dieharder
+is IMHO a valid sanity check tool.
+>
+>
+Best regards,
+Christian
+
+By the way, in order to test Catena, I had to make a one-line change:
+
+diff --git a/Catena/code/src/catena.c b/Catena/code/src/catena.c
+index 8c84f82..5316045 100644
+--- a/Catena/code/src/catena.c
++++ b/Catena/code/src/catena.c
+@@ -283,7 +283,7 @@ int PHS(void *out, size_t outlen,  const void *in,
+size_t inlen,
+        unsigned int m_cost) {
+
+   return __Catena((const uint8_t *) in, inlen, salt, saltlen, (const uint8_t *)
+-                 "", 0, t_cost, MIN_GARLIC, m_cost, outlen, REGULAR,
++                 "", 0, t_cost, m_cost, m_cost, outlen, REGULAR,
+                  PASSWORD_HASHING_MODE, out);
+ }
+
+Without this, all m_cost values under 18 result in an error, and with
+an m_cost of 18, it takes too long to generate a GiB of data.  Would
+it be OK to check in this change along with the other changes I've
+made to PHC entries to get them to compile with a common main.c?
+
+Bill
+

@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] multiply latency reduction via table lookups
+
+Message-ID: <20140310114659.GA17734@bolet.org>
+Date: Mon, 10 Mar 2014 12:46:59 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply latency reduction via table lookups
+
+On Mon, Mar 10, 2014 at 12:02:29PM +0400, Solar Designer wrote:
+Do e.g. CPUs use table lookups like this for multiplication already?
+
+If I recall my courses correctly, fast multiplier circuits can be made
+with a depth of O(log n) gates (for operands of n bits), and offer a
+latency about twice that of an addition of the same width.
+
+Table lookup is not competitive because a _lookup_ is actually address
+decoding, which also has O(log n) depth; and the table itself uses a lot
+more silicon area than the circuit. One way to say it is the following:
+FPGA emulate generic circuits using table lookups (e.g. in Xilinx FPGA
+each abitrary 4->1 function is a small 16-bit block); if such lookups
+were competitives then we would be using _only_ FPGA. In practice, a
+non-table ASIC tends to be 2 to 3 times faster than its FPGA
+counterpart, for the same overall design.
+
+
+Table lookups are done in software when no fast multiplier is available.
+This is true in particular for smart card CPU (where all RAM and ROM is
+"fast", i.e. offers one-cycle read and writes) when doing GF(2^m)
+arithmetics (for GCM and for binary elliptic curves). They also use
+Karatsuba beyond a given size:
+
+  (a + W*b*) * (c + W*d) = (ac) + ((a+b)*(c+d) - ac - bd)*W + (bd)*(W^2)
+
+which reduces one multiplication on 2n-bit operands to three, not four
+multiplications on n-bit operands, albeit with more additions and
+subtractions.
+
+
+
+If you want to investigate table-based multiplications, you may consider
+logarithm tables. With a table for logarithms and a table for
+exponentials, you can turn a multiplication into two table lookups and
+one addition. This is usually not worth the effort, unless you want to
+also do divisions, which becomes subtraction on logarithms (doing it
+correctly, rather than approximately, is not easy).
+
+
+	--Thomas Pornin
+

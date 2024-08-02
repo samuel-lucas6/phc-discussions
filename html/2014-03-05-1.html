@@ -1,0 +1,378 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - escrypt 0.3.1</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/03/04/18">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140305004404.GA13191&#64;openwall.com&gt;
+Date: Wed, 5 Mar 2014 04:44:04 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: escrypt 0.3.1
+
+Hi,
+
+I've attached a revision of escrypt.  It lacks some of the planned
+features/properties, and in fact I (temporarily?) removed code for L2
+cache accesses from it to make this revision more consistent.
+
+Bill, I suggest that you use escrypt in scrypt compatibility mode as a
+baseline for comparing the performance of your TigerKDF against.
+escrypt's native modes are still a moving target, but its scrypt
+compatibility is unlikely to change in performance much.  (This should
+replace your use of Arch Linux's known suboptimal build of scrypt.)
+
+
+	Testing, demos, benchmarks.
+
+See the README and PERFORMANCE-* files in the attached tarball.
+
+
+	Features and properties.
+
+- Much optimized SIMD-enabled implementation of scrypt (including
+use of SSE prefetch and AMD XOP intrinsics).  This establishes a
+performance baseline for further incompatible changes.
+
+- Additional APIs (see crypto_scrypt.h), including a tentative crypt(3)
+encoding syntax for both the official scrypt and our revisions of it, as
+well as for separation of global and thread-specific initialization from
+per-password computation (as it would need to be done in many actual
+deployments, and thus as relevant to our performance testing).
+
+- Optional initialization and use of a large ROM (using the added API
+to treat the ROM as global context).
+
+- Optional time-memory tradeoff discouraging measures for individual
+hash computation (ESCRYPT_RW flag) and mandatory for ROM initialization.
+
+- Support for and demo of placing the ROM into SysV shared memory via a
+separate program.
+
+- Multi-threaded initialization of the ROM (112 GiB ROM initialization
+shown in PERFORMANCE-scaling-up completed in just 42 seconds, while
+providing decent time-memory tradeoff resistance).
+
+- ROM-on-SSD support.  See PERFORMANCE-SSD for a usage example and some
+performance figures.
+
+- Compile-time tunable instruction-level and SIMD parallelism, (with
+current default settings for total ILP*SIMD width of 512 bits.  The
+smallest amount of parallelism is 64-bit (one lane).  Despite of reuse
+of scrypt's Salsa20 for the lane mixing step, there is support for
+amounts of parallelism greater than 512 bits as well.  So it's 64 bits
+to "infinity".
+
+- Rapid small random lookups in L1 cache, to achieve GPU resistance
+comparable to bcrypt's even at unusually low memory cost settings.
+(See below for limitations of what's currently achieved.)
+
+- Multiply latency hardening: use of sequences of integer multiply
+operations to tie up memory for a certain number of cycles, even in
+ASIC, since this is one of few common CPU instructions that is not
+leaving a lot of room for latency reduction.  Currently, 32x32-&gt;64
+multiplies are used.
+(See below for limitations of what's currently achieved.)
+
+- Alternative way to implement thread-level parallelism, requested via
+the optional ESCRYPT_PARALLEL_SMIX flag, which requires that for
+efficient processing the attacker provides as much memory as the
+defender had specified, even if the attacker does not intend to fully
+use the parallelism on a given node.  See the description of
+ESCRYPT_PARALLEL_SMIX in the revised crypto_scrypt.h for more detail.
+
+
+	Issues and future work.
+
+I am not happy about the complexity.  Clearly, when supporting classic
+scrypt and more, complexity is higher than scrypt's.  Is this worth
+keeping, or should we drop support for computing classic scrypt hashes
+in order to let us simplify things somewhat?  I guess this would depend
+on how much we're able to simplify the design and code while keeping an
+scrypt compatibility mode vs. without scrypt compatibility.  This is yet
+to be seen, but I suspect the difference is not very large.  We'd move
+from Salsa20 to ChaCha20, which should in turn allow us to drop the SSE
+shuffling, but compared to total complexity this is not much.  We'll
+also fully drop scrypt's sub-block shuffling in BlockMix, but this is
+also not a lot compared to total complexity.  The rest of scrypt's
+complexity I'm afraid is well justified (meaning that simpler PHC
+candidates will have serious shortcomings, I'm afraid), even though JP
+had expressed (on his slides) unhappiness about scrypt being too
+complex, and hope for something much simpler to come out of PHC (it may,
+but I'm afraid it'll also be worse than scrypt in important ways).
+
+Both scrypt's high-level and my SMix-level approaches to thread-level
+parallelization are implemented, selectable via a flag.  This has some
+added code complexity (luckily not a lot), and unfortunately it may also
+be confusing (when to choose which approach?)  It will probably stay
+this way for the PHC submission, but we might drop one or the other
+later _if_ the complexity+confusion is deemed inadequate.  (Of course,
+dropping scrypt's may only be done along with dropping or limiting
+support for the classic scrypt mode.)
+
+An advantage of having an scrypt compatible mode is that we reduce
+complexity and size of crypto libraries that would otherwise include
+separate code for scrypt.  Another advantage is that it might ease
+adoption of the new hash type(s): a crypto library might include our
+code (or another implementation) initially just for its scrypt
+functionality, but it'd also happen to provide support for our new hash
+type(s), which share much design and code with scrypt.  Yet another
+advantage is that when our code (or another implementation) is included
+in a library, a programming language runtime, a SQL server, or whatever
+for its new functionality, it also happens to provide classic scrypt,
+which might be handy to another user.
+
+An issue, though, is that inclusion of any tunable-cost KDF or password
+hashing scheme is risky, e.g. in the SQL server example.  I have some
+thoughts on additional API to let such uses mitigate these risks.
+
+In this code revision, crypto_scrypt-sse.c has suffered from premature
+optimization in its smix1() and smix2().  I happened to move if's out of
+the loops, duplicating the specialized loops instead, which worked great
+when the functionality was more limited.  I then proceeded to add more
+functionality, which resulted in some if's popping up inside the loops
+again.  I intend to de-optimize this, considering that these loops are
+not very performance critical except when r is very low, and considering
+that probably keeping blockmix*() last sub-block's X0/X1/X2/X3 in
+registers across calls to blockmix*() makes more of a difference than a
+few (correctly predicted) conditional branches do.  So I might implement
+the latter optimization instead (maybe the compiler does it already when
+blockmix*() are inlined).
+
+The tentative 64-bit lane round function:
+
+	x += ((uint64_t)xl * s0l + s1) ^
+	    ((uint64_t)xl * s1l + s0);
+
+(where the 64-bit s0 and s1 come from S-box lookups, and s0l and s1l are
+their least significant 32 bits) has some significant biases, as can be
+seen with the attached analyze.c program on a local-&gt;aligned memory dump:
+
+r=6 N=2^12 NROM=2^22
+Will use 3145728.00 KiB ROM
+         3072.00 KiB RAM
+
+min = 10801 max = 71264 (min+max)/2 = 41032.5 (expected 12329.0)
+diff = 788534 (expected 788983.5)
+diff_lo = 65515 diff_hi = 65536 (expected 65535.6)
+
+(where min and max are the number of occurrences of the least common and
+most common byte value, diff is the number of different 32-bit values,
+and diff_lo and diff_hi are of different 16-bit halves in each 32-bit
+value).  As you can see, (min+max)/2 is way off, and diff and diff_lo
+are non-perfect.  This can be much improved by simply adding:
+
+	x += (uint64_t)xl * xl;
+
+right before the expression given above, but after "x" has been used to
+derive S-box lookup indices.  (This added multiplication occurs in
+parallel with the two S-box lookups, so there's almost no slowdown from
+it.  In fact, I've been experimenting with repeating that line (or
+rather its SSE2 equivalent) a few times.  With one or more of these
+added lines (_not_ included in the escrypt 0.3.1 code attached here),
+"analyze" output improves to:
+
+min = 12018 max = 12638 (min+max)/2 = 12328.0 (expected 12329.0)
+diff = 788789 (expected 788983.5)
+diff_lo = 65535 diff_hi = 65536 (expected 65535.6)
+
+(diff is still slightly lower than perfect, but the rest is great).
+
+For SSE2 experiments, the line to add is:
+
+	X = _mm_add_epi64(_mm_mul_epu32(X, X), X); \
+
+right after the existing lines:
+
+#define SBOX_SIMD_1(X, x, s0, s1) \
+	x = EXTRACT64(X) &amp; 0x0ff000000ff0ULL; \
+
+To analyze the "x += x * x" thing (in its different variations), or
+"x = x * (x + 1)" (which is the same or almost the same, depending on
+integer widths used), I used the attached sim-mul.c program.  Curiously,
+aside from the obvious aspects (the result being always even, and there
+being some fixed points), this trivial operation behaves reasonably
+well.  The loss of 1 bit of entropy may be compensated by also using the
+value of x prior to this operation.  (In the above case, for S-box
+lookups.)  Is squaring much simpler or/and quicker in ASIC than
+arbitrary multiplication?
+
+I am also going to consider other variations of the round function.  In
+fact, I get better results when fully replacing the value of x with some
+computation based on values looked up from the S-boxes, but I dislike
+this because it may result in fatal entropy loss if the (variable) S-box
+contents happen to be degenerate.  Perhaps I am overly paranoid here,
+since currently the initial S-boxes are generated via Salsa20 only, but:
+
+Currently, the L1 cache fitting S-boxes stay read-only after they're
+initialized using an smix1() call (thus, are based on both the password
+and the salt).  This will need to change.  In fact, I had a code
+revision where the S-boxes were instead part of V, and their use would
+only start when a V fill threshold is reached.  However, this was tricky
+for optimized implementations, and it was conflicting with support for
+ESCRYPT_RW in smix2().  In particular, I (and the C compiler) would no
+longer be able to assume non-overlap of S-boxes with Bin2 being updated
+by the current blockmix_*_xor_save(), even though in practice such
+overlap would be rare (not enough to cause much slowdown to attackers,
+but a pain for everyone to optimize the code more fully).  So another
+approach at making the S-boxes read-write may be added, or ESCRYPT_RW
+mode in smix2() may be dropped (and then the S-boxes in V approach may
+be reintroduced).
+
+The frequency of S-box lookups is not high enough, and their results are
+not required soon enough, as compared with bcrypt, especially on older
+machines.  This will need to be improved.  Some of the added parallelism
+is compensated for by the S-boxes being slightly larger, though.
+
+The instruction-level and SIMD parallelism is currently compile-time
+tunable (which obviously changes the hash values being computed).  In
+-ref and -nosse, these things are on #define's.  In -sse, they're also
+partially hardcoded.  We may want to make them runtime tunable instead,
+and include some specialized code for common combinations of settings.
+I think this may fit in a range of bits in the "flags" parameter, to
+avoid introducing lots of separate parameters.
+
+The current settings are for total compile-time instruction-level * SIMD
+parallelism of 512 bits, with additional 2x instruction-level
+parallelism available during S-box lookups and multiplies (since there
+are two S-boxes).  This is excessive for Sandy/Ivy Bridge, contributing
+to the "S-box lookups [...] results are not required soon enough"
+problem (to compete with bcrypt at low memory settings).  A better
+default choice may need to be made, and the implicit extra parallelism
+from parallel S-box lookups may need to be removed.  (bcrypt has 4
+S-boxes, so it does have this kind of parallelism too, but if we add
+explicit parallelism via multiple lanes, we may want not to also have
+parallelism within each lane, or we lose to bcrypt.)
+
+The L2 cache stuff should preferably be re-added, after the L1 cache
+stuff is "finalized".  (BTW, when I temporarily had it, there was almost
+no performance impact on Sandy Bridge and newer despite of the much
+increased total number of memory+cache accesses, but there was
+significant impact on Bulldozer.)
+
+For ROM-on-SSD, support for read-ahead may need to be added, although
+we've achieved reasonable results even without it (with many hardware
+threads sharing one SSD).
+
+Support for simultaneous use of multiple ROMs (with different access
+frequencies) may need to be added, so that when using ROM-on-SSD it is
+possible to also use a ROM-in-RAM.  (Alternatively, the APIs may be
+simplified assuming that such support would never be added.)
+
+Alternatively, ROM-on-SSD may be considered too exotic, and
+simplifications may be made by excluding support for adjusting ROM
+access frequency.
+
+(In general, I assume that removal of optional features will be
+considered as acceptable "tweak" under the PHC.)
+
+Many other things are not in here yet, including postponing of cache
+timing unsafe lookups, and the (relatively straightforward) wrapper code
+to support hash upgrades, server relief, and hash (re-)encryption.
+There's also no zeroization yet.
+
+Finally, we need better names for escrypt itself (turns out there's a
+company under that name...) and for the S-box using sub-block processing
+algorithm (and thus for the corresponding BlockMix_* as well), even
+though that algorithm is still subject to change.  (Currently, it lives
+under the dull name of Sbox.)
+
+Any feedback is welcome.
+
+Alexander
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="1/1" rel="nofollow" download>escrypt-0.3.1.tar.gz</a><strong>" of type "</strong>application/x-gzip<strong>" (40626 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/2">analyze.c</a><strong>" of type "</strong>text/x-c<strong>" (2048 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/3">sim-mul.c</a><strong>" of type "</strong>text/x-c<strong>" (509 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CALCETrUmCBXxCDcuxfXJK2M=6_WjdB5mM-o0fm-AODb_aHvY_A@mail.gmail.com>
+Date: Fri, 7 Mar 2014 17:06:52 -0800
+From: Andy Lutomirski <luto@...capital.net>
+To: discussions <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 3:45 PM, Solar Designer <solar@...nwall.comwrote:
+On Fri, Mar 07, 2014 at 03:30:37PM -0800, Andy Lutomirski wrote:
+>It seems odd to me that PBKDF2 is being used in any PHC proposals.
+>
+For escrypt, this is in part because of the scrypt compat mode.
+>
+PBKDF2-HMAC-SHA256 also has the advantage of being well accepted, so
+being able to say that cryptographic security of a new password hashing
+scheme is provably no worse than PBKDF2-HMAC-SHA256's may be helpful.
+>
+BTW, Bill's choice of BLAKE2 for the sole cryptographic primitive, while
+sound technically, may be problematic for some prospective users.
+>
+>AAUI PBKDB2 was intended as a password hashing algorithm,
+>
+I'd say it was intended as a key derivation function, not as a password
+hash.  It has problems when used as the latter and the output size is
+naively set to be larger than the underlying hash's block size.
+>
+>and it's not very good.
+>
+Yes.  It is not.
+>
+>The modern PHC candidates really want to use at as a
+>function that maps arbitrary-length strings to arbitrary-length
+>strings and that has "some of" the properties of a PRF, where "some
+>of" is possibly not very well thought through.
+>>
+>Why not use a simple, modern primitive for this?  To me, the obvious
+>candidate is Keccak.  It's immune to generic attacks like this, which
+>was half the point of developing it in the first place.
+>
+Maybe.  However, if I were to bring a new crypto primitive in, I'd
+prefer it to be suitable not only for the initial/final steps, but also
+for per-block data mixing.  Keccak favoring hardware implementations is
+not great for that.  (Unfortunately, BLAKE2 is not going to be SHA-3.)
+>
+>ISTM that it
+>would be embarrassing for the PHC winner to have less resistance to
+>generic attacks than a hash function should provide.
+>
+I agree.  So I am thinking of a suitably minimal change to scrypt's use
+of PBKDF2 so that the two problems pointed out in this thread today
+would not affect escrypt (except in scrypt compat mode).  Unfortunately,
+those minimal changes feel hackish.  For example, I could XOR the
+least significant byte of password length into each derived key block
+after the initial PBKDF2 call.  How does this sound to you?  (One byte
+should be enough since it contains all the info that is otherwise lost
+with padding.  And there's no endianness issue.)
+
+Well, if people really want "at least as secure as PBKDF2" (sigh) and
+scrypt compatibility (I've already expressed my opinion on that), then
+how about something that's ugly but should be provably good:
+
+MGF1-SHA256(password legnth || password || PBKDF2(whatever))
+
+Benefits:
+
+ - MGF1 is well studied, at least for some purposes.
+ - I think that it can be proved that the MD construction is free from
+generic attack when the length is prefixed (in a fixed-size or
+prefix-free encoding)
+ - You can use whatever PBKDF2 parameters you want, and the only way
+it can be weaker than not using PBKDF2 at all is if PBKDF2 actually
+conspires to *increase* the number of collisions in SHA-256.
+
+Downsides:  I still think this is silly.  Crypto shouldn't be about
+"this looks okay" these days.  I'd be happier with:
+
+Keccak(reasonable params, PBKDF2(whatever))
+
+--Andy
+

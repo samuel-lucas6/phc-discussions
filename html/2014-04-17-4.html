@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p7KjMGVWn=pgut0p6Pivf+w7jc2336apr+O7DjOt3ox=A&#64;mail.gmail.com&gt;
+Date: Thu, 17 Apr 2014 11:08:25 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+Here' s some raw data comparing best-case single-thread scenarios for
+hashing speed of Lyra2, Yescript, and TwoCats.  All three are SSE2
+optimized versions compiled with:
+
+gcc -Wall -march=native -std=gnu99 -pthread -lcrypto -lm -O3 &lt;files&gt;
+
+I modified TwoCats to use 1 thread in it's PHS function (which it should be
+doing by default), and reduced multiplications to 1 (meaning 2 multiples
+per 16 bytes hashed) so it would not dominate runtime.
+
+I modified Yescript as Alexander suggested, commenting out 3 of 4 calls in
+the Salsa20/8 hashing, turning it into Salsa20/2, and commenting out 5 of 6
+calls to PWXFORM_ROUND.  I also added printf statements to all 3 just to be
+sure we're allocating the same amount of memory.  Raw result data below:
+
+*********** Lyra2 - no modifications, hashing 2GiB of memory
+PHC&gt; !!
+time ./phs-lyra 1 349525
+Allocating 2147481600 bytes
+
+2e bf 7b 0b 24 b3 c8 54
+68 3b 50 00 90 f4 88 c8
+2b 31 cb 26 72 74 62 8b
+79 31 0d c3 0e f0 f4 a1      32 (octets)
+
+
+real    0m1.320s
+user    0m1.200s
+sys     0m0.110s
+
+
+*********** Yescript - 5 of 6 calls to PWXFORM_ROUND commented out, and 3
+of 4 calls to SALSA20_2ROUNDS
+PHC&gt; !!
+time ./phs-yescrypt 0 18
+Allocating 2147494912 bytes
+
+1c 92 02 2b 21 8d 7a 9d
+34 c4 77 26 4b 6a d3 40
+b7 96 a5 5f 4b 1f 5a ae
+ad 33 81 ef 7a 90 13 89      32 (octets)
+
+
+real    0m0.709s
+user    0m0.560s
+sys     0m0.140s
+
+*********** TwoCats - multiples was set to 1, and #threads set to 1
+PHC&gt; !time
+time ./phs-twocats 0 21
+Allocating 2147483648 bytes
+
+58 75 b8 55 94 98 35 a9
+3a 88 e3 7b c8 6e af 7d
+ab 37 fc 2c 4c b0 6d 40
+2e f5 f0 42 68 e2 33 ba      32 (octets)
+
+
+real    0m0.431s
+user    0m0.330s
+sys     0m0.080s
+
+This gives the time each algorithm requires to allocate and hash 2GiB of
+memory.  With Alexander's suggested tweaks, Yescript is faster than Lyra2.
+ I want this as a parameter to Yescript!  Single thread may not be
+everything, but it is an important case.
+
+Tabulating what I think this all means:
+
+Lyra2:
+Peak memory/second: 1.63 GiB/s
+Average memory/second: 1.22 GiB/s
+Memory bandwidth: 11.4 GiB/s  (highly bandwidth limited)
+
+Yescript:
+Peak memory/second: 3.03 GiB/s
+Average memory/second: 2.27 GiB/s
+Memory bandwidth: 6.06 GiB/s (does it do 2 r/w to DRAM per location, or 3?)
+
+TwoCats:
+Peak memory/second: 4.98 GiB/s
+Average memory/second: 2.49 GiB/s
+Memory bandwidth: 9.97 GiB/s
+
+
+Lyra2 slammed hard into my memory bandwidth limit, and so it has the lowest
+hashing rate of the three.  It does 7 memory accesses per memory location
+(4 writes, 3 reads), while TwoCats and Yescript do on average 1 read and 1
+write (at least if Yescript is behaving like Script in this mode).  The
+average memory*time for Yescript almost beats TwoCats.  The reason TwoCats
+is ahead on peak memory*time is that TwoCats second loop continues to fill
+more memory, while Lyra2 and Yescript do not.
+
+I ran the same tests on Alexander's Sandy Bridge server, which has more
+memory channels, I think.  For this one-thread case, the results scaled
+almost exactly from the results above, just a bit slower.  On Alexander's
+Haswell machine, Lyra2 catches up a bit, which surprised me, because I have
+the impression that the memory on this machine is slower than the memory on
+mine.  Here's the raw data for Alexander's Haswell box:
+
+*********** Lyra2 - no modifications, hashing 2GiB of memory
+time ./phs-lyra 1 349525
+Allocating 2147481600 bytes
+
+2e bf 7b 0b 24 b3 c8 54
+68 3b 50 00 90 f4 88 c8
+2b 31 cb 26 72 74 62 8b
+79 31 0d c3 0e f0 f4 a1      32 (octets)
+
+
+real    0m1.578s
+user    0m1.172s
+sys     0m0.364s
+
+*********** Yescript - 5 of 6 calls to PWXFORM_ROUND commented out, and 3
+of 4 calls to SALSA20_2ROUNDS
+PHC&gt; !!
+time ./phs-yescrypt 0 18
+Allocating 2147494912 bytes
+
+1c 92 02 2b 21 8d 7a 9d
+34 c4 77 26 4b 6a d3 40
+b7 96 a5 5f 4b 1f 5a ae
+ad 33 81 ef 7a 90 13 89      32 (octets)
+
+
+real    0m1.142s
+user    0m0.744s
+sys     0m0.352s
+
+
+*********** TwoCats - multiples was set to 1, and #threads set to 1
+time ./phs-twocats 0 21
+Allocating 2147483648 bytes
+
+58 75 b8 55 94 98 35 a9
+3a 88 e3 7b c8 6e af 7d
+ab 37 fc 2c 4c b0 6d 40
+2e f5 f0 42 68 e2 33 ba      32 (octets)
+
+
+real    0m0.717s
+user    0m0.308s
+sys     0m0.376s
+
+That's all I have for now!
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

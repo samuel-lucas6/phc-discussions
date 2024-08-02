@@ -1,0 +1,99 @@
+phc-discussions - simplifying yescrypt
+
+Message-ID: <20141021015837.GA8536@openwall.com>
+Date: Tue, 21 Oct 2014 05:58:37 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: simplifying yescrypt
+
+Hi,
+
+As I recognize that complexity is yescrypt's worst drawback, I've been
+thinking of how to simplify it.  There's not a lot that can be removed
+without making it substantially worse in some way.
+
+I think the same applies to scrypt, so I don't find scrypt exactly
+over-engineered.  It's just complex - more so than we would have liked
+it to be.  The only likely-unjustified thing in scrypt is BlockMix's
+block shuffling.  Everything else is justified in some way - e.g., the
+use of PBKDF2-HMAC-SHA256 on the outer layer lets us say that scrypt's
+basic crypto properties rely solely on NIST-approved crypto, which may
+be crucial for adoption by some users.  (Of Open Source projects, at
+least glibc and Drupal have stipulated such requirements, although
+scrypt in particular would not be suitable for them for other reasons.)
+
+As long as yescrypt supports computing not only its native, but also
+classic scrypt hashes, it obviously can't be made simpler than scrypt.
+However, I am planning on introducing yescrypt-lite supporting a subset
+of yescrypt's full functionality, and yescrypt-lite would not be a
+superset of the full scrypt either.  Here's what I'd change in -lite:
+
+- Drop support for (ye)scrypt's p parameter.
+(Only p=1 will be supported in -lite, and hence -lite will not include
+the different handling of p that now exists between classic scrypt and
+native yescrypt hashes.)
+
+- Maybe: drop support for classic scrypt hashes.
+(Have only native yescrypt hashes supported in -lite.)
+
+- Maybe: drop support for a ROM.
+
+I'd appreciate arguments for/against the two "maybes" above, considering
+that I intend -lite to be usable in Unix crypt(3) and PHP crypt(), etc.
+
+Overall, I don't expect this to make yescrypt-lite simpler than scrypt
+(it will have pwxform, which isn't in scrypt), but it'd certainly be
+simpler than full yescrypt.
+
+In PHC context, I am willing to offer replacing full yescrypt with
+yescrypt-lite, and keeping the full yescrypt (a strict superset of
+yescrypt-lite, re-adding full classic scrypt support and the rest of
+full yescrypt features) as a non-PHC extra.  That is, if the PHC panel
+prefers so, yescrypt-lite and not full yescrypt would be the PHC
+candidate, although of course it can/should be kept in consideration
+that there exists this sort of superset (which would remain a reason
+for yescrypt-lite to be defined the way it would be).  I don't actually
+recommend doing things in this way (I'd rather keep full yescrypt in
+PHC, with -lite being a subset of it, much like how TwoCats/SkinnyCat
+is currently in PHC), but this is a valid option.
+
+Regardless of what exactly goes into yescrypt-lite (and what's excluded
+from it), and regardless of whether/which yescrypt remains in PHC, here
+are some other changes I am considering to simplify yescrypt (the full
+thing, not only -lite):
+
+- Drop support for ROM access frequency mask.  In practice, this will
+mean no ROM-on-SSD support (only ROM-in-RAM will be supported).  The
+reason why I am considering dropping this is that in most cases where I
+would have recommended use of ROM-on-SSD I would _also_ recommend
+simultaneous use of ROM-in-RAM, and then it would need to be two ROMs,
+with different access frequency, resulting in even greater complexity.
+Perhaps just one mask (only for the ROM-on-SSD) would be enough even in
+that two-ROMs case, though.
+
+- Merge the various yescrypt flags into one - to choose native yescrypt
+mode or classic scrypt mode.  This doesn't simplify the reference code
+much, but it will simplify documentation, analysis, testing,
+benchmarking, and it may simplify optimized implementations.  A drawback
+is that there will no longer be any deliberately-TMTO-friendly native
+yescrypt mode (for which I think some use cases exist), requiring that
+people use the classic scrypt mode if they require that.
+
+(On the other hand, I need to add a new flag for enabling cache timing
+resistance.  So get rid of separation between the existing flags, and
+add that new flag.)
+
+- Without scrypt compatibility (as in -lite) and when in native mode, I
+can replace Salsa with ChaCha.  If a given build lacks scrypt
+compatibility (would be true for -lite), this would probably make it
+slightly simpler by eliminating the need for 32-bit word shuffling
+associated with interfacing with Salsa.  The drawback is that full
+yescrypt would become more complicated, requiring both Salsa (for scrypt
+compatibility) and ChaCha.  This is why I stayed with Salsa only so far.
+
+Any comments?
+
+Thanks,
+
+Alexander
+

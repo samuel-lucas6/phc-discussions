@@ -1,0 +1,95 @@
+phc-discussions - Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.
+
+Message-ID: <20141213002258.GA9941@bolet.org>
+Date: Sat, 13 Dec 2014 01:22:58 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Cc: gmaxwell@...il.com
+Subject: Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.
+
+On Fri, Dec 12, 2014 at 10:38:05PM +0000, Gregory Maxwell wrote:
+I am saddened that none of the proposals supported delegation scheme
+with information-theoretic security ( which are possible,
+https://bitcointalk.org/index.php?topic=311000.0 )
+
+Well, there _is_ a PHC candidate that supports delegation: Makwa. Like
+the scheme suggested in that page, the core of Makwa is a sequence of
+squarings modulo a RSA modulus. The delegation mechanism is a bit
+different, though.
+
+Actually, the delegation system described in that page may leak some
+information. It blinds a message m to hash with:
+
+   r = (g^b)*m
+
+where g is a known generator, and b is chosen randomly. The value b
+tends to be reused because the unblinding value y = g^e is expensive to
+compute, as much as doing the work yourself instead of delegating
+(therefore not reusing the value b would make little sense). Therefore,
+if the same system performs two external delegations for messages
+(passwords) m1 and m2, then eavesdroppers will see (g^b)*m1 and
+(g^b)*m2, and thus be able to compute m1/m2, which can yield quite a lot
+of information if both m1 and m2 are human-compatible passwords (e.g.
+ASCII only).
+
+As another remark, application of the Jacobi symbol should reveal one bit
+of information on m, thereby halving the attack effort.
+
+
+Makwa's delegation mechanism avoids both problems by using the following:
+
+ - The modulus n = pq is a Blum integer (i.e. p = 3 mod 4 and q = 3 mod 4).
+
+ - One squaring is performed locally, so that only quadratic residues
+   ever appear in the rest of the protocol.
+
+ - There is not one secret blinding pair (x,y) (where y=x^e), but 300
+   public blinding pairs. The client generates a new pair for each
+   delegation instance by selecting randomly half (or so) of the pairs
+   and multiplying them together. Compared to the blinding described
+   previously, the cost for the client is higher (an average of 300
+   modular multiplications) but still acceptable (it is less than that
+   of a single RSA private key operation).
+
+Note that the blinding pairs used by Makwa need not be secret; they can
+be shared; thus, they can be published on some server or even hardwired
+in the application code.
+
+
+Of course, Makwa is not memory-hard. I did not find a construction that
+supports delegation AND is memory-hard (just like you experienced
+yourself). Though memory hardness is, as you say, "fashionable", it is
+not the Alpha and Omega of password hashing and its virtues should be
+assessed in the light of economics, as you do.
+
+
+As for parallelism: _any_ password hashing KDF can be parallelized by
+computing hashes with several distinct salts, and XORing the results
+together. If you envision delegation, then you might want to account for
+failing servers; the "XOR" method can be extended to tolerate servers
+not responding in time (or at all) with a construction reminiscent of
+Shamir's Secret Sharing. E.g. you split the work into 10 shares, that
+you delegate to 10 servers, so that if any 7 of them respond you can
+complete the computation. I have not yet taken the time to write it down
+formally, but it is described in the presentation I made at Passwords14
+Las Vegas on August 2014. Slides can be found at the bottom of the Makwa
+Web page: http://www.bolet.org/makwa/
+(there is also a video: https://www.youtube.com/watch?v=9j3WfvOj-IQ
+if you don't mind hearing me torturing English language.)
+
+This kind of parallelizing works for about any KDF, but surviving
+loss of some shares really makes sense only in a delegation setup.
+
+
+(Minor terminology nitpick: none of the above is "information-theoretic
+security". That term designates algorithms that remain secure against
+attackers with unbounded computing abilities. By definition, this cannot
+apply to password hashing, where exhaustive search always succeeds in
+the long run. Also, anything involving a non-prime modulus can be broken
+by factoring the modulus.)
+
+
+	--Thomas Pornin
+

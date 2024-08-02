@@ -1,0 +1,228 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7KaNOXYFcDpEJ50dbeKN2R81+6V3Omdzw2qjSkB1uFH2Q@mail.gmail.com>
+Date: Sat, 23 Aug 2014 01:31:34 +0400
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Hi Alexander,
+
+
+On Fri, Aug 22, 2014 at 6:31 PM, Solar Designer <solar@...nwall.comwrote:
+
+Hi Dmitry,
+>
+On Wed, Aug 06, 2014 at 10:31:25AM -0700, Dmitry Khovratovich wrote:
+here is the link to the slides of the talk I have just given at
+PasswordsCon'14. It investigates time-memory tradeoffs for PHC candidates
+Catena, Lyra2, and Argon, and estimates the energy cost per password on
+an
+optimal ASIC implementation with full or reduced memory.
+>
+https://www.cryptolux.org/images/5/57/Tradeoffs.pdf
+>
+This is very nice analysis.  Thank you!
+>
+How would you summarize the reasons why Lyra2 T=1 appears to hold up
+better than Catena-3 and -4 against computation in less memory?
+
+
+The main reason is that the stack of bit-reversal permutations used in
+Catena is a weak construction. Regarding memory-hardness, it is barely
+better than a
+single layer of a bit-reversal permutation. Lyra2 is more resilient against
+tradeoff attacks due to its data-depending, pseudo-random addressing in the
+Wandering phase. The data-independent Setup phase of Lyra2 is as weak as
+Catena.
+
+This is not a surprise. It is really difficult to design a memory-hard
+function with data-independent addressing. When multiple cores and memory
+banks are available, many theoretical constructions fall apart
+*(http://eprint.iacr.org/2014/238.pdf
+<http://eprint.iacr.org/2014/238.pdf)*. I have only started exploring the
+other cache-timing resistant designs, but my guess is that they all have
+similar problems.
+
+One more reason is that the simplicity of Catena allowed me to understand
+it properly and make a better analysis. In case of Lyra2 I had to analyze
+its two phases separately and thus spend less time on each, making the
+entire analysis more superficial.
+
+
+  Is it
+primarily Lyra2 making more memory accesses per iteration (and thus more
+of them total, at these settings, right?) or is Lyra2's simple reverse
+order working better than Catena's bit reversal order, or both, or is
+some other factor more important than these two?  (Yes, I didn't look
+into your attacks closely.  Sorry.)
+>
+
+No, both reverse and bit-reverse orders are weak. Lyra2 with just many
+iterations of the Setup phase would have the same attack (if not better) as
+Catena-T.
+
+
+>
+You appear to be focusing on relative slowdown at fractions of the full
+memory usage, as well as on finding optimal tradeoff points in terms of
+energy consumption per password tested.  While these results are highly
+desirable to have, maybe even more important is cost per password tested
+(e.g. also in terms of energy consumption) for the different PHC
+candidates being compared when they're tuned for the same defensive
+request rate capacity (on commodity server hardware)?  Indeed, you'd
+need to estimate such costs at the candidates' respective optimal
+tradeoff points.
+>
+
+I somewhat agree. We would definitely make this next step if we had a
+reference platform where all candidates have been benchmarked. Then yes, we
+could set a bound of say 0.5 sec and choose the maximum memory parameter
+that allows to compute the hash securely within this time. Although I am
+not sure if all candidates support this way of choosing the memory
+parameter.
+
+On the other hand, in the cryptographic competitions the security analysis
+is not usually coupled with performance. If a designer suggests 40 rounds,
+claim it secure, and afterwards a 39-round version gets broken, then the
+scheme is dead even if it is so fast that the number of rounds can be
+doubled with no problem. The reason is that it is designer's job to choose
+secure-and-fast set of parameters, not of cryptanalyst. The same here: if a
+function is claimed to be memory-hard, and it is not (i.e. reducing the
+memory does not increase the cost), then it has problems no matter how fast
+it is.
+
+
+>
+Suppose you'd optimally attack Catena-3 at 1/32 memory, and Lyra2 and
+Argon at full memory.  However, if Catena-3 at same defensive memory
+cost setting is e.g. twice faster than Lyra2 and Argon (an arbitrary
+number for the sake of illustrating my point), then this may enable a
+defender to use roughly twice more memory with Catena-3 to achieve the
+same (maximum affordable) time cost per hash computed.  Once Catena-3 is
+tuned like that, its non-tradeoff area-time cost probably grows by a
+factor of 4, meaning that it loses to Lyra2 and Argon only by a factor
+of 8, not 32 as this could have originally appeared.  In some other
+scenario (e.g. with other PHC candidates, or if the 2x speed difference
+is actually an under-estimate), this might affect the rankings of PHC
+candidates as it relates to practical relevance of their susceptibility
+to TMTO.  Do you agree?
+>
+Isn't Argon significantly slower than both Catena-3 and Lyra2 T=1?
+>
+
+It seems that Argon is twice as slow as Lyra2 with T=1, and Catena-3 is
+much slower than both.
+
+
+
+If so, it'd probably lose to Lyra2 when we consider actual attack costs
+for same defense costs, rather than relative slowdowns with tradeoffs.
+Is this your understanding too?
+>
+
+No, I have a different feeling. Argon's ASIC implementation quickly
+increases in latency when the memory is reduced, e.g. by the factor of 6
+when using 1/2 of memory, whereas in Lyra2 latency remains almost the same
+till the reduction of 1/5 or so. This means that if the energy consumption
+is dominated by the memory usage (which easy to imagine in models slightly
+different from ours), then Lyra2 will be executed faster and hence take
+less energy.
+
+I'd emphasize here that our energy numbers for Blake implementations are
+far less precise than that of memory, because Blake2b simply has not been
+implemented in hardware yet.
+
+
+>
+Additional comment: It is a standard practice in the crypto community to
+give explicit security claims for the recommended parameter sets so that
+cryptanalysts could easily identify the primary targets. Many PHC
+candidates do not follow this rule by not only missing these claims but
+also concealing the recommended parameters. As a result, cryptanalysts
+like
+me spend valuable time attacking wrong sets or spreading the attention
+over
+multiple targets.
+>
+Remember: third-party cryptanalysis increases the confidence in your
+design, not decreases it (unless it is badly broken). Analysis of a
+5%-part
+of your submission (one of 20 possible parameter sets) is little better
+than no analysis at all. It is also worth mentioning that to make fair
+comparison of candidates, benchmarks and performance discussion in
+general
+should cover recommended parameter sets only.
+>
+I agree.  yescrypt tries to achieve adequate security for whatever time
+and memory costs are given to it, across a very wide range of possible
+settings (ranging from kilobytes for RAM, to terabytes for RAM+ROM).
+However, I think we want to focus on the following parameter sets when
+evaluating yescrypt vs. other candidates:
+>
+
+Thank you for the explicit parameter values!
+
+>
+Common defaults for all tests:
+p=1 (no internal thread-level parallelism)
+t=0 (lowest running time for a given memory usage)
+mask=1 (every other read is from ROM, if available)
+YESCRYPT_RW and YESCRYPT_PWXFORM flags are set
+YESCRYPT_PARALLEL_SMIX flag does not matter (is no-op when p=1)
+>
+RAM only tests:
+>
+1. r=8 N=2048
+(2 MiB, request rate ~10k/s on a 16-core server)
+>
+2. r=8 N=16384
+(16 MiB, request rate ~1k/s on a 16-core server)
+>
+3. r=8 N=1048576
+(1 GiB, KDF use)
+>
+4. r=8 N=1048576 p=(a multiple of logical CPU count)
+YESCRYPT_PARALLEL_SMIX set
+(1 GiB, KDF use, multi-threaded)
+>
+RAM+ROM tests:
+>
+5. r=7 N=2048 NROM=134217728
+(1.75 MiB RAM, 112 GiB ROM, request rate ~10k/s on a 16-core server)
+>
+6. r=7 N=16384 NROM=134217728
+(14 MiB RAM, 112 GiB ROM, request rate ~1k/s on a 16-core server)
+>
+You may adjust NROM to fit your hardware, and/or we may provide access
+to our machine.  At least for the tests with ROM, the system should have
+enough "huge pages" allocated and available to the user account, as
+shown here:
+http://www.openwall.com/presentations/PHDays2014-Yescrypt/mgp00014.html
+>
+Please note that yescrypt's TMTO resistance grows with higher t.  At t=0
+it is meant to be adequate, but not excessive.  Optimal t doesn't
+necessarily correspond to "full memory" being the optimal attack point.
+I think our actual goal should be different, as I tried to explain above -
+namely, maximizing attack costs in absolute terms, for same defense
+costs.  And t is part of the defense costs, so it should be kept as low
+as practical.
+>
+If you analyze yescrypt and conclude that optimal attack/defense cost
+ratio is achieved at some t 0, then this may be a reason to recommend
+such higher t for yescrypt going forward.  For now, I'd like to give t=0
+a try.
+>
+Thanks again,
+>
+Alexander
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

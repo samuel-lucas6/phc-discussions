@@ -1,0 +1,33 @@
+phc-discussions - uint8_t vs. unsigned char for aliasing (was: hash encryption)
+
+Message-ID: <20160324113059.GB8705@openwall.com>
+Date: Thu, 24 Mar 2016 14:30:59 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: uint8_t vs. unsigned char for aliasing (was: hash encryption)
+
+On Wed, Mar 23, 2016 at 09:18:41AM -0700, Andy Lutomirski wrote:
+Off-topic, but I recently learned the distressing fact that uint8_t is
+not specified as a "character" type and is therefore not special wrt
+aliasing :(
+
+Yes, I recently learned this too, from Alexander Cherepanov:
+
+https://twitter.com/ch3root/status/708748830540484608
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66110#c13
+
+The current understanding appears to be that uint8_t is being treated as
+special wrt aliasing in practice so far, but this isn't guaranteed by C
+standards and thus might change in some compiler.
+
+I still have plenty of uint8_t in yescrypt inherited from scrypt, and
+this is why I use uint8_t in this code for now.  I'll consider changing
+them all to "unsigned char" as a separate change for the entire tree.
+
+Unfortunately, doing so will change the crypto_scrypt() prototype
+compared to the scrypt tree... or maybe I should keep uint8_t just in
+that one wrapper function, with casts to (unsigned char *) in calls to
+deeper layer functions.
+
+Alexander
+

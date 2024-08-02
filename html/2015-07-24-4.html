@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2 improvement thread</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150724154338.GA1859&#64;openwall.com&gt;
+Date: Fri, 24 Jul 2015 17:43:38 +0200
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Cc: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;,
+	Alex Biryukov - UNI &lt;alex.biryukov&#64;....lu&gt;,
+	Agnieszka Bielec &lt;bielecagnieszka8&#64;...il.com&gt;
+Subject: Re: [PHC] Argon2 improvement thread
+
+Dear Argon team,
+
+Thank you for commenting on the proposed changes!
+
+On Fri, Jul 24, 2015 at 04:00:50PM +0200, Dmitry Khovratovich wrote:
+&gt; So far we support most of the API and minor corrections to the scheme that
+&gt; do not change its functionality and do not make it more complex.
+
+Do you view merging 2d and 2i into one API, with a parameter to choose
+one or the other, as an API change that you support?
+
+&gt; Complexity, as we see it, is one of the greatest enemies of security.
+
+We're in agreement on this.
+
+However, I think we should consider complexity not only of each one
+scheme individually, but also overall across currently deployed systems.
+If Argon2 is suitable for fewer use cases, this means that other schemes
+are to be used for those, which in turn means greater complexity across
+multiple systems.
+
+&gt; =============MAXFORM============
+&gt; 
+&gt; The proposed MAXFORM modification as in
+&gt; <a href="http://article.gmane.org/gmane.comp.security.phc/2838" rel="nofollow">http://article.gmane.org/gmane.comp.security.phc/2838</a> adds a  64-bit
+&gt; transformation with a large number of S-box lookups that runs in parallel
+&gt; to the primary 8192-bit transformation P.
+&gt; 
+&gt; The motivations behind this new transformation are to reduce the
+&gt; parallelism and that certain number of sequential S-box lookups slows down
+&gt; the brute-force on GPU on some settings.
+
+The parallelism (or latency) control is also helpful against ASICs.
+
+With S-box overwrites, this also improves Argon2's TMTO resilience.
+
+&gt; The negative effect of this addition is fourfold:
+&gt;  - new transformation, conceptually different from the other blocks in the
+&gt; scheme
+&gt;  - scheme becomes more complex and more difficult to analyze
+&gt;  - increased exposure to side-channel attacks
+&gt;  - wider gap between Argon2d and Argon2i, getting two schemes rather than
+&gt; one.
+
+Yes, although I think we can work on narrowing this gap again,
+especially because the parallelism control is also useful for 2i.
+Specifically, we might come up with a variation of MAXFORM for use in 2i
+(only) where the multiply-add-XOR operations would remain
+input-dependent, but the S-box lookups would be replaced e.g. with
+sequential reads (or some other input-independent order of reads).
+
+&gt; Clearly, adding this type of structure requires careful analysis and clear
+&gt; benefits. We would like to evaluate the effect of this update on the actual
+&gt; GPU performance with various memory requirements. Thanks to Alexander, we
+&gt; already know that the performance impact on CPU is not so large.
+&gt; 
+&gt; If there is anyone volunteering to code and benchmark Argon2d with and
+&gt; without this update on some GPU likely to be used by a cracker, we would be
+&gt; happy to assist. For instance, the GPU performance should be compared for
+&gt; Argon2d with and without this update using 4 KB, 64 KB, 1 MB, 64 MB, and 1
+&gt; GB of RAM.
+
+I expect that Agnieszka, CC'ed here, will work on Argon2 on GPU as part
+of her GSoC project with us (although only 1 month of it is left).  And
+yes, since Argon2 is still a moving target, she will have to experiment
+with several revisions of it.
+
+What revision of Argon2 should Agnieszka start with?  1.2 aka v3?
+Including the not-yet-approved by the panel BlaMka?
+
+&gt; Given the significance of the change, we consider it premature to integrate
+&gt; without proper evaluation.
+
+It is definitely premature to integrate - IMO, not so much because of
+lack of proper evaluation on GPUs, but mostly because we haven't yet
+defined how the S-boxes would be initialized and overwritten.  I am
+willing to work on defining that (and already have some ideas on it,
+which I haven't fully expressed yet).
+
+&gt; =========================Hybrid scheme===
+&gt; 
+&gt; It has been proposed to add another version of Argon2, which is a
+&gt; combination of Argon2d and Argon2i. In more details, the first half (or so)
+&gt; of the memory should be filled with data-independent addressing, and the
+&gt; rest with data-dependent addressing. The motivation is to reduce the
+&gt; side-channel leakage for 1-pass Argon2d  at the cost of reduced tradeoff
+&gt; resilience and the overall latency. The drawback of this proposal is
+&gt; threefold: 1) yet another primitive 2) the side-channel leakage is reduced
+&gt; but not removed, which still restricts the use case. 3) the tradeoff
+&gt; becomes more favourable to the attacker.
+&gt; 
+&gt; Clearly, such update would make sense only for 1- or 2-pass Argon2d, since
+&gt; for 3 passes and more Argon2i comes into play. We think that the drawbacks
+&gt; currently outweigh the positive effect, in particular we are concerned of
+&gt; the fact that the scheme is weaker than both existing variants in some
+&gt; scenarios. Still, it can be possible to include it as a possible extension,
+&gt; though not recommended by the designers but available to those who
+&gt; desperately want such a scheme.
+
+In "Clearly, such update would make sense only for 1- or 2-pass Argon2d,
+since for 3 passes and more Argon2i comes into play." you appear to have
+been thinking of TMTO only.  In practice, for some attackers I'd expect
+2i to be weaker than 2d (or the hybrid) even for more than 3 passes.
+Especially if 2d (and the corresponding portion of the proposed hybrid)
+gains MAXFORM and 2i does not (or at least doesn't gain the
+input-dependent S-box lookups, which it obviously can't have).
+
+&gt; ===================================
+&gt; 
+&gt; We would be happy to see more discussion on these topics, in particular
+&gt; from the panel members who have not expressed their opinion yet.
+
+Ditto.
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

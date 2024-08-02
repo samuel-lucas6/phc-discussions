@@ -1,0 +1,97 @@
+phc-discussions - Re: [PHC] Computational comparison of 3 schemes...
+
+Message-ID: <52E0F2A9.3060005@uni-weimar.de>
+Date: Thu, 23 Jan 2014 11:44:57 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Computational comparison of 3 schemes...
+
+On 23.01.2014 00:54, Bill Cox wrote:
+
+There are very interesting trade-offs.  First, all three algorithms
+fail completely in timing-attack-resistant mode for an attacker using
+1/4 of memory.  All three required no significant recalculations, and
+an attacker gets to use 1/4 of memory basically for free.  Catena-3
+only uses 1/4 of the memory, because it reuses the row memory, and
+there are 4 rows.  Both attacker and defender benefit from the 1/4th
+memory.
+
+This observation is a little bit unfair. We claim: with (at least) 2^g
+memory unites Catena-3 can be computed with (approx.) 4*2^g hash
+function calls. It is obvious that you can compute Catena-3 in the same
+time when you have 4 times the memory.
+
+However, with memory timing data, a NoelKDF attacker can probably use 1/8th or
+possibly less of memory, as it relatively easy to pebble.  Escrypt
+would probably still require closer to 1/4th, while I suspect
+attackers wont even bother trying to save even one memory location
+when attacking Catena-3.
+
+This observation complies with my claims.. :-)
+
+
+In short, Catena-3 is the natural timing-resistant choice, but it only
+uses 1/4 of the memory of an equivalent sequential-memory-hard KDF.
+
+Your strategy is
+1. allocate a huge amount of memory and
+2. overwrite the majority of it
+
+The Catena strategy is:
+1. allocate a reasonable amount of memory
+2. overwrite (all of) it multiple times.
+
+
+The former strategy implies that the cost for time and memory are alike
+since we have S(g) * T(g) = G^2. Let assume that S(g) is not equal
+T(g). Then an adversary might be willing to trade some memory units
+for some additional CPU time. Thus, an adversary can  exploit linear
+optimization techniques to compute a sweet spot.
+
+In the latter approach, we assume that memory is much more expensive
+then CPU time, \ie S(g)^3 * T(g) = G^4. Here exchange rate is not fair
+anymore. Usually, an adversary will not exchange some memory for a lot
+of CPU time.
+
+
+You have multiple times elaborated that you do not like the latter
+approach. Fine by me. :-)
+
+But I do not really understand why the former strategy is superior to
+the latter one.
+
+
+1 Put all the initial pebbles down over the first N locations if there
+are N pebbles
+2 Add all non-fixed, non-in-use pebbles that have no edges pointing at
+them from beyond the current runner pebble position to the "pebble
+group"
+    2.5 If there are no such pebbles, use a heuristic to add the
+"best" pebble to the group.
+3 When pebbling, take virtual pebbles from the pebble group.  Reduce
+the "num available" pebbles on the group by 1, but alloc a new pebble
+rather than removing any from the group
+4 When num available reaches 0, delete all the pebbles in the group, and goto 2
+
+Thanks you very much for the evaluation of the three password schemes.
+Great job! Have you planed to publish the source code? I might be useful
+for the evaluation process of the submitted PHC candidates. :-)
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

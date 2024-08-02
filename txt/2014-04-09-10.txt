@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <534583A1.5060705@uni-weimar.de>
+Date: Wed, 09 Apr 2014 19:30:09 +0200
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+On 09.04.2014 13:32, Dmitry Khovratovich wrote:
+Hi Christian,
+
+>>Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+considered to be independent?
+
+The independency is a not a well-defined notion here. Consider, for
+instance, distinct bytes of K1. Are they independent?
+
+If we think about it for a while, it becomes clear that a single key can
+be splitted into as many keys as its length without any security loss.
+
+>>y= H(PWD || salt)
+K1' =   F(y, 1)
+K2' =   F(y, 2)
+
+This method is clearly equivalent to the first one. Indeed, consider
+H'(x) = F(H(x)||1)||F(H(x)||2). Then the second method turns into the
+first one with H = H'.
+
+
+Your observations are fine if H is a secure KDF. But it is easy to
+construct an insecure KDF out of a (preimage) secure password scrambler.
+
+Let G be a slow and memory-consuming cryptographic hash function and let
+F be a cryptographic hash function. Suppose H is a password scrambler
+and we have
+
+y = H(x) := G(x) || F(G(x)).
+
+H can be considered to be s secure password scrambler  since it is hard
+to recover x from y. Nevertheless, it is a bad idea to use
+y = y1||y2 directly as a key since you can derive y2 from y1
+by just computing F(y1).
+
+Therefore, it might be a good idea to output
+
+F(y, 1) || F(y, 2) instead of y.
+
+Best regards,
+Christian
+
+
+
+
+
+
+
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

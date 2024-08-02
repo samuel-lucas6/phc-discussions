@@ -1,0 +1,70 @@
+phc-discussions - RE: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <00ab01ce1388$1b9da7c0$52d8f740$@acm.org>
+Date: Mon, 25 Feb 2013 10:44:11 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>,
+	"'Marsh Ray'" <maray@...rosoft.com>
+Cc: "'Jeffrey Goldberg'" <Jeffrey@...dmark.org>,
+	<Stefan.Lucks@...-weimar.de>
+Subject: RE: [PHC] Any "large verifiers" on the panel?
+
++1
+
+That's very appealing.  It is not necessary for a client-side F( ) to be disclosed in any way to the authenticator so long as the submitted binary string (which is what the authentication service retains a hash of), a password-independent key, is indistinguishable from random and has enough bits to make a meet-in-the-middle attack on it computationally infeasible in the event that the authentication service's retained form is disclosed.
+
+Furthermore, the client procedure should be such that the same key is never reused for a different account/authentication, so even if there is a compromise, there is no "password" that can be reused with another system.  The chance of collisions with keys for other users should be negligible.  (This can be aided by having something locally-unique mixed into the server-side transformed value, confounding reuse of disclosed server-carried authentication data.
+
+This puts all of the great secrets (such as cryptographically-random salts, and any user-memorable password used in the scheme) in the custody of the user.  Now the problem is providing an user agent of some form that will be used, keeps the generated data secure, and is recoverable in the advent of misadventure on the client side.  This is far more than a technical problem.  
+
+I've been noodling about this for a while.
+<http://nfoworks.org/notes/2012/08/n120801.htm
+   for considerations and principles
+<https://www.oasis-open.org/committees/document.php?document_id=46218
+   for a particular instance (all work being "client-side")
+   (some small cleanups are about to be posted)
+<https://tools.oasis-open.org/version-control/svn/oic/Advisories/00009-ProtectionKeySafety/trunk/description.html
+   for a higher-level discussion that motivates the particular instance
+
+ - Dennis
+
+
+
+
+-----Original Message-----
+From: Stefan.Lucks@...-weimar.de [mailto:Stefan.Lucks@...-weimar.de] 
+Sent: Monday, February 25, 2013 05:34
+To: Marsh Ray
+Cc: Jeffrey Goldberg; discussions@...sword-hashing.net
+Subject: RE: [PHC] Any "large verifiers" on the panel?
+
+[ ... ]
+
+Ideally, given a (slow, memory-hard, or whatver) function F and a 
+cryptographic hash function H, the password hash should be X := 
+H(F(password, salt, ...)). Now, the client could compute Y := F(password, 
+salt, ...), and the server would only have to compute H(Y). So the server 
+would neither need many CPU cycles, nor much memory -- and still, 
+password, cracking would not get any simpler.
+
+The only assumption is that F cannot be so slow or memory-demanding that 
+it would not run reasonably fast on the client at hand.
+
+So long
+
+Stefan
+
+P.S.: Sorry for my late response. I had been on a vacation last week.
+
+
+-------------
+(*)  I understand that it is not really "your" site, of course. ;-)
+(**) I'd prefer to call them Password Scrambling Functions, but that is
+      just me and my taste.
+
+--
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

@@ -1,0 +1,73 @@
+phc-discussions - RE: [PHC] blakerypt sequential memory-hard function
+
+Message-ID: <00c801cef2d0$ac72b100$05581300$@acm.org>
+Date: Fri, 6 Dec 2013 14:15:28 -0800
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] blakerypt sequential memory-hard function
+
+Krisztián,
+
+I think we're collapsing the parameter for creation of the hash versus parameters for verification of the hash.  For verification, the only thing that can be done is whatever is required.
+
+For creation, I see no problem with specifying a time-related work factor.  That would be Ttarget in the sense of my previous note.  How the implementation gets close to that is a different matter.  But the result has to include whatever parameters that allow the hash to be verified anywhere and in the face of changed platforms, speeds, etc.
+
+The technique I'm exploring allows for, but does not require, time-calibrated derivation of a work factor and for compressed expression of that work factor.  But a verifier doesn't have to know how, or even whether, that was done.  It does have to deal with the compressed work-factor value in order to verify such a hash (or report that it is not going to handle it on encounter of an unsupported/outrageous work-factor value).
+
+[Note: With regard to PHS, there is no such provision of course, since the work factor is an input parameter for either creation or verification.  So even the use of a compressed (non-linear) work-factor value would ideally be external to the use of the PHS API.]
+
+I have no objection to hashing methods that accept some sort of algorithm-related cost factor, such as a number of iterations.  It just means the determination of appropriateness in terms of workload on the generator of the hash is going to be determined by external means and with some knowledge of how the implementation runs on a given platform.  How that applies laterally to verifiers of the hash is also a consideration, of course.  In the context where I ran into the need for an iterative work factor, some constant too-low values were being used for some inexplicable reason.  Those number have been unchanged for the past 5-10 years.  Time-derived work factors provide automatic scaling to improvements in performance of the underlying cryptographic primitive and the platforms as new hashes are produced.
+
+I agree that there is additional complication with time-determined work factors.  And the time-based hash creation cannot (or at least should not) offer the same API as the call for verification.  
+
+ - Dennis
+
+PS: I favor Krisztián's suggestion about provision of a benchmarking tool for determining concrete impacts of work-factor parameters with a given implementation.  That's a great idea.  Having a sense for the variation over some range of platforms would also be valuable.
+
+
+-----Original Message-----
+From: Krisztián Pintér [mailto:pinterkr@...il.com] 
+Sent: Friday, December 6, 2013 09:46
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+
+Dennis E. Hamilton (at Thursday, December 5, 2013, 5:16:02 PM):
+The advantage is that the Fibonacci recurrence provides a nice way
+of deriving k on the fly by seeing how much time is being taken in
+real time, and incrementing by the next step if a target threshold
+has not been reached.
+
+this is a recurring theme, and i never was a great fan of that. now i
+took some time to think through why.
+
+conclusion
+
+determining the proper cost parameters should not be a part of the
+actual algorithm, and should come from outside. the parameters must be
+provided in an explicit format, that is, number of cycles, number of
+memory blocks, etc. it allows equivalent forms, like 2^t time, but
+disallows time in milliseconds.
+
+rationale
+
+1. theoretical stand: separate things should be separate. it is
+conceptually different to determine the parameters and using them. use
+small code blocks, avoid swiss army knife antipattern.
+
+2. many times we want to calculate the hash on different platforms,
+including the case of switching platforms in the future. it is unwise
+to lock the parametrization to the current platform.
+
+3. if we always use fixed parameters, hashing the password the first
+time and checking a password does not differ at code/circuit level.
+this simplifies the code.
+
+4. we lose nothing with taking fixed parameters. we can at any time
+offer the user a separate "benchmark" option. together with a table of
+preset values for different platforms.
+
+
+the above is an opinion. don't get offended, discuss!
+
+

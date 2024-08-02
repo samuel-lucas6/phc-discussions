@@ -1,0 +1,90 @@
+phc-discussions - KDF features?
+
+
+Message-ID: <CAOLP8p7O7Dh+8x71LRLXZ-=62PaRT3xrPYJs0u3kom0eZjo-zQ@mail.gmail.com>
+Date: Sun, 16 Feb 2014 11:45:19 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: KDF features?
+
+What features are important for a competitive KDF?
+
+Because of great feedback and new ideas from SolarDesigner, I'm
+rewriting my NoelKDF password hasher to improve performance and
+support more features.  The new KDF will be called TigerKDF, after my
+other cat.
+
+Features I currently plan on supporting in TigerKDF include:
+
+- Selectable amount of compute time hardening with sequential
+multiplication chains
+- A fast non-cryptographic SSE/AVX2 friendly hash for the memory
+hashing inner loop
+- Parameter for reading/writing memory more than once to increase
+bandwidth without increasing memory
+- PBKDF2 initial password hash, after which an optional attempt can be
+made to clear the password.
+- Small Blake2 hashes between larger block hashes, and at the start and finish.
+- Catena's "garlic" for client independent updates
+- A first loop without password dependent addressing to protect
+against cache timing attacks
+- A second loop that does unpredictable password based addressing to
+hurt attackers doing a TMTO
+- User specified parallelism to increase memory bandwidth - any number
+of memory hashing threads in parallel, which depend on hash results
+from the multiplication chain to force them to keep memory loaded as
+long as the multiplication chain takes to run
+- Option to do lots of small unpredictable reads to hurt GPU
+performance, similar to bcrypt
+- Variable memory and block size to allow efficient hashing in small
+caches, or huge external RAMs
+- Method for initial password hashing for a specified time which
+generates good values for multiplication chain length and amount of
+memory to hash
+- Support for server relief where the client does most of the hashing.
+- Option to force memory from parallel threads to be loaded at the same time
+
+How important are shared ROMs?  I suspect this would be useful on a
+password authentication server in that the memory could be hashed
+extensively, making it nearly impossible to do a useful TMTO against
+it, and a password authentication server could reuse it for each
+password hashed.
+
+What can be added to better support GPU hashing?
+
+Are there important features I've left out, or features I've included
+that should be left out?
+
+The tunables for TigerKDF include:
+
+- Salt
+- Memory size
+- Block size
+- Multiplication chain length
+- Garlic (for client independent update)
+- Repetitions (to increase bandwidth without increasing memory)
+- Parallelism (number of memory hashing threads)
+- Sub-block hashing size for small unpredictable memory accesses
+- Boolean flag for enabling hashing between thread memory to force
+them to be loaded simultaneously.  Is this needed?  I think it might
+hurt GPU hashing if there is no way to disable this.  In NoelKDF, it's
+always enabled.
+
+Most of these could be set to reasonable defaults and would not have
+to be stored with each password hash.  At a minimum, only the salt and
+resulting hash would have to be stored.  In order of how useful it
+would be to store with the password hash, I would include:
+
+- Salt
+- Garlic (for client independent updates)
+- Memory size
+- Parallelism
+- Multiplication chain length
+- Repetitions
+- Block size
+- Sub-block size
+
+Thoughts?
+
+Bill
+

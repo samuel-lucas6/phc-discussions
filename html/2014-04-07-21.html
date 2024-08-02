@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="20">[&lt;prev]</a> <a href="22">[next&gt;]</a> <a href="../../../2014/04/06/11">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5342D4E6.7070104&#64;rub.de&gt;
+Date: Mon, 07 Apr 2014 18:40:06 +0200
+From: Ralf Zimmermann &lt;ralf.zimmermann&#64;....de&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Sorry for the late reply.
+
+On 04/03/2014 11:39 AM, Solar Designer wrote:
+&gt; On Thu, Apr 03, 2014 at 10:20:05AM +0200, Ralf Zimmermann wrote: I
+&gt; think you can pipeline the functions and receive their results
+&gt; every clock cycle if you use the routing or buffering approach
+&gt; (number #4 and number #3 on the list I had posted).  The real
+&gt; question (for the attacker) is whether this is worth the overhead.
+&gt; I think for complicated functions, it is.  And for simple functions
+&gt; their die area is negligible, and portions of them like multipliers
+&gt; may easily be shared between them, as Bill pointed out.
+That is true in theory, though the overhead of interleaving many more
+computations than parallel units might kill you (in hardware).
+
+To #3: If you consider that you need to have a medium size memory -
+let's say 64kB - per core (and as their content differs for each step,
+you need to store them all in parallel), then you will most likely hit
+the limit of parallel cores due to the memory consumption in hardware.
+In this case, you will need to reduce the number of parallel cores
+manually to keep more copies on the chip, working in an interleaved
+mode of operation.
+It might work, but I agree that the overhead is very likely to
+outweight the benefits. Still it would be interesting to see someone
+implement this buffering approach on an FPGA and compare it to a
+straight-forward implementation.
+
+To #4: see next paragraph :)
+&gt; 
+&gt; In fact, now that I think of it that way, the sharing of e.g. 
+&gt; multipliers that Bill pointed out is not very different from "my" 
+&gt; routing approach.  It's a similar concept applied at a different
+&gt; level: in Bill's example it'd be "within a core" (and would apply
+&gt; to portions of functions) and in my example it'd be "across cores"
+&gt; (and would apply to whole functions).  Looking at this from yet
+&gt; another angle it can be said that with the routing approach we're
+&gt; re-defining "core" such that it tests lots of candidate passwords
+&gt; at once using its pool of resources.
+As this is the same idea that #4: you suggest to share the resources
+between attacking cores or functions. You can do this of course, but
+you will need to stall the computation in case you have a collision,
+e.g., two or more cores/functions need the same hardware modules at
+the same time.
+
+So if you want to get a valid output every clock cycle *without any
+stalls*, you need to use as much area as needed to perform any
+operation in every pipeline stage.
+Of course, you may reuse for example a multiply unit for two different
+functions *within a pipeline stage*, as only one function needs to be
+computed per step.
+Nevertheless, you may not share modules over the boundary of the
+pipeline stages without stalling the pipeline.
+&gt; 
+&gt;&gt; This does not matter if you use friendly functions like XOR,
+&gt;&gt; shift, etc., but we hope that using more complex but still CPU
+&gt;&gt; friendly functions (this is why we tried floating-point), the
+&gt;&gt; area consumption *may* hurt a little more.
+&gt; 
+&gt; Maybe, but how would you avoid the kind of sharing that Bill
+&gt; mentioned? Can you come up with a large number of sufficiently
+&gt; different functions that not much sharing could occur?  To me, even
+&gt; 16 feels too low, and I doubt you can come up with 16 without
+&gt; allowing for shared multipliers, etc., yet being CPU-friendly.
+You are correct: You cannot avoid it. But to be honest, it is not
+really an issue, at least not for me. The idea is to add *something*
+with each function, which increases the area a bit. In the worst case,
+you just add to the complexity of the multiplexers and thus to the LUT
+usage.
+In the best case, you enforce the use of an additional
+hardcore/additional logic circuit, e.g., a DSP core, which was
+previously not needed.
+
+[..]
+
+&gt; Here's a CPU attack on AntCrypt (as I understand it): define all 
+&gt; possible two-function groups.  For 16 original functions, this
+&gt; will result in 256 dual-function functions, and if they're as tiny
+&gt; as they currently are they will probably still fit in a CPU's L1i
+&gt; cache.  Now you can define a dual-AntCrypt, testing two candidate
+&gt; passwords at a time, and using the CPU core's parallel processing
+&gt; capabilities (SIMD, multiple issue, super-scalar) it'll likely run
+&gt; no slower than a single AntCrypt does.  So you get a 2x performance
+&gt; boost for the attacker. Moreover, the cost of conditional branches
+&gt; is amortized,
+[.. removed due to followup email ]
+
+I must admit, that I am not really the best when it comes to
+platform-based, optimized CPU implementations. Would you benefit in
+case the instructions inside of the dual-functions differ heavily? For
+example, if one function computes an AND and the other an DIV or if
+one is a simple MUL and the other a XOR? Or would you only benefit in
+case you share the same instruction(s) at some point inside the functions?
+
+And: how important do you rate the CPU attacker, if the GPU and FPGA
+implementations are still likely to provide a much higher parallelism
+due to the larger amount of parallel cores?
+&gt; 
+[..]
+&gt; 
+&gt; A way to mitigate these CPU attacks would be to define many more 
+&gt; individual functions.  Another way would be to include sufficient 
+&gt; parallelism in them (tunable to be barely enough for current and 
+&gt; very-near-future CPUs), so that the defender is not at a
+&gt; disadvantage. These two approaches may be used together.  (Not that
+&gt; I like this whole approach, but like I said some diversity in PHC
+&gt; is good anyway.)
+We already mentioned a potential parallelism in the paper. The most
+straight-forward method would be to process not one sequence alone but
+n (independently permuted) sequences in parallel. The n sequences
+should still diverge for GPUs (as they are not the same permutation),
+but the speedup due to the parallel processing would be usable for
+both the attacker and the defender.
+
+The reason why we did not implement it directly is that we need to be
+careful with synchronization when reading/writing from/to the memory.
+As "#parallel_resources" is no part of the interface, we need to
+ensure that the result is the same for every batch size.
+
+Anyway: Would adding such parallelism help address/soften the
+relevance of the CPU attack? It will at least give the defender more
+control over the utilized resources.
+
+
+A last question: Are we allowed to update the code and document for
+such a change? Then I would add the parallelism to the code as soon as
+I find the time to implement and test it.
+
+Cheers,
+Ralf
+
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. &amp; Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+<a href="http://www.emsec.rub.de" rel="nofollow">http://www.emsec.rub.de</a>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - <a href="http://www.enigmail.net/" rel="nofollow">http://www.enigmail.net/</a>
+
+iEYEARECAAYFAlNC1NsACgkQ/N3XAntS/5bPPwCgi5scj1KFJpJrG/s0fvhBn71b
+LzkAn2p60uxyzmHdeB9yJwbp2MvRQCQG
+=z4hA
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

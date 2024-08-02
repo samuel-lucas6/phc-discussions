@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Deliberately GPU-friendly password hashes?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="31">[&lt;prev]</a> <a href="33">[next&gt;]</a> <a href="31">[&lt;thread-prev]</a> <a href="35">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p5mpcUoeixaZgwz2UtA93pkeTwzmjhUKC4sPYJkR6Joog&#64;mail.gmail.com&gt;
+Date: Thu, 3 Apr 2014 09:53:48 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Deliberately GPU-friendly password hashes?
+
+On Thu, Apr 3, 2014 at 9:08 AM, Daniel Franke &lt;dfoxfranke&#64;...il.com&gt; wrote:
+&gt; Steve Thomas &lt;steve&#64;...tu.com&gt; writes:
+&gt;
+&gt;&gt; Parallel it's SIMD, GPU, FPGA, and ASIC friendly. It's not memory-hard,
+&gt;&gt; but as a defender you can use whatever hardware the attacker is using.
+&gt;&gt; Well besides maybe ASICs but it depends on how interface to them is. If
+&gt;&gt; it's a simple send password and salt or initial key and get a hash back
+&gt;&gt; then yes, but if it's a here's the salt and hash now let me send you a
+&gt;&gt; bunch of passwords to test and ask if one of the last N passwords match
+&gt;&gt; then it won't work.
+&gt;
+&gt; I don't like the threat model implied by the argument you're
+&gt; making. You're assuming that the defender gets to adapt his algorithm
+&gt; and parameter choices to the attacker's hardware choices. The reality is
+&gt; the other way around.
+
+While I agree Steve's anti-parallelism reaction could use an
+adjustment, I think Steve does have a good point about the API to the
+password hashing engine.  In pepper mode, for example, the GPU needs
+to have the password hash so it can detect when it's got the right
+answer.  Using a client's GPU in server relief mode wont work out so
+well in this case.  We certainly don't want to be broadcasting
+password hashes to anyone who wants to authenticate.  A modified
+server-relief mode could do the trick maybe, by hashing all the
+possible hashes produced with pepper, and using that as the client's
+derived key.
+
+However, on an authentication server such as envisioned in EARWORM,
+you've got full control over the API, so it's not a problem.
+
+That PHS entry that enables secure offloading of password hashing to
+remote servers is cool.  It would be even cooler if we could figure
+out how to make it use a monster GPU or even a GPU farm.  I could see
+selling GPU farm time for password hashing to big geeks.  I'd buy a
+few cycles :-)
+
+I see three common attitudes on this list that I which I could
+influence to change.  I guess that just means I have strong attitudes
+a lot of these guys would have me change instead.  They are:
+
+1) Parallelism is good for the attacker, and bad for the defender
+2) Speed doesn't matter.  All that matters is security, and speed doesn't help.
+3) Data written to memory in a memory hard PHS needs to be
+cryptographically random.
+
+The PHS web site does a good job explaining why there is such thing as
+useful parallelism:
+
+<a href="https://password-hashing.net/faq.html#qb" rel="nofollow">https://password-hashing.net/faq.html#qb</a>
+
+If that's not a good enough argument for parallelism, I might as well
+be trying to convince someone to change their religion.  Using pepper
+is a decent counter-argument, and including parallelism in a PHS does
+complicate it, but pepper gives an attacker a free TMTO option.
+Either way, we should all be able to agree that limited parallelism is
+also good for the defender.
+
+Speed not mattering in a memory hard password hashing scheme seems to
+me to be an attitude from academia.  In the real world, time always
+matters (did that login take 0.1 seconds or 10s?), and when the
+strength of your memory hard PHS can be approximated by attacker
+memory used * attacker runtime, it is critical to avoid giving an
+attacker a free ride by having inefficient code or code that can
+easily be sped up on a GPU of FPGA.  Again, this seems almost to be a
+religious thing.  Guys on this list either do or don't seem to care at
+all about speed, and it shows in the entries.  EARWORM's use of the
+new AES instructions is a nice way to have your cake and eat it too,
+but it does somewhat limit it's applicability.  I still have to
+respect all the guys trying to have the AES instructions
+runtime-harden their PHS.
+
+Finally, I am saddened to be the only submitter to use a cryptographic
+primitive like SHA256 for securely deriving an initial key, but then
+filling memory with non-cryptographically pseudo-random data.  The
+guys using the new AES instructions might be fast enough, but every
+other memory hard entry is speed limited due to their reliance on a
+strong hash function for deriving data to fill memory.  However, a lot
+of these entries have trivial tests for non-randomness that easily
+prove the memory is the result of their PHS, and not random.  The only
+benefit of using a slow cryptographic primitive in this case is that
+there is little need to worry that the whole thing can be reversed,
+revealing the password or initial derived key.  I suppose it also
+makes it simple to prove that there are no short-cuts an attacker can
+take.  However, simply applying a strong hash function now and then
+should be enough to gain similar confidence (which Alexander made me
+do - I was being a dork before).
+
+Anyway, I think applicability for GPU password strengthening should be
+one of the criteria used by the PHS judges.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - BSTY - yescrypt-based cryptocoin</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140909115003.GA23270&#64;openwall.com&gt;
+Date: Tue, 9 Sep 2014 15:50:03 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: BSTY - yescrypt-based cryptocoin
+
+Hi,
+
+A yescrypt-based cryptocoin was launched ~12 hours ago:
+
+<a href="https://bitcointalk.org/index.php?topic=775289.0" rel="nofollow">https://bitcointalk.org/index.php?topic=775289.0</a>
+<a href="https://github.com/GlobalBoost/GlobalBoost-Y" rel="nofollow">https://github.com/GlobalBoost/GlobalBoost-Y</a>
+<a href="https://bst.globalboo.st/y/product.php?id=22" rel="nofollow">https://bst.globalboo.st/y/product.php?id=22</a>
+
+They currently credit me for "recommendations", but actually my
+involvement was minimal, and I'd like to keep it minimal, so I am asking
+them to remove that wording (hopefully, it'll be gone by the time you
+read this).  I am not entirely happy with this cryptocoin, but I think
+it's a fine way to test yescrypt better if the coin ends up providing
+incentive for breaking/optimizing yescrypt.
+
+Currently, the only miner is the wallet.  As released, it uses
+yescrypt's SIMD-less code (with a minor incompatible change possibly
+inadvertently introduced by BSTY developers) and it has memory
+(de)allocation overhead in the loop.
+
+The attached patch introduces the change/bug into yescrypt's SIMD code
+in the wallet tree and uses thread-local storage (yes, a hack, and
+not universally supported) to easily move the memory (de)allocation
+overhead out of the loop.  Someone may reimplement the latter in a
+better way (without a dependency on thread-local storage).  Of course,
+the official yescrypt won't include these changes; they are BSTY-only.
+
+The official yescrypt's API allows for the caller to keep the memory
+(de)allocation overhead out of the loop, but this wallet code didn't use
+that.  And it was quicker for me to hack than to implement such use.
+
+Before this patch, BSTY mining ran at 1300 hashes/s on i7-4770K.  With
+the patch, it's the expected 3400 hashes/s (same as my "userom 0 2"
+benchmark reports for 8 threads).  However, the speed drops to zero
+whenever the wallet loses connection to network, which happens very
+often (perhaps overloaded nodes).
+
+BSTY uses yescrypt with: N=2048, r=8, p=1, t=0, (YESCRYPT_RW |
+YESCRYPT_PWXFORM).  The parameters are fixed (no growing N, unlike e.g.
+in YACoin).
+
+Luckily, BSTY's incompatible change to yescrypt does not affect its
+security, nor its performance.  So BSTY can serve to test yescrypt's
+important properties despite of this change.
+
+I am BCC'ing this to a BSTY developer.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="5/1">GlobalBoost-Y-fast.diff</a><strong>" of type "</strong>text/plain<strong>" (3805 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

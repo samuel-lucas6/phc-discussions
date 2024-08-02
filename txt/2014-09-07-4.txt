@@ -1,0 +1,176 @@
+phc-discussions - Re: [PHC] A review per day - Lyra2
+
+Message-ID: <20140907150526.GA9022@openwall.com>
+Date: Sun, 7 Sep 2014 19:05:26 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Lyra2
+
+Bill,
+
+Thank you for comparing these three candidates.
+
+On Sat, Sep 06, 2014 at 10:44:21AM -0400, Bill Cox wrote:
+Yescrypt wins at GPU defense, due to it's rapid unpredictable small
+memory reads from L1 cache.  Like bcrypt, Yescrypt issues multiple
+unpredictable small memory reads in parallel, to get to about 1/2 the
+number that bcrypt does
+
+Where did you get the specific "1/2" figure from?  Does it possibly come
+from that posting on "escrypt 0.3.1"? -
+http://thread.gmane.org/gmane.comp.security.phc/959/focus=1009
+If so, please note that current yescrypt, as submitted to PHC, has
+changed in this respect since then, to match bcrypt more closely in this
+respect.  In that posting, I specifically said that those initial
+benchmark results vs. bcrypt demonstrated that more work was needed.
+
+when single-threaded.
+
+What do you mean by that?
+
+The comparison vs. bcrypt only makes sense when we're exhausting all CPU
+cores by both bcrypt and the PHC candidate being tested.  This means
+running as many concurrent instances (yes, single-threaded ones) as
+there are logical CPUs in the system (so multiple threads total).
+
+Purely single-threaded comparisons are not relevant, neither for the
+defender (where the bcrypt cost setting and the PHC candidate's cost
+settings will be limited by server capacity), nor for the attacker (who
+will typically want to use their resources fully at all times).
+
+TwoCats only issues one
+unpredictable read at a time, and performs them at about 1/3 the
+number as bcrypt when single threaded.  However, Yescrypt is designed
+to max out everything at the same time, including CPU cores, while
+TwoCats runs into memory bottlenecks on my test machine using only
+half the CPU cores.  This gives Yescrypt a 3X-ish advantage over
+TwoCats in unpredictable read rate, which likely translates into
+better GPU defense.
+
+Oh, OK.  So you do acknowledge the single-threaded scenario isn't one to
+consider in this context.
+
+Lyra2 does small-ish unpredictable reads,
+
+Where?  I am not seeing that.  I only see 3 nested loops: Time Loop
+until T (corresponds to yescrypt's t), Visitation Loop for rows
+(corresponds to (ye)scrypt SMix second loop), and Columns Loop
+(corresponds to (ye)scrypt's BlockMix).  There's nothing that would
+correspond to yescrypt's pwxform, as far as I can see.  Setting C low
+would be equivalent to setting scrypt's r low - that is, it would bring
+things closer to a Pufferfish-alike, but not close enough for this to
+make sense (so memory access would become slow, but not much GPU defense
+would be achieved).
+
+ASIC defense for large memory hashing is excellent for all three,
+assuming Lyra2 becomes multi-threaded.  An ASIC attacker will quickly
+become memory bandwidth limited.  Practical ASIC attacks have at most
+about a 32 times higher memory bandwidth than a modern high-end CPU.
+This enables an attacker to run up to 32 times faster, but the expense
+per ASIC of such a system is likely similar to the cost of a desktop
+PC.  TwoCats and Yescrypt have multiplication chain compute-time
+hardening, which in some cases will limit an attacker's ability to
+hash at the full speed supported by his memory bandwidth.  In that
+case, Yescrypt and TwoCats will force an attacker to either make fewer
+guesses per second, or buy more memory so that more attacks can be
+interleaved, filling up memory bandwidth.  Yescrypt and TwoCats win
+over Lyra2 because of this.  TwoCat's multiplication chains are
+tunable, allowing it to tune the multiplication chain lengths to the
+hashing speed of the machine.  This allows TwoCats to be more
+multiplication chain hardened than Yescrypt in some cases.  The extra
+area on the ASIC needed by Lyra2 and Yescrypt computation logic vs
+TwoCats is tiny, as there would only be 32 copies at most.  TwoCats
+has a slight win here over Yescrypt.
+
+I intend to look into making yescrypt's pwxform rounds count tunable,
+e.g. maybe supporting 2, 6, 10, 14 rounds (two flag bits).  (The current
+hard-coded default is 6.)  In semi-optimized code, this may be 2 rounds
+followed by a loop with 4 rounds in it, or vice versa, or it may be a
+loop with 4 rounds in it and an exit from the middle of the loop's body.
+6 is what I find optimal on current servers for user authentication,
+2 may provide better single-threaded performance (but lower
+multiplication latency hardening), closer to TwoCats'.  10 and 14 may
+provide higher multiplication latency hardening.
+
+Do you feel this would be worth the extra complexity?
+
+It may be common for some groups of users to run single-threaded,
+though I recommend against it in all cases except for single-core
+CPUs.  In that case, TwoCats wins in ASIC defense simply because it
+will fill more memory than either Lyra2 or Yescrypt.  A single TwoCats
+thread fills external memory over twice the speed of either Yescrypt
+or Lyra2.  When no SIMD unit is available, that ratio might increases
+by a factor of about 4, corresponding to the pipeline depth used in
+the SIMD units by Yescrypt and Lyra2.
+
+While all three have no requirement for special hardware, all three
+are tuned for modern x86 SIMD units.  TwoCats I think wins in
+adaptability to basic CPUs.  This is because it can run with a single
+32-bit width with far fewer instructions per byte of memory hashed.
+Yescrypt also has variable width SIMD loops, but it's pipeline depth
+is not currently variable, making it slow down somewhat on a basic
+CPU.  TwoCats wins here because it uses less pipelined parallelism.
+
+Yes, I need to make yescrypt's instruction and SIMD parallelism runtime
+tunable, supporting a handful of settings.
+
+Lyra2 easily wins at TMTO defense.  Both Lyra2 and Yescrypt use
+increasing t_cost to improve TMTO defense, but Lyra2's decision to
+continue overwriting memory while reading I think makes it more TMTO
+resistant.
+
+yescrypt also continues overwriting memory while reading, except when
+run with high p (which Lyra2 doesn't currently support) and the
+YESCRYPT_PARALLEL_SMIX flag set.  When p 1 and YESCRYPT_PARALLEL_SMIX
+is set, yescrypt avoids writes during the portion of its running time
+where all threads share the entire V.  Even in that case, increasing t
+also increases the number of loop iterations during which writes do
+happen (although this number is relatively small when p is high).
+
+TwoCats as submitted uses t_cost poorly.  A revised
+version exists that will be submitted if allowed, which does increase
+TMTO resistance as t_cost increases, but this feature works better in
+Lyra2 and Yescrypt.  However, because TwoCats was designed as a single
+pass algorithm, it has the best TMTO resistance when t_cost turned
+off, meaning only one memory pass.  This is not a mode Lyra2 allows,
+but Yescrypt does, and both Yescrypt and TwoCats achieve higher
+memory*time defense as a result.
+
+yescrypt doesn't support fully skipping its SMix2.  t=0 corresponds to
+spending 1/4 of yescrypt's total running time in SMix2.
+
+As for time*memory defense, Yescrypt, when run with t_cost == 0, has
+the same characteristics as TwoCats, filling memory linearly, never
+stopping until enough memory has been hashed.
+
+No.  See above.
+
+This maximizes time*memory defense vs any other possible solution.
+
+It does, but there are also concerns on the (non-)uniformity of memory
+accesses, which may enable attacker's dollar cost optimizations via use
+of different memory types.  You partially deal with this (and with TMTO)
+via your "cubed distribution".  yescrypt deals with it via sliding power
+of 2 window, but this moves the optimal stopping point for its scrypt
+SMix-like algorithm from N (just first loop) to 4/3*N (1/4th of total
+time spent in SMix's second loop).  We discussed this in here some
+months ago.
+
+Lyra2 does at
+least two passes over memory, doing twice as many read/write
+operations per memory location.  This causes it to use half the memory
+as TwoCats and Yescrypt when memory bandwidth limited.  All of my ASIC
+attack plans so far would need only half the memory to attack Lyra2
+hashes, lowering it's time*memory defense by 2X.  However, a more
+sophisticated attack might be able to take advantage of the unfilled
+memory until it is needed, lowering the time*memory penalty to only a
+3/4ths of TwoCats and Yescrypt.
+
+For TwoCats, average usage is 1/2 of peak.  I guess you derive 3/4 of
+TwoCats' for Lyra2 given that Lyra2's average is also naturally somewhat
+lower than its peak usage, just not to the same extent.
+
+For yescrypt t=0 in native mode, average usage is 5/8 of peak.
+
+Alexander
+

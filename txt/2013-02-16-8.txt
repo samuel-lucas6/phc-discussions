@@ -1,0 +1,51 @@
+phc-discussions - RE: [PHC] Different cost settings and optional input
+
+Message-ID: <218AE73F98E99C4C98AF7D5166AA798E09036F25@TK5EX14MBXC286.redmond.corp.microsoft.com>
+Date: Sat, 16 Feb 2013 22:29:37 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: Solar Designer <solar@...nwall.com>, "discussions@...sword-hashing.net"
+	<discussions@...sword-hashing.net>
+CC: Milen Rangelov <gat3way@...il.com>
+Subject: RE: [PHC] Different cost settings and optional input
+
+-----Original Message-----
+From: Solar Designer [mailto:solar@...nwall.com]
+
+1. We specify nearby that we'll evaluate "Effectiveness of the cost parameter
+(e.g. can the time and space expected requirements be bypassed?)"  Thus,
+password hashing schemes that allow for cost downgrades are discouraged.
+
+I've heard of people using password hashing schemes that attempt to add encrypted elements or other secrecy for the resulting hash values. One popular formulation is to keep the salt secret and treat it as a per-hash key. This is usually done by folks coming from a SQL database background who are looking at defending against pure SQLi attacks.
+
+Some schemes allow the defender to increase the work factor by adding more iterations. Of course, if he fails to destroy the old hashes before the attacker obtains them, he's only increased the work for himself. I have also heard of people (I think in a discussion on Hacker News) building trapdoors into their hash functions such that the knowledge of a secret key (say, kept in an HSM) could be used to reduce the work factor for the defender.
+
+I don't think any features which could be added with simple encryption or keeping multiple hashes around should be considered part of the PHC itself. I don't see these features have general utility, unless it proves truly popular enough to benefit from standardization.
+
+2. There may be time-memory trade-offs.  If someone clever comes up with
+a password hashing scheme where an existing hash may be transformed to a
+higher CPU cost but lower memory cost, or vice versa, without knowledge of
+the password - this may be fine, as long as this property is known and
+considered in the evaluation.  A password hashing scheme should not be
+automatically disqualified, nor necessarily discouraged, just for possessing
+this property.  In some cases, this property may be useful.
+
+And maybe we should revise the wording somehow... or link to this sort of
+explanation, which we'd put somewhere (near the end of the FAQ, as
+perhaps this is not a very frequent question, yet it may come up more than
+once?)
+
+We will likely see submissions with these features and should probably have a plan in advance as to whether or not they will be considered beneficial. Unfortunately, if we award any points for such flexibility then probably the serious entrants will feel compelled to add them.
+
+As to TMTOs in general, there are some pros and cons to having and not
+having them in a password hashing scheme.  (In fact, "not having" only
+means that the TMTOs are such that they're not lucrative for almost any
+attacker.  Not that they literally don't exist.)  I expect that some of the
+submissions of sequential memory-hard schemes will (deliberately?) allow
+for TMTOs, some will (deliberately?) defeat TMTOs, and some will have a
+Boolean parameter controlling that.  All of these are welcome.
+
+It's really interesting stuff. Still, I'm inclined to discourage giving the developer lots of knobs to turn. Some have had trouble with a simple iteration count: https://en.wikipedia.org/wiki/PBKDF2#BlackBerry_vulnerability
+
+- Marsh
+
+

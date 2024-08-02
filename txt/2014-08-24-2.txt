@@ -1,0 +1,104 @@
+phc-discussions - Re: [PHC] What TrueCrypt (probably) wants from the PHC
+
+Message-ID: <53F9C682.1010304@ciphershed.org>
+Date: Sun, 24 Aug 2014 07:03:30 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What TrueCrypt (probably) wants from the PHC
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/23/2014 12:01 PM, Solar Designer wrote:
+>TrueCrypt volumes are currently essentially indistinguishable
+>from true random data (with some unfortunate caveats mentioned in
+>the audit). Because TrueCrypt has to open volumes with no idea
+>what the encryption parameters might be, TrueCrypt currently
+>tries every combination of supported encryption and password hash
+>to see if any work. That's OK, because it only takes a few
+>milliseconds to do them all. However, with multiple memory-hard
+>options, guessing the correct one could take too long. In this
+>case, I think Catena's "garlic" could work for us. We would have
+>TrueCrypt first try all the old combinations and when they fail,
+>we would guess a low garlic level appropriate for a mobile phone,
+>and then increase the garlic until we either would use more
+>memory than the machine has or run for too long. If the password
+>is correct, this should only take about twice as long to discover
+>the correct garlic level.
+
+This sounds unnecessarily wasteful.  You could as well actually
+use the too-small-garlic hash values as input to the higher-garlic
+hash, just like Catena itself does internally.
+
+Good point.  That way an attacker can't just guess the most likely
+setting - he has to go through the whole set of sizes.  I'll do it
+this way instead.
+
+In fact, you can extend this approach to parameters other than
+memory cost.  You can also keep increasing the instruction, SIMD,
+and thread parallelism along with each(?) higher memory cost
+setting you test. (And this does not mean actually running more
+threads, etc. than your hardware supports - indeed, you're not
+forced to actually make use of the parallelism as such on every
+hash computation.  You'll just use your hardware optimally.)
+
+For example, currently you can use:
+
+128 MiB, 128-bit, 1 thread 1 GiB, 512-bit, 4 threads 4 GiB,
+512-bit, 8 threads 16 GiB, 512-bit, 16 threads
+
+with each stage's result input to the next stage, until you either
+hit the right password or hit a configured memory limit.
+
+This is basically what I suggested on the TrueCrypt forum a year ago.
+ It certainly would be an improvement to do it this way.
+
+I forgot to mention that I want an option for multi-threaded hashing.
+ Pepper doesn't work out as well.
+
+If the KDF has configurable cache-timing attack resistance, you can
+keep it enabled for the first invocation (or two) and disable it
+for the rest (so you get a hybrid scheme as a result, except on the
+smallest systems).
+
+That's another good idea.  It could just be a pre-process, like a
+cache-timing resistant 128MiB hash to start.  That way even a cell
+phone gets some protection from unpredictable addressing.
+
+>Another problem is we face because of our no-visible-parameters
+>rule is that we can't support a lot of memory-hard hash
+>functions. Therefore:
+>
+>- - Please choose *one* high-memory usage successor to Scrypt
+
+That's flawed logic.  PHC choosing multiple winners that are
+suitable for your use doesn't mean you actually have to support
+multiple schemes. You can choose just one, irrespective of PHC
+panel's decision.
+
+There are other good reasons for PHC not to inflate the number of 
+winners.  Your reason is just not among those, in my opinion.
+
+You're right again.  The PMC should pick exactly one winner for each
+specific category.  TrueCrypt falls into the volume-encryption
+category.  Another would be the authentication server category.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT+cZ+AAoJEAcQZQdOpZUZIKYP/3eSIZKgZpQl4yqDYJA8sY26
+DIuRNuSkicnCHh7j9fkx5EDCdJMyV5U8GDX8IpEZ9MlyN2qLIuk0GSSnwaCjHg+L
+ghXKYOsBHm5GCEeIyXQ7je5LLiPhCPr/FmsQfBGVwyz3DuOSvOv+I+ODydWNwqXb
+fvjh0AdVfyN4f2RzV4jw5tzSwZxMJksJAnlJMRE4NGswzwh8m73yMhTFq4x9E7ii
+hPBZ4ogg8IJL/gv5BPxcuz83kxOEJ7/x1ijF8Xg+QpnLzADkMb0rpchemzMEFxTo
+61E3mhSq3lrPjk7rI325C8nASe1CxVsvX+BDHasPnJZ9TZ15zZiaLl6n9YqtywIS
+IgjHWJfYDPBqJfEOEUgRrZnHciG1U5IiI4/w383mezsM6um2HATitBzMj57wgdmt
+g1VBgZSjPv1gajqDy/SfCn4sIGl32lMwP3eOgUIsN6IN5HVziJ+uPuadJ0UWF5zL
+I+VJ02EONCiEyC4+E3sU0lGp+iUJAr/USMDYtiLNn8Rh0FiYlX3syqCayDs3IQoE
+slDj2raw4mGniikkxD5p/SSwYTSAd90OQHG3WquOa6xLmGkn+vGlUb8qpLn2vR19
+ruXei/7+ew0ndwd6ljWpneQe/31Ihq4zn9aOTMxQaKcQbPdjqh0q0phRWSDZfKpY
+RNRpH0+jlgBnEme9T/Tz
+=rXBQ
+-----END PGP SIGNATURE-----
+

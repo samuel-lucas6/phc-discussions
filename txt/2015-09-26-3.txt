@@ -1,0 +1,142 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150926173453.GA14407@openwall.com>
+Date: Sat, 26 Sep 2015 20:34:53 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+The SHA-256 crypt format (and other similar formats) use _optional_
+parameters. When the parameters are not specified, then a default value
+must be used; that default will either be hardcoded (FreeBSD uses 5000
+as default value), or configured through a system file (Solaris'
+crypt.conf). In my opinion, a configurable default can only lead to
+trouble: if you have an existing hash string that was computed with the
+default number of rounds, but without recording that value in the
+string, and the default is changed in the system configuration file,
+then the string is broken.
+
+Agreed.
+
+Conceptually, a function could specify a hardcoded (non-configurable)
+default value for each parameter, and use that value if the parameter is
+omitted from the string. This may make strings shorter; however, this has
+two drawbacks:
+
+   -- Omitting the parameter decreases readability, because the human
+   reader must then know the default values instead of simply reading
+   them.
+
+True, but this doesn't apply if we opt for a compact rather than a human
+readable encoding for other reasons anyway.
+
+   -- If we want a deterministic output, then the encoder must
+   systematically omit the value when it matches the default, which
+   makes that code slightly more complex.
+
+Here's a way around this: for parameters where our desired default value
+is also the minimum valid value, omit them when the default would have
+been used, and encode them as value-(minimum+1) otherwise.  This forces
+encoders to provide deterministic output - there's simply no other way a
+given value could be encoded.  Indeed, this is incompatible with human
+friendly encodings, where it'd defeat the purpose of e.g. using decimal
+(since the values encoded wouldn't be the actual parameter values), but
+it appears OK for compact encodings.
+
+In fact, encoding as value-minimum (if we have no defaults and never
+omit anything) or as value-(minimum+1) (with the approach above) also
+lets the decoder skip the check for "< minimum", because such invalid
+values have no encodings corresponding to them.
+
+For example, either of these approaches would work for scrypt's r=1,
+p=1, and yescrypt's flags=0, t=0, g=0.  For r in particular, maybe we
+don't actually want r=1 as the default (although IIRC Cisco uses that in
+$9$), so maybe we simply encode it as r-1 (so that the invalid r=0 can't
+be represented, if our encoding is such that only non-negative numbers
+can be represented), but for the rest of these having the smallest valid
+value as the default makes sense to me.  (It's a bit weird to encode the
+flags bitmask as flags-1, yet in a compact encoding that's fine.)
+
+The "- minimum" doesn't need to be explicit for every parameter;
+instead, the "encode a number" and "decode a number" functions could
+accept the minimum (and for decode, maybe also the maximum) valid value
+(and would take care of subtracting/adding the minimum, and of checking
+against the maximum).
+
+For these reasons, I declare that parameters are non-optional.
+
+For my compact encoding experiments, I haven't decided on that yet.
+
+A question is how to indicate that a parameter is (not) omitted in a
+compact encoding.  My current idea is to prefix the optional parameters
+with a "have" bitmask (a number encoded like any other), where each bit
+would correspond to an optional parameter that does (not) follow.  The
+parameters would then be encoded in the same order as the corresponding
+bits in "have".
+
+Further, when no optional parameters are specified at all, "have" itself
+may(*) be omitted (saving one char), if we do include a '$' between
+parameters and salt anyway.  And to ensure deterministic output, "have"
+is to be encoded with a minimum of 1 (thus as have-1) when it is present
+(this also lets us encode "have" up to 48 rather than up to 47 in 1 char).
+
+(*) By "may", I mean we may choose to specify so, and it'd be a MUST if
+we do choose so.
+
+The description above might sound complex, but it's actually very simple
+in code.
+
+So for (ye)scrypt we could have:
+
+$7X$Nr$salt$hash
+
+or:
+
+$7X$Nrhp$salt$hash
+
+or:
+
+$7X$Nrhpftg$salt$hash
+
+where "N" is encoding of N-1, "r" is encoding of r-1, "h" is encoding of
+have-1, and "p", "f", "t", or/and "g" are encodings of p-2, flags-1,
+t-1, g-1 if those are non-default and indicated as present in "have".
+
+This is also extensible for adding more optional parameters (up to 30
+total optional parameters) without changing the prefix.  For example, we
+could add a parameter for outlen, shown encoded as "o" here:
+
+$7X$Nrhpftgo$salt$hash
+
+or e.g.:
+
+$7X$Nrho$salt$hash
+
+Decoders MUST refuse to process encodings where any of the reserved bits
+(not understood by a given decoder) in "have" are set.
+
+BTW, I use single characters to show each parameter in the encodings
+above - and they will in fact end up being single characters with my
+proposed numeric encoding most of the time, yet it's also possible to
+encode values of up to over 1 billion in each of them.
+
+Also, we could easily make the '$' before the salt optional (and save 1
+char) if "have" is present (since it indicates exactly how many optional
+parameters are included, and each of them indicates how long it is), but
+I think including it is good for some kinds of incomplete parsing
+(extract just the salt or just the parameters without care for actual
+parameter values), as well as for some very limited human friendliness
+(being able to determine roughly how many parameters are included, and
+the exact salt size).  It's also consistent with bcrypt, where a '$' is
+included after the cost value.
+
+A system-wide configuration may still exist, that provides default
+values for parameters then the salt is generated -- application code
+does not have to manually provide such values. But once the salt has
+been generated, the parameters are always encoded with the salt string.
+
+Right.
+
+Alexander
+

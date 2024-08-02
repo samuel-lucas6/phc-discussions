@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] on timing attacks
+
+Message-ID: <20140428145938.GA29693@bolet.org>
+Date: Mon, 28 Apr 2014 16:59:38 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] on timing attacks
+
+On Mon, Apr 28, 2014 at 04:25:34PM +0200, Krisztián Pintér wrote:
+no surprise modern crypto primitives/impls don't use secret based
+branching/indexing.
+
+This may also be due (at least in part) to performance reasons.
+Data-dependent branching will behave poorly with regards to jump
+prediction within the CPU. Contrary to password hashing, most
+cryptographic algorithms try to be fast, not slow.
+
+Similarly, data-dependent indexing usually means trouble when trying to
+implement the algorithm on ASIC or FPGA. The usual example is RC4, which
+is quite efficient on a PC (in the 1990s, it was much faster than almost
+all other symmetric encryption algorithms) but really cumbersome, large
+and slow when building a dedicated circuit. Even if there was no
+cache-timing attack, we would still, for performance reasons, avoid
+data-dependent indexing; or we would do it only for operations which
+have a regular enough internal structure to allow for optimized circuits
+(typical example being GCM: software will commonly use a table, while
+hardware would rely on a GF(2^128) multiplier, possibly with a LFSR if
+die area is more important than latency).
+
+Of course, cache-timing attacks are enough to promote the design of
+algorithms which do no data-dependent indexing at all. But my point is
+that this "ban" integrates within a larger trend: the definition of
+algorithms which behave well (i.e. fast) both in software and in
+dedicated hardware circuits.
+
+To a large extent, password hashing works in a complete opposite
+direction: we really want algorithms which do _not_ behave well at all
+when used in anything else than the software platform of the defender
+(often an x86 PC, never a FPGA).
+
+
+	--Thomas Pornin
+

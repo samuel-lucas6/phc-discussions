@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C738A3538CE@uxcn10-tdc06.UoA.auckland.ac.nz>
+Date: Wed, 9 Apr 2014 10:25:27 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Deriving multiple keys (was RE: Mechanical tests)
+
+Christian Forler <christian.forler@...-weimar.dewrites:
+
+>Let H be a KDF and let K1||K2 = H(PWD || salt).  Are K1 and K2 be
+>considered to be independent?
+
+No.
+
+>Personally, I would feel better when using the following key derivation
+>algorithm.
+>
+>y= H(PWD || salt)
+>K1' =   F(y, 1)
+>K2' =   F(y, 2)
+
+This is how existing crypto protocols like TLS and CMS do it, typically you
+denote the operation via some diversifier, e.g. TLS uses "CLNT" and "SRVR"
+(actually for the MAC, but a similar thing), CMS uses:
+
+  MAC-K := PRF( master_secret, "authentication" );
+  CEK-K := PRF( master_secret, "encryption" );
+
+(disclaimer: I wrote the RFC), and there are probably others.
+
+>where F is a cryptographic hash function. Here you have only two additional
+>hash function calls and since (y, 1) != (y,2) one can argue that K1' and K2'
+>are pairwise independent. But is hard to argue that K1 and K2 are pairwise
+>independent.
+
+Exactly.  I'm not sure if this is explicitly recorded anywhere, but it's
+certainly part of the crypto folklore that you don't use the same PRF output
+to generate keys for different purposes.
+
+Peter.

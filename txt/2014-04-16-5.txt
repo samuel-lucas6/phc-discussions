@@ -1,0 +1,38 @@
+phc-discussions - Re: Lyra2 initial review
+
+Message-ID: <CAOLP8p6KsfJODANg8fj1DUtfYNHxvmbPHvHKogNnU_G0LFfz0A@mail.gmail.com>
+Date: Wed, 16 Apr 2014 16:54:58 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Lyra2 initial review
+
+On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+4.41 GiB/s DRAM bandwidth
+>
+>
+I made a mistake on the memory bandwidth computation.  I forgot to add in
+the 2 reads and 2 writes on average per location in the wandering phase.  I
+should have multiplied by 7 instead of 3!  The fixed numbers are:
+
+1.47GiB/s of memory hashing (.57GiB/.39s) peak
+1.10GiB/s average
+10.3 GiB/s DRAM bandwidth
+
+That bandwidth is close to maxed out for one thread on my machine.  12GiB/s
+seems to be about the limit (EARWORM maxes out at 12GiB/s, with a far
+simpler inner loop).  I suspect the code is more memory bandwidth limited
+than CPU limited.  To test this, I commented out the XOR onto the row
+indexed by 'rowa'.  The runtime dropped from 3.9s to about 3.05.  This is
+another indication that the code is mostly bandwidth limited.  It's also
+another reason for me to dislike the XOR-ing onto rowa.  With a slightly
+more complex setup phase loop, it could have good cache timing resistance
+without the XORs, and run 25% faster, increasing memory*time cost to
+attackers for a given runtime by the same 25%.
+
+Bill
+
+
+

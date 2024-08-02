@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="../../../2014/03/22/19">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140323015724.GA27114&#64;openwall.com&gt;
+Date: Sun, 23 Mar 2014 05:57:24 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: Jeremy Spilman &lt;jeremy&#64;...link.co&gt;
+Cc: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Jeremy,
+
+On Fri, Mar 14, 2014 at 04:35:37PM -0700, Jeremy Spilman wrote:
+&gt; There are a surprising number of features in the scope of  
+&gt; "password storage and verification" which could be bundled or not within  
+&gt; the underlying hashing function.
+&gt; 
+&gt; I like the idea of a hash-agnostic API which can properly handle salting,  
+&gt; peppering, stretching, lengthening, serializing/deserializing, offloading,  
+&gt; and upgrading. Let the hash function provide the tunable [compute-hard,  
+&gt; memory-hard, ROM-port-hard] function, but where everything else lives one  
+&gt; layer up?
+
+This sounds cool in theory, and I think Jean-Philippe wanted this sort
+of submissions to PHC - not only self-contained schemes like most we've
+been discussing so far, but also generic schemes aimed to replace
+PBKDF2.  (Maybe Catena is a valid example of this.)
+
+However, how can you keep "stretching" at this higher level while also
+providing a "memory-hard" underlying function?  Wouldn't the stretching
+need to be inside that function, then?  Or would you move the
+memory-hardness to the higher level, too?  (If we treat Catena as such
+higher-level scheme, then it has its memory-hardness at this higher
+level.)  Efficiency (and thus security) would probably suffer, like it
+does in PBKDF2 (and I think in Catena too), but maybe for some use cases
+(what would they be?) that's an acceptable price for having a more
+generic scheme.
+
+&gt; &gt;&gt;Or even more advanced features such as the ability to
+&gt; &gt;&gt;delegate computation to an external untrusted system.
+&gt; 
+&gt; &gt;This is an interesting topic, which somehow we haven't touched on this
+&gt; &gt;list yet, although at least Jeremy Spilman and I thought of it before.
+&gt; 
+&gt; The approach I've been developing involves a Site handing just the hash of  
+&gt; a salted-stretched-password to an external service. The Service HMAC's  
+&gt; this hash with a Site-specific shared key and a Site-specific private key  
+&gt; to generate pseudo-random indices into a very large ROM-on-SSD. (I'm  
+&gt; currently running 16TB ROMs in multiple data centers if anyone is  
+&gt; interested in playing with this, please let me know)
+
+It's nice to hear you've implemented this by now.  Are your 16 TB ROMs
+on SSDs or on HDDs?
+
+How do you (re)initialize them?  e.g. are they filled from /dev/urandom
+(meaning you need to transfer 16 TB to each new data center?) or are they
+generated from a seed that you store in a safe place?  In the latter
+case, do you ensure a portion of the ROM can't be used to recompute the
+rest of it?
+
+The multiple data centers are for redundancy, right?  Do you use some
+custom protocol or DNS or anycast or a combination of these to route
+requests to portions of your Service?
+
+As you're aware, I've been considering setting up a service like this
+too. ;-)
+
+&gt; &gt;Moreover, there are probably ways to
+&gt; &gt;implement this feature as a built-in better than it'd be implemented
+&gt; &gt;externally, by introducing blinding with some per-hash-computation
+&gt; &gt;randomness rather than merely by relying on fixed secrets (the
+&gt; &gt;difference is in how much metadata is leaked to the external party).
+&gt; 
+&gt; I believe the lower-bound here is the external party will know that you  
+&gt; made a request (either a user tried to login, or the Site is generating  
+&gt; fake logins), and obviously the given input for each request, but the  
+&gt; external service would not know if that input corresponds to a successful  
+&gt; or unsuccessful login attempt.
+&gt; 
+&gt; Assuming the external party is hostile, and saves every input you ever  
+&gt; send it, then the Service can presume a request with a duplicate input  
+&gt; means there's a user trying the same password twice, but still not know  
+&gt; anything about the password, which user, or even necessarily if it's a  
+&gt; valid password.
+
+Yes.  With the scheme you've described, which is pretty much what I had
+in mind as well, the Service can also estimate the number of (active?)
+user accounts, by counting different partial hashes.  In an active
+attack, probing for valid usernames might also be possible (depending on
+implementation and whether fake requests to the Service are made for
+unknown usernames).
+
+&gt; I think the key requirement is to treat the external party as untrusted,  
+&gt; i.e. they can't recover any plains, and there's no hostile output they can  
+&gt; provide back to you that would ever weaken your stored value or lead to  
+&gt; collisions. If the external service is compromised, the attacker gets the  
+&gt; metadata, but they don't get any passwords unless they compromise the Site  
+&gt; as well.
+&gt; 
+&gt; If there's a way to reduce metadata leakage any further, I would be very  
+&gt; interested in this.
+
+Like I mentioned, I think something along the lines of RSA blinding
+could be used if it were a portion of hash computation that we were
+delegating (and we'd build the stretched portion of our scheme upon
+suitable primitives, which allow for blinded computation like that).
+
+For ROM lookups, I'm afraid this can't be done.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

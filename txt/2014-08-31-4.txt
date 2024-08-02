@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] A review per day - RIG
+
+Message-ID: <5402F754.8070405@ciphershed.org>
+Date: Sun, 31 Aug 2014 06:22:12 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - RIG
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/30/2014 11:52 PM, Bill Cox wrote:
+I verified this by commenting out the bit-reversal function and
+simply returning the original address.  It gets the same hash
+result!
+
+Actually, I also had to also do bit-reversal on KeySet in
+PerformLayer_Zero to get the same result.  Here's the diff of rig.cpp
+showning the changes I did:
+
+
+diff --git a/RIG/source/rig.cpp b/RIG/source/rig.cpp
+index adafdf5..c94a4f2 100644
+- --- a/RIG/source/rig.cpp
++++ b/RIG/source/rig.cpp
+@@ -60,7 +60,7 @@ void PERFORM_BLAKE_STATE(byte* in, u32 inLength,
+byte* out)
+    memcpy(out, d, HASH_LEN_BYTES_OUT);
+ }
+
+- -int PerformLayer_Zero(byte *ChainingValue, AlphaData* AlphaSet,
+HashData* KeySet, COUNT_TYPE M, COUNT_TYPE & Count)
++int PerformLayer_Zero(byte *ChainingValue, AlphaData* AlphaSet,
+HashData* KeySet, COUNT_TYPE M, COUNT_TYPE m_cost, COUNT_TYPE & Count)
+ {
+    COUNT_TYPE i = 0, j = 0;
+
+@@ -93,7 +93,9 @@ int PerformLayer_Zero(byte *ChainingValue,
+AlphaData* AlphaSet, HashData* KeySet
+        memcpy(Input + CNT_LEN_BYTES, AlphaSet[i], HASH_LEN_BYTES_OUT);
+        memcpy(Input + CNT_LEN_BYTES + HASH_LEN_BYTES_OUT, Temp,
+HASH_LEN_BYTES_KS);
+
+- -       memcpy(KeySet[i], Temp, HASH_LEN_BYTES_KS);
++       u64 address = BitReverse64(i) >(64 - m_cost);
++       memcpy(KeySet[address], Temp, HASH_LEN_BYTES_KS);
++       //memcpy(KeySet[i], Temp, HASH_LEN_BYTES_KS);
+
+        PERFORM_BLAKE_STATE(Input, LAYER_LENGTH, Temp);
+    }
+@@ -121,7 +123,8 @@ int Perform_Layer(AlphaData* AlphaSet, HashData*
+KeySet, byte* ChainingValue, CO
+        byte Count_Bytes[CNT_LEN_BYTES];
+        LongToBytes((++Count), Count_Bytes);
+
+- -       address = BitReverse64(i) >(64 - m_cost);
++       //address = BitReverse64(i) >(64 - m_cost);
++       address = i;
+        if (i == 0)
+        {
+@@ -218,7 +221,7 @@ extern "C" int PHS_FULL(void *out, size_t outlen,
+const void *in, size_t inlen,
+    {
+        u64 M = (u64)pow((float)2, (int)M_LOOP);
+
+- -       ret = PerformLayer_Zero(ChainingValue, AlphaSet, KeySet, M,
+Count);
++       ret = PerformLayer_Zero(ChainingValue, AlphaSet, KeySet, M,
+M_LOOP, Count);
+        if (ret != SUCCESS) return ret;
+
+        for (unsigned int i = 0; i < t_cost; i++)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUAvdRAAoJEAcQZQdOpZUZ69wP/RCyeDQm1sCmWZp/MZCChTa8
++jJ4292dbuYVbSInTUCMF4SxD8VXHH7ybBTy9a4aTXHqBe2v/vxEqZw/Po9yImTO
+KgrpKgnygAn6yQ9sq3N0ZrUtPsH9q4CNc0gy4JnqhSHn64z9O4JSMQla2+P3nNQt
+JOTgKozeawTGs/nrHWHvcSXZbGeTyjUuT/krTfGxl+vLYoTuGMt3hpRiZV2BOSoo
+jMMI32JS0IELmrUX8+x5Dn+A+NyoXvUWwlTrrmUpflaSlNF2QUaF4UCW5ierRvr1
+qXmjt9xRz0o03b2TvmESaZe7S1V2CwSTkJc8vFPzBW9T3TQHwQPvHZe7kp/5MCz3
+lHA3fhhifWAaQYwTPrkPOJ43nJ3GoVeOzX/m2H0rrwoeqTgnmpZPTkksk7wDEluy
+RXW6TVXalf4DycrtIGAxiGSP1R6nYoU4zfAu13UoSPbsFmJekvw56w13hicZ77Rq
+AIGRr+QqMxOprzvORe2PFG+EK0rIkCjlechqePbsTyDQ+5sCGlkDx/8NZA8yDI66
+MKEmaNIedwEoIKpEIr5e2A8aqYSInDeYr+3u8cy0DF9CVmAk7EdhZn1Uj0tm4y7M
+7wj/1Qngl8zWdmwEfx0I/OtijTJdKxVrnEPIxflV8XCrhDcdz4ktjjADICgYiLlk
+tFUzzg2i+6BIhIk6Hz3A
+=XffD
+-----END PGP SIGNATURE-----
+

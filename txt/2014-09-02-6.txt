@@ -1,0 +1,174 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <5405A504.3030506@ciphershed.org>
+Date: Tue, 02 Sep 2014 07:07:48 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Here is what I believe is a devastating attack on Schvrch for m_cost =
+0.  An attacker can in 2KiB of memory and constant time determine if
+his password guess is wrong with very high probability of being
+correct, independent of t_cost.
+
+I'm kind of hoping that we can move on to reviewing other algorithms
+while the Schvrch author deals with some of the basics, like trying to
+insure the attacker needs to use memory for the runtime.  These
+attacks are a bit of a pain to create, and this algorithm seems to
+invite a few of them.  Until there is *any* evidence that Schvrch
+actually results in a secure hash, I would prefer to move onto
+reviewing other entries.
+
+The t_cost loop only calls revolve, which does not throughly mix the
+state.  The result is a purely linear combination of the initial
+states.  Any mixing between the 64 lanes of XOR computation can be
+reduced to a 256-bit inversion mask which can be applied at the end.
+Here's the function:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+    uint64_t i;
+    uint64_t carry = 0;
+    int j;
+
+    for(i = 0; i < rounds; i++)
+    {
+        for(j = 0; j < statelen; j++)
+        {
+            if(state[(j+2)%statelen]>state[(j+3)%statelen])
+                carry ^= state[(j+1)%statelen];
+            else
+                carry ^= ~state[(j+1)%statelen];
+
+            state[j] ^= carry;
+        }
+    }
+}
+
+Here, statelen is 256, which I'll use to simplify things a bit, and
+rounds is t_cost.  This can be rewritten as:
+
+void revolve(uint64_t state[256], uint64_t t_cost)
+{
+    uint64_t i;
+    uint64_t carry = 0;
+    int j;
+    uint8_t x1, x2, x3;
+
+    for(i = 0; i < t_cost; i++)
+    {
+        for(j = 0; j < 256; j++)
+        {
+            x1 = j+1; x2 = j+2; x3 = j+3;
+            carry ^= state[x1];
+            if(state[x2]>state[x3])
+                carry = ~carry;
+            state[j] ^= carry;
+        }
+    }
+}
+
+Instead of complementing the carry, we could have a bit to remembers
+if it is complemented.  We could do the same for all the states.  In
+that case, we can rewrite this as:
+
+void revolve(uint64_t state[256], uint64_t t_cost)
+{
+    uint64_t i;
+    uint64_t carry = 0;
+    bool invCarry = false;
+    bool invState[256] = {0, };
+    int j;
+    uint8_t x1, x2, x3;
+    uint64 state2, state3;
+
+    for(i = 0; i < t_cost; i++)
+    {
+        for(j = 0; j < 256; j++)
+        {
+            x1 = j+1; x2 = j+2; x3 = j+3;
+            carry ^= state[x1];
+            state2 = state[x2];
+            if(invState[x2]) {
+                state2 = ~state2;
+            }
+            state3 = state[x3];
+            if(invState[x3]) {
+                state3 = ~state3;
+            }
+            if(state2>state3)
+                invCarry = !invCarry;
+            state[j] ^= carry;
+            invState[j] ^= invCarry;
+        }
+    }
+    for(j = 0; j < statelen; j++)
+    {
+        if(invState[j])
+            state[j] = ~state[j];
+    }
+}
+
+- From this, I see that the final loop is the only place that the state
+array in any way takes the operation into account.  Before that
+loop, each state is a simple XOR combination of the other states.  If
+we drop the final loop, we get a simpler loop that gets the exact same
+result, except for the application of the final complement.  This loop
+looks like:
+
+void revolve(uint64_t state[256], uint64_t t_cost)
+{
+    uint64_t i;
+    uint64_t carry = 0;
+    int j;
+    uint8_t x1;
+
+    for(i = 0; i < t_cost; i++)
+    {
+        for(j = 0; j < 256; j++)
+        {
+            x1 = j+1;
+            carry ^= state[x1];
+            state[j] ^= carry;
+        }
+    }
+}
+
+For any given t_cost associated with a password hash, we can compute
+the binary matrix that says how to compute state[i] as a pre-process.
+ For each output state[i], row i in the matrix says how to compute it:
+by XORing together the state[j] for each position j in row i that is
+set to 1.  Such a matrix can be pre-computed for any number of
+t_costs, making the state computation a constant time operation,
+independent of t_cost.
+
+The result will not include the correct output inversions for each
+state.  However, an attacker only needs to know if the guess is wrong,
+not that it's right.
+
+All the attacker does is run the quick evolve loop and see if his
+first 64-bit state value matches the either output hash first 64-bits,
+or it's inverse.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBaUAAAoJEAcQZQdOpZUZdx0P/Rf/xrzCyb/iHOUZSIWYqEiu
+hON+Oq0VnrUKQY3nr6yvOQ5KCbkHNnIbUH3Mq6VbU3Yrl8ZvmB1+XlKuixvKXIQ8
+4z7p42fNMqQbMp9iDyIHH2k+tCUihu7pBq9QsD2QOaBwwSL+QJKHM3q52vLm+vWR
+7kS991W2ju5jZmX8o8n4j+RouBWWYrCVVmJ41o0jE7Bl/niaxmA5+ZHmG0vL/sjj
+qcelqEMyaAPMATzbBir9zsgh06bNG71HKkGoMglI0SgddGplBfAytjziMbQfsAto
+KQGYmJQm7V+tneULernD5VLEB9QPGuT77XmXek6vbobdAO+pNLg1gEBmPdfpNQAU
+1af7Iwpzb0DRswMdKzcjPdDWFAbJbjxPklC/VDhJgAS3L0zJs3EBOhhywqca3vm9
+tC97Lw+hMEhooUWFCkxrG3hJI8wgTfjXnnKx4nlzINwy+t+o5/M/w51OLQf7YSCm
+kgQ1jR+LiDW/CIHvSA5s2PXVvgtGpyunqHznec6x4yUVc9fiCnBAvNizsh0+EmsV
+0MGn7FZBtGPLERdgn5H3COIXZXQ0dN0eVoJI7LQoG8rrhKApEcqbeV2nqG74QUyP
+SZZtz7Jbz1Jf9MNdkLqk1UxQmrFSHPbsODqh3ErB4KjFEd2tMHBVAdZKYE79i5Ze
+RbmDTAosLNmnZiXTQZAh
+=geH/
+-----END PGP SIGNATURE-----
+

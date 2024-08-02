@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <20150907150303.GA8819@openwall.com>
+Date: Mon, 7 Sep 2015 18:03:03 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Mon, Sep 07, 2015 at 12:41:42PM +0100, Darren J Moffat wrote:
+On 09/07/15 11:55, Solar Designer wrote:
+>If we continue to build upon the traditional crypt(3) alphabet and
+>encoding (like the above specification for scrypt does), then I'd also
+>like to include a way to represent the numeric parameters in a more
+>compact form: let the little-endian encodings be truncated when the
+>values are small.  So e.g. instead of:
+>
+>$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+>it would be valid to use:
+>
+>$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+>or if we want to keep the number of '$' characters fixed, then either
+>require the '$' delimiters to always be present or maybe introduce '+'
+>or '=' for truncation (a character already used in the other base64
+>encoding's alphabet, so likely safe to use):
+>
+>$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>
+>The savings for classic scrypt are small, but with yescrypt's additional
+>parameters they are more significant.
+
+In Solaris crypt(3C) we use this syntax:
+
+If the first character of salt is "$", crypt()  uses  crypt.conf(4)  to
+determine  which  shared  module  to load for the encryption algorithm.
+The algorithm name crypt() uses to search in crypt.conf is  the  string
+between  the  first  and second "$", or between the first "$" and first
+"," if a "," comes before the second "$".
+
+Basically ',' is the argument separator so you can end up with things 
+like this:
+
+$5,rounds=6000$nlxmTTpz$
+
+So you could have
+
+$7,C6$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+
+Oh, this is actually consistent with what I just wrote in the previous
+message: use another delimiter between parameters, so that some may be
+omitted and defaults used.  In the case of Solaris, it's the exact same
+thing with being able to omit the rounds specification, right?
+
+So maybe:
+
+$7,14,8$base64salt$base64hash
+
+which would mean classic scrypt and imply p=1, or:
+
+$7,14,8,16$base64salt$base64hash
+
+for p=16, etc.  And yescrypt extras would then be in the form of
+changing the initial "7" e.g. to "7a" and a few others (to encode the
+flags right there), and optionally listing extra decimal numbers after
+scrypt's p.
+
+For yescrypt, part of the question is whether we want to invent a new
+encoding for scrypt while at it, or whether we want to build upon one
+that is already in use.
+
+Personally, I like crypt's base64 and I like to use it for parameters as
+well, but I recognize there are valid reasons for RFC base64 and decimal.
+
+Alexander
+

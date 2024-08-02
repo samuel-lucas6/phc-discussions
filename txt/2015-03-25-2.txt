@@ -1,0 +1,59 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150325044915.GA6884@openwall.com>
+Date: Wed, 25 Mar 2015 07:49:15 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Tue, Mar 24, 2015 at 11:50:44PM +0100, Milan Broz wrote:
+The updated test report (draft) is here
+
+  https://github.com/mbroz/PHCtest/blob/master/output/phc_round2.pdf
+
+Thank you!
+
+I think you should include more info on your two test platforms.  Most
+notably, the specific CPU types and clock rate.
+
+The charts showing real memory usage and real time vs. the cost
+parameter values might be useful, but it would also be useful to see a
+cross-chart of real memory usage vs. real time (with the lowest time cost
+setting supported by each scheme) and with growing memory cost setting
+(this is how you'd control the real time).
+
+- battcrypt, MAKWA, Parallel and yescrypt produces the same output on big-endian system.
+  All other candidates are broken there (probably quite easy fixes possible).
+
+To other candidate authors: I may provide SSH access to a FreeBSD/mips64
+toy machine (64-bit big-endian) that I use for testing.  It's just like
+this one: http://rtfm.net/FreeBSD/ERL/  Please e-mail me off-list if
+interested.
+
+- I added some test case for my intended use (KDF for LUKS) for few functions.
+
+Lyra2 is surprisingly fast.  That's nice.  Your table does not give
+exact numbers for candidates meeting your requirements, though - maybe
+you can add that (for their lowest supported t_cost)?
+
+As to yescrypt taking 1.3s for 1 GB, I'd say that consuming 1 GB isn't a
+goal per se.  The goal is attack resistance.  Quite possibly yescrypt's
+6 sequential pwxform rounds (each with two S-box lookups and one
+multiply) per sub-block provide more attack resistance in the time
+factor of the area-time product than Lyra2's higher memory filling speed
+does in the area factor (if you measured these two at the same running
+time, so with different memory usage).  Besides, yescrypt tries not to
+bump into the memory bandwidth prematurely, thereby letting you use
+multiple threads to a greater advantage.  If you do not intend to use
+multiple threads and want to maximize the memory filling speed by your
+one thread (even if at expense of possibly reducing the attacker's
+area-time product, via the potentially much lower time factor), you may
+reduce yescrypt's pwxform round count from 6 to 1 as Bill suggested.  In
+yescrypt-simd.c, simply delete 5 of the 6 repetitions of PWXFORM_ROUND
+in the PWXFORM cpp macro.  I got to make this runtime tunable (easy),
+even if just to show that yescrypt is (more) competitive. ;-)
+
+Thanks again,
+
+Alexander
+

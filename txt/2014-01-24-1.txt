@@ -1,0 +1,50 @@
+phc-discussions - RE: [PHC] cache timing attacks (Re: [PHC] Initial
+ multiply-compute-hardened Catena-3 benchmark)
+
+Message-ID: <8651633210354c2782e309f8a1c059cf@BY2PR03MB074.namprd03.prod.outlook.com>
+Date: Fri, 24 Jan 2014 00:57:22 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] cache timing attacks (Re: [PHC] Initial
+ multiply-compute-hardened Catena-3 benchmark)
+
+From: Solar Designer [mailto:solar@...nwall.com] 
+>
+On Thu, Jan 23, 2014 at 10:33:59PM +0000, Marsh Ray wrote:
+Now say the PHC algorithm imposes memory-latency hardness by using
+the supplied password to generate a seed with which to initialize a PRNG
+sequence to pick memory addresses within a large memory block. Going
+by the general rule that 50% of users choose one of the 10,000 most
+common passwords, the attacker only needs to learn just one or two
+cache line addresses in order to have a better than 50% chance of
+guessing the user's password on the first try.
+>
+This sounds about right, but:
+>
+This assumes that the salt is known to the attacker,
+
+Rather, even worse, no salt at all is used in this part of the computation. I was just trying to give an example of an obviously broken case.
+
+which is usually the case when the attacker has a copy of the salts+hashes database and can run offline attacks already.
+
+Yep, the main value of a PHC function and the work factor is obtained only after the attacker learns one or more of the stored hash values. Otherwise all we'd ever need is a time-invariant memcmp().
+
+But we also can't regress (relative to time-invariant memcmp) in the other (hopefully usual!) case where the attacker does *not* know the stored hash value. So leaking meaningful information about salt or derived values via side channels (with an attacker-chosen password input) should be considered a weakness too.
+
+In order to check the 10k most common passwords against cache line addresses, the attacker needs
+to partially compute hashes - up to the point of first password-dependent lookup. If this corresponds
+to a substantial portion of the full hash computation, then that attacker hasn't gained all that much
+ - only a speedup of their offline attack by a certain factor, which we may try to make reasonably small. 
+
+Yeah. But let's be clear here that nothing can save users who choose such common passwords anyway, because any defender with 5,000 logins-per-reasonable-time will have chosen a work factor small enough to make that calculation practical.
+
+So I currently think that a combination of the two approaches will work best
+
+Interesting.
+
+- Marsh
+
+-------------------------------------------------------
+Personal opinions, usual disclaimers apply as usual
+
+

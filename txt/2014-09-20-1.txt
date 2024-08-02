@@ -1,0 +1,50 @@
+phc-discussions - Multiply with CUDA
+
+Message-ID: <1074460371.662538.1411171224410.open-xchange@oxuslxltgw10.lxa.perfora.net>
+Date: Fri, 19 Sep 2014 19:00:24 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Multiply with CUDA
+
+I heard some people talking about multiply being slow on GPUs but still a little
+faster than CPUs. This is why it's slow on Nvidia cards:
+5.4.1. Arithmetic Instructions
+http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions
+
+The first row is the number everyone quotes as the number of cuda cores per
+multiprocessor, but depending on what you are doing it can be more or less.
+
+With CC 1.1, 1.2, and 1.3, doing 24bit*24bit=48bit might be the best choice
+using __umul24 and floating point multiply or just 16bit*16bit=32bit with
+__umul24.
+
+With CC 2.0 and 2.1 if these numbers include 32bit*32bit=high(32bit) then these
+should be relatively fast.
+
+With CC 3.0 and 3.5, since there are 1/6 integer multiplies vs floating point it
+might be faster to do 12bit*12bit=24bit with floats.
+
+With CC 5.0, to do integer multiply it takes "multiple instructions" (ie no
+native integer multiply or small integer multiply) this may or may not be faster
+than doing 12bit*12bit=24bit with floats.
+
+* I think 32bit*32bit=high(32bit) costs the same as 32bit*32bit=32bit and is not
+free like with CPUs**.
+** Some CPUs have a higher latency on the high part. Intel's Nehalem is 10 vs 3,
+but most are closer or no difference.
+
+--------
+
+Newer CPUs can do 64bit*64bit=128bit with a throughput of 1 per cycle and a
+latency of 3 cycles (https://gmplib.org/~tege/x86-timing.pdf). When comparing
+CPUs and GPUs with hash function speeds GPUs are ~10x faster than optimized SIMD
+CPU code. So we're losing SIMD with multiply so that's a 8x hit. GPUs have a
+similar hit on speed while doing smaller multiplies which is another ~4x
+slowdown.
+
+Last note, interleaving MULX (umul128), ADCX (_addcarryx_u64), and ADOX
+(_addcarryx_u64) with VPMULUDQ (_mm256_mul_epu32) might get better performance
+on CPUs. MULX and VPMULUDQ should be similar in speed since VPMULUDQ can do
+4x(32bit*32bit=64bit) but there's 4x more work to do than doing 64bit*64bit=128.
+Interleaving them should mask some of the latency.
+

@@ -1,0 +1,37 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <5319EE0E.7050509@defuse.ca>
+Date: Fri, 07 Mar 2014 09:04:30 -0700
+From: Taylor Hornby <havoc@...use.ca>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On 03/07/2014 03:34 AM, Bill Cox wrote:
+I noticed that any password used in PBKDF2 gives the same result as
+that password with 0's appended any number of times up to a total
+length of 64 bytes.  Is this a problem?  A way around this would be to
+add the password length to the data hashed.  Since I always call
+PBKDF2 with c ==1 (1 repetition), this is the only input parameter
+which can change without changing the output.
+
+Is that part of the PBKDF2 specification, or an artifact of using a
+null-terminated string as the password parameter?
+
+I infer from the following test vector (RFC 6070) that zero bytes should
+be allowed in passwords (and salts):
+
+
+     Input:
+       P = "pass\0word" (9 octets)
+       S = "sa\0lt" (5 octets)
+       c = 4096
+       dkLen = 16
+
+     Output:
+       DK = 56 fa 6a a7 55 48 09 9d
+            cc 37 d7 f0 34 25 e0 c3 (16 octets)
+
+
+-- 
+Taylor Hornby
+

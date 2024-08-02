@@ -1,0 +1,49 @@
+phc-discussions - Analysis of Argon2i
+
+Message-ID: <CALW8-7KtLFACwdR2jAuwOEySdE9efxv_Pa7KQzR1Oe9pHSJxbg@mail.gmail.com>
+Date: Wed, 13 Jan 2016 15:18:17 +0100
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Analysis of Argon2i
+
+Dear all,
+
+we have looked at the recent paper by Corrigan-Gibbs et al., which claims
+several attacks on Argon2i.
+First of all we don't agree with authors regarding "provable" aspect of
+their and our scheme. We have a reductionist proof that all the blocks are
+different and this paper does not undermine it, we could shape Argon paper
+more in definition-proof style but we found it unnecessary.
+
+IDEA: The main observation exploits the known fact that the pseudo-random
+memory block addresses, used by the Argon2i function to pull random blocks
+from memory, are known in advance and thus the blocks that are not used
+(till they are overwritten later) can be discarded.
+
+WHAT IS AFFECTED: Argon2i only (even Argon2id is not affected).
+
+WHAT IS ATTACKER's GAIN: On custom hardware it is possible to run 1-pass
+Argon2i with 0.2 of memory and no time penalty, while N-pass Argon2i can be
+run with 0.37 of memory. We expect that this effect to be less of a problem
+for GPU/FPGA.
+
+WHAT IS NEW: This observation was known for 1-pass Argon2i (ex. noticed by
+Bill Cox)  and thus it was the reason why 3 passes for Argon2i were already
+recommended. The effect for N-pass Argon2i is new.
+
+CAN IT BE PATCHED: Yes, at a cost of quite small performance/code
+difference. We are testing several countermeasures at this point, for
+example a simple XOR into the memory instead of overwrite (around 10%
+slowdown).
+
+WHAT WILL BE DONE: We will discuss whether this memory reduction should be
+mitigated (0.37 is not a big advantage anyway), and will come up with the
+best alternative and its design rationale within a few weeks.
+
+
+-- 
+Best regards,
+Argon team
+
+
+

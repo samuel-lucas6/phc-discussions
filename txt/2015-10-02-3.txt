@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <560E7096.4030102@openwall.com>
+Date: Fri, 02 Oct 2015 14:55:02 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-10-02 04:29, Peter Gutmann wrote:
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+>
+>It's hard to guarantee it without seeing a full program but this
+>multiplication very much looks like a signed integer overflow which is
+>undefined behavior (UB).
+>
+It's checked a few lines down with 'value >= ( MAX_INTLENGTH / 10 )', where
+'value' is the input to the multiply.
+
+Yes, I know, but it's too late, harm is already done. If you evaluate 
+"value * 10" somewhere then a compiler can assume that "value <= INT_MAX 
+/ 10" and use this to optimize the following code. Not sure how bad the 
+situation in this particular case (due to your unusual limits) but, for 
+something similar in spirit, you can recall a problem in Linux with null 
+pointer check optimized out after a deref (CVE-2009-1897).
+
+My programming style is to use consts
+as much as possible, so I create the const where it has to be set at the start
+and then check that it was OK before using it.
+
+Nice.
+
+>The last check seems to be superfluous or at least ineffective.
+>
+Paranoid programming, check everything from five different directions if
+possible.  It should actually be stated as an invariant:
+>
+   INVARIANT( value >= 0 && value <= MAX_INTLENGTH );
+>
+but that throws an exception which I don't want in this case.
+
+I doubt this approach is very effective with optimizing compilers. My 
+gcc 4.7 -O2 generates the same code with and without your last if. 
+Another example -- the following program will happily print negative 
+number even though it specifically checks against it:
+
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+   unsigned short x = -argc;
+   int y = x * x;
+
+   if (y >= 0)
+     printf("y = %d\n", y);
+
+   return 0;
+}
+
+-- 
+Alexander Cherepanov
+

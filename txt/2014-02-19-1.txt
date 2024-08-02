@@ -1,0 +1,89 @@
+phc-discussions - avoiding cache thrashing
+
+Message-ID: <20140219142524.GA31253@openwall.com>
+Date: Wed, 19 Feb 2014 18:25:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: avoiding cache thrashing
+
+Hi,
+
+Here's another idea I'd like to share with this community.
+
+When trying to access multiple layers in the memory subsystem at once -
+e.g., L1 cache and L2 cache, or a cache and RAM - a problem is that our
+accesses to the larger cache throw data out of the smaller cache, yet we
+know we're going to need that data in the smaller cache again very soon.
+
+For convenience, I'll be calling the smaller cache L1 and the larger
+cache (or RAM) L2.
+
+We wish we had some local memory instead of (or in addition to) L1
+cache, but on general-purpose CPUs we don't.  We can't do anything about
+this, or can we?
+
+Yes, we can.  Cache thrashing occurs only when the L1 cache tag of a L2
+access matches that of a possible L1 cache access.  So the workaround is
+to avoid such L1 cache tag matches between the two types of accesses.
+We can do that e.g. by resetting an address bit (in the range that is
+part of L1 cache tags) in all L1 accesses, and forcing the same address
+bit to 1 in all L2 accesses. (*)
+
+A drawback of this workaround is that it effectively halves our usable
+sizes of both caches.  What can we do about that?  Another workaround:
+once in a while, alter our choice of address bit that we split the two
+types of accesses on.  Each time we do this, we effectively swap a half
+of the active and inactive cache halves (for both caches at once).  Of
+course, when a previously inactive L1 cache half becomes half-active, it
+has only a subset of its original L1'ish data (with the rest having been
+thrashed with L2 accesses that we made while that half was inactive).
+Thus, we shouldn't do such swapping very often, but we may nevertheless
+occasionally do it to make some use of the other halves (and of the data
+contained there).
+
+A concern is what happens when multiple threads are running.  When each
+thread has its own L1 cache, there's no problem.  However, when some
+threads share a L1 cache - perhaps on a CPU with 2+ hardware threads per
+core - we have a potential problem: L1 access tags of one thread may
+happen to match L2 access tags (for L1 cache) of another thread sharing
+the L1 cache.  Then we have L1 cache thrashing again.  To avoid it, we
+need to keep the threads' use of categories of L1 cache tags in sync.
+If we accept only using one half of each cache's capacity (total for all
+threads sharing a L1 cache - thus, at most 1/4 of L1 cache size per
+thread instead of at most 1/2 per thread, which would be full use), then
+all we need to do is align all threads' memory allocations to cache set
+boundary (which is typically achieved along with aligning to page
+boundary) and refrain from altering our choice of the selector bit (just
+hardcode it).
+
+If we do insist on altering the choice (to more fully use caches'
+capacity and the data contained at those other addresses), then we'd
+need explicit thread synchronization, which is not always possible:
+the multiple threads might not be part of one instance of our hash
+computation - instead, they may be the caller's, or they may be part of
+different processes or even different VMs happening to run multiple
+instances of our software on the same machine.
+
+Thus, there's a tradeoff: either we use half the caches' capacity only
+or we likely incur L1 cache thrashing when multiple instances (beyond
+the number of physical CPU cores) are run on a machine with multiple
+hardware threads sharing a L1 cache.
+
+(*) Since our L1 accesses are likely more frequent than L2 ones and since
+we probably use an AND instruction anyway - to extract the index - it
+is cheaper to reset the bit for L1 accesses and set it for L2 accesses,
+rather than the other way around.  In fact, this same one AND instruction
+may also be used to mask multiple indices at once, matching the S-box
+count, if that's what we're using.  Thus, larger S-box count helps
+amortize the cost of this AND in software, which is desirable since this
+cost is fully avoided in ASIC.  The L1 index mask might be e.g.
+0x0ef00ef00ef00ef0ULL for indexing 4 S-boxes with 128-bit elements, with
+the e's instead of f's showing where our selector bit currently is.  The
+lower bits are zero so that we obtain byte offsets right after applying
+the mask, saving on the need for shifts or addressing modes with index
+scaling.  16-bit (like in this example) or 32-bit sub-fields may be used
+for easier extraction of the individual indices on some archs, in some
+cases helping avoid shifts too.
+
+Alexander
+

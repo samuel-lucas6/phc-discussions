@@ -1,0 +1,93 @@
+phc-discussions - Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2
+ initial review)
+
+Message-ID: <CALW8-7L7iLAO+CPb6Y0WOMrR5A-twDaL2Fg0Xzw1pBBa6h+cjg@mail.gmail.com>
+Date: Tue, 22 Apr 2014 14:53:40 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Any other authores ready for benchmarking? (was [PHC] Lyra2
+ initial review)
+
+Hi Bill,
+
+Please feel free to benchmark the optimized Argon with 4/8/16 threads.
+
+Regarding the memory bandwidth, Argon with default parameters accesses each
+memory location 12 times for reading and 11 times for writing on average
+(Section 6.4 of the submission document). If I understand your metrics
+correctly, this gives 23x multiplier on the speed that is around 9 cycles
+per byte for 1 GB of RAM used (330 MB/sec on a 3 GHz CPU).
+
+Best regards,
+Dmitry
+
+
+On Fri, Apr 18, 2014 at 8:34 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+Yesterday, I had some fun benchmarking Lyra2, TwoCats, and Yescrypt.  Are
+there any other authors who would like their algorithms benchmarked?  I'd
+be happy to start tabulating data on all the entries that are ready for
+benchmarking.  After yesterday's hack-fest, I don't feel simply running the
+PHS routines without the involvement of the author is likely to generate
+useful data, so I'm only going to do benchmarking the authors request for
+now.
+>
+We should discuss what to measure and how to report it.  Is there a better
+place than posting it here?
+>
+I think we maybe we need three memory size categories, where PHC entries
+can be benchmarked in any or all of them.  Basically, the 3 memory sizes
+correspond to:
+>
+- L1 cache bound:  how about 8KiB?
+- Cache bound: how about 8MiB?
+- External DRAM bound: how about 2GiB?
+>
+Also, some are not memory bound, for PBKDF2-like entries.  It's best if we
+stick to powers of two for memory size, as some entries require that.
+>
+The simplest thing to report is how long a algorithm takes to run to hash
+for a given amount of memory, so I think we should report that.  However,
+it needs to be interpreted based on what the algorithm is doing.  Assuming
+the algorithm is linear in runtime for the range of memory in the category
+(for example, heavily external DRAM bound), then we can can convert runtime
+to now many MiB or GiB would be hashed in a 1 second runtime, by dividing
+the memory hashed by the runtime.  This let's us compare the memory*time
+cost for a 1 second runtime, and obviously higher is better.
+>
+An important modification to the GiB/s hashed is the expected "average"
+memory usage for a 1 second run.  Several entries call malloc or a similar
+function to allocate uninitialized memory, and in a first loop they fill
+that memory.  Linux does not allocate physical memory to malloc-ed address
+space until it is accessed, so memory usage increases roughly linearly for
+the first memory filling loop.  TwoCats fills memory and is done, so it's
+average memory usage is only 1/2 of the total.  Others mostly write to
+memory more than once, and so they reach peak memory early in the
+algorithm.  For example Scrypt would be expected to have around a 75%
+average memory usage relative to the total used, since it fills memory
+linearly in the first loop and hashes it once in the second loop.
+>
+Finally, there's memory bandwidth, which should be in terms of MiB or GiB
+per second read/write to DRAM or cache.  Memory bandwidth is the primary
+runtime defense for a lot of the entries, so having high bandwidth is very
+important.  We can estimate memory bandwidth by the total memory hashed
+divided by runtime, times the number of memory accesses on average.  Cache
+adds a complication when estimating external DRAM bandwidth, but so far
+we've been able to guestimate which reads are most likely cached, and
+discount them for external DRAM bandwidth.  For example, for TwoCats, I
+estimate each DRAM location is written on average once, and read on average
+once, the same as Scrypt.
+>
+Are these the right metrics?
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

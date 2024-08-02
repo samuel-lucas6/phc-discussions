@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] TigerKDF paper and code ready for review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="11">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p64o04TuzcQN3t6En7jx_8dJNR-u7WMi+oMk0dx29Vm6w&#64;mail.gmail.com&gt;
+Date: Fri, 7 Mar 2014 23:24:56 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+On Fri, Mar 7, 2014 at 10:03 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Fri, Mar 07, 2014 at 08:56:31PM -0500, Bill Cox wrote:
+&gt;&gt; On Fri, Mar 7, 2014 at 7:13 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt;&gt; &gt;&gt; At least with AVX2 on Haswell, I would be surprised if Bcrypt's inner
+&gt;&gt; &gt;&gt; loop were faster, so for hashing out of just L1 cache, I'm probably
+&gt;&gt; &gt;&gt; good on that platform vs current GPUs.
+&gt;&gt; &gt;
+&gt;&gt; &gt; Are you trying to say that on Haswell you read 64 byte blocks as rapidly
+&gt;&gt; &gt; as bcrypt reads 4 byte blocks (also on Haswell)?  I think this is false.
+&gt;&gt;
+&gt;&gt; I need to verify this, but I think the math last time showed that a
+&gt;&gt; loop with 3 AVX2 instructions reading 2 32 byte values at a time,
+&gt;&gt; hashing them slightly, and writing them back ran at the clock speed.
+&gt;&gt; I should have said 32-bytes, not 64.
+&gt;
+&gt; OK, you might be right.
+&gt;
+&gt; For my optimized defensive implementation of bcrypt running on the
+&gt; i7-4770K, I am getting 603 c/s at $2a$05 when running one thread (and
+&gt; one instance), and 4330 c/s when running 8 threads.  (FWIW, attack
+&gt; optimized implementations, with 2 or 3 instances per thread, are twice
+&gt; faster when running one thread, or 1.5 times faster when running 8
+&gt; threads.)
+&gt;
+&gt; This gives:
+&gt;
+&gt; 603*34000*16*4/(3.9*10^9) = 0.336 lookups/cycle
+&gt; 4330*34000*16*4/(3.7*10^9) = 2.55 lookups/cycle
+&gt;
+&gt; where 34000 is roughly the number of Blowfish encryptions performed,
+&gt; 16 is the number of Blowfish rounds, and 4 is the number of S-box
+&gt; lookups per round.
+&gt;
+&gt; (For attack, we'd have about 4 lookups/cycle on this CPU, meaning about
+&gt; 1 lookup/cycle/core.)
+&gt;
+&gt; BTW, the defensive single-thread result above is pretty bad in how it
+&gt; compares against historical Blowfish cycles per byte speeds.  It is:
+&gt;
+&gt; 3.9*10^9 / (34000*8*603) = 23.78 cpb
+&gt;
+&gt; whereas the original Pentium did 18 cpb:
+&gt;
+&gt; <a href="https://www.schneier.com/blowfish-speed.html" rel="nofollow">https://www.schneier.com/blowfish-speed.html</a>
+&gt;
+&gt; and my own assembly code for bcrypt on the original Pentium was inbetween:
+&gt;
+&gt; 120*10^6 / (34000*8*20.1) = 21.95 cpb
+&gt;
+&gt; (This is for defensive, thread-safe code; attack and thread-unsafe code
+&gt; was slightly faster, and is 1.5x to 2x faster on Haswell.)
+&gt;
+&gt; Perhaps there's some room for further optimization/tuning for Haswell,
+&gt; but overall these numbers should be about right.
+&gt;
+&gt; Alexander
+
+After three glasses of wine, all I can say is... ouch, that hurts!
+
+I really shouldn't post after drinking, which frankly gets me in
+trouble (there's a guy I called a dork on a forum, when I probably
+shouldn't have)
+
+So, this is a good time to do personality analysis of your code,
+because normally I'd have slightly more sense.  You indent by tab,
+which is one keystroke, there are very few comments, and you like 1
+letter variable names.  This indicates you feel typing speed is a
+limiting factor, and I bet you type pretty fast.  I read a very long
+function you wrote that could have been broken up, but that would also
+have slowed you down, as there were no common sub-functions to factor
+out, or you would have.  None of this lack of commenting or long
+variable names are useful to you, because the code is perfectly clear
+without it.  Given all this, I'd bet you also have at least two
+screens.  One just wouldn't be enough.
+
+You APIs in header files are very clear, and I bet you focus on that.
+
+I've seen code like this before, just one other time, and I've read a
+crazy amount of code.  Actually, this other guy might have a bit of an
+edge on you (and way past me) in terms of writing very efficient code
+quickly and accurately.  He hit his head on a rock as a child and the
+way his brain rewired itself turned him into a coding genius (though I
+don't know what he'd be like without the rock):
+
+    <a href="http://en.wikipedia.org/wiki/Synplicity" rel="nofollow">http://en.wikipedia.org/wiki/Synplicity</a>
+
+I went to work for Ken in 1996 at Synplicity, hoping I could learn to
+be more like him, but my brain isn't wired like his.  I've got some
+fun stories about him.  I was the first coder he hired, though there
+were 24 employees already, because he could handle the coding load by
+himself for a long time.  There were 350,000 lines of hardware
+description language synthesis code, and he hired me to help out with
+it.  I opened one of the more interesting files (the factoring engine,
+which blew doors on competitors), which was 2,400 lines long, most of
+which being 1 function, with no comments, tabs for indentation, and he
+actually ran out of good 1-letter variable names and started using
+2-letter names.  I figured he must just put the comments somewhere
+else, like header files, so I greped the whole code base for /*...
+there was just one, and it said "This is a hack".
+
+He had two monitors covered in maybe a couple hundred icons, most of
+which ran custom scripts.  He had the build icon in release mode, and
+a an icon to publish for customer download, but no debug icon I ever
+saw him use (it was probably a lonely unused icon).  He would wake up,
+write a piece of code that blew away everything in the field, hit the
+compile in release mode button until his typos were fixed, maybe (and
+not always) run it once, and then hit the release to customers button.
+ He's like Mozart with code.  I found a mistake he made once, which he
+assumed was me being stupid, and when I turned out to be right, I made
+it on is somebody worth working with list, and thus the job later on.
+I don't know if he remembers details like that... he forgot I was the
+first programmer he hired.
+
+Anyway, he owned over 50% of Synplicity before dilution to go public,
+which is about the best I ever saw.  He's got a lot of money now, but
+you'd never know it... he's still the same guy.  Just now he drives a
+Tesla Model S.
+
+Anyway, I'm used to seeing code like this.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

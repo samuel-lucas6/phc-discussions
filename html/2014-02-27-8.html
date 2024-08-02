@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] GPU multiplication speed?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140227143209.GA11200&#64;openwall.com&gt;
+Date: Thu, 27 Feb 2014 18:32:09 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 09:13:52AM -0500, Bill Cox wrote:
+&gt; Given this description, I would guess that Script is sped up on GPUs
+&gt; only for small memories, like the 128KiB used in LiteCoin.  Large
+&gt; memory hashes, such as 1GiB would be limited by memory space on the
+&gt; card, and the fact that instructions take something like 11-ish ns
+&gt; each.  If that's the case, GPUs should be very bad at large memory
+&gt; sized Script hashing.  Is this right?
+
+As I mentioned before, the threshold where current GPUs are on par with
+current CPUs per chip appears to be at around 4 MiB for scrypt, as we
+know from YAC mining.  How much slower the GPUs will become when the
+per-hash memory cost setting grows further we'll know in a few months
+when YAC moves to 8 MiB.  Indeed, you can simulate this right now (just
+hack a YAC miner's source code), but a monetary incentive might mean more.
+
+&gt; Also, on a GPU, there's nothing special about multiply (maybe 32 bit
+&gt; vs 24 is helpful by).  Any memory hashing algorithm will slow down a
+&gt; GPU so long as there are enough sequential operations that depend on
+&gt; the previous result.
+
+Right.
+
+There might or might not be a few cycles of extra latency for a
+multiply, but compared to the latency incurred with any instruction this
+is only a small advantage (for the defender).
+
+&gt; However, SHA-256, Blake2, and other hash
+&gt; functions have a lot of parallelism, so a GPU can interleave
+&gt; instructions that don't act on results from the prior few
+&gt; instructions, reducing the latency impact.
+
+As far as I'm aware, no current code takes advantage of this as it's
+incompatible with OpenCL and CUDA programming models, and as GPUs lack
+ability to issue more than one instruction per cycle from the same
+hardware thread (unlike CPUs).  Also, the parallelism available in those
+algorithms is insufficient to make it worthwhile to introduce any kind
+of data dependencies across threads.
+
+So e.g. in Litecoin and YAC mining, the parallelism comes purely from
+concurrent instances of scrypt.  Their number is doubled via scrypt's
+TMTO, though.  ... Oh and yes, this means that the 4 MiB I mentioned
+above actually means 2 MiB for a TMTO-unfriendly variation of scrypt.
+
+&gt; If this is correct, wouldn't an effective strategy be to have a long
+&gt; chain of sequential operations that depend on the prior result, and to
+
+We have this with bcrypt, yes.
+
+&gt; hash a lot of memory?
+
+Yes, but when it's a lot of memory your latency dependency reduces since
+your random memory accesses are not as rapid on the defender's system.
+
+&gt; It wouldn't have to be multiply - anything
+&gt; would do, such as a chain of addition, rotation, and XOR.  If I did
+&gt; this, causing an 11-ish cycle effective computation time, and hashed 1
+&gt; GiB, then a modern Nvidia GPU with 12GiB would only be able to compute
+&gt; 12 hashes in parallel due to memory limitations, and his 11-cycle
+&gt; latency vs my 1-ish cycles for simple operations should limit his
+&gt; advantage to maybe 2x-ish?  If I run 2 threads, than would it be a
+&gt; 1x-ish non-advantage?
+
+The advantage from GPUs (comparing currently available CPUs and GPUs)
+should become negative at a few MiB or (preferably) less.  For bcrypt,
+CPUs and GPUs are on par at bcrypt's 4 KiB. :-)
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

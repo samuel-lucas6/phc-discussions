@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <20150922202603.GA19034@openwall.com>
+Date: Tue, 22 Sep 2015 23:26:03 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On Sun, Sep 13, 2015 at 08:26:50PM +0200, Thomas Pornin wrote:
+  format; the parameters are separated by commas, and the list ends
+
+FWIW, a comma was historically (prior to password shadowing and/or on
+YP/NIS) used to separate the password hash from password aging info.
+Perhaps this is still the case on some NIS setups, possibly even on
+those that could upgrade their hash type?
+
+In JtR, the comma is only parsed like that (truncating the hash to
+crack) for descrypt, bigcrypt, and AFS, but not in the generic loader
+code.  IIRC, no one has reported needing this comma processing for
+another hash type, but this doesn't necessarily mean such cases don't
+exist.
+
+https://www.cs.duke.edu/csl/docs/sysadmin_course/sysadm-242.html
+
+| entry in /etc/passwd could be:
+| 
+| frank:yPf3M5qMgglUc,437I:101:10:Frank G Fiamingo:/home/tardis/frank:/usr/bin/csh
+
+http://bak.spc.org/dms/archive/passsec.txt
+
+| ]
+| ] Sample entry from /etc/passwd with password aging installed:
+| ]
+| ] will:5fg63fhD3d,M.z8:9406:12:Will Spencer:/home/fsg/will:/bin/bash
+| ]
+| 
+| Note the comma in the encrypted password field.  The characters after
+| the comma are used by the password aging mechanism.
+| 
+| ]
+| ] Password aging characters from above example:
+| ]
+| ] M.z8
+| ]
+| 
+| The four characters are interpreted as follows:
+| 
+|   1: Maximum number of weeks a password can be used before changing
+|   2: Minimum number of weeks a password must be used before changing
+| 3&4: Last time password was changed, in number of weeks since 1970/1/1
+
+Then there's more detail given on some special cases.
+
+http://h30499.www3.hp.com/t5/Security/Password-aging-in-NIS/m-p/3496039#M10018
+
+| 03-02-2005 03:47 AM 
+| 
+| I've configured password aging by hand. You can do this by editing the passwd file on the NIS master. Password aging information is added to the password hash:
+| 
+| user1:--hash---,abCC:uid:gid:....etc
+
+2005 is relatively recent, but I guess it was a descrypt hash anyway.
+
+http://docstore.mik.ua/orelly/networking/puis/ch08_08.htm
+/Old-Style Password Aging
+
+... and many other web pages, e.g. also an IRIX passwd(4) man page, etc.
+
+BTW, this sets a precedent of using crypt B64 to encode numeric data.
+Other such uses are seen in bsdicrypt (to my knowledge, the very first
+scheme to use variable iteration counts in early 1990s, with four B64
+chars encoding a 24-bit iteration count) and in my phpass "last resort
+fallback" MD5-based scheme.
+
+Alexander
+

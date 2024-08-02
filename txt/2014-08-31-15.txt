@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] An additional PHS API to include a string?
+
+Message-ID: <20140831151004.GA1709@bolet.org>
+Date: Sun, 31 Aug 2014 17:10:04 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] An additional PHS API to include a string?
+
+On Sun, Aug 31, 2014 at 10:40:43AM -0400, Rich Felker wrote:
++1, but I don't think this is easy. For example depending on the
+application, this may involve Unicode normalization forms, and I don't
+think processing them belongs at this level; it's complex and
+error-prone. Do you have ideas on the matter?
+
+My ideas so far on normalization forms are:
+
+ - They are mostly out of scope of the password hashing function properly
+   said.
+
+ - BUT they must be minded by system implementors. Password entry
+   devices (e.g. popup windows, command-line prompts...) will return the
+   password characters with some convention. For proper operation, all
+   devices used for a given password must agree on the normalization
+   form. This is especially important for password-based encryption
+   where several distinct systems will need to turn the same password
+   into the same key (for the "authenticate users on a server", password
+   hashing can be centralized, which makes encoding issues easier to
+   deal with).
+
+ - If a normalization form must be chosen (and it must be chosen at some
+   point in the whole system), then NFC is probably the best choice,
+   since that's what you will get anyway from most password entry
+   devices. Easiest normalization is the one which is already done.
+
+The conventions I used for Makwa reference implementations are the
+following:
+
+ - In C, for the string-based API, assume that the input password has
+   already be encoded properly (UTF-8) in a zero-terminated string.
+   (The "binary" API can apply Makwa on an arbitrary sequence of bytes,
+   including one with embedded zeros.)
+
+ - In Java, for the string-based API, the password is provided as a
+   String instance, that is encoded in UTF-8 with str.getBytes("UTF-8").
+   (Do NOT use str.getBytes(), because the used encoding will be
+   locale-dependent.)
+
+So I assume that any normalization (and encoding, in the case of C)(*)
+has already occurred. The alternative would be to include some
+renormalization code, which would imply massive tables (generated from
+the Unicode standard files), and would certainly allow cache-timing
+attacks. In fact, in a client-server classic authentication scenario,
+one may argue that password normalization MUST happen on the client
+side, precisely to avoid such attacks -- and this means that the
+relevant code must not be part of the password hashing function
+implementation.
+
+
+	--Thomas Pornin
+
+(*) Notably, I elected NOT to offer a function which expects the
+password as a sequence of wchar_t. There is no guarantee that wchar_t
+encode Unicode code points, making portable conversion very challenging.
+Even in practice, Unix-like systems will routinely use 32-bit wchar_t,
+while Windows uses 16-bit wchar_t, which changes things for code points
+beyond the first plane.
+

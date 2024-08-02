@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] TigerKDF paper and code ready for review
+
+Message-ID: <20140308001329.GA27285@openwall.com>
+Date: Sat, 8 Mar 2014 04:13:29 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+Bill,
+
+On Fri, Mar 07, 2014 at 10:50:48AM -0500, Bill Cox wrote:
+I'm not trying to have resistance as strong as Bcrypt at 4KiB, but I
+would like the resistance to be stronger for a small size, preferably
+much less than 1MiB.
+
+Right.  Same here.
+
+Any 4KiB hashing algorithm is highly
+parallelizable on a custom ASIC, and with high CPU count generic
+processors coming, I doubt anyone should count on a 4KiB hash being
+secure.  Even 1MiB fast cache memories can likely integrate somewhere
+between 16 to 64 on a reasonable sized 28nm ASIC, and I don't even
+want to think about how many 4KiB cores we could integrate.
+
+I primarily think of this differently: what's the amount of processing
+and memory usage that the oldest/smallest relevant system can afford?
+This should be our smallest target, regardless of what attacks it allows
+for or does not allow.  We simply should do almost the best we can given
+the resources we have in each case.  ASICs are not the only threat.  If
+we happen not to defend against ASICs in a given case, we should
+nevertheless do our best to defend against other threats.
+
+At least with AVX2 on Haswell, I would be surprised if Bcrypt's inner
+loop were faster, so for hashing out of just L1 cache, I'm probably
+good on that platform vs current GPUs.
+
+Are you trying to say that on Haswell you read 64 byte blocks as rapidly
+as bcrypt reads 4 byte blocks (also on Haswell)?  I think this is false.
+So you lose to bcrypt in terms of attacks with GPU implementations that
+choose to use global memory, and they will choose to do so if this is the
+faster attack.
+
+As you say, it's the older CPUs that are problematic for GPU defense.
+
+Not exactly.  I say that older CPUs are more problematic for defending
+against GPU attacks when the same code+settings is attempted to be used
+for both older and newer CPUs.
+
+This does not mean that defending against GPUs is trivial on newer CPUs
+(at sub-megabyte memory per hash), unless you're willing to give up on
+certain other desirable properties.  This is not trivial.
+
+I'll try to find time to comment on the rest of your message later.
+
+Alexander
+

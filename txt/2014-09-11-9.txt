@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+Message-ID: <20140911072405.GA7166@openwall.com>
+Date: Thu, 11 Sep 2014 11:24:05 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BSTY - yescrypt-based cryptocoin
+
+On Wed, Sep 10, 2014 at 07:15:43AM +0400, Solar Designer wrote:
+On Tue, Sep 09, 2014 at 03:45:28PM -0400, Bill Cox wrote:
+I did a quick comparison of TwoCats and Yescrypt when doing 2MiB
+hashes.  Yescrypt maxes out my machine at about 3,100 hashes per
+second using 8 threads, which gives the best performance.  TwoCats
+maxes out at about 3,800 similar sized hashes on 3 threads with 2
+multiplications per inner loop, which gives the best performance.
+However, Yescrypt is doing something like 2.3 memory read/writes per
+location vs TwoCat's 2.  The difference is basically in the noise.
+
+Yeah.  To add one more number, yescrypt with pwxform rounds count
+reduced from 6 to 2 does 4400 hashes per second on the same i7-4770K
+where it does 3400 hashes per second with the default of 6.  I guess
+this might correspond to more than 3800 on your machine. ;-)  But I
+think the default usually works better, since it provides much more
+compute latency hardening:
+
+6*3400/(2*4400) = 2.3 times more hardening
+
+I realized I should have tried other thread counts when benchmarking
+yescrypt with reduced pwxform rounds count, because at only 2 MiB per
+hash L3 cache plays a significant role.  It turns out that although with
+the default of 6 pwxform rounds 8 threads were a bit faster than
+4 threads (3400 vs. 3150 hashes per second), with only 2 pwxform rounds
+4 threads win, with between 6300 and 6700 hashes per second (the speed
+becomes somewhat unstable, perhaps because of the structure of L3 cache
+and the effect of context switches).  So the reduction in compute
+latency hardening is much smaller than I previously thought:
+
+6*3400/(2*6500) = 1.57
+
+This actually might be a better fit for such use, because it uses much
+more bandwidth (to cache or RAM or whatever memory the attacker provides):
+
+6500/3400 = 1.91
+
+So perhaps I should in fact export the pwxform rounds count as a
+parameter, perhaps with some granularity.
+
+Also interesting is what happens with 1 MiB per hash:
+
+6 rounds, 4 threads: 6300
+6 rounds, 8 threads: 7300
+2 rounds, 4 threads: 13400
+2 rounds, 8 threads: 14550 to 15400 (unstable speed)
+
+As expected, this makes 8 threads the optimal choice again.  The speed
+and bandwidth usage difference between 6 and 2 rounds improves to 2x+.
+Of course, like before this is countered by the 3x reduction in compute
+hardening per hash computed (so up to 1.5x overall).
+
+When AVX2 code is written, it will improve speeds at 6 rounds slightly
+(but less so at 2 rounds).
+
+Alexander
+

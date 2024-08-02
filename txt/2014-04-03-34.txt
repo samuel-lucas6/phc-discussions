@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] Catfish and public key hash
+
+Message-ID: <CAN5JNV1RpKk=b7ypKdXaJqeuLhy2+WT1cS_3QkrOovKc5onYcA@mail.gmail.com>
+Date: Thu, 3 Apr 2014 10:39:55 -0400
+From: Bo Zhu <bo.zhu@...terloo.ca>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Catfish and public key hash
+
+Hi Steve,
+
+Thanks for the recommandation of using RSA-type $x ^ e \mod{N}$.
+Actually, we have considered this option before.
+
+But by using $x ^ e$, you may have a big trouble about collision
+resistance, if you don't handle its input very well.
+You may consider the case where (1) $(x + N) ^ e = x ^ e \mod{N}$, and (2)
+$N$ is not a power of 2, so it might be less than $2^n$, where $n$ is the
+output bit-length of a hash function, e.g. Keccak.
+(It seems Makwa is using RSA-type operations, so hope it doesn't have any
+issues with this.)
+
+However, the discrete-log type $g ^ x \mod{N}$ doesn't have all these
+troubles.
+It is proven to be collision-resistant if factoring $N$ is hard and $x$ is
+simply any positive integer.
+
+
+For more info, you may read Theorem 2 in our specification paper, and/or
+the two following papers.
+J.K.  Gibson, Discrete logarithm hash function that is collision free and
+one way
+http://senderek.com/SDLH/discrete-logarithm-hash-for-RSA-signatures.ps
+
+Best regards,
+Bo
+
+
+
+On Thu, Apr 3, 2014 at 5:06 AM, Steve Thomas <steve@...tu.comwrote:
+
+On April 2, 2014 at 6:36 PM mjunior@...c.usp.br wrote:
+>
+ Hi there
+>
+ I would say that if the attacker needs more than 2x the amount of
+memory used
+>by the defender to get less than a 2x speed-up, then the attacker is
+wasting
+>resources: he/she could simply use two cores to get the same throughput...
+>Unless the attacker model considers a limitation in number of cores,
+which does
+>not seem to be the most common case.
+>
+>
+But it's "free" if I have 8 GiB of ram and 4 cores and the settings are
+such
+that I need 64 MiB/guess then I have 7.75 GiB doing nothing. Anyway this is
+a non-issue if they just change it from (x is the output of Keccak):
+>
+g ** x (mod N)
+to
+x ** e (mod N)
+>
+
+
+

@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] A little nit which bothers me...
+
+Message-ID: <20140402082306.GA24793@openwall.com>
+Date: Wed, 2 Apr 2014 12:23:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: Brandon Enright <bmenrigh@...ndonenright.net>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] A little nit which bothers me...
+
+On Wed, Apr 02, 2014 at 06:22:27AM +0000, Brandon Enright wrote:
+If it is possible for an attacker to "build a profile" of either
+data-dependent branching or memory access behavior then they can
+abandon any search that doesn't match the profile.
+
+So suppose you're hashing an input, say "password" with scrypt and you
+build a profile of did (1) or didn't (0) do something or access some
+memory in some way that results in a profile like
+0111001101011111010....
+
+Even if the whole profile is millions of "bits" long, if an attacker is
+guessing "123456" and the profile starts out 110011101101... they can
+abandon the search for 123456 immediately because it doesn't match the
+profile.
+
+My designs suffers from this.  scrypt (I think) suffers from this too.
+
+For an offline attack where all an attacker has is the hashes, this
+issue doesn't matter.  But for an "online" attack where the attacker is
+able to build profiles whenever a defender performs some hashing, the
+attacker can use this knowledge to prune guesses early.
+
+Right, for an online attack where the online attacker additionally
+already has a copy of the salts (or can guess them via similar profiling
+of candidate {password, salt} pairs, but this is easily defeated by
+making salts sufficiently large and unpredictable).
+
+We've discussed this in here (or/and on crypt-dev) before.  Where have
+you been? ;-)
+
+I mentioned the "fingerprinting" ability of ocrypt in my paper but I
+didn't realize that it could be used to avoid performing lots of work
+until now.
+
+I'm slightly comforted though that the only culprit isn't just
+data-dependant branching.  Data-dependant memory accesses have the same
+issue.
+
+Correct.  A difference, however, is that data-dependent memory accesses
+are already part of state-of-the-art password hashing schemes - bcrypt
+and scrypt - so by (still) having them in new schemes at least we're not
+taking on extra risks.  Data-dependent branching has not been used as
+much yet, with the exception of SunMD5.  I also don't see a lot of
+benefit from adding data-dependent branches to a scheme that already
+does data-dependent memory accesses.  Existing schemes with
+data-dependent memory accesses (bcrypt and scrypt) are a success,
+whereas existing scheme with data-dependent branches (SunMD5) is not: it
+doesn't let typical defenders use SIMD, but it failed at preventing
+attackers from using SIMD.  I think this is not a coincidence: it is
+too easy to (inadvertently) have such data-dependent branching that it
+has more impact on defenders (with their limited external supply of
+parallelism) than on attackers.
+
+To mitigate the side-channel leaks, I had suggested starting with
+data-dependent memory accesses later in the hashing process, not at the
+very beginning.  I think Bill Cox implemented that, or at least he was
+going to (I have yet to look at TwoCats as submitted).  I am planning on
+adding a flag to yescrypt to do that.  Unfortunately, I failed to find
+time to do it before the submission deadline.
+
+Alexander
+

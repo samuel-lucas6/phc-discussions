@@ -1,0 +1,73 @@
+phc-discussions - Re: [PHC] Re: A review per day - Yescript
+
+Message-ID: <20140829021131.GA5086@openwall.com>
+Date: Fri, 29 Aug 2014 06:11:31 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: A review per day - Yescript
+
+On Thu, Aug 28, 2014 at 04:05:32PM -0400, Bill Cox wrote:
+- - For t == 0, most of hashing could be done serially, rather than in
+parallel, though the results need to be loaded in parallel for the
+final pass.
+[...]
+The complaint I have about not forcing parallel computation is
+basically a banana attack.  If an attacker can instantly flush his
+memory to disk, and later instantly read it back, then he can do a
+TMTO, running threads in series rather than in parallel, because no
+data is exchanged between the threads.  They are all independent.  In
+the last pass, all memory has to be loaded so that the random read
+phase can complete in a reasonable time.  The problem with this attack
+is that the attacker needs the bandwidth from memory to disk to be as
+high as from the CPU to memory.  On my test machine, I'm able to get
+about 12GiB/s bandwidth from the CPU to memory.  In theory, my Sata
+interface is 6GiB/s.  I seriously doubt that having 2 Sata disks in my
+system would let me do 12GiB/s read/write to them.  However, if I were
+determined to make this TMTO attack, I might be able to do so with
+only a 2X increase in time*memory cost for high parallelism values,
+but I still would need to load it all in memory in the end.  That
+compares to Scrypt's *reduction* in time*memory cost by 4X, so it's
+hard to say this is a real concern.  It's more like me beating Solar
+Designer with a banana :-)
+
+OK, re-read it.  Yes, it's a banana.
+
+You can't force parallel computation onto any other algorithm as well.
+Whatever can be computed in parallel can also be computed sequentially,
+or with fewer parallel cores.
+
+I think what you meant by that is forcing all the data to be kept in
+memory at once, for efficient computation, by having even a sequential
+implementation "unpredictably" access the different portions of data.
+To achieve that, yet allow for parallel implementations, you'd need more
+sync points, which I'd view as a drawback.
+
+Yes, with yescrypt t=0 p>1 YESCRYPT_PARALLEL_SMIX, only 1/4 of its
+computation is "forced parallel" in the above sense.  However, that
+portion corresponds to 1/2 of the area-time cost of attacks, and to
+mount your banana attack almost all of the data would need to be swapped
+out and back in, which adds to the total area-time cost.
+
+I think most attackers will find this specific attack infeasible even if
+they did in fact have disks as fast as RAM.  It may be feasible when
+used with different types or placement of RAM, though.  It doesn't
+actually reduce the (theoretical) area-time cost even if successful, but
+might help the "logistics" in custom hardware in practice.  ... But:
+
+With such super fast disk-like memory, I'd rather apply it to swapping
+in/out portions of each individual thread's memory during SMix1.  With
+the sliding power-of-2 window, the out-of-window portions may be swapped
+out (and then back in, at start of next power of 2).  Overall, this may
+reduce SMix1's area-time cost by 1/3 (or total area-time cost for t=0 by
+20%), if we only count RAM and not disks in the area cost and do not
+count any swapping in/out overhead time cost.  However, this potential
+attack is already factored into my area-time cost figures, and into the
+choice of 4/3*N for the SMix* iteration count.  I simply do not assume
+that out-of-window data remains part of the area.
+
+So I have a better banana attack on yescrypt.  I think I had mentioned
+this one before, when we were discussing pros and cons of sliding
+power-of-2 vs. modulo division and others.
+
+Alexander
+

@@ -1,0 +1,79 @@
+phc-discussions - Re: [PHC] Proposed changes to author's code
+
+Message-id: <5EF144C4-0A61-4F59-8888-0EDA1245FEDB@mac.com>
+Date: Sun, 06 Apr 2014 15:22:53 -0700
+From: Larry Bugbee <bugbee@....com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Proposed changes to author's code
+
+I just started.  At https://github.com/buggywhip/yarn_py you will find the following.
+
+yarn_wrapper.py is a ctypes Python wrapper for the Yarn Password Hashing Candidate.
+
+yarn_demo.py is a simple demo program to illustrate various calls.
+
+yarn_kats.py converts and runs the provided KATs.
+   
+To compile an OSX .dylib:
+    
+gcc -dynamiclib -arch x86_64 -o libyarn.dylib yarn.c
+    
+Python wrapper API:
+    
+from yarn_wrapper import *
+
+hash = yarn(outlen, pswd, salt, pers, 
+            t_cost, m_cost, par, initrnd, m_step)
+
+# Note: this version of blake2b does NOT support a key
+hash = yarn_blake2b(outlen, pswd, salt, pers)
+
+The goal is to now create a Python wrapper to support the generic API.
+
+
+
+--------------------------------------------------------------------
+On Apr 6, 2014, at 12:21 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I have compiled each PHS with a common main.c.  Doing so required
+minor changes to the following PHS's:
+
+Argon
+Battcrypt
+Catfish
+Gambit
+Lanarea
+M3lcrypt
+MCS_PHS
+OmegaCrypt
+Parallel
+PolyPassHash
+Pufferfish
+RIG
+
+My goal is to have each entry have a PHS function that is C linkable.
+This is required, for example, if we wish to have bindings in
+different languages like Python, so I made the minimum changes to make
+these C linkable.  The C++ projects mostly just needed extern "C" in
+their PHS declarations.  Some of the others had minor portability
+issues that I fixed, possibly not exactly how the author would prefer.
+My change to Yarn were magically identical to the V1 version of the
+code... spooky!
+
+I've attached a diffs file, which shows all the changes I made to each
+project.  I also added the V1 versions of Yard, M3lcrypt, and POMELO,
+so if my changes get pulled upstream, these will also get pulled.  I
+think there is a ^M line ending issue in one of them that I haven't
+fixed.
+
+If the authors could review the diffs and let me know if they are OK
+with the mods, I'll ask that these changes get pulled into the main
+git repo.
+
+Thanks,
+Bill
+<diffs>
+
+
+
+

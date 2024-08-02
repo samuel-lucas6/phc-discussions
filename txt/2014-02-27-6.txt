@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <CAOLP8p4Q4itsMh9z0ypV9BFmWY97zRsN716=Toi2zohy6tafJA@mail.gmail.com>
+Date: Thu, 27 Feb 2014 09:13:52 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 8:41 AM,  <pornin@...et.orgwrote:
+I think newer Nvidia chips could run 16 instructions in parallel in a
+multicore, for a latency down to about 11 cycles, but I have not tried it.
+
+Thanks for the great description!  That's very helpful.  If I
+understand correctly, you are suggesting that a modern Nvidia chip on
+a single thread can do a multiply that depends on the result of the
+previous multiply every 11-ish cycles (possibly 24x24 rather than
+32x32), and that all instructions take this long.  So computing:
+
+    (a*b ^ c)*d ^e
+
+should have a latency of 4*11 == 44-ish cycles, but each core can do
+32 of these in parallel.  Is that right?
+
+If you want to make things awkward and difficult for GPU, good methods
+include using a very large state (the number of free registers in a GPU is
+large but not infinite), or to force memory usage (e.g. with accesses at
+irregular addresses, like in RC4 encryption: these cannot be easily mapped
+to registers; actual RAM must be used). Each multicore has access to some
+"local RAM" (like 4 kB) that supports parallel access to some extent, but
+all intertwined computations must share that amount: if you need to run
+192 parallel instances on a multicore, then each instance only has 20 or
+30 bytes to play with efficiently; everything beyond will incur accesses
+to external RAM, and these won't be parallel.
+
+Given this description, I would guess that Script is sped up on GPUs
+only for small memories, like the 128KiB used in LiteCoin.  Large
+memory hashes, such as 1GiB would be limited by memory space on the
+card, and the fact that instructions take something like 11-ish ns
+each.  If that's the case, GPUs should be very bad at large memory
+sized Script hashing.  Is this right?
+
+Also, on a GPU, there's nothing special about multiply (maybe 32 bit
+vs 24 is helpful by).  Any memory hashing algorithm will slow down a
+GPU so long as there are enough sequential operations that depend on
+the previous result.  However, SHA-256, Blake2, and other hash
+functions have a lot of parallelism, so a GPU can interleave
+instructions that don't act on results from the prior few
+instructions, reducing the latency impact.
+
+If this is correct, wouldn't an effective strategy be to have a long
+chain of sequential operations that depend on the prior result, and to
+hash a lot of memory?  It wouldn't have to be multiply - anything
+would do, such as a chain of addition, rotation, and XOR.  If I did
+this, causing an 11-ish cycle effective computation time, and hashed 1
+GiB, then a modern Nvidia GPU with 12GiB would only be able to compute
+12 hashes in parallel due to memory limitations, and his 11-cycle
+latency vs my 1-ish cycles for simple operations should limit his
+advantage to maybe 2x-ish?  If I run 2 threads, than would it be a
+1x-ish non-advantage?
+
+Thanks,
+Bill
+

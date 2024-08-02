@@ -1,0 +1,115 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <56106DAB.1020308@openwall.com>
+Date: Sun, 04 Oct 2015 03:07:07 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-10-03 13:52, Peter Gutmann wrote:
+Alexander Cherepanov <ch3root@...nwall.comwrites:
+>
+>Yes, I know, but it's too late, harm is already done. If you evaluate "value
+>* 10" somewhere then a compiler can assume that "value <= INT_MAX / 10" and
+>use this to optimize the following code.
+>
+That would appear to be a violation of sequence point constraints.
+
+Not sure what you mean. Perhaps I was not clear. I'll try again. Your 
+program evaluates the expression "value * 10" (suppose "value" is int). 
+It's ok if value <= INT_MAX / 10 (suppose it's positive) but if value 
+INT_MAX / 10 the result of multiplication is "not in the range of 
+representable values for its type". This is an undefined behavior and 
+the result of the whole program run is undefined (nasal demons et al.). 
+Hence a compiler is free to assume that this case is impossible (i.e. 
+that "value <= INT_MAX / 10") and to use this knowledge to optimize the 
+code in the program after this expression and even before it. E.g. it's 
+free to remove both whole "if"s in the following code:
+
+   if (value INT_MAX / 10)
+     printf("before\n");
+
+   const int valTmp = value * 10;
+
+   if (value INT_MAX / 10)
+     printf("after\n");
+
+Now given
+that you mention gcc later on, and that's an apparent source of endless
+optimiser bugs (I have more workarounds for gcc bugs in my code than all other
+compilers combined, going back to VC++ 6.0 from 1998), it wouldn't surprise me
+if it did that, but there's a limit to how far you can go to work around buggy
+compilers, particularly if you can't predict the bugs in advance.  Thus my
+somewhat conservative programming style, I have huge numbers of preconditions,
+postconditions, and invariants in my code that should be no-ops, but it's
+surprising what they've caught at times (mostly in gcc-compiled code, their
+ingenious remove-checks-for-null-pointers optimisation is particularly
+clever).
+
+While specific optimizations vary from compiler to compiler I think all 
+optimizing compilers rely on undefined behavior. This is the whole 
+purpose of undefined behavior after all.
+
+You can get some impression about gcc and clang here:
+
+http://blog.regehr.org/archives/1234
+
+You could also be interested in the views of LLVM folks on the subject:
+
+http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html
+
+>Another example -- the following program will happily print negative number
+>even though it specifically checks against it:
+>
+I'm not enough of a language lawyer to figure out the legalities around going
+via the unsigned short, but I'm guessing there's something in the annotations
+to the appendix to the apocrypha to C99 that says this is supposed to happen.
+
+This has (almost) nothing to do with unsigned numbers. What I was trying 
+to illustrate is that compilers rely on the assumption that a product of 
+positive numbers is positive. Let's replace unsigned numbers with an 
+explicit check that a number is positive (and make it a bit closer to 
+our case by using 10 as a second multiplier but it doesn't really matter):
+
+#include <stdio.h>
+#include <limits.h>
+
+int main(int argc, char **argv)
+{
+   /* for x * 10 to overflow let's take
+      something a bit larger than INT_MAX / 10 */
+   int x = INT_MAX / 10 + argc * 10;
+
+   if (x >= 0) {
+     int y = x * 10;
+
+     if (y >= 0) {
+       printf("%d\n", y);
+     }
+   }
+
+   return 0;
+}
+
+(argc is used to prevent a compiler to compute everything at compile 
+time and to force it to emit some code).
+
+Bot gcc 4.9 -O2 and clang 3.5 -O1 produce binaries which print a 
+negative number.
+
+You can also be interested in (invalid) bug report for gcc regarding 
+"assert(int+100 int) optimized away":
+
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=30475
+
+This is why I always use signed ints everywhere, you get overflows, but you
+can easily check for those, rather than getting code that looks like it should
+do A but actually does B.
+
+I'm afraid that it's exactly the opposite. If signed ints overflow then 
+the game is over. If unsigned ints overflow (this is well-defined) you 
+can check for it.
+
+-- 
+Alexander Cherepanov
+

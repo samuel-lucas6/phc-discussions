@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="6">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;52F71671.9050909&#64;dei.uc.pt&gt;
+Date: Sun, 09 Feb 2014 05:47:29 +0000
+From: Samuel Neves &lt;sneves&#64;....uc.pt&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On 09-02-2014 03:49, Solar Designer wrote:
+&gt; #define _mm_mullo_epi32(a, b) \
+&gt; 	_mm_unpacklo_epi32( \
+&gt; 	    _mm_shuffle_epi32(_mm_mul_epu32((a), (b)), 0x08), \
+&gt; 	    _mm_shuffle_epi32(_mm_mul_epu32(_mm_srli_epi64((a), 32), \
+&gt; 	    _mm_srli_epi64((b), 32)), 0x08))
+&gt; #endif
+&gt;
+&gt; Instead of _mm_srli_epi64(..., 32), we may use _mm_srli_si128(..., 4) -
+&gt; which of these is faster and which is slower varies by CPU type.
+
+I managed to shave one instruction (cycle) off in two different ways,
+one requiring SSE4.1, the other only SSE2. Both run at same speed.
+
+__m128i _mm_mullo_epi32(__m128i xl, __m128i yl)
+{
+    __m128i xh = _mm_shuffle_epi32(xl, _MM_SHUFFLE(3,3,1,1)); // x3 x3 x1 x1
+    __m128i yh = _mm_shuffle_epi32(yl, _MM_SHUFFLE(3,3,1,1)); // y3 y3
+y1 y1
+    __m128i pl = _mm_mul_epu32(xl, yl); // XXX x2*y2 XXX x0*y0
+    __m128i ph = _mm_mul_epu32(xh, yh); // XXX x3*y3 XXX x1*y1
+#if SSE2_ONLY
+    ph = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(pl),
+                                         _mm_castsi128_ps(ph),
+                                         _MM_SHUFFLE(2,0,2,0)
+                                        )
+                         ); // x3*y3 x1*y1 x2*y2 x0*y0
+    return _mm_shuffle_epi32(ph, _MM_SHUFFLE(3,1,2,0)); // x3*y3 x2*y2
+x1*y1 x0*y0
+#else
+    ph = _mm_shuffle_epi32(ph, _MM_SHUFFLE(2,2,0,0)); // x3*y3 x3*y3
+x1*y1 x1*y1
+    return _mm_castps_si128(_mm_blend_ps(_mm_castsi128_ps(pl), //
+BLENDPS instead of VPBLENDD to be Avoton-compatible
+                                         _mm_castsi128_ps(ph),
+                                         0x0A // 0b1010
+                                        )
+                           ); // x3*y3 x2*y2 x1*y1 x0*y0
+#endif
+}
+
+One note: since we're doing two PMULUDQ, and they cannot be dispatched
+in the same cycle, the lower bound for the latency of any accurate
+emulation is 6 cycles.
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

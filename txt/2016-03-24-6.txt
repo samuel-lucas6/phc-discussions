@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] hash encryption
+
+Message-ID: <20160324122934.GA10265@openwall.com>
+Date: Thu, 24 Mar 2016 15:29:34 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] hash encryption
+
+On Thu, Mar 24, 2016 at 01:15:22PM +0100, Dmitry Chestnykh wrote:
+What about starting a round counter (which gets hashed) from a different, non-overlapping, value for different key sizes?
+
+128-bit key: round# = 0, 1, 2, 3
+256-bit key: round# = 10, 11, 12, 13, 14, 15, 16
+
+Sure, but for keys that are just 16 vs. 32 bytes the problem doesn't
+exist because all of them fit in one SHA-256 block (along with the
+cipher half-block, which is another 16 bytes).  Andy was referring to
+unusually long k2's, needing at least two SHA-256 blocks.
+
+I am considering hashing in round+keylen.  For one byte, this is almost
+as easy and clean as hashing in just the round number.  But this becomes
+potentially susceptible to Andy's attack for keylen >= 257.  To deal
+with that, we'd be back to encoding the full length or full round+keylen
+as a 64-bit number.
+
+Another detail is that 6 least significant bits of keylen don't really
+need to be encoded, but this detail doesn't appear to be of any use,
+unless we were to encode (round + (keylen >6)) and declare keylen's
+needing more than 14 bits unsupported.
+
+Alexander
+

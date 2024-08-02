@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+Message-ID: <20150403104145.GA24902@openwall.com>
+Date: Fri, 3 Apr 2015 13:41:45 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Panel: Please require the finalists to help with benchmarks
+
+On Thu, Apr 02, 2015 at 06:17:00PM -0700, Bill Cox wrote:
+For benchmarking, authors should pick a minimum t_cost they feel
+is secure, and a number of rounds that give the best memory*time defense
+with good compute time hardness.  I still have not heard any reasons we
+need more than the current reduced Blake2b round or more than 2 of
+Alexander's new hash for any security reasons
+
+"Good compute time hardness" is a reason to possibly go for more rounds.
+I've previously shown that on a currently relevant machine 6 pwxform
+rounds is nearly optimal in terms of memory*time where the attacker's
+time factor is estimated from the number of sequential multiplies.
+
+6 pwxform rounds (along with other current defaults) also provides
+bcrypt-like frequency/parallelism of S-box lookups.  This is relevant
+for GPU attacks.  Reducing the number of rounds slightly may be OK,
+though, since the reduction in frequency of S-box lookups is much slower
+than linear.  Maybe being e.g. 1/3 worse than bcrypt would still be OK.
+
+other than to make memory indistinguishable from random,
+
+There might not be a difference in this respect for pwxform rounds
+counts of 1 or 2 vs. 6 anyway.  Like I said, yescrypt's V passes my
+randomness tests at PWXrounds = 1 as well.  However, it might be
+distinguished from random either way if you know just what properties
+to check for.  For example, for scrypt you'd check V_{i+1} = H(V_i).
+
+and I don't see that as a particularly important goal.
+
+I agree it isn't a particularly important goal.
+
+Alexander
+

@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] GPU multiplication speed?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140227141640.GA11062&#64;openwall.com&gt;
+Date: Thu, 27 Feb 2014 18:16:40 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 07:20:45AM -0500, Bill Cox wrote:
+&gt; I'm trying to figure out how effective GPUs could be against
+&gt; multiplication based compute-time hardened KDFs.
+
+At the 2 GiB memory cost setting you consider below, I guess you'd bump
+into other bottlenecks first.  The multiplies might (not) make it
+measurably slower.  It is hard to tell without trying.
+
+I'd consider these things primarily at much lower memory cost settings,
+on the order of 1 MiB and below.  Yes, there are use cases for these.
+
+&gt; A modern CPU does  a
+&gt; multiply in about 1ns.  If I am not mistaken, a GPU takes 4 or more
+&gt; clocks to do an integer multiply, and they run no faster than about
+&gt; 1GHz, meaning at least 4ns per multiply.
+
+Where did you find this 4 cycles figure?  While it is realistic for a
+multiply, note that GPUs are optimized for high throughput given high
+concurrency.  Not for low latency.  If on an x86(-64) CPU it is
+currently normal to run 1 or 2 threads/core, and you might get decent
+performance even when you run 1, on a GPU you need at least 10 to
+achieve full throughput (and this will be called differently depending
+on whether you read it in NVIDIA/CUDA or OpenCL context, but it's
+roughly the same concept as SMT on CPUs).  This is without multiplies -
+it applies even when you do XORs and ADDs.  So if you assume your
+concurrency is below (or equal to) the number of GPU's physical "cores",
+then you possibly incur stalls of 10 cycles right there, without any
+multiplies.  Does this increase to 40 or to 14 with multiplies, or
+does it stay at 10?  You'll need to experiment to find out.
+
+OK, here's a test for what happens with insufficient concurrency for
+GPU-friendly algorithm and code without multiplies.  Optimal:
+
+$ ./john -te -form=mscash2-opencl -dev=1
+Device 1: Tahiti (AMD Radeon HD 7900 Series)
+Optimal Work Group Size:256
+Kernel Execution Speed (Higher is better):1.517161
+Optimal Global Work Size:253952
+Benchmarking: mscash2-opencl, MS Cache Hash 2 (DCC2) [PBKDF2-SHA1 OpenCL]... DONE
+Raw:    102400 c/s real, 102400 c/s virtual
+
+Concurrency limited to exactly match physical resources (2048 x 32-bit):
+
+$ GWS=2048 ./john -te -form=mscash2-opencl -dev=1
+Device 1: Tahiti (AMD Radeon HD 7900 Series)
+Optimal Work Group Size:128
+Kernel Execution Speed (Higher is better):1.517110
+Benchmarking: mscash2-opencl, MS Cache Hash 2 (DCC2) [PBKDF2-SHA1 OpenCL]... DONE
+Raw:    20277 c/s real, 682666 c/s virtual
+
+OK, only a 5x hit here, not the 10x I mentioned above.  So while
+253952/2048 = 124x concurrency was found optimal by the program in this
+case, and it is 10x+ per AMD docs, not having any concurrency greater
+than available physical resources has only a 5x hit here, for this card
+(HD 7970 at stock clocks, meaning 925 MHz core) and this algorithm and
+code.  Yet 5x is significant - more so than the presumed 1 vs. 3+ cycles
+difference for ADD vs. MUL.
+
+BTW, this is somewhat similar on Xeon Phi, just to a smaller extent: it
+is capable of up to 4 threads/core, and it requires at least 2
+threads/core for optimal performance, even with instructions that you'd
+normally expect to complete in 1 cycle each.  So in this sense Xeon Phi
+is half way between a CPU and a GPU.  Similar things are also observed
+on UltraSPARC T1 (4 threads/core) and later (8 threads/core), where
+running almost the maximum number of supported hardware threads is
+essential to achieving full performance, even for trivial integer code.
+
+Regarding the clock rate, you're right - modern GPUs have it at around
+1 GHz.  [ Older NVIDIA GPUs (circa 2010) ran the shaders (which is what's
+relevant here) at double the core clock, so e.g. the vendor overclocked
+GTX 570 we're using for some JtR benchmarks runs at 1.6 GHz - but it's
+also a lot smaller than NVIDIA's latest GPUs. ]
+
+In terms of throughput, today's CPUs and GPUs can all be expected to do
+one multiply or multiply-add (if available) per SIMD lane per cycle, for
+up to whatever SIMD multipliers size they have in hardware in sufficient
+quantity (as you found, for some GPUs it's 24x24).  Bigger may be much
+slower, even in otherwise optimal conditions.
+
+(BTW, I am still playing with 32x32-&gt;64 as it's suitable for both scalar
+and SIMD on both current x86(-64) and recent ARM, and considering that
+it's roughly 2x the circuit size of 32x32-&gt;32 in ASIC.  64x64-&gt;64 would
+be 2x bigger yet, but it's unfriendly to some relevant CPUs/modes.)
+
+&gt; If a defender hashes his password using 2GiB in 0.5 seconds on his PC
+&gt; in a multiplication limited loop (easily done on 1 thread on a 3GHz+
+&gt; Sandy Bridge, Ivy Bridge, or Haswell CPU and a single bank of 1,666MHz
+&gt; DDR3 RAM), and an attacker has an 8GiB graphics card (do they sell
+&gt; bigger?),
+
+NVIDIA has Tesla K40 with 12 GB, AMD is planning a revision of FirePro
+S10000 with 12 GB.
+
+<a href="http://www.nvidia.com/object/tesla-servers.html" rel="nofollow">http://www.nvidia.com/object/tesla-servers.html</a>
+
+Xeon Phi is available with 16 GB.
+
+&gt; then the attacker could only do 2 guesses in parallel, and
+&gt; each guess will take 4 times longer, at about 2 seconds per guess, or
+&gt; 1 guesses per second total throughput.  That's half what the CPU can
+&gt; do.
+
+Yes, and if you're not memory-bound the performance hit may be even
+bigger.  However, if you're memory-bound, then the improved memory
+bandwidth may give advantage to GPUs.
+
+So, yes, having some computation so that you don't bump solely into the
+memory bandwidth, but also into compute latency on CPUs, is good to
+discourage GPUs.
+
+The multiplies specifically don't matter as much as they do against
+ASICs and FPGAs, but are good to use nevertheless.  There's probably
+some latency hardening advantage over ADDs even for GPUs, but it might
+not be much.  This is assuming that you do small multiplies; bigger
+ones might be much slower on specific GPUs.
+
+&gt; Are my numbers right?  My Google-fu is failing me this morning.  I
+&gt; could not find a table of NVDA or ATI GPU instruction latencies.  I
+&gt; did find one post suggesting to use 24x24 multiplication because it's
+&gt; only 4 clocks, but there was no mention of 32x32 latencies.
+
+Oh, that's curious.  As far as I can tell, information on instruction
+latencies on GPUs is generally not published, and it doesn't make as
+much sense as it would on CPUs given that higher concurrency needs to be
+maintained for optimal performance anyway.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

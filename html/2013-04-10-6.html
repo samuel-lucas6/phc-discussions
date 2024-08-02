@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Random Hash Functions</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="../../../2013/04/11/1">[next&gt;]</a> <a href="5">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CA+aY-u5FrmRNogKpfVDzNnwHRLhS4bqJf709gZ_rRD5jsvKCbg&#64;mail.gmail.com&gt;
+Date: Wed, 10 Apr 2013 23:56:55 +0100
+From: Peter Maxwell &lt;peter&#64;...icient.co.uk&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Random Hash Functions
+
+On 10 April 2013 02:20, havoc &lt;havoc&#64;...use.ca&gt; wrote:
+
+&gt; Here's a quick idea for PHC, that you're all free to expand on:
+&gt;
+&gt; Generating the hash:
+&gt;
+&gt; Input: The password P.
+&gt; 1. Generate a random salt S.
+&gt; 2. Generate a random hash algorithm F.
+&gt; 3. D = H(S, F, P).
+&gt; 3. Return &lt;D, S, F&gt;.
+&gt;
+&gt; Checking the hash:
+&gt;
+&gt; Input: &lt;D, S, F&gt; and test password P'.
+&gt; 4. Return D == H(S, F, P').
+&gt;
+&gt; Where H(S, F, P) is some iterated stretching function that involves the
+&gt; random hash function F, a well-tested hash function (e.g. SHA3), and
+&gt; whatever else you want, in each iteration.
+&gt;
+&gt; The idea is that every hash would have not only a random salt, but a
+&gt; random hash algorithm. By "random hash algorithm", I don't mean simply a
+&gt; random hash function which you could easily get by prefixing a random
+&gt; salt, I mean really generating random *code*.
+&gt;
+
+This idea had been briefly discussed on Twitter a month or so back, irrc
+Dan Kaminsky &amp; Marsh Ray (correct me if I'm wrong).
+
+The suggestion was that one would try to use as much of the x86 instruction
+set as possible to make it difficult to replicate in FPGA/ASIC.  While it's
+an idea to ponder, I don't personally think it's a fantastic approach for
+at least the following reasons:
+
+i) you can replicate a fair number of instructions &amp; conditionals on
+hardware and if one goes to the lengths of using really unusual x86
+instructions the construct becomes difficult to port to other processors,
+e.g. ARM;
+
+ii) you have to use many different and unusual x86 instructions to achieve
+your goal, otherwise one can replicate most of it in hardware;
+
+iii) it makes the algorithm very hard to analyse in terms of how it will
+operate on a real system, i.e. is it likely to leak entropy in
+side-channels and such like;
+
+iv) you will likely have to prove that any random function generated does
+not cause degenerate states either by losing entropy or getting caught in
+predictable short-cycles;
+
+v) the instructions that come to my mind that would be difficult to
+replicate in hardware would all open the algorithm up to side-channel
+attacks;
+
+vi) for the verification routine, you are essentially creating executable
+code that is data-dependent... in security applications. I would argue that
+is not particularly wise.
+
+
+
+
+&gt;
+&gt; This has interesting implications for hardware cracking. The crackers
+&gt; will have to either,
+&gt;
+&gt; 1. Create custom hardware for each hash they want to crack, or
+&gt; 2. Build lots of small processors that can of compute any of the random
+&gt; hash algorithms.
+&gt;
+
+I suspect your assertion is flawed.
+
+For 1. the attacker needs to be able to replicate the subset of CPU
+instructions you are using, if you limit yourself to something you can
+study and easily implement then it's probably not too bad to implement in
+hardware (although I can think of a few difficult scenarios).  Granted it's
+more tricky but it's still one item of hardware.
+
+For 2., as per 1 or using a combination of hardware and an x86.
+
+
+
+&gt;
+&gt; Currently, the best way to do it is probably to use an FPGA with method
+&gt; (1). To counter this, it should be very time consuming to find (either
+&gt; by hand or by automated process) an FPGA implementation of any F, that
+&gt; is faster than a well-designed general processor (method (2)).
+&gt;
+
+Therein lies the rub: how do you design something that is both provably
+non-degenerate and immune to side-channel attacks while still being very
+difficult to implement as a general algorithm in hardware?
+
+
+
+&gt;
+&gt; The random hash algorithm F should be encoded in a simple, standard,
+&gt; machine language, and either interpreted by the host system or
+&gt; translated into the host system's native instructions (safely!) before
+&gt; execution.
+&gt;
+&gt; Of course, generating a random *secure* cryptographic hash function is
+&gt; NOT easy, since it takes years of design and testing to become confident
+&gt; in just one. However, except for very valuable hashes, attackers
+&gt; probably won't spend a lot of time cryptanalyzing them, so it's OK for
+&gt; them to be not-so-secure.
+&gt;
+
+I've heard that line a fair few times before ;-)  Attackers do spend quite
+a large amount of their time, resources and effort in inverting password
+hashes.
+
+Seriously though, some of the problems can be overcome by using a standard
+hash before and after any random hash function, however you still must
+ensure the intermediate random hash function does not create degenerate
+states, leak information or poses a potential hazard from a vulnerability
+point of view.
+
+
+
+&gt;
+&gt; Does anyone know of existing similar work?
+&gt;
+&gt; Thanks,
+&gt; --
+&gt; Taylor (was: Havoc)
+&gt;
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt
+
+Message-ID: <554D2632.5090501@larc.usp.br>
+Date: Fri, 08 May 2015 18:10:10 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt
+
+-------- Forwarded Message --------
+Assunto:     Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC
+candidates "mechanical" tests (ROUND2))
+Data:     Thu, 7 May 2015 20:32:47 +0300
+De:     Solar Designer <solar@...nwall.com>
+Responder a:     discussions@...sword-hashing.net
+Para:     discussions@...sword-hashing.net
+
+
+
+Hi Marcos,
+
+Thank you for working on this!  It's much appreciated.
+
+I intend to take a closer look and provide a response to the specific
+points you raised later.  Meanwhile:
+
+I find the testing methodology weird and wrong.  You're reporting
+microseconds.  You should be reporting hashes per second rates 
+
+OK, hashes/s is indeed a better metric for reporting this. Alone, this
+should not change the ratios shown in the 3rd column, though, so I do
+not agree that the end result is actually wrong. I agree that further
+tests can be made and *added* to the analysis, though, and that is a
+good thing (see below).
+
+Anyhow, the code was made available so anyone can improve the tests for
+different platforms (note: please try getting the code from the root
+folder, "https://github.com/leocalm/Lyra/", not from the sub-folder I
+sent earlier). We will also include our execution scripts there as soon
+as we clean them up.
+
+
+for full
+device load, for both CPU and GPU.
+
+For the CPU, I guess you are proposing we do something similar to what
+Milan did in Test9, right? If so, that sounds reasonable.
+
+Now, for the GPU, we have to disagree: (see
+http://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy):
+
+"Higher occupancy does not always equate to higher performance-there is
+a point above which additional occupancy does not improve performance.
+However, low occupancy always interferes with the ability to hide memory
+latency, resulting in performance degradation."
+
+Since we were looking for the best throughput, our scripts tried many
+different occupancies until the optimal point was found, just like we
+did for plotting "Figure 20" in Lyra2's Reference Guide. Indeed, 8
+threads per warp gives lower latency (hence, higher throughput) than the
+usual 32 threads per warp, for both algorithms, so the former is optimal
+for the attacker.
+
+In a similar spirit, I think we should lock p=1 for these tests, and add
+the maximum amount of parallelism externally - much like it'd happen on
+an authentication server or in an attack.  So e.g. on a quad-core Intel
+CPU with HT, we should run 8 threads externally to both yescrypt and
+Lyra2, both at p=1. 
+
+That is a reasonable test.
+
+And keep the memory (de)allocation out of the loop,
+if we can - or maybe report both kinds of benchmarks (with this overhead
+included or excluded, as it can be either depending on how well a given
+software integration or server deployment has been performed).
+
+We will start with (de)allocations inside the loop, since that seems to
+have better correspondence with a higher memory usage scenario (and
+takes less effort for now :) )
+
+
+For yescrypt t=0, 2 MB, you report latency from 1750 us to 2700 us for
+p=1 to p=4.  However, I know that e.g. on i7-4770K, it performs 3400
+hashes/s (without use of AVX2) at 2 MB per thread.  Luckily, for the
+purpose of this comparison, it's around 3400 for 4 or 8 threads -
+doesn't matter.  (I think this is in part due to 2 MB being exactly the
+L3 cache size per core, as well as due to yescrypt including slightly
+excessive parallelism when run with 128-bit SIMD.)  That's for 8 MB or
+16 MB total.  1750 us could suggest a throughput of only 570 per second,
+which is 6 times lower than actual (and IIUC yours is for 2 MB total,
+vs. 8 MB or 16 MB total for my 3400 figure).  But things don't really
+work like that, which highlights the problem with the methodology.
+
+We will try to use the same approach Milan did in his benchmarks to have
+comparable results.
+
+For a sanity check, though: Figure 10 in Milan's benchmarks shows a
+throughput of ~1100 h/s for mcost = 1 MiB, tcost = min (so, yescrypt's
+T=0) and parallel_processes = 1, which is much closer to what our
+latency measurements suggest (~750 h/s) than to your numbers. My best
+guess is that most of the difference comes from the different platforms
+(hardware, OS, etc.),not necessarily from methodology. For example,
+considering only processor speed, ours is 2.2 GHz, Milan's is 2.1 GHz,
+and i7-4770K is 3.5 GHz.
+
+BR,
+
+Marcos.
+

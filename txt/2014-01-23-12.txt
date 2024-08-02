@@ -1,0 +1,49 @@
+phc-discussions - cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+Message-ID: <20140123235511.GA12671@openwall.com>
+Date: Fri, 24 Jan 2014 03:55:11 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: cache timing attacks (Re: [PHC] Initial multiply-compute-hardened Catena-3 benchmark)
+
+On Thu, Jan 23, 2014 at 10:33:59PM +0000, Marsh Ray wrote:
+Assume the attacker is able to rent a virtual machine sharing the same CPU as the defender. By observing his own perceived cache latency carefully, he is able to learn what memory locations are accessed by the defender during the hashing of a specific user's password. This has been demonstrated possible in practice.
+
+Now say the PHC algorithm imposes memory-latency hardness by using the supplied password to generate a seed with which to initialize a PRNG sequence to pick memory addresses within a large memory block. Going by the general rule that 50% of users choose one of the 10,000 most common passwords, the attacker only needs to learn just one or two cache line addresses in order to have a better than 50% chance of guessing the user's password on the first try.
+
+This sounds about right, but:
+
+This assumes that the salt is known to the attacker, which is usually
+the case when the attacker has a copy of the salts+hashes database and
+can run offline attacks already.  In order to check the 10k most common
+passwords against cache line addresses, the attacker needs to partially
+compute hashes - up to the point of first password-dependent lookup.
+If this corresponds to a substantial portion of the full hash
+computation, then that attacker hasn't gained all that much - only a
+speedup of their offline attack by a certain factor, which we may try to
+make reasonably small.  That factor may be larger if the portion without
+password-dependent lookups, even if it is taking e.g. 50% of total time
+for the defender, is somehow easier to attack (than the cache timings
+leaking portion) - and this may well be the case for the approach
+discussed so far (Catena's), as well as probably for any other we might
+come up with.  However, that is yet another reason not to spend 100% of
+time on cache timing attack resistant processing, as it would mean
+making our hashes weaker against regular offline attacks (without cache
+timing info).
+
+An important detail: the password-dependent lookups, when they start to
+be made, should depend on results of all prior computation, but not
+directly on the original password, nor on some earlier intermediate
+results (these lookups must not leak closer-to-password intermediate
+results via cache timings).
+
+So I currently think that a combination of the two approaches will work
+best: Catena's followed by scrypt's, in certain maybe-tunable
+proportion.  Yes, this means that upgraded hashes will have _relatively_
+less cache timing resistant processing than same-duration new hashes,
+but that's a tradeoff we need to accept (although for those who don't
+want to, accepting having hashes weaker against regular offline attacks
+instead, we may have the proportion tunable even to 100%, matching Catena).
+
+Alexander
+

@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] A review per day - Lyra2
+
+Message-ID: <540DC6C7.3040202@larc.usp.br>
+Date: Mon, 08 Sep 2014 12:09:59 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Lyra2
+
+
+>>Lyra2 does small-ish unpredictable reads,
+
+>Where?  I am not seeing that.  I only see 3 nested loops: Time Loop
+>until T (corresponds to yescrypt's t), Visitation Loop for rows
+>(corresponds to (ye)scrypt SMix second loop), and Columns Loop
+>(corresponds to (ye)scrypt's BlockMix).  There's nothing that would
+>correspond to yescrypt's pwxform, as far as I can see. Setting C
+>low would be equivalent to setting scrypt's r low - that is, it
+>would bring things closer to a Pufferfish-alike, but not close
+>enough for this to make sense (so memory access would become slow,
+>but not much GPU defense would be achieved).
+
+Whoa!  I totally missed that!  I did not re-read Lyra2's code well
+enough this time.  I thought I remembered it well enough from last
+Spring.  The loop for each row is a simple linear pass, with no small
+random reads at all.
+
+This is worse GPU defense than I thought.
+
+On section 6.3, pages 36 and 37. If you looking at the reference code
+only, then it is really not there (but maybe your memory came from the
+documentation, not the code).
+
+
+
+>>Lyra2 does at least two passes over memory, doing twice as many 
+>>read/write operations per memory location.  This causes it to
+>>use half the memory as TwoCats and Yescrypt when memory
+>>bandwidth limited.  All of my ASIC attack plans so far would need
+>>only half the memory to attack Lyra2 hashes, lowering it's
+>>time*memory defense by 2X.  However, a more sophisticated attack
+>>might be able to take advantage of the unfilled memory until it
+>>is needed, lowering the time*memory penalty to only a 3/4ths of
+>>TwoCats and Yescrypt.
+
+>For TwoCats, average usage is 1/2 of peak.  I guess you derive 3/4 
+>of TwoCats' for Lyra2 given that Lyra2's average is also naturally 
+>somewhat lower than its peak usage, just not to the same extent.
+
+>For yescrypt t=0 in native mode, average usage is 5/8 of peak.
+
+>Alexander
+
+I went back and looked at Lyra2's memory access again.  With t_cost ==
+1 (minimum), it does a total of 9 passes, plus 1 for zeroing if not
+running as an authentication server.  It fills to max memory while
+doing 2 reads and 2 writes, and then does a pass with 3 reads and 2
+writes.
+
+In these benchmarks the zeroing counts, so both loops should run about
+the same speed.  So, it fills for 1/2 the time, and then rehashes for
+1/2 the time.  It uses 1/2 the peak memory that it would if it just
+kept on filling, but the average is 3/4ths as high as it would be if
+it kept filling.
+
+The real killer for Lyra2, in addition to poor small-memory GPU
+defense, is the lack of any good mode for running with fewer memory
+passes.  TwoCats runs with the fewest, and Yescrypt is only slightly
+higher at min t_cost.  Overall, I think you made a better design, but
+improved TMTO is not why.  I think your improved GPU defense is the
+main improvement, followed by better authentication server support,
+and then compatibility with Scrypt.  That, plus your code is less
+buggy and closer to ready for prime time.  I still like my hybrid
+architecture with cache-timing defense, though :-)
+
+Well, that is also suggested on section 6.3, although the discussion is
+biased toward raising the number of reads/writes rather than lowering it
+(which would make it resemble more to the original Lyra)... For a
+parallel version, though, it does make more sense to lower the number of
+reads/writes (our benchmarks with two reads and writes do look terrible... )
+
+Marcos.
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (664 bytes)
+

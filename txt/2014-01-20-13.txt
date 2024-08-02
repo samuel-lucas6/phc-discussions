@@ -1,0 +1,103 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <52DD232B.3090908@uni-weimar.de>
+Date: Mon, 20 Jan 2014 14:22:51 +0100
+From: Christian Forler <christian.forler@...-weimar.de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On 20.01.2014 12:40, Solar Designer wrote:
+On Mon, Jan 20, 2014 at 11:37:40AM +0100, Christian Forler wrote:
+>I'm not familiar with the Blakerypt's session key approach.
+>Catena supports "Keyed Password Hashing". (see
+>http://eprint.iacr.org/2013/525.pdf Section 4 page 8) where password
+>hash is encrypted by the (IND-CPA) secure AES-CTR mode.
+
+This isn't implemented yet, is it?
+
+No, not yet. :-)
+
+
+>For the sake of of simplification, it is likely that we switch to
+>Blake2b-CTR encryption.
+
+For CTR mode, it is critical to have unique nonce for each hash 
+encrypted in this way.
+
+I know, this the reason why we introduced a the first nonce-misuses
+resistant on-line authenticated encryption scheme, namely McOE, in 2011.
+(http://eprint.iacr.org/2011/644) :-)
+
+
+ Where would it come from (would you simply reuse
+the salt?) and how would you guarantee it is unique (normally, it is not
+nearly as critical for 100% of salts to be unique, although indeed this
+is our goal anyway)?
+
+
+Our "Keyed Password Hashing" approach requires n-bit nonce consist not
+of the salt, but of a 64-bit (unique) user id (uuid) padded 64 zero bits
+(0^{64}), \ie nonce = uuid || 0^{64}.  Thus, nonce reuse is not an issue
+at all. Furthermore, it also works fine with a constant salt value.
+
+
+I've been thinking of including a similar feature into escrypt (to allow
+for the secret key to be changed, which isn't possible with a mere local
+parameter included in hashing), but I felt we'd need a block cipher (and
+not turn it into a stream cipher with CTR mode or the like) to avoid the
+issue mentioned above.  Not wanting to depend on an extra crypto
+primitive (unless we'd be building on top of a block cipher anyway,
+which is unlikely), my thoughts even went as far as building a Feistel
+network on top of whatever crypto hash would need to be in the source
+tree anyway (if scrypt compatibility mode is maintained, it'd likely be
+SHA-256). 
+
+A Feistel cipher with keyed SHA-256 as round function sounds fine to me.
+
+
+Obviously, this doesn't make me happy.  I was just toying
+with these ideas, without having arrived at a good builtin solution yet.
+Extra dependency on salts uniqueness is bad.
+
+It is not a major drama since the salt should always be a unique value.
+
+
+Dependency on an extra crypto primitive for just this little thing is
+bad (can as well not have the feature built in, then). 
+
+Right. It is not a very sound solution, but better than nothing. :-)
+
+
+>IMHO we can assume that an adversary that has access to your password
+>hashes has also access to your key.
+
+This will vary.  For example, a database backup dump may get compromised
+without a corresponding compromise of the web server's config files.
+
+Sure you are right. I only want to point out that the following
+assumption is a strong one: adversary has *ONLY* access to the password
+hashes, but no access to the key.
+
+
+If we could achieve "perfect security", then sure it'd make sense to
+assume only the worst case scenario and focus solely on that.  However,
+we can't, so it makes sense to consider a variety of scenarios.
+
+Unfortunately, we do not have formal security notions so far. This makes
+it quite hard to design a secure scheme. I hope that due to the PHC we
+can agree to a set of reasonable security notions.
+
+BTW. Colin did an amazing good job in introducing the notion of
+(sequential-)memory hardness.
+
+
+Best regards,
+Christian
+
+
+
+
+
+
+Download attachment "signature.asc" of type "application/pgp-signature" (535 bytes)
+

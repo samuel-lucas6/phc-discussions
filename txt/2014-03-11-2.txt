@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] multiply latency reduction via table lookups
+
+Message-ID: <20140311043412.GA12707@openwall.com>
+Date: Tue, 11 Mar 2014 08:34:12 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply latency reduction via table lookups
+
+On Mon, Mar 10, 2014 at 08:57:58PM -0400, Bill Cox wrote:
+This thread has me thinking that we can compute-time harden our PHSs
+(for Password Hashing Schemes) with L1 cache access times, as an
+alternative to multiplication, if we want to.  There's a reason we
+don't use small RAMs to accelerate multiplication: they're too slow!
+
+Doing 32-byte random lookups in L1 cache and hashing it with one other
+32 byte value, and writing it back to yet another random lookup, would
+run really fast on Haswell, and I do not believe it would be easy for
+an ASIC attacker to do better.
+
+Is the "writing back" part essential?  What if the writes are many times
+or even orders of magnitude less frequent than reads?  Isn't it
+sufficient to ensure the data is dependent on the password and salt (so
+must be stored in a RAM rather than a ROM)?  Frequent writes would hurt
+performance on CPUs with write-through L1 cache, including Bulldozer.
+Another drawback of frequent writes is that some of them may eventually
+propagate to main memory even on systems with write-back caches, which
+would waste some memory bandwidth.
+
+It would have to be done carefully, since we also want to write to as
+much memory as possible to maximize time*memory cost for an attacker,
+so somehow we'd need to figure out a strategy for hammering L1 cache
+without cache miss penalties while at the same time filling external
+DRAM at the bandwidth it can support.  The multiplications seem to
+happen in parallel on the scalar unit, while memory hashing can happen
+in the SIMD unit.  Is it possible to do something similar with cache
+vs external DRAM hashing?
+
+Yes, escrypt tries to do that.  I thought TigerKDF did too.
+
+I don't know how to do both at the same time... Alexander?  This seems
+like your kind of thing.
+
+The L1 cache reads may be made from the sub-block processing function.
+This may be happening while further sub-blocks are being prefetched (the
+prefetch instructions are issued when processing of a new block starts).
+This is what escrypt does.
+
+BTW, with blocks as large as what you use (multiple KiB rather than up
+to 1 KiB as I normally test escrypt with), the number of pending
+prefetches would definitely exceed what's supported in hardware.
+I don't know what exactly happens then (are some prefetch instructions
+simply ignored? or are there CPUs where they'd block?)  I tested this
+briefly, and somehow didn't run into any significant performance
+penalty, but I think there must be room for optimization there (this may
+be a reason why I am not getting much of a speedup for larger r) - e.g.,
+for r 8, we could be doing the prefetches in groups of 16 (or even
+fewer?) 64-byte sub-blocks, just a few sub-blocks before they're
+processed.  I haven't tried that yet, focusing on r <= 8 for other
+reasons I mentioned (in other postings in here).
+
+Alexander
+

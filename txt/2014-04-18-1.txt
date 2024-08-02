@@ -1,0 +1,44 @@
+phc-discussions - Non-temporal writes and uninitialized memory
+
+Message-ID: <CAOLP8p5uzCH-k+qUgyVNxwL_cAqGRKvZ_gchGeL-WZEz7pLLdA@mail.gmail.com>
+Date: Fri, 18 Apr 2014 11:53:33 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Non-temporal writes and uninitialized memory
+
+I've been banging my head against a crazy problem for some time.  Using
+temporal writes, I should be able to speed up TwoCats.  Nope!  Nothing
+worked, and I tried many combinations.
+
+Here's what I think is going on.  When I write hash data to a block of
+uninitialized memory that I allocated with malloc (or posix_memalign),
+somehow the CPU knows this, and therefore it does not bother to read the
+cache line, modify it, and write it, like it normally does.  Instead, it
+just buffers writes until a cache line is full, and then it writes that
+cache line to cache.
+
+When I use temporal writes in my inner loop, and then repeat my whole
+memory hashing many times in an outer loop, I find that temporal writes
+help a ton.  When I run my memory hashing just once, the temporal writes
+actually slow me down!  The reason for this is that I have to fool the CPU
+into doing a temporal write while keeping the written data in cache.  I do
+this with a separate write to a buffer that remains in cache all the time.
+ This combination is much better than not doing temporal writes when
+writing to memory that is already initialized, and much worse for writing
+to uninitialized memory.
+
+Temporal loads for some reason never help at all.  Here's the temporal
+write instruction I use to speed up writing to previously initialized
+memory:
+
+    _mm_stream_si128(p++, value);
+
+TwoCats currently has no method for writing to previously initialized
+memory, so it's no help to me.  Some of the other entries, like Yescript
+and Lyra2 should be able to benefit from it, but only in the second loop,
+not in the first.
+
+Bill
+
+
+

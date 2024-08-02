@@ -1,0 +1,111 @@
+phc-discussions - RE: [PHC] RE: Passwords15 BSidesLV talks
+
+Message-ID: <CY1PR0301MB0668E6D94119F049CD3A655CAC780@CY1PR0301MB0668.namprd03.prod.outlook.com>
+Date: Tue, 18 Aug 2015 21:13:58 +0000
+From: Greg Zaverucha <gregz@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] RE: Passwords15 BSidesLV talks
+
+Thanks Alex, I wasn't familiar with this line of work. 
+
+If I understand the RAE paper (2014/793), the construction is roughly E_K(M||0^l) where E is a block cipher with a blocksize as long as M||0^l.  Since the entire plaintext is encrypted as a single block, the entire ciphertext must be decrypted to recover the plaintext.  Rivest discusses this approach in his FSE'97 paper which I cite, and I briefly considered this idea in the context of PBE (on page 5):
+
+"Variable-Length Block Ciphers: Rivest observes that variable-length block ciphers, such as BEAR and LION [1], can be inherently "all-or-nothing" because decrypting one block can mean decrypting the whole message (when the block size equals the message size). We chose not to investigate using variable-length block ciphers since the costs are comparable to applying OAEP before encryption"
+
+Since AEZ looks more efficient than BEAR and LION, I should take another look.  Without having taken the time to review the two papers and the AEZ mode, I'm hesitant to say it provides the same security properties as the modes I did look at.  But it looks likely, and I will try to include this in an update.  It will be interesting to look at how it compares to the three variants in my report as well. 
+
+Greg
+
+-----Original Message-----
+From: Alex Elsayed [mailto:eternaleye@...il.com] 
+Sent: Monday, August 17, 2015 2:10 PM
+To: discussions@...sword-hashing.net
+Subject: [PHC] RE: Passwords15 BSidesLV talks
+
+What about Robust AE/MRAE (in Rogaway's definition)?
+
+Since it forbids online enc/dec as a side effect of the definition, does it provide the same security benefits? Would AEZ provide the same desirable security properties for password-based encryption?
+
+See also:
+
+https://eprint.iacr.org/2014/793 (Robust AE, AEZ)
+https://eprint.iacr.org/2015/189 (Relationship between Robust AE and Online)
+
+Greg Zaverucha wrote:
+
+Jeremy, you understand correctly, and Dennis' summary is accurate.
+
+With EtM, the attacker can test a password either by decrypting the 
+whole ciphertext, or checking the MAC.  In both cases he has to make a 
+pass over the whole ciphertext.  In the MtE variant, the MAC is 
+encoded and encrypted, so the attacker must make two passes over the 
+ciphertext.  But with MtE the defender must decrypt before checking 
+the MAC, which can lead to problems. So that's why I wanted to consider both variants.
+
+Greg
+
+-----Original Message-----
+From: Dennis E. Hamilton [mailto:dennis.hamilton@....org]
+Sent: Saturday, August 15, 2015 10:32 AM
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Passwords15 BSidesLV talks
+
+My understanding of the ANT scheme described at 
+<http://research.microsoft.com/apps/pubs/default.aspx?id=252097>.
+
+The key to this scheme is that an Encode is such that, without Decode, 
+a decryption does not reveal enough about known-plaintext 
+characteristics to signal to an attacker that they are on the wrong 
+track or not.  In particular, it is not enough to use a single 
+decrypted-trial block to determine that the trial key is incorrect.
+
+This is a big deal in document formats and document container systems 
+that have predictable early structure, as in OOXML, ODF, and EPUB 
+documents (where the ODF case is fairly notorious because it encrypts 
+document components individually and implementations have tended to 
+include known, fixed boilerplate components that are independent of 
+document content and there are other structural clues such as expecting XML and HTML forms).
+
+For encrypt-then-MAC, there is the problem that testing a key for 
+failing to verify the MAC becomes the next attacker opportunity for "rapid"
+key-trial rejection, especially for short ciphertexts.  Even though 
+the defender only has to do this once (with a correct, known key) and 
+the attacker is not quite so fortunate, the problem is that we're 
+still talking about password-based encryption and the fundamental 
+weakness of that remains so long as defender encryption-decryption 
+must remain practical.
+
+The short-message case seems bothersome all around, although one could 
+crank up the work-factor parameters of the key derivation operation 
+given a short plaintext.  But that is not much compared to making the 
+key extremely strong and never reused instead [;<).
+
+ - Dennis
+
+ -----Original Message-----
+From: Jeremy Spilman [mailto:jeremy@...link.co]
+Sent: Saturday, August 15, 2015 08:23
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Passwords15 BSidesLV talks
+
+A question I wanted to ask at the talk but didn't get the chance...
+
+I guess with Encrypt-then-MAC an attacker can still just check the MAC 
+but that would involve;
+
+a) calculating the MAC key, which is typically chained off the 
+encryption key possibly with additional work factor
+
+b) streaming the entire cipher text through the hash function
+
+Whether this is faster than skipping the MAC key derivation and hash 
+step and going straight to decrypting the entire ciphertext and 
+applying the ANT I guess could vary. But in any case it's a better 
+lower bound than decrypting just one block.
+
+Is that right?
+
+[ ... ]
+
+
+

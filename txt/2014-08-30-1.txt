@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] A review per day - RIG
+
+Message-ID: <20140830041103.GA10337@openwall.com>
+Date: Sat, 30 Aug 2014 08:11:03 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - RIG
+
+On Fri, Aug 29, 2014 at 06:01:07PM -0400, Bill Cox wrote:
+The XOR-ing over memory is an idea from Gambit that we talked about
+quite a bit.
+
+I think this idea pre-dates Gambit, or do I miss something?  Here it is
+in a comment by Anthony Ferrara (@ircmaxell) made 3 years ago:
+
+https://www.drupal.org/node/1201444#comment-4675994
+
+| This "issue" could be eliminated by simply writing to V_j in the
+| second loop, for example:
+| 
+| For i = 0 ... N - 1
+|     j <-- Integerify(X) mod N
+|     V_j <-- X xor V_j
+|     X <-- H(V_j)
+| B <-- X
+
+At least I call it Anthony Ferrara's scrypt tradeoff defeater, and it
+was in my code leading up to yescrypt probably before Gambit appeared.
+
+BTW, the Gambit submission doesn't appear to credit any prior work that
+it builds upon (it's not the first memory-hard function, not the first
+to suggest use of a ROM array, and not the first to XOR things onto
+memory), except for Keccak.  I wouldn't care much, but maybe you're
+bashing RIG for the same kind of things too much... or would you do it
+to Gambit too, when you reach it?
+
+Now that I've found that writing to a memory location
+just read from is quite fast compared to writing to a different
+location, I am a fan.
+
+Yes, I like this too.  It works great for our typical defender, but what
+would it mean for an attacker with custom memory chips?  That attacker
+can implement the XOR near memory rather than near the hashing cores.
+
+Luckily, this doesn't save them any bandwidth: they still need to pass
+the data to XOR with to memory, and the data read back from memory
+(before or after XOR, depending on algorithm) back to a hashing core.
+...Unless a given password hashing scheme only XORs things onto memory,
+without using that memory's contents in any other way at the same time.
+yescrypt is fine in this respect (it also uses the data), but some other
+PHC candidates might not be - we could want to check them for this risk.
+
+Then, what if the attacker implements more or all of the hashing logic,
+not just the XOR, near memory?  The concept of memory bandwidth stops to
+make full sense, so we can't reasonably say that such attacker would
+e.g. halve their required memory bandwidth, but perhaps there are still
+some savings due to use of possible custom memory cells that support a
+write-XOR-read operation?  I guess such savings might exceed the speedup
+we're seeing, relative to unrelated read/write locations, on our target
+CPU+RAM systems.  Hopefully, this risk is rather theoretical, and
+clearly its worst case impact is limited to 2x (or actually less, if we
+consider it relative to defender's speedup).
+
+Alexander
+

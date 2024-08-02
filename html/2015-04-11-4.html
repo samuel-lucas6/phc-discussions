@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] Pufferfish</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;10f801d07442$a06017a0$e12046e0$&#64;bindshell.nl&gt;
+Date: Sat, 11 Apr 2015 03:31:09 -0700
+From: &lt;epixoip&#64;...dshell.nl&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] Pufferfish
+
+Hey Alexander,
+
+&gt; -----Original Message-----
+&gt; From: Solar Designer
+&gt; Sent: Friday, April 10, 2015 23:43
+&gt; 
+&gt; The Pufferfish specification document says "a catastrophic failure of
+&gt; Pufferfish's dynamic S-boxes or modified F function would not affect
+&gt; Pufferfish's cryptographic properties so long as HMAC-SHA512 remains
+&gt; unbroken."  That's great, but I failed to confirm it.  Looking at both
+&gt; the pseudocode and the actual C code, I see that only the salt input is
+&gt; bypassed over the bcrypt-alike construction, whereas the password input
+&gt; appears to only pass through that construction.  Am I missing something?
+
+Both the salt and the password are hashed with HMAC-SHA512 before doing anything blowfish-esque. Both the password and the salt are used in constructing both the s-boxes and the key. The salt is hashed, then the password is hashed with the salt to initialize the state, then the state is iterated depending on m_cost, and then the password is hashed again with the resulting state to generate the key.
+
+salt_hash = hmac_sha512 (P[0], salt)
+state = hmac_sha512 (salt_hash, password)
+iterate over the state with hmac_sha512 4 * (2^(m_cost + 5) / 64) times
+key_hash = hmac_sha512 (state, password)
+expandkey (salt_hash, key_hash)   // this is where the blowfishy stuff starts
+
+So initializing the key with an m_cost of 8 results in hashing the password with 514 rounds of hmac_sha512, which is /roughly/ equivalent to the security provided by sha512crypt with 1028 rounds. Not exactly an apples-to-apples comparison here, but that's the closest comparison I can think of. 
+ 
+
+&gt; Another deviation from that claim is in how Pufferfish produces longer
+&gt; than 64 bytes KDF output (when requested to do so).  You rely on your
+&gt; modified Blowfish actually working reasonably for that.  Post-processing
+&gt; of the output sub-blocks with HMAC-SHA512 wouldn't help if your modified
+&gt; Blowfish e.g. leaves ctext unchanged between iterations of the
+&gt; "for ( i = 0; i &lt; blockcnt; i++ )" loop (e.g., because the S-boxes are
+&gt; all-zero by that time).
+
+I'm not sure I follow. I'll have to re-read this portion in the morning, but perhaps in the meantime you can elaborate on this. For example, I'm not sure why ctext would be unchanged between iterations, nor why the S-boxes would be all zeros. I agree this would be very bad, but I'm not sure how this scenario arises. 
+
+
+&gt; Of course, I don't expect failures like that to actually occur, since
+&gt; your modified Blowfish looks reasonable, but my point is that Pufferfish
+&gt; does rely on it for its cryptographic properties.  I'm afraid you'll
+&gt; have to remove that claim from the spec, unless/until further tweaks are
+&gt; possibly allowed (which, as you're aware, is currently not planned).
+
+This statement can be revised in the spec.
+
+
+&gt; In Pufferfish, the S-boxes can be made arbitrarily large.  [...]
+&gt; Thus, asymptotically the running time is
+&gt; reduced to 2/3 of what was intended. [...]
+&gt; The pseudocode for this attack is something like this:
+
+You've already addressed this in your follow-up, so I'll skip it.
+
+ 
+&gt; I thought that Pufferfish supported arbitrarily large S-boxes, but upon
+&gt; a closer look I doubt it.
+&gt; 
+&gt; What's Pufferfish's maximum supported m_cost?  This suggests it's 11:
+&gt; [...]
+&gt; and I think it corresponds to only 2 MiB.  Is this right?
+&gt; [...]
+&gt; Somehow Milan benchmarked it to much larger sizes, likely invoking
+&gt; undefined behavior.
+&gt; [...]
+&gt; (or do you intentionally limit to 2 MB?)
+
+... Wow, you're right. I certainly never intended to limit it to 11, but it is indeed limited to 11! I actually thought that m_cost = 12 would result in x &gt;&gt; -1 which I thought was equal to x &lt;&lt; 1. While this does seem consistent on the systems I've tested on, you're right, it is indeed undefined:
+
+"If the value of the right operand is negative or is greater than or equal to the width of the promoted left operand, the behavior is undefined."
+
+While a 2MiB limit isn't necessarily tragic -- that is actually quite a bit of memory for Pufferfish -- it's certainly not what I had intended, and I definitely don't like it. I wish it would have been caught sooner :(
+
+
+&gt; Maybe use:
+&gt; 
+&gt; static uint64_t pf_f ( puf_ctx *ctx, uint64_t x )
+&gt; {
+&gt;     return (( ctx-&gt;S[0][( x &gt;&gt; ( 64 - ctx-&gt;log2_sbox_words ) )] ^
+&gt;               ctx-&gt;S[1][( x &gt;&gt; 35 ) &amp; ( ctx-&gt;sbox_words - 1 )]) +
+&gt;               ctx-&gt;S[2][( x &gt;&gt; 19 ) &amp; ( ctx-&gt;sbox_words - 1 )]) ^
+&gt;               ctx-&gt;S[3][( x &gt;&gt; 3 ) &amp; ( ctx-&gt;sbox_words - 1 )];
+&gt; }
+
+I like this, but it might be too late to change. I guess it depends on if it is viewed as a bug fix, or as a tweak. I personally view it as a bug fix, but others may disagree. If it is too late to change, it could likely still be tweaked after the competition if it is selected as a winner.
+
+
+&gt; I'm sorry I haven't looked at Pufferfish closely enough before the
+&gt; tweaks period ended.
+
+No need to apologize!
+
+Jeremi
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

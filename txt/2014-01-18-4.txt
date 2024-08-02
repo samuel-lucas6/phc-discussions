@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140118092636.GA13026@openwall.com>
+Date: Sat, 18 Jan 2014 13:26:36 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Fri, Jan 17, 2014 at 10:54:40PM -0500, Bill Cox wrote:
+I agree that the most important goal in the near term at least is to
+have the best protection possible on traditional CPUs, as well as
+mobile CPUs and even embedded processors.
+
+However, there is no reason I see that a KDF cannot have a parallelism
+parameter.  Scrypt has a "p" parameter which in theory is just that.
+If we have a quad-core CPU, it may make sense to use all 4, especially
+if they can fill up more memory bandwidth.  Taking that to an extreme,
+there is no reason we can't allow p == 4096, and match the KDF to a
+monster graphics card.
+
+p=4096 is generally not enough for current GPUs, unless there's a large
+extra (hidden) parallelism factor.  With typical algorithms, current
+GPUs need concurrency levels of at least tens of thousands to hide
+instruction and memory latencies.  For example, I just ran some JtR
+bleeding-jumbo benchmarks on HD 7970 and GTX TITAN, and the concurrency
+level (GWS) got auto-tuned to values from 24k to almost 300k (on
+different algorithms).
+
+This would only be for applications where a
+user expects to always perform password KDF on the same system, such
+as is typical with a TrueCrypt volume.
+
+Yes, and given the current state of GPU drivers, also where reliability
+and local OS security isn't critical (single user systems, or possibly
+also redundant cluster nodes dedicated to just password hashing -
+although I wouldn't dare, given that we have simpler alternatives).
+
+I don't think that a KDF that
+is adaptable to such extremes is necessarily weaker on traditional
+CPUs.
+
+Yes, I think it is practical to support scaling to high p while staying
+reasonable in other aspects.
+
+Alexander
+

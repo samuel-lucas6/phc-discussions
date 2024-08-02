@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <20151005191825.GA2422@openwall.com>
+Date: Mon, 5 Oct 2015 22:18:25 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: MassimoDZ8@...il.com
+Subject: Re: [PHC] yescrypt on GPU
+
+On Thu, May 07, 2015 at 09:02:41PM +0300, Solar Designer wrote:
+On Sat, May 02, 2015 at 05:34:27AM +0300, Solar Designer wrote:
+The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+(with tiny bits of inline PTX assembly, even - for things such as the
+pwxform MULs):
+
+https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741
+
+The code is still very dirty.  I expect it won't build or work for most
+people as-is, yet.  However, it looks reasonably well optimized, and
+specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+are precomputed and hard-coded, etc.)
+
+Further in that thread, djm34 mentions getting 1.5 kh/s on GTX 980.  The
+best speed another person reported so far is 980 h/s on GTX 750 Ti.
+
+For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+
+There's a new BSTY miner for GPUs:
+
+https://github.com/MaxDZ8/M8M/releases/tag/929
+https://github.com/MaxDZ8/M8M/commit/a500d4af0c96ee64344dd37797a176bf4cc2d370
+
+The author reports 372 h/s on "Radeon 7750 1 GiB GDDR5 core/mem 850/1200."
+
+The code looks moderately weird to me - there's an optimization(?) in
+M8M/kernels/yescrypt_difficultSmixes.cl: Block_pwxform() that I don't
+understand the rationale for: the 16-byte S-box lookups from global
+memory are split across 16 work-items, loading into local memory and
+followed with a local memory fence, before the values are finally used
+as pairs of ulong's.  I would sort of understand if these were uint's
+(fits the SIMT model and the local memory port width on GCN, so might
+help maximize global memory bandwidth usage, assuming these get
+coalesced for up to 16 bytes anyway), but why individual bytes?  And
+does the code that follows do 16x duplicate work then (this may be fine
+since we have that bottleneck anyway)?
+
+Massimo, did I possibly confuse you into doing that with the indices
+being byte-granular right after applying the mask?  The byte-granular
+offsets don't imply byte-granular loads - you can compute the address at
+byte granularity, yet perform wider loads, like my C code does.
+
+Alexander
+

@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] Lyra2 initial review
+
+Message-ID: <20140417210855.GB12305@openwall.com>
+Date: Fri, 18 Apr 2014 01:08:56 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra2 initial review
+
+On Thu, Apr 17, 2014 at 05:40:05PM -0300, Marcos Antonio Simplicio Junior wrote:
+Well, the "time" seems OK, although it is quite worse than what we got in our machine. The number "7" being multiplied by "Peak memory/second" eludes me, though. Each hashing operation in Lyra2 takes as input two memory locations ("prev" and "row*") and then its output is written to two memory locations ("row" and "row*). During Setup, "row" is just written over, while "row*" is XORed with the output (which may count as a "read"?); during the Wandering phase, both "row" and "row*" are XORed with the output. 
+
+The reads from prev shouldn't be counted, because they're from cache.
+XOR'ing of a memory location should be counted as two r/w operations
+(one read and one write), if not expected to be readily in cache before
+the read.  It appears that row* is already read to cache before it is
+used a second time for XOR'ing, so there's no second read to count there.
+
+Does this give you 7?
+
+Setup:
+- read from prev: doesn't count
+- read from row*: counts
+- write to row: counts
+- read from row*: doesn't count (since we've already counted the same)
+- write to row*: counts
+
+Wandering:
+- read from prev: doesn't count
+- read from row*: counts
+- read from row: counts
+- write to row: counts
+- read from row*: doesn't count (since we've already counted the same)
+- write to row*: counts
+
+This gives me 7, confirming Bill's analysis.
+
+This is assuming T=1.  (I think higher T is unreasonable, unless you
+specifically want to spend more time without increasing memory usage.)
+
+Am I missing something? The r/w on the "state" variable, maybe? 
+
+No, we're not counting anything that's in cache.
+
+nCols is set to 64 by default, which means that each row has 64*768 bits = 6144 bytes = 6 KiB. In our machine we got better results with nCols = 128 (12 KiB), though. Those are the figures we put in the specification.
+
+OK, so Bill's testing of yescrypt with r=32, which means 4 KiB blocks,
+is fair comparison.
+
+Alexander
+

@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - yescrypt on GPU</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/04/30/21">[&lt;prev]</a> <a href="../../../2015/05/03/1">[next&gt;]</a> <a href="../../../2015/05/07/4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150502023427.GA2485&#64;openwall.com&gt;
+Date: Sat, 2 May 2015 05:34:27 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: yescrypt on GPU
+
+Hi,
+
+The yescrypt cryptocoin stuff is starting to pay off.  djm34 has just
+implemented support for BSTY mining on GPU, in both OpenCL and CUDA
+(with tiny bits of inline PTX assembly, even - for things such as the
+pwxform MULs):
+
+<a href="https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741" rel="nofollow">https://bitcointalk.org/index.php?topic=775289.msg11252741#msg11252741</a>
+
+The code is still very dirty.  I expect it won't build or work for most
+people as-is, yet.  However, it looks reasonably well optimized, and
+specialized to the yescrypt settings that BSTY uses (e.g., loop counts
+are precomputed and hard-coded, etc.)
+
+My own experience with it so far is this: the modified sgminer built
+fine on Linux.  When trying to build the yescrypt OpenCL kernel with an
+older AMD Catalyst I had installed on that machine, the OpenCL compiler
+segfaulted.  Telling it to use another OpenCL platform number, to target
+an NVIDIA card in the same machine, it sort of worked - the kernel built
+and started mining, but instead of accepted shares only the HW error
+counter increased slowly - roughly at the pace I would have expected
+valid shares to be generated at the reported hashes per second rate.
+Speaking of which, it was 198 h/s on a GTX TITAN.  (Indeed, this doesn't
+mean much until the code starts to actually work correctly on that
+system.)  For comparison, a (much cheaper) quad-core CPU does ~3400 h/s.
+
+The modified sgminer includes a copy of yescrypt-opt.c to validate the
+shares found on GPU.  I guess this is how the "HW errors" were detected.
+
+The CUDA code is present only in the "windows" branch of djm34's fork of
+ccminer-tpsp.  With a few easy changes here and there, it mostly built
+for me on Linux - however, cuda_yescrypt.cu has been compiling for 1.5
+hours already as I am typing this message.  (No idea if that build will
+finish or not.  The compiler's memory usage is slowly growing, which
+might be a good sign.)
+
+bsty     27511 99.7  0.1 242304 216548 pts/1   R+   04:47 100:23 cicc -arch compute_35 -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 -maxreg 128 -nvvmir-library /usr/local/cuda/bin/../nvvm/libdevice/libdevice.compute_35.10.bc --orig_src_file_name yescrypt/cuda_yescrypt.cu /tmp/tmpxft_00006af6_00000000-9_cuda_yescrypt.cpp3.i -o /tmp/tmpxft_00006af6_00000000-5_cuda_yescrypt.ptx
+
+So I have no performance numbers from actually running it yet.
+
+Unfortunately, neither djm34 nor anyone else has posted any specific
+performance numbers yet.  djm34 only made this comment: "It is difficult
+to go higher in intensity due to the high mem requirement. (also current
+speed is rather low... for the same reasons)".  Obviously.
+
+To remind, BSTY uses yescrypt v0 (with an unimportant high-level bug
+introduced when merging into BSTY wallet, and now preserved as part of
+BSTY-specific yescrypt) at 2 MB, with 1 KB blocks (r=8).  yescrypt v1
+should be almost same speed (no changes to the performance critical
+parts were made between v0 and v1).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

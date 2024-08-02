@@ -1,0 +1,46 @@
+phc-discussions - How about memory*time comparisons?
+
+Message-ID: <CAOLP8p4q3xWGW3XuBYg7UfH2yAgbob8TUpwoEGKoy+bFo7YRTg@mail.gmail.com>
+Date: Fri, 3 Apr 2015 08:18:35 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: How about memory*time comparisons?
+
+I see a lot of discussion about TMTO, cache timing resistance, and lately a
+good discussion on compute time hardness, which is excellent.
+
+However, I worry that we're not focusing enough on the most obvious and
+important metric: memory*time.  I still have not seen a chart showing
+memory*time defense.
+
+The right way to measure memory*time is with t_cost at the minimum secure
+value.  For Yescrypt, that's with t_cost == 0 and 2 rounds rather than 6
+for the single-thread case, and more rounds for the multi-thread case.
+You're supposed to choose the rounds to gain compute time hardness
+_without_ losing memory*time defense.  Plots showing memory vs time with
+higher t_cost seems wrong and misleading to me.  The same goes for plots
+where the number of rounds was chosen to be too low.
+
+Here's some very simple math for explaining why Yescrypt has the best
+memory*time security: it does the lowest number of I/O operations per
+memory location used.  Benchmarks that defeat this desirable property by
+running Yescrypt with t_cost higher are silly, IMO.  This is simply
+allowing the benchmarkers to incorrectly choose parameters for comparison,
+rather than the authors.
+
+Yescrypt in my benchmarks has the best memory*time defense in all
+scenarios, followed by Lyra2 which is still excellent (not counting
+Argon2d, since it seems we can't pick it - which is really too bad).
+
+To be more fair to Lyra2, can we also try running it with the ^= operation
+replaced with = in some places to lower the number of I/Os to a more
+reasonable level?  Lyra2 does achieve it's TMTO resistance goal with these
+operations, but we don't need it to be this strong.  Lyra2 is elegant,
+simple, and has other desirable properties, but the authors lowered it's
+memory*time defense to get it.  This seems easily fixable.
+
+Thanks,
+Bill
+
+
+

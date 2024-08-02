@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <20150930041204.GA6873@openwall.com>
+Date: Wed, 30 Sep 2015 07:12:04 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On Tue, Sep 29, 2015 at 02:55:48PM +0200, Thomas Pornin wrote:
+Strictly speaking, the decoder tries to be strict when strictness is
+cheap. If we want a strict decoder of numerical values, strtoul()
+won't be enough; we would need something like this:
+
+That's true, and your code works, but I gave strtoul() a try anyway.
+This code appears equivalent to yours, as per the attached program
+(which also happened to test yours).
+
+static const char *
+decode_decimal_solar(const char *str, unsigned long *v)
+{
+	char *end;
+
+	errno = 0;
+	*v = strtoul(str, &end, 10);
+	if (errno ||
+	    str == end ||
+	    end - str != strspn(str, "0123456789") ||
+	    (*v == 0 && end - str != 1))
+		return NULL;
+	return end;
+}
+
+It's quite a bit shorter than yours, but it relies on correct behavior
+of two libc functions, so it might be less reliable for that reason.
+
+I think we should actually go with manual parsing, like you did.  I just
+wanted to see how bad strtoul() is at this, and how many additional
+checks are needed to repair it.  BTW, the comparison against strspn() is
+needed to detect strtoul()'s ignoring of leading whitespace, without
+having to enumerate all whitespace chars (' ', '\n', any others?); it
+also happens to take care of '-', letting me omit that check.
+
+Alexander
+
+View attachment "decimal.c" of type "text/x-c" (2537 bytes)
+

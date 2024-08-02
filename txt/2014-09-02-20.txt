@@ -1,0 +1,65 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <5405EE5E.5010507@ciphershed.org>
+Date: Tue, 02 Sep 2014 12:20:46 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+I think I see a typo on line 107.  The code looks like:
+
+        for(i = 0; i < (memcost / statelen); i++)
+        {
+            for(j = 0; j < statelen; j++)
+line 107 -     state[j] = memstate[j * (i + 1)];
+            revolve(state, statelen, 2);
+        }
+
+Every time we execute the inner loop, we overwrite the results of the
+previous revolve rounds.  Did you mean to XOR memstate into state, or
+overwrite state?  In my TMTO attack, I only kept 256 values of the
+last memory pass.  Also, did you mean to access a block of 64 adjacent
+locations in the inner loop, or is accessing addresses which are
+multiples of i intentional?
+
+The multiples of i adds some defense against TMTO attacks, once the
+bug is fixed, so I recommend keeping it, though there are more TMTO
+resistant access patterns.  If you want better off-line brute-force
+attack resistance, I'd make that loop access memory locations that
+depend on the password, like Scrypt.
+
+Just quickly analyzing your TMTO resistance with the XOR fix, f I use
+256 pebbles, and have them on 256 memory locations at multiples of
+i+1, then at the end, my pebbles are at 0, memcost/statelen,
+2*memcost/statelen, 3*memcost/statelen ...
+(statelen-1)*memcost/statelen.  The total pebble moves is at most the
+sum of these = statelen*(statelen-1)*memcost/(2*statelen) =
+(statelen-1)*memcost/2.  However there's usually a pebble already half
+way between an old pebble location and the new one, so I get another
+2X.  For statelen == 256, that's an additional computation penalty of
+about 64 full memory recomputations.  Versus the defender that's
+around a 17X recomputation penalty for attackers using only 8KiB of
+memory.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBe5aAAoJEAcQZQdOpZUZdusP/j6nNI2cHBeFJA5e05D8rCFc
+QZEiYXL7NNvb7K6T95jYxr1H5tk/F0kVYi42N+hFDhhbNScFiNEdxniYdTLdWiqo
+f02+C4i+21NICxZbwI3ir3ycfanyJz6OBRSjiYETIMnit7Zhz2JFPt+EUavfXqez
+8b+7Qyn+Yi1vRGmrRSvd44VUY72dUtGPZZtzYT+07sh1iwo3nPqiXE86rQ9fywQ0
+1x2Q1JKIlf0TDtXf00lG5DcYqZTXb0HxZfvXziYDezWhs7zcxjY8S27HJdyI7KRA
+puXUVNvRRZBqUBJlBG9cdD9VI+bidKNFdDWNr/vnmo4Q9eF/y1XfWsQpru+awssI
+QadzGvu4nNvZw9RmHYiNvKJ3+QAUDizfmouDNaD4sxwRZltb0SqewC5f9QyH/ULQ
+6q41xjIRZE3ySrUCV/YAJV9/7fBcN6qhgkSn2LvDI37ApK2R7Vg68DSnnKsKuAL7
+gw86RGTkY1xYSg77NLlICYHjuU7Ngb6Fzyz6C3rtg7KNcC4hwXDieBtYCiETzfAn
+yS81YJSOXowfmxUVD3uP5ISZbPYGKZLQsWcR2mURMOFB/BBHpB5t5d1LvmXDqGv+
+84it99rA1tYg/bm07l2eMKuwyZBP0JCSmORRarVwFN11yOckcZT/+386kefYf1Kv
+aupaoTP+DYmzjlE+QAkV
+=AmOG
+-----END PGP SIGNATURE-----
+

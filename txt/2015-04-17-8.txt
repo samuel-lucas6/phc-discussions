@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Information theoretic security for delegated hardening was:
+ winner selection
+
+Message-ID: <CAOLP8p7Q7sMWxsy7_eTG4pxfMfPFV7dye+3T0B82YXAe52TMzw@mail.gmail.com>
+Date: Fri, 17 Apr 2015 06:39:12 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Information theoretic security for delegated hardening was:
+ winner selection
+
+On Mon, Apr 13, 2015 at 5:17 PM, Andy Lutomirski <luto@...capital.net>
+wrote:
+
+Can you elaborate on this straightforward way?
+>
+Thanks,
+Andy
+>
+
+I found this:
+
+     https://bitcointalk.org/index.php?topic=311000.0
+
+The scheme seems similar to Makwa, but simpler.  Here's the math from that
+link:
+
+public params:
+
+n=pq (primes p & q deleted at setup)
+g=shared generator
+e=2^(2^w)-1 ie a big, big number w is work factor
+    (Bill: why subtract 1?)
+y=g^e mod n (generated cheaply at setup, or computable one-off cost
+afterwards)
+
+blind:
+
+m=message
+b=random blinding factor
+r=g^b*m (broacast r to miners)
+    (Bill: this is mod n, right?  Also, that's (g^b)*m, not g^(b*m))
+
+work:
+
+s=r^e mod n (expensive because e is big and carm(n)=(p-1)(q-1)/2 is unknown)
+
+unblind:
+
+u=y^b (unblinding factor)
+    (Bill: again mod n, right?)
+m^e = s/u (as s/y^b=r^e/g^{be}=g^{be}*m^e/g^{be})
+    (Bill: by /u, I assume we find g-inverse, and compute y differently)
+
+
+This is simpler than Makwa, but I haven't put any thought into attacking
+it.  Thomas Porin, what do you think of this again?
+
+Bill
+
+
+

@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] Password Hashing done wrong on CISCO IOS
+
+Message-ID: <1499536677.94531.1363901407848.open-xchange@email.1and1.com>
+Date: Thu, 21 Mar 2013 16:30:07 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Password Hashing done wrong on CISCO IOS
+
+On March 21, 2013 at 11:06 AM Yann Droneaud <ydroneaud@...eya.comwrote:
+>
+>
+Hi,
+>
+Reported by H-Online
+>
+"Weakened password hashing found in Cisco devices"
+>
+http://www.h-online.com/security/news/item/Weakened-password-hashing-found-in-Cisco-devices-1827197.html
+>
+"The algorithm was incorrectly implemented in version 15 of Cisco's IOS
+operating system, so that instead of using an 80-bit "salt" value, it
+used none, and instead of an intended 1000 iterations through SHA256, it
+used only one."
+>
+What can be worst ? :/
+>
+Regards.
+>
+--
+Yann Droneaud
+OPTEYA
+>
+
+They either have a bad PR team or they don't know how to write code and have no
+quality control. They should just say "we messed up, but seriously what is your
+other option to Cisco". Hmm maybe I should never go into PR. If anything they
+will get more business because of this. Hopefully they will start posting
+implementation details and test vectors of the algorithm before they switch.
+
+< sarcasm>
+What really happened is they saw this blog post
+(http://phk.freebsd.dk/sagas/md5crypt_eol.html) or one of the many stories on
+it. They had a meeting that went like this "MD5 is broken OK... SHA256. It's got
+a big number 256 vs 5. That's like 50 times larger. Then the CSO points to
+someone in the room and says 'you implement it and deprecate MD5'."
+
+Or maybe they did just call the wrong function twice and have a dumb
+implementation handy. I always have orphan code in my programs to create and
+test unsalted base64 encoded SHA256.
+< /sarcasm>
+
+This is a design choice because PBKDF2 with round count of 1 is not SHA256 it's
+HMAC SHA256. So PBKDF2 and HMAC were never called just SHA256. If this was some
+coding error then that's a huge mistake.
+
+

@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Different cost settings and optional input
+
+Message-ID: <512092E7.9020103@bindshell.nl>
+Date: Sun, 17 Feb 2013 00:20:55 -0800
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: Marsh Ray <maray@...rosoft.com>
+CC: Jens Christian Hillerup <jens@...lerup.net>, 
+ Jens Steube <jens.steube@...il.com>,
+ "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Different cost settings and optional input
+
+On 2/16/2013 11:18 PM, Marsh Ray wrote:
+Salting for Linkedin would have increased the difficulty for the attackers *hardly at all*. [...] So...salts aren't always be the big win they look like on paper because cracking tools have gotten far more faster than users have gotten better at generating and remembering entropic strings.
+
+False. Assuming a unique salt per user, salting would have slowed down
+our attacks by a factor of 6.4 million. At the time that we were
+cracking the LinkedIn hashes, I was pulling about 15.5 billion hashes
+per second. With 6.4 million unique salts, I would have been reduced to
+an effective rate of about 2.4 *thousand* per second.  At that rate it
+would have taken over an hour and a half to just run through rockyou.txt
+without any rules -- and 101 days just to run through rockyou.txt with
+d3ad0ne.rule. Even with the GPU power that I have now (I can pull about
+63 G/s with SHA-1) it still would take a full month to run through just
+rockyou.txt with d3ad0ne.rule. And mind you, we have a *lot* more
+horsepower than your typical password cracker.
+
+That is what we call "crippling." A little salt goes a long way.
+
+GPU cracking has gotten so fast that precomputed rainbow tables often not even worth the trouble.
+
+Agreed, but they are becoming more relevant now that we are able to
+generate tables that are too large to distribute, and provide remote
+chain lookups over the internet as a service. This is useful for lengths
+that are too large to brute force in a reasonable amount of time, even
+with lots of GPUs.
+
+But rainbow tables is not what I had in mind when I said that using a
+fixed salt defeats the purpose of salting. I meant you don't get the
+benefit of dramatically slowing all other bulk attacks.
+
+When you can compute Gigahashes per second on a single video card, a dictionary proves to be more trouble than it's worth for the initial pass.
+
+Well no, that's not true at all. We rely very heavily on our
+dictionaries. Dictionary-based attacks are *always* the first pass --
+and the second, and the third, and the fourth, and the fifth. All the
+GPU means is that we can run more rule-based and hybrid attacks in a
+shorter amount of time. Even with ungodly amounts of power, we rarely do
+any brute forcing. And when we do, it's usually just for specific masks
+and small keyspaces.
+
+So if a defender said "forget the salt...we'll thwart dictionary attacks by preventing duplicate passwords", could he possibly be better off with this strategy?
+
+No. Just because you do not allow duplicate passwords on your site
+doesn't mean these people aren't 1) re-using passwords on other sites,
+and 2) aren't thinking like other people who use the same passwords on
+other sites. People have been trained to pick passwords specific ways,
+that's why the markov model works so well. If you prohibit people from
+using Password1, they'll use Password!.  So if a straight dictionary
+attack doesn't get the job done, a rule-based attack or hybrid attack
+probably will.
+
+But when new user B independently chooses existing user A's password, we know two things: that the password is not unguessable and probably worth adding to a dictionary. We can't allow B to use it. We also have informed B that some user account has that password
+
+Hmm, sounds like a great way for an attacker to start harvesting
+passwords from a site without ever having to compromise it. ;)
+
+Cheers,
+Jeremi
+
+
+

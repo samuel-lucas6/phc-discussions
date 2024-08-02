@@ -1,0 +1,69 @@
+phc-discussions - Re: [PHC] "Attack on the iterative compression function"
+
+Message-ID: <20150427063307.GA29492@openwall.com>
+Date: Mon, 27 Apr 2015 09:33:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+On Sat, Apr 25, 2015 at 03:11:40PM -0300, Marcos Antonio Simplicio Junior wrote:
+De: "Solar Designer" <solar@...nwall.com>
+On Sun, Apr 19, 2015 at 03:03:33AM -0300, Marcos Antonio Simplicio Junior wrote:
+3) If we initialize a row in one order, and each subsequent
+read/update is done in the same but the columns are themselves
+reversed, then there is no easy pipelining (unless, of course, if
+some extra columns besides the first one are kept in memory to
+accelerate computations)
+
+And of course I meant approach (3), where every BlockMix would write the
+block in reverse order from reading. (This might be easier implemented
+by reading in reverse order and writing in sequential order, since we're
+already starting with the last sub-block in (ye)scrypt now. Also,
+keeping the writes in sequential order allows to keep Integerify()
+defined in the same way as it is in scrypt, using the last sub-block.
+OTOH, sequential reads could be friendlier to the hardware
+prefetcher.)
+
+The only issue here would be that you would need an extra buffer, because the memory position from which you read is not the same on which you write (?)
+
+Good point!  I was thinking in terms of equivalent of original scrypt's
+shuffling, only changing the shuffling order to be simple reverse order.
+Despite of this shuffling, optimized implementations are able to avoid
+needing a write to a temporary buffer, as illustrated by the revision
+that was possible in the yescrypt v0 submission to PHC, where
+YESCRYPT_RW could be set without YESCRYPT_PWXFORM.  In that revision
+invoked with those flags, SMix2 would proceed with XOR'ing over existing
+blocks yet it would use original scrypt's BlockMix with its shuffling.
+Yet yescrypt-0.5/yescrypt-simd.c: blockmix_salsa8_xor_save() updated the
+block in-place.
+
+Basically, the existing random block being XOR'ed over would not be
+shuffled relative to BlockMix output.  Rather, BlockMix output would be
+shuffled relative to its input, which is the previous block.
+
+In other words, the shuffling would occur for only one of two blocks
+that a newly (over)written block depends on.  So it'd extend the length
+of only one out of two branches of the recomputation sub-tree.
+
+What do you think of this approach?
+
+As a side note, if one does implement reversal as a separate, second operation shown our illustration, the memory bandwidth might be larger in architectures with write-through caches: the write operation would go down the memory hierarchy the first time we write, and also the second.
+
+Right.  Somewhat similarly, Argon2 appears to suffer from this: the
+writes to state[] between the first 8 and the second 8 BLAKE2b's may
+waste memory bandwidth on architectures with write-through caches.
+
+Also, why do you call this attack "pipelining"?
+[...]
+
+I'm not sure if Colin Percival was thinking the same thing as we [...]
+
+Thank you!  From these illustrations, which basically show the same
+attack that Dmitry had described, I conclude that the "pipelining" here
+is not the same as enabling the use of a pipelined crypto primitive or
+such (this is left as an implementation detail, which may be used or not
+regardless of this attack, although indeed with more parallelism it
+makes more sense).
+
+Alexander
+

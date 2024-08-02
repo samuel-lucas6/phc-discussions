@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="15">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;op.xqsddvy1yldrnw&#64;laptop-air&gt;
+Date: Fri, 12 Dec 2014 19:02:09 -0800
+From: "Jeremy Spilman" &lt;jeremy&#64;...link.co&gt;
+To: discussions&#64;...sword-hashing.net
+Cc: gmaxwell&#64;...il.com, "Thomas Pornin" &lt;pornin&#64;...et.org&gt;,
+ cormac&#64;...rosoft.com
+Subject: Re: [PHC] Some KDF stumbling blocks, plus Common "memory-hard"
+ approaches and amortized attack costs.
+
+
+&gt; On Fri, Dec 12, 2014 at 10:38:05PM +0000, Gregory Maxwell wrote:
+&gt;&gt; I am saddened that none of the proposals supported delegation scheme
+&gt;&gt; with information-theoretic security ( which are possible,
+&gt;&gt; <a href="https://bitcointalk.org/index.php?topic=311000.0" rel="nofollow">https://bitcointalk.org/index.php?topic=311000.0</a> )
+
+On Fri, 12 Dec 2014 16:22:58 -0800, Thomas Pornin &lt;pornin&#64;...et.org&gt; wrote:
+&gt; (Minor terminology nitpick: none of the above is "information-theoretic
+&gt; security". That term designates algorithms that remain secure against
+&gt; attackers with unbounded computing abilities. By definition, this cannot
+&gt; apply to password hashing, where exhaustive search always succeeds in
+&gt; the long run. Also, anything involving a non-prime modulus can be broken
+&gt; by factoring the modulus.)
+
+I was reading Florêncio, Herley and Oorschot's recently published  
+'Administrator's Guide to Internet Password Research' a couple weeks ago  
+(<a href="http://research.microsoft.com/pubs/227130/WhatsaSysadminToDo.pdf" rel="nofollow">http://research.microsoft.com/pubs/227130/WhatsaSysadminToDo.pdf</a>) and in  
+it I found a curious reference...;
+
+[15] G. D. Crescenzo, R. J. Lipton, and S. Walﬁsh. Perfectly se-
+cure password protocols in the bounded retrieval model. In TCC,
+pages 225–244, 2006.
+
+This is certainly the earliest reference I've found yet of applying the  
+'security by obesity' concept. Crescenzo offers a formal proof for  
+security against a computationally unbounded attacker in the bounded  
+retrieval model (e.g. physically too big to steal over the network).
+
+What I've been calling Blind Hashing takes the bounded retrieval model  
+(wish I knew that term back in 2012!) and combines it with delegation to a  
+untrusted central data pool using a keyed hash to adaptively index the  
+data pool and retrieve a second [512-bit] salt/key for use in further  
+hashing.
+
+We're still beta / pre-launch (soon, soon!) but a write-up is here:  
+<a href="https://medium.com/&#64;TapLink/the-password-defense-league-c416ceaedb33" rel="nofollow">https://medium.com/&#64;TapLink/the-password-defense-league-c416ceaedb33</a>. I  
+felt it's mainly out-of-scope for PHC since it works in concert with any  
+hashing function, and it's a commercial service to boot, but there is zero  
+chance of me passing up an opportunity to discuss delegation and  
+information-theoretic security with GMaxwell, TPornin, and CHerley on the  
+PHC list!
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

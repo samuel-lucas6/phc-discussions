@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <CAOLP8p6cWONYXOiz3HcWKjbgPjrDY677n7gkwpEDpSCY4SRvbA@mail.gmail.com>
+Date: Mon, 27 Jan 2014 23:50:58 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Mon, Jan 27, 2014 at 7:17 PM, Gary W. Hvizdak
+<gary.hvizdak@....rr.comwrote:
+This looks like it's reversing at the byte level.  I had assumed the
+objective was to reverse the entire 64 bits?
+>
+Gary
+
+I should probably just paste more real code into emails when the
+audience is this technically savvy.  Here's Catena's 64-bit reversal:
+
+uint64_t reverse(uint64_t x, const uint8_t n)
+{
+  x = bswap_64(x);
+  x = ((x & UINT64_C(0x0f0f0f0f0f0f0f0f)) << 4) |
+    ((x & UINT64_C(0xf0f0f0f0f0f0f0f0)) >4);
+  x = ((x & UINT64_C(0x3333333333333333)) << 2) |
+    ((x & UINT64_C(0xcccccccccccccccc)) >2);
+  x = ((x & UINT64_C(0x5555555555555555)) << 1) |
+    ((x & UINT64_C(0xaaaaaaaaaaaaaaaa)) >1);
+  return x >(64 - n);
+}
+
+I've seen it before.  I had to implement something similar in an ASIC
+technology mapper once.
+
+Bill
+

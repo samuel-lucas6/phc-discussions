@@ -1,0 +1,233 @@
+phc-discussions - Re: [PHC] Password hashing as a self-overwriting Turing machine;
+ Protection of keys in SSH
+
+Message-ID: <CAOLP8p6QeTMcuZvxjzhcnOSymS7DcrmLM4pb0=pdSRyzAOwZpQ@mail.gmail.com>
+Date: Fri, 3 Jul 2015 05:00:37 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Password hashing as a self-overwriting Turing machine;
+ Protection of keys in SSH
+
+On Thu, Jul 2, 2015 at 8:41 AM, denis bider <pwhashing@...isbider.com>
+wrote:
+
+With respect to my design - I would indeed like to have a greater number
+of operations than 4, but I had a lack of ideas about other good
+constructions that would not have wildly differing costs, and would
+preserve entropy. I would have liked CPU AES, but availability in hardware
+and ease of portability seem troublesome. This ought to be better in 5-10
+years.
+>
+
+Side channel resistance is over-emphasized on this list.  Neither bcrypt or
+scrypt is side-channel resistant, yet they are excellent algorithms
+(particularly scrypt).  If implementing a new algorithm based on executing
+many CPU instructions, I'd focus on the common ALU operations, conditional
+branching, and memory access.  You can use any data operation and turn it
+into a reversible operation if you mix in the result into memory in a
+reversible way.  For example, AND is not reversible, but this is:
+
+    mem[a] += mem[b] & mem[c];
+
+The C operator list is a good list of operations.  CPUs generally implement
+them fast.
+
+
+I see your point about the multiply-and-modulo operation, and how this can
+cause cache-timing leakage if the CPU optimizes it away when the result is
+not used. I see this as a tradeoff - I wanted to have the
+multiply-and-modulo because it's one of a few entropy-preserving operations
+I can think of that really favor a 64-bit CPU.
+>
+
+I agree. 64 bit multiplies even slow down GPUs.  It also is the only
+operation that requires a non-trivial amount of silicon.
+
+
+With regard to parallelism - I agree there's a clear and decisive
+advantage to this on the client, where cores are most often going unused.
+For use on the server, the advantages are less apparent: for a busy server,
+CPU cost is CPU cost, whether it's distributed 1*8 or 8*1. My design
+targets specifically the niche of an x64 server that cannot offload
+password hashing on the client, and needs to use an algorithm with a
+reasonable CPU and memory footprint.
+>
+
+I agree, servers do not benefit from multi-threading.  Server-side is a
+very difficult problem, partly because servers lack resources to do memory
+hard hashing in a way that might begin to make typical passwords secure.
+No matter what algorithm you use, a 1ms hash is not strong enough to secure
+most passwords.  Additional steps must be taken server-side, such as
+hashing in a secret master password, secondary secret salt, etc.
+
+For large corporations, I favor the authentication server concept.
+Yescrypt supports hashing in data from a large ROM, which provides some
+additional security.  It's clearly the best authentication server algorithm
+in the competition, for a lot of reasons.  I think it was primarily
+optimized for this use case, though it scales well from a few KiB to many
+GiB hashing, and works well client-side, server-side, etc.  The only
+downside is all that flexibility comes with complexity.
+
+
+With regard to ASIC and FPGA optimization: I think making an effort to
+defend against this, and succeeding to *some* extent, is important.
+However, maximizing such defense would matter primarily:
+>
+- For the most critical of passwords, which might motivate someone to
+invest tens/hundreds of thousands of USD (for FPGA) or millions (for ASIC)
+into cracking a class of passwords. (Arguably, if a class of passwords is
+*that* important, it ought to be complex enough that even a single SHA-256
+would protect it.)
+>
+
+I agree.  The common password hacker has access to either a botnet or GPU
+farm at most.  A really good custom ASIC would cost millions of dollars to
+produce.
+
+I focused on ASIC resistance because:
+
+1) I understand this threat better than I understand GPUs
+2) If you defend well against ASICs, then you defend well against any kind
+of hardware acceleration any attacker might throw at it using today's
+silicon.
+3) The MiB (Men in Black) build custom ASICs for crypto all the time, I
+suspect.
+4) Even if you do not care to defend against the MiB, if you do, you
+automatically defend well against the rest of the world's hackers.
+
+However, you don't _have_ to defend well against ASICs to have a good
+algorithm.  Bcrypt has far lower ASIC defense than Scrypt, for example.
+It's really only good at GPU defense, and only for today's GPUs.
+
+
+- For a proof-of-work hash for a digital currency that wants to encourage
+mining by casual enthusiasts, and have them be competitive with moneyed
+investors. Litecoin made the original attempt with scrypt, which kinda fell
+through. Vertcoin now uses Lyra2RE.
+>
+
+Crypto-currencies should use a variant of Momentum
+<http://www.hashcash.org/papers/momentum.pdf>, instead of Lyra2RE or
+similar, IMO.  The verification time is constant ant fast, allowing rapid
+block-chain verification compared to Lyra2RE.
+
+It probably should be modified a bit to make it more CPU friendly vs other
+hardware, but the idea seems sound.
+
+
+For everyday passwords, it seems we're defending primarily against hackers
+with botnets. Those have access primarily to commodity hardware they might
+purchase themselves, and other people's hardware to which they have
+surreptitious access. I can imagine them having significant GPU power at
+their disposal; possibly FPGA, if a well-to-do hacker is into that as a
+hobby; but access to custom ASICs seems very unlikely.
+>
+Having written that, though - it comes to mind that China is an attacker
+who is interested in commercial targets, is beyond the law, and is someone
+we need to be defending against as well. Hmm.
+>
+
+Yep.  China quite likely will implement an ASIC farm based password cracker
+to crack down on their own people, and the market for these ASICs to
+governments in general may create a market need that will quickly be filled.
+
+Unfortunately, the MiB includes every good and bad government.  ASIC
+resistance, IMO, means defending against the MiB.
+
+
+My other point is that there's value in variety. No one should use weak
+algorithms, by any means. However, if there's a single widely used strong
+algorithm, and it's used for everything from protection of common passwords
+to proof of work for a digital currency, *eventually* there may be cheap
+ASICs everywhere for that algorithm, such as there are now for SHA-256. In
+that case, an application may be better off using a different algorithm,
+just because there aren't readily available ASICs for it.
+>
+
+One of the MiB's main tools is being willing to spend far more on cracking
+electronic encryption than any sane adversary would guess.  If we used 100
+different algorithms, I think we'd simply see the MiB build 100 different
+ASICs.  My preference is to focus on one algorithm that is MiB resistant -
+a feature rarely talked about here.
+
+In order for this not to happen with PHC winners, they would have to be
+*strongly* resistant to more cost-effective implementation in ASIC. Do you
+believe any of the candidates truly resist this, if the stakes are high
+enough? Would you say this is the case for Yescrypt, Lyra2, or Argon2d? If
+yes - what properties of these algorithms do you think are critical in this?
+>
+
+An ASIC will never do what Intel/AMD CPUs do more cost effectively.  The
+best defensive algorithm vs ASICs would have to be more like BusyBeaver,
+and execute actual random machine code, using the full memory stack and a
+lot of memory.
+
+However, Yescrypt and Lyra2 got pretty close - especially Yescrypt.  I
+think TwoCats actually had the strongest ASIC defense on Intel CPUs because
+of marginally more efficient multiplication chains, but Yescrypt is very
+close.  They are good enough for defense against the MiB, I think.
+
+On the other hand, cryto-currency miners would prefer a proof-of-work that
+favored CPUs, so that ASIC farms would not ruin the party.  The great thing
+about CPU mining is that everyone already has one, which encourages lots of
+individuals to participate.  The needs of crypto-currencies is somewhat
+different than password hashing.  For example, there's no worry about
+side-channel attacks against miners.
+
+With respect to password hashing in SSH, you are correct; the widely used
+methods are poor. But:
+>
+(a) When transferring private keys between implementations, the main
+obstacle is compatibility - if strong password hashing is to be used, both
+sides have to agree on the method. The dominant implementation dictates the
+most common interchange format; for client keys, this means PuTTY and
+OpenSSH.
+>
+
+Yeah... compatibility remains one of the strongest reasons for poor
+security.  It's a real bummer.
+
+
+(b) When encrypting private keys locally, the main obstacle is
+practicality. People often use public key authentication because they do
+not want to use a password. A large proportion of users, therefore, will
+not encrypt a private key, and this has to be supported.
+>
+
+What we need to do is offer $5 USB keys that you have to touch to log in.
+It would just prove that it still has possession of a hardware backed
+secret key.  That could be used for more secure access to web sites, or
+ssh.  We do this now days at Google.  It works great.  I think everyone
+should use them, and for the massive improvement in security, I suspect
+many people would fork over the $5, and live with the hassle of touching
+their computers once per login.
+
+
+(c) There's also no way to truly encrypt a key that must be used by an
+automated process. Anything that runs unattended must be able to access
+credentials without user input.
+>
+
+I've done this a few times, and had to use password-less ssh keys.  In
+those cases, I needed to access one machine from another to periodically
+run some job.  If we had the $5 USB key, the remote machine could verify
+that the hardware with the secret key is on the other end of the line,
+without requiring a physical touch.  The same hardware should be used for
+both cases.
+
+
+You are right that we could do more in case (a) when our own interchange
+format is used, and in case (b) when the user chooses to encrypt the
+private key. In this case, the most suitable password hashing function
+would be something other than BusyBeaver; something with threads, a larger
+CPU cost, and a larger memory footprint. I will recommend that we implement
+one of the PHC winners for this purpose, when they are chosen.
+>
+
+That's excellent!  For some reason, the more dominant ssh tools continue to
+lag behind in password security.  It would be great to see some improvement.
+
+Bill
+
+
+

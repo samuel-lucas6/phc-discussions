@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] sub-block memory*depth attacks and countermeasures
+
+Message-ID: <20150925003206.GA2406@openwall.com>
+Date: Fri, 25 Sep 2015 03:32:06 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] sub-block memory*depth attacks and countermeasures
+
+On Thu, Sep 24, 2015 at 06:44:40PM +0300, Solar Designer wrote:
+My current understanding is that scrypt's even/odd shuffling and simple
+reverse order of sub-blocks written (vs. read) achieve a similar
+(limited) effect at increasing the recomputation depth (counted at
+sub-block operations level) for a given ratio of sub-blocks stored
+(assuming attacker's optimal choice of which sub-blocks to store).
+
+It appears optimal for an attacker to store the first few sub-blocks
+that would be needed should the block happen to be referenced later, as
+well as a sparse selection of further sub-blocks,
+
+Specifically, it appears that to fully avoid the depth increase from the
+hashing scheme's use of sub-block shuffling (as compared to non-shuffled,
+non-reversed sub-blocks order), around 2*sqrt(n) sub-blocks per
+not-fully-stored block would need to be stored, where n is the sub-blocks
+per block count (e.g., n=2r for scrypt), for large n.  This includes
+sqrt(n) would-be-first-needed sub-blocks and another sqrt(n) sub-blocks
+spread over the rest of the block.
+
+For large n, this number is relatively small, meaning that e.g. storing
+every other full block (and these sub-blocks for the rest) results in
+slightly higher than 1/2 of non-TMTO memory usage.  In other words, a
+1/2 TMTO at block level is only slightly higher than 1/2 TMTO overall.
+
+For small n like 16 for (ye)scrypt's recommended r=8, this number is
+significant, meaning that a 1/2 TMTO at block level might nevertheless
+result in 3/4 overall TMTO (since 2*sqrt(16) = 8, which is half of 16,
+meaning that we store half of the sub-blocks in the not-fully-stored
+blocks).  However, for small n this formula is significantly inaccurate
+(and its accurate replacements might vary by shuffling scheme a bit).
+Also, this assumes that the attacker wants to fully avoid the depth
+increase, whereas it might be optimal to accept some moderate increase.
+
+(I use "n/m TMTO" to refer to the memory usage ratio only, compared to
+non-TMTO.  The corresponding increases in computation and depth, and
+thus in time, are likely not proportional to the memory reduction, nor
+to each other, and they vary by the hashing scheme and its parameters.
+What I am focusing on here is attacking the scheme such that the depth
+is kept the same as it would have been for the same block-level TMTO
+ratio for a variation of the same scheme without sub-block shuffling.)
+
+so that the rest of
+the (non-stored) sub-blocks for this block would be recomputed while the
+first few (stored) sub-blocks are being processed (as input for whatever
+new block is being computed).  (As discussed earlier, this is in
+addition to also using a block-level TMTO - that is, some blocks are
+stored in full, and some with some of their sub-blocks missing as
+discussed here.  e.g. every other block may be stored in full, and the
+other half of them with some/most sub-blocks missing, for a slightly
+higher than 1/2 memory usage total.)
+
+Alexander
+

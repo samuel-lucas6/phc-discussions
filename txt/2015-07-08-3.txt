@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <CANdZDc7gd=qSPjEbi=5VdfAkYbT1e_6y_RJ2FxJ5d=rchoSEkw@mail.gmail.com>
+Date: Wed, 8 Jul 2015 21:27:31 +0000
+From: "Zooko Wilcox-O'Hearn" <zookog@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Dear Bill Cox and Solar Designer:
+
+Thanks for the useful conversation.
+
+On Tue, Jul 7, 2015 at 10:29 PM, Bill Cox <waywardgeek@...il.comwrote:
+>
+One more concern is a possible DDoS attack on the network.  Publishing
+1,000's of fake solutions to blocks per second that require the entire
+network to debunk them with a very computationally expensive verification
+would be bad.  I read about that DDoS problem somewhere recently... can't
+remember if it was the Argon2 paper or somewhere else.
+
+Hm, that's a good point. I haven't thought this one all the way
+through. I don't know how to assign a budget to this one, other than
+"the cheaper verification is the better".
+
+Another solution that this issue suggests is "cheap rejection of
+invalid proofs", i.e. it would be okay if it takes 1 second to verify
+that a valid proof is valid, as long as it takes only 1/10 of a second
+(usually) to verify that an invalid proof is invalid. The
+Merkle-Tree-NIZK in https://eprint.iacr.org/2015/430 seems like it
+would have that property.
+
+In any case, assuming the reason we want a memory-hard PoW is to discourage
+ASIC mining, I think we might want to consider memory-hard algorithms that
+max out L1 + L2 + L3 capacity and bandwidth (or some reasonable fraction of
+it, like 1/2).  I am not convinced we do better busting out of on-chip
+cache, since a GPU and probably an ASIC or GPU would win the total I/O
+bandwidth to external DRAM war.  However, it would be very hard for them to
+beat the performance of my L1+L2+L3 cache system on my CPU for random
+access.
+
+Why are you saying "bandwidth" here instead of "latency"? My
+(admittedly limited) understanding of Argon2d is that the memory
+access patterns (for reads, not for writes) is unpredictable and is
+determined by the some of the most recently computed state, and
+therefore it should be latency-bound instead of bandwidth-bound. If
+I'm right about that, does it change your argument above?
+
+I _think_ I saw the impact of botnets
+
+I'm not interested in botnet-resistance as a design goal. The *intent*
+is "resistance to resources which are accessed by theft", but we can't
+implement that intent in our algorithm, we can only implement some
+proxy for it, such as "resistance to resources which are cheaply spun
+up or cheaply delegated". I don't think this is an effective way to
+deter theft, and it might deter other legitimate uses, and it might
+have other negative consequences. So don't talk to me about
+botnet-resistance.
+
+Regards,
+
+Zooko
+

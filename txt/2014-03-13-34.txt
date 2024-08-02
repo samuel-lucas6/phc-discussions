@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-Id: <1738B8D1-6FBC-4547-AAA2-7B0A8339FFD4@bolet.org>
+Date: Thu, 13 Mar 2014 19:20:34 -0400
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+
+On 2014-03-13, at 4:27 PM, Solar Designer wrote:
+
+In short: I mostly disagree with the opinion you express, although I see
+how you (and others) can arrive at that opinion (it is intuitive).
+I'd probably be of that opinion too if it weren't for the benchmarks I
+ran on actual servers, etc.
+
+Well, It is a recurrent debate and it is easy to predict that it will remain a recurrent debate. A core problem is the notion of a "usual server", which is, let's say, a bit lacking on the objectivity side.
+
+If I may summarize things: the defender's machine has, on average, some available resources, which are the difference of what the defender started with (i.e. what he gets from his hardware) and what was used for the "normal business tasks" of the defender. The defender will want to use these resources for password hashing, i.e. he will configure the various parameters of his password hashing function so as to maximize the cost _for the attacker_ while using only his free resources (resources become "not free" when using them forces the defender to slow down his business tasks below some predefined limit of acceptability).
+
+If the function was well designed, then the most cost-effective hardware for the attacker is the same machine as what the defender uses. However, since the attacker does only the password cracking, while the defender has other things to do, they don't both compete with exactly the same weapons.
+
+The resources offered by the hardware are of different kinds. To simplify things here, there is CPU time, and RAM bandwidth. Both kinds can be allocated with fine granularity (as you say, it is easy, for the hardware, to interleave RAM access requests on a given bus with low switching overhead; the same can be said for CPU, as long as you don't try to switch more than a few thousand times per second because of the L1 caches). "Optimal" hardware is one where the amounts of both resources will be well balanced with regards to the problem at hand: if you increase the load (e.g. number of concurrent users), at some point you will run out of CPU or of RAM bandwidth; for optimal hardware you will run out of both at the same time.
+
+We can easily describe kinds of server-like systems which are thoroughly unbalanced, toward CPU usage or toward RAM bandwidth usage. For instance, if the server does heavy computations which fit in L1 cache, then there will be a lot of free RAM bandwidth when the CPU saturate. Ideally, the password hashing function will be tuned so as to restore the balance, thus maximizing the free resource usage. Since various servers have various resource usage patterns, we can say that a good password hashing function will offer many tunable parameters so that optimality may be reached.
+
+
+The gist of our disagreement is then the following: I tend to assume, from "shared experience", that the majority of servers actually in use have more free CPU than free RAM bandwidth. Apparently you don't assume the same. But, really, the problem is ill-defined as long as we don't specify what really is our target market. What servers are we talking about ? How do we measure how "important" a kind of server is ? The question is more about economics than computer science, so that call for another species of specialist.
+
+
+Another point is that I don't actually believe in tunable parameters. At least not many. If we take 100 sysadmins, and give them a password hashing function with a single tunable parameter, we can expect that about 80 or 90 of them will do at least token effort at setting that parameter to a right value for their problem at hand. With two parameters, that proportion will drop; since measuring performance is actually hard (or, at least, much too rarely done, for some reason), two or more tunable parameters imply a lot of combinations which won't be explored correctly, or at all.
+
+In my view, a "good" password hashing function should provide enough parameters to make it adequate for a large variety of situations, but must refrain from complexity. A big part of what makes a cryptographic algorithm "good" is how much it intrinsically protects users from their own mistakes. Mutatis mutandis, this is why I really prefer HMAC over most other MAC algorithms: since HMAC has no IV, it is much harder to get wrong.
+
+That's my opinion, of course, but it implies that I am not a big fan of functions which can be tuned for both CPU and RAM "usage" (for some notion of usage). Such functions are doomed to be awfully misapplied in practice.
+
+
+	--Thomas Pornin
+
+

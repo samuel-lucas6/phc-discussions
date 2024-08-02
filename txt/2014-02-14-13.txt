@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p5cJgfx_vXBvtZNTVj+++g5ajZjYccPKQE8m=FWS_O1sw@mail.gmail.com>
+Date: Fri, 14 Feb 2014 13:52:04 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 10:21 AM, Solar Designer <solar@...nwall.comwrote:
+Maybe try precomputing the random address one iteration in advance.
+In bcrypt, there are 4 S-box lookups, which means that computation (on
+results of first 2 lookups) doesn't have to start (or be stalled) until
+all 4 lookups are issued.  So you have a little bit of room for
+parallelism too, without necessarily becoming worse than bcrypt.
+>
+Alexander
+
+I wrote a file called fasthash.c which incorporates a lot of these
+ideas.  I do 4 scalar multiplication hashes in a loop with SSE
+instructions that do a simple XOR/ADD hashing of 8 32-bit lanes (256
+bits), reading from "from" and "prev" and writing to "to".  On my Ivy
+Bridge processor using SSE4.1, this is a decent match, where the
+memory bottleneck is just kicking in while the multiplication hardness
+is still taking most of the loop time.  I randomized "prev" reads as
+you suggested, and most of the caching issues go away, though there is
+about a 20% speed penalty when hashing 256 bits at a time before
+switching the prev address.  I made the randomization length tuneable,
+so it is possible to make most of the 20% penalty go away.  I also do
+a SHA256 hash on the 8 lanes every 64 blocks - if I do it more often,
+the SHA256 begins to hurt runtime.
+
+On my machine, the inner loop before any of these upgrades did 13GB/s
+bandwidth on one thread (factoring out the memory allocation
+overhead), matching the best I've been able to do combining multiple
+threads and SSE in the past.  The loop time was about 64% longer than
+a single multiply instruction, so it's a bit worse than before, but I
+think this is a fair trade-off.
+
+After the upgrades, I take some hit for the SHA256 and some for the
+tunable random read lengths.  It does about 10.25GB/s when using no
+randomization in the prev reads, which isn't too bad.  It's doing 2GB,
+doing 1 read and 1 write, in .39 seconds.
+
+I tried making the multiply chain tunable relative to the SSE hashing.
+ Putting a loop around the scalar multiplication loop slowed it down,
+so we make this tunable in the same loop, I'd probably instantiate
+multiple versions of the loop with different numbers of multiplies and
+select which one to run.
+
+With memory allocation overhead, it runs in .47 seconds, which is
+8.5GB/s, and about 50% multiplication time hardened, which isn't too
+bad, though the old one was about 2/3rds compute hardened, and hashed
+2GB in 0.72 seconds, or 5.5GB/s.  With 256 bit random reads it takes
+closer to .6s.
+
+Bill
+

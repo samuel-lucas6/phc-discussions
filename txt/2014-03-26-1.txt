@@ -1,0 +1,109 @@
+phc-discussions - Re: [PHC] Re: New password hashing entry: PolyPassHash
+
+Message-ID: <CAMVss_o7QipvP+VB88Ry7-UdF7VzFd1QhHPC+uFZ60pkFvDtjg@mail.gmail.com>
+Date: Wed, 26 Mar 2014 00:52:32 -0400
+From: Justin Cappos <jcappos@....edu>
+To: discussions@...sword-hashing.net
+Cc: santiago torres <sat417@...dents.poly.edu>
+Subject: Re: [PHC] Re: New password hashing entry: PolyPassHash
+
+The longer explanation is that the Shamir Secret Share stores a random
+value and that value can be used as a key for symmetric crypto.   Using
+that key, one can encrypt the salted hashes for some set of accounts.
+Since the key is protected by the threshold accounts, those accounts are
+also protected in this case.   Thus if an adversary cannot crack enough of
+the threshold accounts, they cannot crack any thresholdless accounts, even
+if they have weak passwords and the attacker can generate new accounts at
+whim.
+
+Thanks,
+Justin
+
+
+
+On Tue, Mar 25, 2014 at 4:38 PM, Justin Cappos <jcappos@....eduwrote:
+
+There is an option to have accounts that do not count toward the
+threshold.   (This is the "thresholdless account" extension in the paper.)
+>
+Sorry for the brevity, about to get on a flight...
+>
+Justin
+>
+>
+On Tue, Mar 25, 2014 at 4:35 PM, Stephen Touset <stephen@...set.org>wrote:
+>
+>Given a database that requires n shares to start validating passwords,
+>what stops an attacker from creating n - 1 accounts with passwords under
+>his control?
+>--
+>Stephen Touset
+>stephen@...set.org
+>>
+>>
+>On Tue, Mar 25, 2014 at 6:03 AM, Justin Cappos <jcappos@....eduwrote:
+>>
+>>The TLDR version of the scheme is as follows:
+>>>
+>>Today password databases store: "username:salt: securehash(salt,
+>>password)"   An attacker can crack passwords individually by guessing the
+>>password and computing the salted secure hash.
+>>>
+>>>
+>>PolyPassHash stores: "username:salt:sharenumber: (share(sharenumber) XOR
+>>securehash(salt, password))"   So a correct password allows the server to
+>>obtain a share in a Shamir Secret store.   The only way to know if the
+>>share is valid (and the password is correct) is to have a threshold of
+>>shares.   Since a valid server gets many correct login attempts, it can
+>>trivially do this.   The attacker needs to simultaneously guess many
+>>accounts which increases the needed time exponentially.
+>>>
+>>Thanks,
+>>Justin
+>>>
+>>>
+>>>
+>>>
+>>On Mon, Mar 24, 2014 at 5:34 PM, Justin Cappos <jcappos@....eduwrote:
+>>>
+>>>I would like to solicit the community's feedback about an submission to
+>>>the PHC called PolyPassHash.
+>>>>
+>>> This scheme is different than most PHC entries in that it uses a
+>>>threshold-based storage technique to prevent passwords from being
+>>>individually cracked.   To validate a password, one must recover a share in
+>>>a Shamir Secret Store, which necessitates knowing a threshold of correct
+>>>passwords.   (There are extensions to allow passwords to be securely
+>>>validated by a server upon setup and also to support accounts that do not
+>>>count toward the threshold.)
+>>>>
+>>>PolyPassHash gives an exponential increase in the search space an
+>>>attacker needs to explore while only increasing the server's time by a
+>>>small linear factor.   If you take the three passwords that are composed of
+>>>six random characters each and protect them with PolyPassHash, to search
+>>>the key space would take every computer on the planet working together
+>>>longer than the universe is estimated to have existed.   PolyPassHash is
+>>>about as efficient in terms of memory, disk, and CPU time as existing
+>>>salted secure hash techniques.   In fact, PolyPassHash is orthogonal to the
+>>>secure hashing technique and should integrate with (any?) other submission.
+>>>>
+>>>More information about the scheme (including both technical
+>>>documentation and information for a more general audience) is available at:
+>>>https://github.com/JustinCappos/PolyPassHash
+>>>>
+>>>There is also a Python implementation available in that repository and
+>>>a link to the C implementation (by Santiago Torres) which will be submitted
+>>>to the contest.
+>>>>
+>>>I welcome any comments or feedback.
+>>>>
+>>>Thanks,
+>>>Justin
+>>>>
+>>>
+>>>
+>>
+>
+
+
+

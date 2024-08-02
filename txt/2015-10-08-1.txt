@@ -1,0 +1,138 @@
+phc-discussions - Re: [PHC] yescrypt on GPU
+
+Message-ID: <CALWCaob00cWwmCqQNsJDBYX1SdNoRFabFoDcRxmL6QW=nN2fBA@mail.gmail.com>
+Date: Thu, 8 Oct 2015 10:00:53 +0200
+From: Massimo Del Zotto <massimodz8@...il.com>
+To: Solar Designer <solar@...nwall.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt on GPU
+
+I have been shuffling a bit through the CL forum and I'm quite sure I
+missed something.
+Anyway, I have reached that conclusion (about instruction latencies being
+basically 0) reading this/posting:
+https://community.amd.com/thread/170261
+
+I also read a couple of times the link you provided.
+
+Quoting, for those who don't feel like following the link:
+
+RealHet, 2015 Apr 18
+Hi,
+
+This example is absolutely correct, it can harvest the peak performance of
+the gpu, yet it uses the same register for everything:
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+v_mad_f32 v0, v0, v0, v0
+
+
+>From the discussion you linked:
+
+gautam.himanshu, 2012 May 11
+Actually only a quad-wavefront(16 work-items) can run parallely on a
+Compute Unit. All these extra work-items are introduced, so hide the
+latencies of memory i/o for data as well as **code**.
+
+
+It seems GCN also switches to a different wavefront at every instruction
+anyway.
+
+I honestly haven't fully understood the latency involved by using LDS but
+given the little control the CL compiler gives, I don't think I have the
+tools to investigate it. I would have loved doing some ASM but I'm positive
+I cannot afford it.
+It's sure LDS latency isn't as instruction latency and is deterministic
+only when no bank collisions occur(ed). I'm inclined to believe we're
+talking about an handful of ticks (which are effectively clocks, from the
+point of view of IP increment).
+
+I agree with your conclusion of requiring occupancy at least 4/10.
+
+Plus: I've seen S_NOP being emitted very sparingly. It burns 1 clock.
+_expand32W has a few, one of them looks like
+
+ Address;Opcode;Operands;Cycles;Instruction Type;Hex
+ 0x000190;V_ADD_I32;v2 vcc s6 v2;4;Vector Arithmetics;4A040406
+ 0x000194;V_LSHLREV_B32;v3 2 v1;4;Vector Arithmetics;34060282
+ 0x000198;S_LOAD_DWORDX4;s[12:15] s[2:3] 0x70;Varies;Scalar Memory
+Read;C0860370
+ 0x00019C;S_MOV_B64;s[10:11] exec;4;Scalar Arithmetics;BE8A047E
+ 0x0001A0;V_MOV_B32;v8 0;4;Vector Arithmetics;7E100280
+ 0x0001A4;S_NOP;0x0000;1;Flow Control;BF800000
+ label_006A:
+ 0x0001A8;V_ADD_I32;v9 vcc v2 v8;4;Vector Arithmetics;4A121102
+
+My CubeHash kernel has two. They look like:
+
+0x00004C;V_LSHLREV_B32;v3 2 v3;4;Vector Arithmetics;34060682
+0x000050;V_LSHLREV_B32;v4 2 v4;4;Vector Arithmetics;34080882
+0x000054;V_LSHLREV_B32;v5 2 v5;4;Vector Arithmetics;340A0A82
+0x000058;V_LSHLREV_B32;v6 2 v6;4;Vector Arithmetics;340C0C82
+0x00005C;V_ADD_I32;v3 vcc s12 v3;4;Vector Arithmetics;4A06060C
+0x000060;V_ADD_I32;v4 vcc s12 v4;4;Vector Arithmetics;4A08080C
+0x000064;V_ADD_I32;v5 vcc s12 v5;4;Vector Arithmetics;4A0A0A0C
+0x000068;V_ADD_I32;v6 vcc s12 v6;4;Vector Arithmetics;4A0C0C0C
+0x00006C;S_LOAD_DWORDX4;s[16:19] s[2:3] 0x50;Varies;Scalar Memory
+Read;C0880350
+0x000070;V_LSHLREV_B32;v7 2 v0;4;Vector Arithmetics;340E0082
+0x000074;S_WAITCNT;lgkmcnt(0);Varies;Flow Control;BF8C007F
+0x000078;V_ADD_I32;v7 vcc s0 v7;4;Vector Arithmetics;4A0E0E00
+0x00007C;S_NOP;0x0000;1;Flow Control;BF800000
+0x000080;TBUFFER_LOAD_FORMAT_X;v3 v3 s[4:7];0 offen
+format:[BUF_DATA_FORMAT_32BUF_NUM_FORMAT_FLOAT];Varies;Vector Memory
+Read;EBA01000 80010303
+
+...
+
+0x000478;V_ADD_I32;v20 vcc v20 v4;4;Vector Arithmetics;4A280914
+0x00047C;DS_WRITE2_B32;v28 v19 v20 offset0:224
+offset1:192;Varies;LDS;D838C0E0 0014131C
+0x000484;S_NOP;0x0000;1;Flow Control;BF800000
+0x000488;DS_READ_B32;v29 v18;Varies;LDS;D8D80000 1D000012
+
+
+_expand32W has occupancy 4/10, cubehash 6/10 (oddly).
+
+So I'm inclined to believe instruction latency is "not worry" in many
+(most?) cases. It is clear it can effectively be considered 0 under some
+circumstances.
+My 10'000 ft decision about the rest is to investigate further at some
+point in the future. I don't think I will be constrained in further
+revisions.
+
+
+Massimo
+
+2015-10-07 10:42 GMT+02:00 Solar Designer <solar@...nwall.com>:
+
+On Wed, Oct 07, 2015 at 09:29:09AM +0200, Massimo Del Zotto wrote:
+I have been told on the AMD CL forum (by 'realhet', who appears very
+proficient and up to date with GCN ASM) that GCN has no instruction
+latencies (i.e. it can consume a result in the instruction immediately
+following), probably a nice implication of the instructions being
+processed
+in 4-clock 'ticks'.
+>
+realhet wrote an assembler/Pascal/IDE targeting GCN, so got to be very
+proficient with GCN.  Can you post an URL for that specific forum posting?
+>
+In the following old thread, it was said that while 4 wavefronts could
+be sufficient for ALU bound problems, more are needed for memory bound
+problems (not surprisingly), and I think this might include local memory
+(but I don't really know):
+>
+https://community.amd.com/thread/159171
+>
+(In that old thread, I think comments by jeff_golds are authoritative,
+while realhet was just learning then-new GCN at the time.)
+>
+Anyway, I think this means that if we put the S-boxes into local memory,
+we do incur at least those 4 cycle minimum latencies.
+>
+Alexander
+>
+
+
+

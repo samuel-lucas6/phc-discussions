@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="6">[&lt;prev]</a> <a href="8">[next&gt;]</a> <a href="6">[&lt;thread-prev]</a> <a href="8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150326140400.GA22228&#64;bolet.org&gt;
+Date: Thu, 26 Mar 2015 15:04:00 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 08:11:52AM +0100, Milan Broz wrote:
+&gt; Or more generic question: what about embedded world?
+&gt; 
+&gt; PHC seems to be mainly about online services, where you have some big
+&gt; Intel server hosting behind it but I would like to not forget about
+&gt; embedded systems.
+
+Generically, password hashing is a muscle contest between defender and
+attacker; we try to design hash functions that are inherently (and in a
+configurable way) slow to compute, so that brute force attacks are made
+harder. In any case, if the defender is weak, then the attacker is
+necessarily strong, relatively speaking.
+
+PHC candidates try, within that context, to optimize things for the
+defender, i.e. to pessimize things for the attacker by relying on the
+kind of computation that the defender does best, and that the attacker
+cannot do better than by using the same kind of hardware (which is the
+best than can be hoped for). Most PHC candidates have used as working
+assumption that the defender has plenty of RAM that it can access quite
+efficiently; that assumption maps to authentication servers, but not
+necessarily to other kinds of systems. Other candidates assume the
+availability of a GPU, or an access to some big fast-access ROM.
+
+Nevertheless, small embedded systems (the kind of hardware that has
+lately become highly fashionable under the name "Internet of Things")
+can be adequately described as poor at doing anything, except being
+cheap. To take an example, we are here talking about ARM7TDMI chips
+clocked at 30 MHz, with maybe a few dozen kilobytes of RAM. If the
+defender tries to enter a muscle context while having only that kind of
+hardware, then prospects for security are grim.
+
+
+So what can be done with such embedded systems ? The first idea is to
+try to arrange things so that any password hashing happens elsewhere.
+For instance, if the password (presumably some access code entered by a
+human bring) is meant to authenticate with a remote server, send it to
+the server under the cover of some SSL-like protocol(*), so that any
+expensive hashing happens server-side. This kind of protocol design
+cannot necessarily be applied, though. Even for authentication with a
+server, nice password-authenticated key exchange protocols (e.g. SRP)
+tend to imply that the hashing is done client side.
+
+It is my cue, at this point, to remark that my PHC candidate (Makwa)
+offers a generic method for offloading most of the hashing cost to an
+external server that needs not be trusted (if we want to offload the
+work to a trusted server then it can be done with any password hashing
+function; the hard part is doing it without having to trust that
+server). If you need to do password hashing on an embedded system that
+is way too weak to do it properly, and you have some network and online
+muscle (e.g. cloud-based machines), then Makwa's delegation may be the
+way to go.
+
+Of course, in contexts where there is no network at all (and we were
+talking full disk encryption, to be unlocked at boot time, before any
+network may be configured at all), then delegation cannot be applied,
+and you are back to step 1. Namely, to do things like smart cards do:
+with hardware shielding, so that secrets may be stored and still not
+be plundered by attackers with physical access.
+
+
+To sum up: to achieve security with passwords on (small) embedded
+systems, you will need one of the following:
+
+ -- a protocol that ensures that whatever password hashing is needed
+    will be done elsewhere, on bigger systems;
+
+ -- a password hashing function that can delegate the bulk of the
+    computation to an external server (with Makwa, you get the
+    additional benefit that the external server needs not be trusted);
+
+ -- tamper-resistant hardware that can store secrets safely, thus
+    removing the need for slow password hashing.
+
+
+	--Thomas Pornin
+
+(*) A 30 MHz ARM7TDMI with 20 kB of RAM and 20 kB of ROM _can_ run a
+standard-compliant TLS 1.0 client, even including some barebone X.509
+certificate validation, and do so fast enough to saturate the bandwidth
+offered by a 115200 bauds serial line. I've done it a few years ago. In
+particular, RSA-based key exchange is light on the client side. Thus,
+SSL/TLS, or any other similar protocol (e.g. IPsec), can be envisioned
+on such small embedded systems. Of course, raw unprotected
+communications are even easier to do, if they can be tolerated.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

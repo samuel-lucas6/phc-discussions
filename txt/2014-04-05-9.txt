@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] POMELO fails the dieharder tests
+
+Message-ID: <CAOLP8p4Z91jiwkRtgiDXhuYQ-qLLr_WTdUSXOgq0aVGYTM-WXA@mail.gmail.com>
+Date: Sat, 5 Apr 2014 11:40:41 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] POMELO fails the dieharder tests
+
+On Sat, Apr 5, 2014 at 8:37 AM, Peter Maxwell <peter@...icient.co.ukwrote:
+On 5 April 2014 07:15, Daniel Franke <dfoxfranke@...il.comwrote:
+>>
+>POMELO is one of a handful of PHC candidates which are not constructed
+>around any established cryptographic hash function or cipher. POMELO's
+>security claims include collision-resistance. Unfortunately, its output
+>fails the dieharder tests.
+>>
+>
+While I don't have the time myself to do it this weekend, it might be better
+actually looking at the PHS output and what's going on in the reference
+implementation because you'd expect at least a wee bit of non-zero results.
+What you've got looks like a bug somewhere.
+
+Looking at the output is a fine idea.  However, I feel very strongly
+that computational verification is important.  What Daniel is doing
+needs to be done.
+
+Also, although it's probably not what's causing your results here, I'm
+fairly sure that the dieharder tests aren't great for short inputs.
+
+He ran it in a mode where pomelo is called repeatedly, generating what
+should look like an infinite source of random data.  He did it the
+right way, and I see no bug in his code.
+
+If you want to demonstrate an algorithm isn't collision resistant, a sample
+collision usually persuades people, e.g. x = f(a_1) = f(a_2).  Or at least
+provide an argument of how much work would be required to generate a
+collision.
+
+Another way is to have others verify the work.  I just wrote a
+completely independent wrapper for pomelo, and verified Daniel's
+result.  If anyone's interested, I can throw my git repo for all the
+PHC entries up on github.
+
+I'm trying to figure out what the problems are in PAMELO.  The first
+one is simple.  There's a bug on line 47:
+
+    // load salt into S
+    for (i = 0; i < saltlen; i++)   ((unsigned char*)S)[i] =
+((unsigned char*)salt)[i];
+
+It should read:
+
+    // load salt into S
+    for (i = inlen; i < saltlen; i++)   ((unsigned char*)S)[i] =
+((unsigned char*)salt)[i];
+
+The salt is overwriting the password.  I fixed that in my version, but
+the output is still massively non-random.  I printed the output for
+several passwords in dieharder format, and found that output values
+get repeated a ton.  There's at least one more bug in there.
+
+Bill
+

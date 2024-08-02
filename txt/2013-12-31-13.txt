@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <CAOLP8p4Y1FRPXqgevSh-Oj3HZJdFqWQnUHEcaWu4DiDbgvHV=g@mail.gmail.com>
+Date: Tue, 31 Dec 2013 11:48:39 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+On Mon, Dec 30, 2013 at 8:42 PM, Solar Designer <solar@...nwall.comwrote:
+
+- 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+intermediate derived key.
+>
+I dislike this.  It's very wasteful in use cases where our total running
+time is very limited.  This may be all running time we can afford (if at
+all), not leaving any time for the memory-hard portion.
+>
+
+I made the number of SHA-256 rounds selectable, from 1 up.
+
+I don't think I described the purpose of the sha256 rounds very well.  2048
+rounds takes 2.5ms on my linux box using scrypte's sha256.c for
+PBKDF2-SHA256 key derivation.  If I do this and then clear the password,
+the plaintext password is only there for 2.5ms.
+
+After that, I do a huge memory hash, and I feel it is common for this sort
+of memory hog of a process  get swapped out (if mlock is disabled or not
+working or available).  Maybe other processes will be swapping and the
+whole thing is so slow that the user closes his laptop, and hibernation
+writes out the contents of RAM to SSD, where files aren't even erased if
+you overwrite them with 0's.  By doing that 2.5ms of key derivation as a
+pre-process, which is tiny compared to the 1s-ish desired for a strong KDF,
+we make it harder for an attacker to discover the password.  Even if he
+extracts the intermediate derived key, he'll need a decent graphics card to
+get enough speed to brute-force attack a password which is protected with
+2048 rounds of SHA256.  With custom hardware, the 2048 rounds provides
+essentially zero protection, but how many password crackers out there have
+such custom hardware?  Surely the NSA, but hopefully not many scammers.  My
+personal preference would be to devote about 1% of the key hashing time to
+this task, which on my machine would be 8192 rounds.
+
+There's a lot of talk about not writing data derived from the password data
+to memory to avoid such an attack, but I've convinced myself that we have
+to write password-derived data to memory to build a memory-hard KDF, There
+seems to be no way around it.  I prefer for that data to be somewhat safe -
+not NSA safe, but average-joe cracker safe.
+
+
+

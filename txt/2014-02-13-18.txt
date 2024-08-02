@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213175236.GB6622@openwall.com>
+Date: Thu, 13 Feb 2014 21:52:36 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:21:40PM -0500, Bill Cox wrote:
+I was under the impression that bcrypt was difficult for a GPU due to
+it's memory size requirement, and that soon with increased L1 cache
+sizes, bcrypt may be fast to hash on GPUS.  Some paper I read said so,
+and papers are never wrong :-)
+
+It's local memory (in OpenCL parlance) rather than L1 cache, but yes -
+having more of it will enable more bcrypt instances to run in parallel,
+helping to put more execution units to use and helping hide latencies.
+
+bcrypt uses only 4 KB.  We're lucky that right now, with this specific
+unpredictable access pattern, it's (barely) sufficient to defeat GPUs.
+We should improve upon that by allowing for scaling that portion up to
+larger sizes while maintaining the access pattern.
+
+What is it about bcrypt's memory access pattern that is hard for GPUs?
+
+Very frequent unpredictable 4-byte lookups.  If they go to external
+memory, they'd incur very high latency and fetch entire cache lines
+(wasteful).  Even with local memory, latency is pretty high (compared to
+L1 cache on CPU).  Normally, the latency would be hidden by having more
+instances run in parallel, but there's currently not enough local memory
+to run even the bare minimum needed to keep all execution units in use
+at all (thus, many are 100% idle).  So it's a combination of factors.
+
+What I currently do for GPUs is to allow for memory sizes as low as
+1MB,
+
+How is this something you do "for GPUs"?
+
+with block sizes as low as 4 bytes, and if that hashes to
+quickly, there is a repetition factor that increases the inner loop
+calculations to run as long as you like.
+
+Oh, so you support block sizes this small.  Good.  What's not so good,
+though, is that such small block sizes at total sizes exceeding CPUs' L1
+cache are slow on CPU - you have that same problem with fetching entire
+cache lines, etc.  They're only good for L1 cache.
+
+I guess my 1MB may be too
+coarse, but below 1MB just seems like giving up on memory hardness.
+
+Yes, giving up on memory hardness for ASICs - but not on let's say local
+memory hardness for current GPUs yet.  There may be use cases where the
+defender would want such low settings for other reasons, and it's our
+job to provide no-worse-than-bcrypt security at those low settings.
+
+Is something like this what is required?
+
+Yes, but I think we need at least 2 levels: one is with tiny bcrypt-like
+accesses to a block of data that fits in L1 cache on defender's systems,
+and the other with larger block-sized accesses.  An easy way to do that
+would be to treat each block as the arena for a bcrypt-like algorithm,
+and to have that algorithm inside our BlockMix-alike.  However, this is
+suboptimal in that an optimal block size in terms of TLB misses is
+something like 1 KB, whereas an optimal bcrypt-like arena size is in the
+range of 4 KB to 32 KB (currently).  I am playing with 12 KB or 16 KB
+for the bcrypt-like S-boxes, which lets me run two threads/core and
+still fit in 32 KB L1 cache, along with the current ~1 KB'ish blocks.
+
+Alexander
+

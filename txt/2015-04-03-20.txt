@@ -1,0 +1,72 @@
+phc-discussions - yescrypt throughput vs. PWXrounds
+
+Message-ID: <20150403180559.GA27352@openwall.com>
+Date: Fri, 3 Apr 2015 21:05:59 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: yescrypt throughput vs. PWXrounds
+
+Bill, all -
+
+FWIW, here's what I am getting on FX-8120 with 2x DDR3-1600 (I should
+probably re-do this on more machines).  The first column is number of
+rounds of pwxform (the current default is 6), followed by throughput in
+hashes/second for 8 threads / 1 thread for 2 MB, 128 MB, and 2 MB RAM +
+2 GB ROM.  For the multi-thread throughput figures, the threads are
+independent (simulating an authentication server) and the total amount
+of RAM is what's shown times the number of threads (so 1 GB for the
+8-thread tests in the 128 MB column).
+
+rounds  2 MB            128 MB          2 MB + 2 GB ROM
+6       2772 / 511      30 / 7          2592 / 486
+4       3653 / 691      32 / 9          3269 / 647
+2       5340 / 1077     33 / 13         4288 / 974
+1       6454 / 1451     33 / 15         4760 / 1255
+
+As you can see, when using only RAM and being out of cache and running
+as many threads as the hardware supports (8 on this CPU), there's only
+a 10% speedup possible from reducing PWXrounds from 6 to 1.  OTOH, when
+the machine is under-loaded, running only 1 thread, there's a 2x+
+speedup possible (7 to 15 hashes/second in 1 thread).  I optimized for
+best behavior when server capacity is reached (because that's what
+limits the cost settings), as well as for multi-threaded KDF use.  For
+this, the choice of 6 rounds still looks good to me.  BTW, looking at
+these numbers another way, it's 3 GB memory filled (and 8 GB of
+bandwidth used) in 1 second, despite of the high PWXrounds setting.
+This can be improved to 3.3 GB (and 9 GB bandwidth usage).  Worth it?
+I'd rather opt for the 10% lower memory and bandwidth usage figure, but
+gain diversity of defense (3x or 6x higher compute hardening).
+
+When much of the RAM portion fits in a cache, there's significant
+speedup from lower PWXrounds, even when running 8 threads.  However, the
+speedup is not enough to keep the compute hardening per time the same.
+For example, 2772*6 / (3653*4) = 1.14, but 6/4 = 1.5, and
+2772*6 / (5340*2) = 1.56, but 6/2 = 3.  So going for PWXrounds = 2 would
+halve the compute hardening per time.  Maybe that's OK, but I wouldn't
+be able to claim that yescrypt achieves bcrypt-like frequency(*) of its
+S-box lookups and thus is at least as GPU-unfriendly as bcrypt even at
+the lowest m_cost settings.  Would being no more than 2x worse than
+bcrypt still be OK?  I'm not sure.  I would be uncomfortable about that,
+even though bcrypt isn't one of the PHC finalists. ;-)
+
+(*) Also considered are parallelism of the S-box lookups and total size
+of the S-boxes.
+
+Should we have PWXrounds (auto-)tuned differently for the
+single-threaded case?  With password hashing use, yescrypt being invoked
+with p=1 doesn't mean there isn't another instance running concurrently.
+In fact, in terms of capacity planning we should assume that there are
+as many such instances as the hardware supports.  Should we have some
+kind of heuristics (or a flag?) to determine KDF use (e.g., size of
+512 MB or more?), and if p=1 then reduce PWXrounds?  This feels like too
+much complexity and unexpected behavior, and yescrypt is too complex as
+it is.
+
+While I don't mind auto-tuning of PWXgather and PWXsimple for the
+current machine (and getting them encoded along with the hashes or e.g.
+with the encrypted filesystem), auto-tuning of PWXrounds is different
+(will vary by other yescrypt parameters and expected system load, rather
+than only by underlying CPU).
+
+Alexander
+

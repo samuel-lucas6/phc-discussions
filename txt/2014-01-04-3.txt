@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104054650.GA2787@openwall.com>
+Date: Sat, 4 Jan 2014 09:46:50 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 04, 2014 at 09:27:24AM +0400, Solar Designer wrote:
+Summary: NOELKDF may be a lot faster than escrypt on SIMD-less builds,
+but might be almost same speed when benchmarked against SIMD-enabled
+builds.  The question is then how SIMD'able NOELKDF is, and how fast
+those builds will run.
+
+Looking at:
+
+    for(i = 1; i < PAGE_LENGTH - 1; i++) {
+        *toPage++ = *prevPage + ((*fromPage * *(prevPage + 1)) ^ *(fromPage - 1));
+        prevPage++;
+        fromPage++;
+    }
+
+I'd say it's almost SIMD'able, with expected up to 2x speedup on this
+machine (64-bit changes to 128-bit), although in practice probably much
+less (because this CPU has more integer ALUs than SIMD units).  Hmm, I
+don't recall if we have 64-bit integer multiplication in SIMD form yet;
+we certainly do have 32-bit starting with SSE4.1.  The SIMD intrinsics
+for 32-bit are _mm_mullo_epi32() (SSE4.1), _mm256_mullo_epi32 (AVX2),
+and there's also _mm_macc_epi32 (XOP).  Googling for these with 32
+replaced by 64 gives almost no results, suggesting that we have no
+64-bit forms.  So perhaps it'd take a downgrade to 32-bit mults here in
+order to make it SIMD'able, which is unfortunate.  Then actually making
+use of SIMD will become more important (32 to 128), and worse security
+will be achieved on pre-SSE4.1 CPUs (as well as on any other archs/CPUs
+not offering 32-bit SIMD mults).
+
+This assumes that the three "pages" don't overlap (BTW, adding the
+"restrict" keyword might provide some speedup, then, but it's risky
+since it's a contract not to be violated).  This brings us to what I
+think is a vulnerability in NOELKDF: too much parallelism inside the
+loop above, where all loop iterations look independent from each other.
+Excessive parallelism (more than the defender is likely to use) is bad
+for memory-hard KDFs.  It lets the attacker reduce the time factor in
+area*time without increasing the area as much (only increasing it by the
+size of extra cores).
+
+A tunable amount of parallelism would need to be introduced here, to be
+set roughly to the defender's (current or near future) expected SIMD
+vector width times number of SIMD units/thread plus instruction latency.
+The latency can be many cycles for the MULs (even though in terms of
+throughput it's generally at least one per cycle on modern CPUs).
+
+Luckily, the simplicity of NOELKDF makes these changes easier than for
+escrypt.
+
+Note: I don't comment on the rest of NOELKDF's security yet - I have not
+given it enough review and thought.  It is unclear whether it can stay
+almost this simple yet be secure; we're just not aware of attacks yet.
+
+Alexander
+

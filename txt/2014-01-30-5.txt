@@ -1,0 +1,37 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <52E9D29D.9010801@dei.uc.pt>
+Date: Thu, 30 Jan 2014 04:18:37 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On 30-01-2014 03:34, Solar Designer wrote:
+>
+>By definition only the most significant bit of each byte is looked at in
+>PSHUFB, so it's OK to share the same selection mask. I've additionally
+>used PSHUFB to compute the bit reversal of 4-bit values, which should be
+>somewhat faster. Here it is:
+Thanks!  Compared to yours, my SSSE3 code looks naive.
+>
+This is in the public domain, correct?  (My bitrev.c is.)
+
+Correct. I've placed a cleaned up version at
+https://gist.github.com/sneves/8702353 with disclaimers and attributions.
+
+>
+>    t3 = _mm_srli_epi32(_mm_andnot_si128(c0f, t1), 4); // x >4
+I guess the reason why you use ANDN before the shift rather than AND
+after it is to better accommodate the shift's higher latency, correct?
+
+The reason was just to avoid using a new constant 0xF0. In hindsight
+your suggestion also works.
+
+The shift and the ANDN have the same latency (1 cycle); but whereas the
+ANDN can be dispatched to 3 different execution ports, shift can only be
+dispatched to one. I doubt it makes any difference here (that is, the
+latency is 5 Intel * Bridge cycles either way), but enabling the 2 ANDNs
+to run concurrently could be an advantage in some cases.
+
+
+

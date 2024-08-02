@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] Schvrch is broken
+
+Message-ID: <5416BD8D.4030301@ciphershed.org>
+Date: Mon, 15 Sep 2014 06:21:01 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Schvrch is broken
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/15/2014 12:06 AM, Rade Vuckovac wrote:
+Regarding time cost
+
+
+
+As it stays (more details is needed perhaps) the statement about
+PHC_Fast does not pass a basic logic.  Since PHS_Fast function is
+allegedly time constant function it means that the time cost is
+indifferent factor. In other words only input which is varied
+through the initial search is the password. That leads that
+PHC_Fast function, without even inspecting inner working (treating
+it as a black box) has multiple outputs for the same input???
+
+
+
+Regards, Rade
+
+It is very impressive that Steve actually implemented a constant time
+attack.  Steve's attack looks like it's generating the actual correct
+result, in which case it's different than mine.  In my constant-time
+attack, I just compute each state result correctly to within a
+complement or not.
+
+Steve, how are you computing the correct answer in constant time?
+Surely the linear combination of states repeats quickly, but don't the
+256 complement values (one per state) toggle unpredictably for a long
+cycle length?
+
+Here's Revolve:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+        uint64_t i;
+        uint64_t carry = 0;
+        int j;
+
+        for(i = 0; i < rounds; i++)
+        {
+                for(j = 0; j < statelen; j++)
+                {
+                        if(state[(j+2)%statelen]>state[(j+3)%statelen])
+                                carry ^= state[(j+1)%statelen];
+                        else
+                                carry ^= ~state[(j+1)%statelen];
+
+                        state[j] ^= carry;
+                }
+        }
+}
+
+An attacker does not need the correct answer like Steve is computing.
+ He only needs to know if his guess is wrong so he can stop wasting
+time on it and move on.  He can find that out running this code:
+
+void revolve(uint64_t * state, int statelen, uint64_t rounds)
+{
+        uint64_t i;
+        uint64_t carry = 0;
+        int j;
+
+        for(i = 0; i < rounds; i++)
+        {
+                for(j = 0; j < statelen; j++)
+                {
+                        carry ^= state[(j+1)%statelen];
+                        state[j] ^= carry;
+                }
+        }
+}
+
+He then compares his result states to the hash value.  If each group
+of 64 bits are either equal, or complements of each other, then his
+guess is correct with high probability, which he can then verify
+running the full algorithm.  Otherwise, it is wrong and he can move
+onto the next guess.
+
+In this attack, each result state is simply the XOR of some subset of
+original states.  A binary matrix can be built to represent which
+input states are XORed into which output states.
+
+These matrices can be built for each value up to t_cost in time
+proportional to t_cost.  After that, any call to revolve can be
+evaluated in constant time.  Also, these matrix values will repeat
+pretty quickly, I think, at which point we can compute them for any
+t_cost with no additional memory.
+
+This attack an be used for a constant time attack on any path through
+the code that calls only evolve and revolve.  The result states will
+be a simple linear combination of input states modulo 2, which can be
+computed in constant time, to within a complement operation on each
+64-bit state value.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFr2JAAoJEAcQZQdOpZUZTPAP/j9kZdRUUkLCa0WZxS78f8R6
+JUbP//vSYIhXrFmIp7jvL09kvAkNk7BiKGGCvO5a7KcK/go3tGDu+MWr5ZOYFpZQ
+OsXNy7lXcD+GRYl9RiueWNWSX7wtWRolNSqiKNQWsE033YmTpFKV8qOb/+lQAErJ
+iB1vK3Jjrg7yj3Zf+stg2c2hKO8bk82yxpqP2zg5ObBsSPQ4pplothJZemulu4oa
+kplAiT8La8BCO4PPrtpdeDXf45l/geIBzORuaRwW5//kZao4xoM64Hignk18p5R1
+8KKeuLuu24AddpNaGVlBkvnvkhJdxps7770/FLWKyQB/3nZeN6elOe8pYnI2pZMH
+GAXEyjD86Bf+NkLJaoMG2RYpKGsfZgmZ7olsFnCucoLK4j+UaOfdZ7qQGFUx0c+N
+3EI3cPvohFjpA20WJOsgdVWmqdwmL6GyilFCRL73V8+2mvJT3KmyJBD154YGyKM5
+5saIvqGNIv4WXE01KSOuybpfCz4NYcub0fpiT1XWdoIiyWNyeMzLlHHZHKTGpSh8
+G5cvs3t1vsC3NYfYPhcDjEiwBrbWlNA6Urh8rWmrAuc3Uz/5RI+Fr2HSbqXpxKT9
+EVPMv+DPxQS9oScS48r+Cu2BNJ9YA7VbPjZidj+4cFVqxhH1d0sv9RWpNIHq6VIX
+mQ43Dm11vnqpmviIlEYc
+=+zRf
+-----END PGP SIGNATURE-----
+

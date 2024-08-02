@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] A final cheat killer pass with smoke
+
+Message-ID: <alpine.DEB.2.10.1401081655250.26288@debian>
+Date: Wed, 8 Jan 2014 17:20:22 +0100 (CET)
+From: Stefan.Lucks@...-weimar.de
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A final cheat killer pass with smoke
+
+On Wed, 8 Jan 2014, Bill Cox wrote:
+
+So, after my threads finish filling memory with their hashed data, I could
+run a "cheat killer" pass that randomly accesses all of the hash data in a
+pattern that depends on the password, making it impossible to pre-compute.
+
+IF I understand correctly what you mean (a big IF, indeed), you consider 
+the following steps:
+
+   1. fill the memory with some password dependent stuff in some password
+      independent order
+
+   2. read (and, maybe, modify) the memory at password-dependent places.
+
+Am I right?
+
+This is actually what ROMIX does. And one issue here are cache timing 
+attacks, under the ASSUMPTION that you can measure cache timings at the 
+system (a big ASSUMPTION, indeed). Consider the adversary did figure out 
+which memory pages you read from. Now a memory-constrained attack would 
+just execute the first step with a password-candidate, without storing any 
+values to memory, except for those accessed in the second step. If, in the 
+second phase, it would need to access one memory location not stored 
+before, it could safely reject the password-candidate.
+
+Or do you mean to run that second phase after, say, a full Catena (or 
+anything similar)? That would make some sense. However, for Catena-i, with 
+large enough i, I don't see much need for that. Even i=2 would already 
+cause pain for the attacker.
+
+Because it only comes at the end, an attacker looking for a specific cache
+miss pattern would not gain a significant advantage in password guessing
+speed, so the major complaint against password based memory accesses goes
+away.  However, some information still leaks.  In particular, while the
+cache timing is useless for password guessing, it does provide a
+detectable timing signature that proves a particular user has just
+authenticated his password.  This seems a bit silly to worry about.  For
+example, I can just run the "who" command to see who's logged in, or ps to
+see what processes they are running.
+
+But it would also allow the attacker to determine when a specific user has 
+changed her password. Especially when you can call "who" to figure out who 
+has logged in. This is somewhat worrisome. At the very least, you 
+determine if the password, that you currently are trying to crack, has 
+already been changed or not.
+
+The "smoke" approach should defend against that, but on the whole this 
+looks more complicated than stacking two or more bit-reversal graphs, ;-)
+
+
+So long
+
+Stefan
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+     <http://www.uni-weimar.de/cms/medien/mediensicherheit/home.html>
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

@@ -1,0 +1,91 @@
+phc-discussions - RIG vs. scrypt performance comparison
+
+Message-ID: <20150209192529.GA2701@openwall.com>
+Date: Mon, 9 Feb 2015 22:25:29 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: RIG vs. scrypt performance comparison
+
+Hi,
+
+Even though RIG is not a PHC finalist, I'd like to post this in here
+while I haven't forgotten.  This is not particularly relevant to RIG's
+non-selection, but I admit I was reminded by today's posting on RIG.
+
+In the RIG v2 PDF, Figure 6 on page 15 (page 18 per PDF's numbering)
+shows RIG significantly outperform scrypt in terms of memory usage vs.
+time.  However, I think it has weird performance data for scrypt -
+possibly for scrypt's -ref rather than -sse implementation (let alone a
+third-party heavier-optimized implementation, such as @floodyberry's or
+mine).  Specifically, the figure shows scrypt take almost 12 seconds to
+reach 1 GB.  On the previous page, it is said that this is on a i7-4770
+at 2400 MHz, and that RIG uses Blake2b with AVX2 on that CPU.  The
+"2400 MHz" clock rate is puzzling - is this possibly a typo of "3400 MHz",
+Intel's published non-turbo clock rate for this CPU?  Was turbo
+disabled?  If not, the actual clock rate is probably 3900 MHz, as long
+as only one thread was running.
+
+http://ark.intel.com/products/75122/Intel-Core-i7-4770-Processor-8M-Cache-up-to-3_90-GHz
+
+Anyway, the scrypt paper gives 3.8 seconds for scrypt at (2^20, 8, 1),
+which I guess is what (should have been) benchmarked here as well, and
+that's on one core in a 2.5 GHz Core 2 Duo CPU.  Clearly, Haswell should
+run faster, not slower, even if under-clocked to 2400 MHz in some weird
+way (unlikely).
+
+Testing yescrypt in scrypt compatibility mode (thus, computing classic
+scrypt) on a i7-4770K (the "K" shouldn't matter as long as we're not
+overclocking, and we are not), I get:
+
+$ time ./tests 
+scrypt("pleaseletmein", "SodiumChloride", 1048576, 8, 1) = 21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81 ec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47 8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3 37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4
+
+real    0m1.553s
+user    0m1.276s
+sys     0m0.252s
+
+This is one of the test vectors from the scrypt paper.
+
+[ This may be reduced to:
+
+real    0m1.504s
+user    0m1.236s
+sys     0m0.240s
+
+by setting r=64 (8 KiB) and lowering N accordingly (still 1 GiB total),
+which I think is a closer match to RIG's block size. ]
+
+@floodyberry's https://github.com/floodyberry/scrypt-jane gives:
+
+$ sh test-speed.sh
+speed test for scrypt[SHA-2-256,Salsa20/8,AVX]
+scrypt high volume     ( ~4mb), 16946398 ticks
+scrypt interactive     (~16mb), 74095665 ticks
+scrypt non-interactive (~ 1gb), 5329264324 ticks
+speed test for scrypt[SHA-2-256,Salsa20/8,SSE2]
+scrypt high volume     ( ~4mb), 17029082 ticks
+scrypt interactive     (~16mb), 74298176 ticks
+scrypt non-interactive (~ 1gb), 5350444579 ticks
+
+5329264324/3.9/10^9 = ~1.37 seconds
+
+This is at i7-4770K's standard 3.9 GHz turbo clock rate (applies when
+running only one thread, same as i7-4770's), and it includes the memory
+(de)allocation overhead.  Even at the mysterious "2400 MHz" (probably
+just a typo), this would be 2.2 to 2.5 seconds.  That's 6 times faster
+than the 12 seconds.  (And ~7.5 to ~8.5+ times faster if the CPU was
+also running at 3.9 GHz in the RIG benchmarks, which it might have been
+unless under-clocked.)
+
+RIG is shown to run rather fast (which is great) - at low n it's shown
+to be faster than these optimized scrypt benchmarks anyway, but not by
+such a large margin.  The differences become small enough that it
+matters whether the memory (de)allocation overhead is included or not in
+the benchmarks (and that this be done in the same way for all of them).
+
+The authors could want to correct this comparison vs. scrypt (re-run the
+benchmarks properly and include info on which scrypt implementation was
+used and how it was built) in future materials they might publish on RIG.
+
+Alexander
+

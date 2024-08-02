@@ -1,0 +1,30 @@
+phc-discussions - Re: [PHC] avoiding cache thrashing
+
+Message-ID: <20140219143948.GA31378@openwall.com>
+Date: Wed, 19 Feb 2014 18:39:48 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] avoiding cache thrashing
+
+On Wed, Feb 19, 2014 at 06:25:24PM +0400, Solar Designer wrote:
+A drawback of this workaround is that it effectively halves our usable
+sizes of both caches.  What can we do about that?  Another workaround:
+once in a while, alter our choice of address bit that we split the two
+types of accesses on.
+[...]
+amortize the cost of this AND in software, which is desirable since this
+cost is fully avoided in ASIC.
+
+Correction: if we do alter the choice of our selector bit, then the mask
+is not entirely constant (some of its bits are, some are not), so its
+cost is no longer fully avoided in ASIC.  This is an additional slight
+benefit to altering the choice (and to using as wide a range of selector
+bits as practical).  (Although no longer being able to use an immediate
+value for the mask might have a cost in software, too - depending on
+architecture, available registers, specific CPU type.)
+
+I care about these minor costs because random L1 accesses need to be
+very frequent in order to match bcrypt's GPU unfriendliness.
+
+Alexander
+

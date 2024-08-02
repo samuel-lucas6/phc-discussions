@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] pufferfish
+
+Message-ID: <CAOLP8p4s6661DH4+hSt1d1vuMbNf3rm+YKCeh6pSgzjjdD-VJw@mail.gmail.com>
+Date: Sun, 23 Mar 2014 23:51:09 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] pufferfish
+
+On Sun, Mar 23, 2014 at 11:38 PM, Jeremi Gosney <epixoip@...dshell.nlwrote:
+>Just two unreflective ideas for Pufferfish:
+>1. Wouldn't it be easier to support variable output length by variable
+>(length of) ctext in Pufferfishs encryption step instead of an extra
+>hash? I can not see any security improvement for the hash.
+>
+Sure. Bcrypt uses the output of the encryption step directly, so we
+could just as easily do that as well. But on the other hand, there's no
+reason not to hash the output, either. Just my preference :)
+
+Is Jeremi suggesting that the SHA512 step be left out of the expand
+step?  I think the expand step can be simplified, but be careful not
+to make the output a sequence of blocks where each block is simply the
+hash of the previous.  That would make it trivial for attackers to
+determine that the output is non-random, simply by performing one hash
+step and seeing if the result matches the next block.  I like the
+chain sequence you have, plus a secure hash.  If blowfish needs 64
+rounds, then I'd just hash the initial key and a counter, with 64
+rounds of blowfish for each output, rather than chaining them.  HKDF
+does this chaining step, and I cannot figure out why.  Does it improve
+security in the case where the hash function is found to be insecure?
+
+Bill
+

@@ -1,0 +1,165 @@
+phc-discussions - Re: [PHC] Question about saturating the memory bandwidth
+
+Message-ID: <20140119100713.GA18640@openwall.com>
+Date: Sun, 19 Jan 2014 14:07:13 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Question about saturating the memory bandwidth
+
+On Sun, Jan 19, 2014 at 01:13:33PM +0400, Solar Designer wrote:
+With Salsa20/2, I am getting 9300 c/s:
+
+Benchmarking 1 thread ...
+845 c/s real, 852 c/s virtual
+Benchmarking 32 threads ...
+9300 c/s real, 292 c/s virtual
+
+Without ROM (all reads are from RAM), also 1.75 MiB RAM:
+
+Benchmarking 1 thread ...
+1248 c/s real, 1255 c/s virtual
+Benchmarking 32 threads ...
+15429 c/s real, 484 c/s virtual
+
+15429*1.75*4*2^30/10^9 = ~116 GB/s
+
+L3 cache helps much more here (we have 1.75*32 = 56 MiB of data).
+
+or 4188 c/s with 3.5 MiB RAM:
+
+Benchmarking 1 thread ...
+429 c/s real, 429 c/s virtual
+Benchmarking 32 threads ...
+4188 c/s real, 132 c/s virtual
+
+Benchmarking 1 thread ...
+635 c/s real, 639 c/s virtual
+Benchmarking 32 threads ...
+4774 c/s real, 150 c/s virtual
+
+4774*3.5*4*2^30/10^9 = ~71.8 GB/s
+
+L3 cache is not of as much help, as we're exceeding its size by more and
+also because:
+
+7 MiB:
+
+Benchmarking 1 thread ...
+214 c/s real, 212 c/s virtual
+Benchmarking 32 threads ...
+1992 c/s real, 62 c/s virtual
+
+Without ROM:
+
+Benchmarking 1 thread ...
+321 c/s real, 323 c/s virtual
+Benchmarking 32 threads ...
+1987 c/s real, 62 c/s virtual
+
+Faster for 1 thread, but almost same speed for 32 threads.
+
+14 MiB:
+
+Benchmarking 1 thread ...
+101 c/s real, 101 c/s virtual
+Benchmarking 32 threads ...
+952 c/s real, 30 c/s virtual
+
+Benchmarking 1 thread ...
+160 c/s real, 160 c/s virtual
+Benchmarking 32 threads ...
+892 c/s real, 28 c/s virtual
+
+Now it's even slower for 32 threads.  Why?  I think it's page size.  We
+had the ROM in SysV shm on 2 MB pages (explicitly requested), whereas
+the RAM is allocated with mmap() without an explicit page size request.
+I guess the kernel kept it on 4 KB pages here.  Thus, re-pointing half
+the reads from ROM on 2 MB pages to RAM on 4 KB pages may slow them
+down, given that the data does not fit in L3 cache (by far) anyway.
+
+This means that when we're using a few MB or more as RAM, we can already
+benefit from 2 MB pages.
+
+To fit in L3 cache, here's 896 KiB (7/8 of a MiB):
+
+Benchmarking 1 thread ...
+1637 c/s real, 1650 c/s virtual
+Benchmarking 32 threads ...
+22250 c/s real, 701 c/s virtual
+
+22250*7/8*4*2^30/10^9 = ~83.6 GB/s
+
+This uses 28 MiB out of 32 MiB L3 cache, but there's possibly some cache
+thrashing by the reads from ROM (even though they're non-temporal, with
+the hint).  Let's try 448 KiB (7/16 of a MiB):
+
+Benchmarking 1 thread ...
+3102 c/s real, 3102 c/s virtual
+Benchmarking 32 threads ...
+57406 c/s real, 1803 c/s virtual
+
+57406*7/16*4*2^30/10^9 = ~107.9 GB/s
+
+Same as above, but without ROM:
+
+Benchmarking 1 thread ...
+2380 c/s real, 2408 c/s virtual
+Benchmarking 32 threads ...
+46534 c/s real, 1462 c/s virtual
+
+46534*7/8*4*2^30/10^9 = ~175 GB/s
+
+Benchmarking 1 thread ...
+4403 c/s real, 4427 c/s virtual
+Benchmarking 32 threads ...
+83581 c/s real, 2628 c/s virtual
+
+83581*7/16*4*2^30/10^9 = ~157 GB/s
+
+The efficiency loss with smaller memory size is puzzling.  At these high
+speeds, some kind of overhead probably starts to play more of a role.
+
+Finally, with 1 MiB per instance to exactly match L3 cache size (r=8, so
+1 KiB blocks):
+
+Benchmarking 1 thread ...
+2078 c/s real, 2089 c/s virtual
+Benchmarking 32 threads ...
+40678 c/s real, 1275 c/s virtual
+
+40678*4*2^30/10^9 = ~175 GB/s
+
+Oh, and with only 1 round of Salsa20:
+
+Benchmarking 1 thread ...
+3078 c/s real, 3102 c/s virtual
+Benchmarking 32 threads ...
+55840 c/s real, 1742 c/s virtual
+
+55840*4*2^30/10^9 = ~240 GB/s
+
+Somehow r=4 is faster in this case (same total allocation size):
+
+Benchmarking 1 thread ...
+3125 c/s real, 3150 c/s virtual
+Benchmarking 32 threads ...
+59062 c/s real, 1846 c/s virtual
+
+59062*4*2^30/10^9 = ~254 GB/s
+
+To remind, for sequential reads from L3 cache (with no processing at
+all) I am getting ~400 GB/s.
+
+In all of the above tests, the 32 threads are independent.  They're not
+hashing the same password, unlike in my tests with a 2 GiB RAM
+allocation that I had posted before.  Those other tests were for KDF
+use (to be directly comparable to Bill's).  These high c/s rate tests
+are for password hashing use, hence I expect the parallelism to come
+from concurrent authentication attempts.
+
+The "*4" factor can be reduced to "*3" or "*2" (with different escrypt
+flags), resulting in higher memory usage for same c/s rate, but with
+lower or with no TMTO resistance.
+
+Alexander
+

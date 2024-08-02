@@ -1,0 +1,302 @@
+phc-discussions - Re: [PHC] A review per day - Lyra2
+
+Message-ID: <54123E08.1070408@ciphershed.org>
+Date: Thu, 11 Sep 2014 20:27:52 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Lyra2
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/11/2014 01:00 PM, Marcos Simplicio wrote:
+>The value of register "a" is simply hashed into the state values
+>with Blake2s after hashing each 16KiB block.  With alternating
+>multiplies and XORs, all of it reversible, I believe that an
+>attacker will have to duplicate these sequential operations.
+>TwoCats relies entirely on the underlying cryptographic hash to
+>provide irreversibly and solid final hashes.
+
+I really can't blame your writing as much as my reading, so let's
+be gentlemen and say we are even :)
+
+Anyhow, I'm not sure you are achieving the goal of forcing the
+attacker to perform the multiplies, at least not always. My point
+is: since you get the most significant portion of the
+multiplication (that is what ">32" does, right?), you get a
+biased distribution for the result. Hence, there may be some
+shortcuts here, such as a simple (?) test that eliminates the need
+of doing multiplications because you already now the result by
+looking at (a part of) the inputs.
+
+There may be enough bias for 0 in the MSB of the output to enable a
+bit of pre-computation in the next stage with this assumption, but
+even the next lower bit has too low predictability to aid in a
+speed-up, IMO.  Basically, any pre-compputation based on an assumption
+does introduce the speed penalty of the MUX that gets put in to select
+between the result given the guess was right or wrong.  Knowing the
+MSB is 0 likely would reduce the delay through the multiplier by one
+single-bit adder stage, and you might be able to use that to justify a
+MUX, but the next bit down is less predictable.
+
+For the sake of the discussion, take a look at the attached excel
+file: it shows what happens for multiplications between numbers of
+4 bits. In this scenario, about 30%  of the multiplications will
+give 0 as a result (namely, when both operands are small enough),
+and there is a reasonably high probability that only a few bits on
+the right will be 1. The same file also shows that the least
+significant portion is less biased, while the distribution when one
+at least one of the operands is odd is almost unbiased (the latter
+is actually a result from number theory: when one of the operands
+is co-prime to the modulus, you get all possible values between 0
+and the modulus-1).
+
+With 32 bits, you will get 0 out of your multiplications much less
+often than 30% of the time, but the bias toward small numbers
+(including 0) will still be there. Is it worthy exploring such bias
+to avoid those multiplications (e.g., using a look-up circuit)? I'm
+not sure, but if that is the case, there will be passwords that can
+be tested with fewer multiplications than usual.
+
+I apologize if you already have considered this attack venue and
+deemed it unpractical. However, in that case it may be worthy to
+add this discussion to your security analysis to avoid anyone else
+thinking it may be worthy exploring it.
+
+BTW, is there a good reason why you are using the most significant 
+rather than the least significant bits? The latter seems better 
+considering that it leads to less predictable outputs...
+
+Alexander pointed out that the LSBs of a multiplier can be computed
+more quickly than the MSBs, and outlined what looked like about a 2X
+faster multiplier that takes advantage of this.  To keep
+multiplication chain hardness high, we both decided to use the upper
+bits.  I think Alexander uses the whole 64-bit value, but in the
+scalar unit, I found it a bit faster to just use the upper bits.
+
+>Sweet.  The cache-timing defense in Lyra2 is one of the things I
+>like best about it, though I am hoping you will wind up with a
+>better memory access pattern, and I bet you will.  Let me know if
+>you would like me to test pebbling a new memory pattern.
+
+Please feel free to do so if you wish. The description of the
+pebbling strategy is on http://lyra-kdf.net/Lyra2ReferenceGuide.pdf
+(table 2 has some examples). The idea is to use a step is
+approximately half the window containing all rows that have already
+been initialized. More precisely, for a window of wnd, we have
+step=wnd/2+(-1)^{lg(wnd)}, where wnd is a power of 2 as in the
+original submission (but there the step was always -1).
+
+Among many alternatives we tested, this led to the best results
+when you consider that we write on the rows we revisit. I'm not
+sure we would beat bit-reversal if we were only reading rows,
+though (that is a merit of Catena that TwoCats seems to have
+employed quite well).
+
+I'm a bit under the gun at the moment, but I surely can find time in
+the next couple month to do some more pebbling.  By the way, I deleted
+a ton of great comments in your reply above.  It's not that I didn't
+feel like they deserve to be re-posted, it's just that I had nothing
+to add at the moment.
+
+>You and I never had a chance to beat Alexander in this category
+>:-)  I thought about adding ROM support just so I could check
+>that box, but I don't know how best to do that.  I'd mess it up,
+>and it would look dorky.  If Yescrypt does not wind up as a
+>winner, perhaps Alexander can help the winning entry add decent
+>ROM support.
+
+I'm not sure (Alexander certainly grasps the details much better
+than I do), but it seems to me that the same idea that allows more 
+pseudorandomly picked rows to be visited in Lyra2 (again, section
+6.3) would allow one or more of these rows to come from ROM rather
+than RAM. Probably the same idea could be included in other entries
+too. But again, this is an educated guess...
+
+That would work fine, I think.  However, he gets details like
+preferring that speed always increase with increased threads, up to
+the max supported by the CPU, to help keep the authentication server
+from getting stuck in an inefficient high parallel authentication
+state.  I never would have though of that.
+
+>This is actually something I would love to see in Lyra2.  If
+>there is any concern about entropy loss, this should keep Lyra2
+>secure.  It makes it easier, IMO, to prove the algorithm is
+>secure.  I am biased here, but after reading all three sets of
+>code, Lyra2, IMO, wins at simplicity and elegance, but left me a
+>be worried about its reliance on a reduced-round Blake2b to not
+>lose entropy.  I believe it's not a problem, but why not just
+>hash in the original derived key before returning the result?
+
+The last squeeze operation is not round-reduced: it does employ the
+full Blake2b to produce the keys. We do not fell comfortable about
+doing only a reduced-round operation here either! Actually, I
+sincerely doubt that two consecutive squeezes at this point would
+result in unrelated outputs.
+
+Nice.  So long as the repeated Blake2b rounds lose insignificant
+entropy, that should be fine.
+
+>First, a full Blake2s Hash round is called after each block is
+>hashed, cryptographically scrambling the state often.  This is
+>the only place memory hashing in TwoCats can lose entropy.
+
+I'm not sure we agree with the concept of "entropy loss". Entropy
+is measured by how much "disorganized" things are. From that
+perspective, any biased operation leads to entropy loss. To give
+extreme case examples: a logical AND with zeros just wipes out
+every entropy of the system, because it is fully biased toward
+zero; on the other hand, a random oracle preserves entropy, since
+for each entry there will be an unpredictable result (and that is
+why cryptographer like to model hash functions as random oracles
+when analyzing the security of a system).
+
+If we disagree on something like this, then I'm probably wrong.  By
+"entropy", I mean the set of reachable values divided by the total
+states.  So long as it remains close to 1, there's no major issue.
+
+Blake2b maps 512 bits to an unbiased 512 bits.  If you keep applying
+Blake2b over and over, eventually you fall into a cycle regardless of
+the starting point.  If you consider all possible inputs, and then
+consider only states that are in a cycle, it is reduced quite a bit.
+Applying Blake2 or any other cryptographic one-way hash should reduce
+the entropy from the full set of possible inputs to just the states in
+cycles.
+
+Then, I would say that the part in which you do a cryptographic
+hash is the only place in TwoCats that you more are likely to _not_
+lose entropy. Was that I typo or I misunderstood something?
+
+When you use a permutation for mixing, you never lose a single
+possible state.  If you take all 2^256 input states to TwoCat's ARX
+hashing loop, every one of those states maps to a unique output state.
+ By my definition of entropy, that means there is zero entropy loss.
+Even if my hash function were just the identity, or x + 1, or any lame
+permutation, no information is lost.  It makes it to the next call to
+Blake2s where any bias, such as the output looking a lot like the
+input, is erased, though with some actual entropy loss.
+
+The multiplication loop in TwoCats is not a permutation and the set of
+possible output states is smaller than the input states.  However, I
+just feed that into Blake2s at the end of the cycle.  Entropy was
+preserved by the ARX loop, so the multiplication loop does not have to
+be perfect.  It simply has to be hard to skip and difficult to speed up.
+
+There is the possibility that some correlation exists between inputs
+to the ARX loop.  XOR does nasty things to correlated inputs :-)
+However, all the data feeding the ARX function is isolated by at least
+one, and typically many, full Blake2s hashes.  Even if Blake2s is
+found to have a weakness, I can easily switch to SHA256, or SHA512,
+both of which are compiled in already as options.
+
+>In contrast, Lyra2 lightly scrambles the state in every
+>operation, with possible entropy loss in memory (but not the
+>sponge).
+
+I'm not sure I get it. If one round of the underlying function
+loses entropy, then it is unlikely that the whole function will not
+lose entropy. I mean, each round should conserve entropy (and that
+is the idea behind unbiased operations of the ARX design) to ensure
+that the whole function does so too.
+
+I do not try to produce unbiased data in my inner loop.  I just try
+not to lose any, and count on the cryptographic hash to even out any
+bias.  It's not much different than how we often feed salt + a counter
+into a hash function to generate arbitrary key lengths.  Input bias
+doesn't matter so long as there is enough entropy there, meaning
+enough possible input states.
+
+If you mean that "Lyra2 leaves traits of the hash function in
+memory", then I fully agree with you. However, I do not see how
+this can be explored to reverse a round or to predict an output (it
+that was easy enough for one round, then it should still be
+reasonably easy for 10 rounds). But this is basically a conjecture
+backed up by the ALRED idea.
+
+That is not a complaint I have about Lyra2.  You do a better job at
+making it difficult to detect that memory is in fact Lyra2 data than
+most entries, including TwoCats.  I decided to accept this weakness
+and focus on speed instead.  Lyra2 gets similar speed per memory
+operation, without completely dropping the desire to appear random.
+
+>
+>Memory hashing in TwoCats and Yescrypt does not have to be 
+>cryptographically secure.  Our memory hashing output can be
+>highly biased with no loss of security.  All that is required is
+>that the hashing cannot be reversed and does not loose so much
+>entropy that an attacker can skip memory hashing and try to guess
+>it's output correctly.  Guessing the output correctly brute-force
+>for any given password guess would have to be faster than the
+>memory hashing, which is not likely.  The state kept by TwoCats
+>is parallelism times the width of the underlying hash function.
+>It is cryptographically hashed with non-entropy-losing hash data
+>once for every block hashed.  Trying to guess this state at the
+>end would not work out for an attacker trying to improve on 1
+>second  for a 4GiB memory hash.
+>
+>In reality, I'm sure it would be fine to just return the state.
+>This would be more similar to Lyra2.  However, just for added
+>paranoia, I prefer to re-hash in the derived key at the end.  I
+>don't think this is a "real" issue.  It's more like why we prefer
+>to choose "safe" primes when hard-coding primes for Duffie-Helman
+>key exchange.  It's just one less thing for the public to worry
+>about.
+
+
+I do agree with this view that the middle of the memory hashing
+between the start and end of the algorithm does not need to be
+cryptographically secure in the sense of avoiding collisions and
+even second pre-image. Resistance to first pre-image (i.e., no
+reversibility) and "having no shortcuts" (e.g., cycles) do seem to
+be the main requirements here. I'm just not fully convinced that
+these two requirements are met with something that does not try to
+be unbiased and, thus, in the long run create something that would
+look like a hash.
+
+That does not mean at all that TwoCats or Yescrypt are insecure.
+Your choice of "multiplies <=8", for example, does give me a
+certain confidence to say that the simple operations employed in
+TwoCats are unlikely to allow anyone to skip the whole
+multiplication chain too often, because if the attacker gets even
+one bit wrong that will mess up the full hash computation that
+comes right afterward. All I'm saying is that they need a more
+careful analysis to see how often one can run into trouble.
+
+One reason I chose a 128 bit state for the multiplication loop is that
+I was able to find rare cases where the state goes to 0 and stays
+there when I only used 64 bits.  This is not a real problem, since it
+happened so rarely, but it bothered me a bit.  Thus the 128 bit state.
+
+TwoCat's multiplication loop does produce bias and entropy loss, but
+that bias and loss in no way impacts the entropy or bias of the
+Blake2s output in the next block.
+
+>When all the bells and whistles get added, and if I can brow-beat
+>you into offering fewer read/writes per memory location, I am
+>confident any of the three would be a real winner.
+
+Well, most of the credit goes to our "parallelism guy" (Paulo
+Carlos, to be exact), but at least you have the right to say "I
+told you so" :)
+
+
+Marcos.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUEj4FAAoJEAcQZQdOpZUZqWQP/Rl8bhiCJC224tPWhbo3UMvs
+ijXSSH67qOzpSBC8aQc6umHx5BPkf7XA048IaD/7EaHaw7Klb6gjyBCiX0PP9Kxy
+26mkpPr1FaLkBPchv/yxOZEmkM+R3tuAhj4Gyb5PnFoobKPoXAeNRZH1XNxl8I6g
+mw77qViTSauYHEno18Y5gDyj4XY/VvQD4N7lNX7fZ0PmrrMNtbbjiXwIkLQmpmGV
+DfrJ7rfzqm5d6xWzidJnCj+asHxTVTYN/r9Gv47uuRSBFr/FHJ+gGhiz6mkQJUb1
+yOPSdTk87fYQiiG76FZmx2SRbnKoZHNbHA02DPnoPQag3hhePnRH3V91rskR03d2
+Dpxn/EAPMrB45FfHeVtlMtB83RCF2MRKcF9vP8AxWArG9Yujvx9zldPj6waAQfrx
+iRdatKHpmM2GLM0Qrlhj4vhzrOSwe5j+++hL5BEP60cGRjXWAln331/iR8b4IQ1o
+UgBvpypp6prWAJA21x55Kp6Kg8jc69HCwCK2GNWF26P2YDAm6cyzsNxMXTtoEZ4L
+IMqP6gvrm6F3eIJ7QW6kOZGwU+VtVsHZgTfGWtwMEg7SVCd4Ysa7O8E/UTbcnWAn
++BCfFyqWCRZZ/7j2jFt9y+nDXT1quYhcsPbwQM4gFBIpFsI2hzHgetLFJ7K4b6lW
+pq44GY51s6JGaa+UVkGC
+=3Uvs
+-----END PGP SIGNATURE-----
+

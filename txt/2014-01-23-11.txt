@@ -1,0 +1,52 @@
+phc-discussions - RE: [PHC] Initial multiply-compute-hardened Catena-3 benchmark
+
+Message-ID: <a26fe75abe5f43878dcefcde2871a647@BY2PR03MB074.namprd03.prod.outlook.com>
+Date: Thu, 23 Jan 2014 23:46:33 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>,
+	"mjunior@...c.usp.br" <mjunior@...c.usp.br>
+Subject: RE: [PHC] Initial multiply-compute-hardened Catena-3 benchmark
+
+From: Marcos Simplicio [mailto:mjunior@...c.usp.br] 
+
+Hi.
+
+Greetings!
+
+Assume the attacker is able to rent a virtual machine sharing the same 
+CPU as the defender. By observing his own perceived cache latency 
+carefully, he is able to learn what memory locations are accessed by 
+the defender during the hashing of a specific user's password. This 
+has been demonstrated possible in practice.
+
+That is a very interesting information. Could you provide the source for future reference?
+
+Yeah, thanks for asking. Due to the keywords involved, it took me a minute to find it again via web-search.
+
+This is one thing I was remembering:
+http://www.cs.tau.ac.il/~tromer/papers/cloudsec.pdf
+Hey, You, Get Off of My Cloud: Exploring Information Leakage in Third-Party Compute Clouds
+Thomas Ristenpart, Eran Tromer, Hovav Shacham, Stefan Savage
+
+"Using [a specific cloud provider] service as a case study, we show that it is possible to map the internal cloud infrastructure, identify where a particular target VM is likely to reside, and then instantiate new VMs until one is placed co-resident with the target. We explore how such placement can then be used to mount cross-VM side-channel attacks to extract information from a target VM on the same machine."
+
+It's fair to assume that many mitigations have been introduced by this and other cloud service providers and virtualization platforms since this was published. But it's probably also a good assumption that many other providers (especially smaller ones) are likely to have not.
+
+"There has been a long line of work (e.g., [10, 22, 26]) on extracting cryptographic secrets via cache-based side channels. Such attacks, in the context of third-party compute clouds, would be incredibly damaging—and since the same hardware channels exist, are fundamentally just as feasible. In practice, cryptographic cross-VM attacks turn out to be somewhat more diﬃcult to realize due to factors such as [...] The side channel attacks we report on in the rest of this section are more coarse-grained than those required to extract cryptographic keys. While this means the attacks extract less bits of information, it also means they are more robust and potentially simpler to implement in noisy environments such as EC2. "
+
+Since a typical password presents far less entropy to the attacker than a randomly chosen AES key, our default assumption should be that side channel attacks on password-based systems will be even more exploitable than against AES. Furthermore, we're talking about much larger blocks of memory than AES's 256 and 1024 byte tables. Since cache misses going all the way to main memory are much slower they may be easier to observe.
+
+ In Catena's paper, they only mention "At the current point of time, our cache-timing attacks are theoretical."
+Or the demonstrations you are referring to are meant for other primitives?
+
+Yeah, it was just a general statement about our threat model. Not specific to Catena at all.
+
+I could find some discussions for AES (against -- http://cseweb.ucsd.edu/~hovav/dist/aes_cache.pdf -- and pro -- http://research.microsoft.com/pubs/64024/aes-timing.pdf), but nothing on KDFs.
+
+It's still an emerging field. Exciting, right?
+
+- Marsh
+
+-------------------------------------------------------
+Personal opinions, usual disclaimers apply as usual
+

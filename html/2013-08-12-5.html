@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] C99 in reference implementations</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2013/08/11/4">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-Id: &lt;05549388-30E6-44BB-BE96-01D2122E1F9E&#64;gmail.com&gt;
+Date: Mon, 12 Aug 2013 12:46:24 -0400
+From: Mansour Moufid &lt;mansourmoufid&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On 2013-08-10, at 1:45 PM, Daniel Franke wrote:
+
+&gt; I have a reference implementation of a prospective PHC entry written in
+&gt; "portable" C99. By "portable", I mean that it uses only standard C99
+&gt; language features, has no external library dependencies, and should
+&gt; produce identical output regardless of host CPU architecture. However,
+&gt; it makes extensive use of C99 language features, including
+&gt; &lt;stdint.h&gt;/&lt;stdbool.h&gt;, mixed declarations and code, and variable-length
+&gt; arrays. Taking advantage of these features significantly improves
+&gt; readability, but will prevent the code from compiling on MSVC and any
+&gt; other compilers with poor C99 support. Does/should this pass muster for
+&gt; PHC submission requirements?
+
+
+The only problematic compiler is MSVC, and its single biggest problem is
+the header &lt;stdint.h&gt;. MSVC implements the LLP64 data model, the other
+popular data model being LP64:[1]
+
+            short   int     long    long long   size_t
+     LP64   16      32      64      64          64
+    LLP64   16      32      32      64          64
+
+The common denominator is: 'int' is 32-bit and 'long long' is 64-bit.
+
+So for MSVC one can minimally replace the &lt;stdint.h&gt; header with:
+
+    typedef int i32;
+    typedef long long int i64;
+    typedef unsigned int u32;
+    typedef unsigned long long int u64;
+
+I propose the following solution: that submissions conform to C99, using
+the types int32_t, int64_t, uint32_t and uint64_t defined in the header
+&lt;stdint.h&gt;; and that a patch for MSVC be generated automatically using
+Coccinelle[2] and the semantic patch listed at the end of this message.
+
+The reason being that there are as many definitions of "Clean C" as
+there are developers. C99 however is unambiguous.
+
+For example:
+
+    $ cat &lt;&lt; EOF &gt; foo.c
+    &gt; #include &lt;stdint.h&gt;
+    &gt; int main(void)
+    &gt; {
+    &gt;     uint32_t foo;
+    &gt;     int64_t bar;
+    &gt;     return 0;
+    &gt; }
+    &gt; EOF
+    $ spatch --sp-file rm-stdint.cocci foo.c | tee foo-msvc.patch
+    ...
+    @@ -1,7 +1,10 @@
+    -#include &lt;stdint.h&gt;
+    +typedef int i32;
+    +typedef long long int i64;
+    +typedef unsigned int u32;
+    +typedef unsigned long long int u64;
+     int main(void)
+     {
+    -    uint32_t foo;
+    -    int64_t bar;
+    +    u32 foo;
+    +    i64 bar;
+         return 0;
+     }
+
+Of course other issues like &lt;stdbool.h&gt; are similarly easily solved.
+
+[1]: &lt;<a href="http://www.unix.org/version2/whatsnew/lp64_wp.html" rel="nofollow">http://www.unix.org/version2/whatsnew/lp64_wp.html</a>&gt;
+[2]: &lt;<a href="http://coccinelle.lip6.fr/" rel="nofollow">http://coccinelle.lip6.fr/</a>&gt;
+
+The semantic patch referred to above, rm-stdint.cocci:
+
+@typedefs@
+@@
+-#include &lt;stdint.h&gt;
++typedef int i32;
++typedef long long int i64;
++typedef unsigned int u32;
++typedef unsigned long long int u64;
+
+@replace_types depends on typedefs@
+identifier x;
+@@
+(
+- int32_t x;
++ i32 x;
+|
+- int64_t x;
++ i64 x;
+|
+- uint32_t x;
++ u32 x;
+|
+- uint64_t x;
++ u64 x;
+)
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

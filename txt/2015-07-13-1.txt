@@ -1,0 +1,112 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-ID: <CALW8-7+p0jNeCajhJRa6oWvHnCR9PyZymafiqPQ4C36j4UMrHQ@mail.gmail.com>
+Date: Mon, 13 Jul 2015 19:56:21 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: John Tromp <john.tromp@...il.com>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+Hi Bill,
+
+As I understand you deal with the attacks that require a lot of bandwidth
+if run in parallel. This is the same effect that we encountered in our
+tradeoff attacks, where I remember your bandwidth-related critique.
+
+I think both bandwidth- and memory- hardening fit into more generalized
+framework of cost-hardening, where we want to lower bound the ASIC running
+costs. We already have a good/standard metric for the cost --- it is the
+time-area product (AT). Costs of many parallel algorithms have been
+evaluated in this metrics, and we know how to compare them.
+
+In the AT metric both memory and bandwidth are related to the area. Area
+grows linearly with the memory. On the other hand, in the 2D view,
+bandwidth is probably proportional to the area as well. At least, it is
+easy to imagine a twice larger chip that has double bandwidth. Similarly to
+counting how much memory fits into a mm^2, we could count how much
+bandwidth a 1-mm^2 chip can provide.
+
+Therefore, if we fix the area, we implicitly bound both memory size and
+bandwidth. The notion of bandwidth hardness then translates to a lower
+bound on time as a function of area, i.e. to the lower bound on the cost.
+The same we already have for the memory, where memory-hardness implies a
+lower bound on the amount of computations needed to compute the function
+and thus to the lower bound on the time, since the parallelism is bounded
+by the area.
+
+----------------
+
+As a side note, I find strange that you still consider Momentum. Memoryless
+collision search is so well known and explored, that this scheme is barely
+better than plain SHA-256.
+
+Best regards,
+Dmitry
+
+On Sun, Jul 12, 2015 at 12:02 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+Is this a good term to use to describe password hashing and PoW algorithms
+with ASIC defense based on the expense of I/O ports with high data
+bandwidth?
+>
+Here are the differences I see between bandwidth-hard algorithms vs
+memory-hard algorithms:
+>
+- Memory hard algorithms compute a serial chain of data values that must
+be computed sequentially
+- Bandwidth hard algorithms allow an attacker to compute hash values in
+parallel
+- Memory hard algorithms require significant memory per parallel worker
+- Bandwidth hard algorithms allow the data to be shared between parallel
+workers, but it must be transmitted between them
+- Memory-hard algorithms defend against ASIC attacks through the cost of
+memory, the cost of bandwidth, or both
+- Bandwidth hardened algorithms limit ASIC attacks through communication
+bandwidth
+- Memory-hard algorithms tend to have long verification times for PoW
+- Bandwidth-hard algorithms tend to have short verification times for PoW
+>
+In most of my proposed ASIC attacks against memory-hard algorithms, memory
+bandwidth limited the overall speed of the attack.  The cost of the
+external memory was rarely significant.  For example, if bandwidth is not a
+concern, I can buy a 1TiB hard drive for under $100.  If I need 350 GiB/s,
+it will cost several hundred dollars, regardless of the amount of memory
+I'm buying.  It seems to me that bandwidth hardening defends more reliably
+than memory cost.  While bandwidth hardened algorithms have disadvantages
+(like those listed above), the fast verification makes them suitable in
+some cases for PoW.
+>
+I know of three bandwidth-hardened algorithms: Momentum, Cuckoo Cycle, and
+what I was calling "CPU Hash", which ideally is something like Yescrypt
+running with a very small amount of RAM, and a reasonable amount of ROM, or
+an EARWORM with expanded state size.
+>
+SFAICT, all three algorithms provide reasonable ASIC defense.  The benefit
+for each is that verification is very fast.  There is also Argon2's
+proposed Merkel hash tree built on top of the memory filled by Argon2.
+Like Cuckoo Cycle, this allows for log(n) speed verification.  However, the
+Merkel hash tree building dominates the runtime, reducing the benefit of
+running Argon2 as a pre-process rather than just filling memory in parallel
+with hash data.  An advantage of a CPU-hash-like algorithm is simplicity
+and I believe a simple proof of security, but then you have to have the ROM
+available everywhere to do verification.
+>
+An important key for fast-verification PoW bandwidth-hardened algorithms
+seems to be high speed computation that fills available memory bandwidth,
+with no significant short-cut available to an attacker.  These slower
+memory-filling implementations I've seen so far give an ASIC attacker too
+much gain.
+>
+Bandwidth hardening only works if you use a lot of bandwidth.
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] Transforming hash to different cost setting
+
+Message-ID: <1123848421.20140322154752@gmail.com>
+Date: Sat, 22 Mar 2014 15:47:52 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+
+Thomas Pornin (at Saturday, March 22, 2014, 2:33:38 PM):
+
+there is a need to regularly (not often, but regularly)
+increase the hash cost,
+
+it is not that tight. upgrading every year seems perfectly
+appropriate.
+
+ - It requires the login process to be able to process two kinds of
+hashed passwords,
+
+not if we are talking about parameter upgrade. you can't upgrade
+between different primitives anyway. and being able two use different
+parameters does not look very hard.
+
+implies that there must be some extra old/new flag stored along
+
+or the parameters themselves. note that this is also required if you
+want upgradable hash, unless you can upgrade all of them in one go
+while logging in is disabled.
+
+ - It requires the login process to contain the re-hash logic. This
+is not hard, but that's still extra code and complexity
+
+seems negligible to me.
+
+ - Rehashing upon login means that the login system must pay the
+cost for the old hash AND the new hash.
+
+rehashing is spread out in a year or more. for ever rehash, there will
+be dozens if not hundreds of regular logins. the relative cost should
+be irrelevant.
+
+- The upgrade process is then spread over time; a given password
+will be upgraded only when the owner comes by next, which can take a
+few months or years.
+
+which is perfectly fine. that also spreads out the load. if the use
+does not come back for a long time, the password hash should be
+destroyed.
+
+it has its own cost, namely
+that the user, if he evers come back, will need to go through the
+hoops of the forgotten password process.
+
+which, again, is a negligible cost compared to the usual routine. we
+are talking about users that didn't show up for at least a year.
+
+As a rule, users don't like these password things;
+
+they also don't like their stuff be stolen, mails read, etc. it is all
+about education. and if they still prefer weakly hashed passwords over
+the hassle, a service provider can simply skip upgrading. after all,
+we want to serve the people, not the cryptographers. if people don't
+want safe passwords, fine. all we can do is to make it available.
+
+but again, i can't imagine it would cause a significant user
+dissatisfaction if they face some password reset procedure after
+coming back to a website after a year of absence. i can't imagine
+angry forum posts about it. personally, i always forget my password
+after such long time, so i start with resetting anyway.
+
+"Offline cost upgrade" is a feature that some password hashing
+functions may provide.
+
+the question is not whether we want to use it if present. the question
+is, how much value it represents. my point is that not much. two
+candidates needs to offer very much the same, for upgradeability to be
+the deciding factor.
+
+
+

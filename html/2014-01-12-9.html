@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="8">[&lt;prev]</a> <a href="10">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="../../../2014/01/13/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140112151249.GA10864&#64;openwall.com&gt;
+Date: Sun, 12 Jan 2014 19:12:49 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Scripting memory (not so) high vs Catena in PHP (with optimizations)
+
+On Sat, Jan 11, 2014 at 09:09:11AM -0600, Steve Thomas wrote:
+&gt; I wanted to get benchmarks to compare a hashing algorithm optimized for a
+&gt; scripting language vs another algorithm that did not consider this. Since I'm
+&gt; familiar with Catena I decided to implement Catena-3-SHA512 in PHP.
+
+This is very helpful.  Thank you!
+
+&gt; Current scripting memory (not so) high vs current Catena:
+&gt; 2 MiB: 544 ms vs 2030 ms (3.73x)
+&gt; 1 MiB: 249 ms vs 1040 ms (4.17x)
+[...]
+&gt; Optimized scripting memory (not so) high vs optimized Catena:
+&gt; 2 MiB: 431 ms vs 995 ms (2.31x)
+&gt; 1 MiB: 195 ms vs 499 ms (2.56x)
+
+I was getting ~560 ms for 10 hashes at 1 MiB on i7-4770K.  Your Q9300 is
+maybe up to twice slower, but you're reporting twice lower time.  Yet if
+it was for just one hash computation rather than 10, then it'd be much
+lower.  So I am puzzled.
+
+I've attached a new revision of smhkdf (still highly experimental, work
+in progress).  It is about twice faster than the first revision, mainly
+due to reduced iteration count in the last loop.  With $k &gt; 1, that loop
+doesn't need as many iterations; rather, to maximize ASIC area*time, we
+want the memory filling and memory using loops to run for roughly the
+same amount of real time.  (Another aspect, though, is that for attacks
+with e.g. CPUs we may want to optimize for greater SHA-512 efficiency,
+even if it reduces the AT cost somewhat.  For this reason, maybe the
+optimal iteration count for the last loop needs to be somewhere inbetween
+of what I had in the first revision and in this new one.)
+
+This new revision also discourages TMTO to a slightly greater extent.
+
+On i7-4770K, the speed at 1 MiB is 37 c/s for 1 instance, 136 c/s
+cumulative for 8 concurrent instances.  Can you benchmark it on your
+system, including against your Catena scripts?
+
+&gt; Scripting memory (not so) high:
+&gt;         $ja = unpack('V', $x);
+&gt; vs
+&gt;         $ja = unpack('V', substr($x, -4));
+
+I've included this change now.  The reason for substr($x, -4) was to
+prevent an optimized (non-PHP) implementation from prefetching the next
+block a few steps (3 steps, I think) before completing the SHA-512
+computation.  But if this costs us too much in terms of PHP overhead,
+let's omit it.  Besides, such prefetching may be helpful for defensive
+native code implementations as well.
+
+&gt; The optimized version's look ups are aligned to 384 bytes with a $blocksize of
+&gt; 384 bytes vs byte aligned with a $blocksize of 431 bytes. Note both require four
+&gt; SHA512 blocks.
+
+The alignment is both good and bad.  It improves code efficiency, but it
+means that fewer previously computed blocks are needed to compute the
+new one.  Having a dependency on one extra block due to misalignment
+(which occurs most of the time) makes us slightly more TMTO resistant.
+
+&gt;         $m_cost = ceil($blocksize / 64);
+
+I chose to use right shifts instead of floating-point division followed
+by ceil() or floor().
+
+&gt;     $v = array();
+
+BTW, if we do that, we can also discourage TMTO by random writes in the
+last loop:
+
+<a href="http://www.openwall.com/lists/crypt-dev/2013/11/20/1">http://www.openwall.com/lists/crypt-dev/2013/11/20/1</a>
+
+I think the same is not easy to do on a string, where substr() can only
+be used on the right hand side, right?  We're lacking an equivalent of
+Perl's vec() in PHP, right?
+
+I think PHP arrays are always associative (they use hash tables), which
+means they're somewhat inefficient for our needs here.  Right?
+
+I'm not very familiar with PHP.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="9/1">smhkdf-v2.php</a><strong>" of type "</strong>text/plain<strong>" (1205 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+phc-discussions - enhancing Argon2 (was: Competition process)
+
+Message-ID: <20150419054006.GA6691@openwall.com>
+Date: Sun, 19 Apr 2015 08:40:06 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: enhancing Argon2 (was: Competition process)
+
+On Tue, Apr 14, 2015 at 04:13:30PM +0200, Dmitry Khovratovich wrote:
+Adding both things to Argon2 would not be a problem. Actually, we
+already considered replacing our Blake2b round with BlaMKa (or any
+other modification that employs a low-latency high-throughput
+instruction). The S-boxes we did not consider yet.
+
+I now think it'd be best to use the same approach I had suggested and
+Bill implemented for TwoCats.  Since you're already fully loading the
+SIMD units with BLAKE2b rounds, use the scalar units for a single
+pwxform lane chain.  This wouldn't really be pwxform - it would be
+neither parallel, nor wide since it'd be locked to just one lane.  So no
+tunable parallelism there.  But other than that, it'd be the same thing,
+and by tuning the total number of rounds for this un-pwxform that you
+perform per your 1 KB block, you'd achieve the equivalent of the desired
+tunable latency and parallelism limitation.  All with just one parameter.
+And no need to introduce data dependencies between your BLAKE2b rounds,
+then.  So this replaces my two-bit tunable parallelism idea.
+
+Due to the S-boxes, this is only suitable for Argon2d.  You'll need to
+use BlaMka or some S-box-less variation of un-pwxform for Argon2i.
+In fact, you may also use BlaMka for Argon2d, along with un-pwxform, to
+improve the tradeoff latency.
+
+Alexander
+

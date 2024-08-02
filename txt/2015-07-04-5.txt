@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <20150704160649.GA23270@openwall.com>
+Date: Sat, 4 Jul 2015 19:06:49 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+On Sat, Jul 04, 2015 at 03:56:57AM -0700, Bill Cox wrote:
+random ROM (maybe 512MiB), and a fairly small RAM (20KiB).
+[...]
+Defeating GPU attacks is with the large ROM.  Scrypt achieves parity
+somewhere around 4MiB.  This would be much larger, maybe 512MiB.
+
+We shouldn't compare RAM vs. ROM sizes like that.  RAM is per instance,
+ROM is shared.  Having a 512 MB ROM will, on its own, have only small
+impact on performance on modern GPU cards.  For example, on a card with
+4 GB RAM, it leaves 3.5 GB for the instances' "RAMs", thereby reducing
+concurrency to 7/8 of what would be possible without a ROM.  The
+expected performance is thus somewhere in the range of 7/8 to 1 of
+what it would have been without a ROM.
+
+To defeat GPUs via a large ROM, you need to make it larger than the GPU
+cards' RAM sizes, so some ROM accesses will have to go over PCIe
+(transferring ROM blocks from other GPU cards' RAM or from host's RAM).
+
+And yes, someone might want to introduce a cryptocoin based on yescrypt
+with ROM enabled.  Maybe its ROM size should even grow over time, e.g.
+starting at 28 GB (4 GB higher than what current top GPU cards use, and
+4 GB lower than what fits in current desktop systems) and doubling every
+few years or something... and eventually this might favor HPC clusters
+with fast interconnect or something.
+
+Alexander
+

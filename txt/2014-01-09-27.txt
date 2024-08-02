@@ -1,0 +1,58 @@
+phc-discussions - Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+Message-ID: <CAOLP8p7JbdHzrnWNJYsS7iFrcwobtpPSX4ieUuk0Av8HEy0TDw@mail.gmail.com>
+Date: Thu, 9 Jan 2014 10:58:09 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Lyra, Password Key Derivation Based On The Sponge Construction
+
+On Thu, Jan 9, 2014 at 4:14 AM, Christian Forler <
+christian.forler@...-weimar.dewrote:
+
+On 09.01.2014 01:43, Bill Cox wrote:
+Sorry about being noisy.  I'm just looking for every opportunity to push
+my primary point about the design of memory-hard KDFs: they should be
+fast, fill lots of memory, and any CPU cycles wasted on computing a
+crypto-strength hash per memory location is a waste of time.
+>
+"All of our methods for doing this involve finding some function F()
+which approximates a random function and which requires roughly 2^t
+work to compute." -- https://www.schneier.com/paper-low-entropy.html
+>
+It is quite hard so show such a behavior for a algorithm F() which is
+not based on a cryptographic primitive. Moreover, the random function
+approx. property is crucial since a cryptographic key is assumed to be
+random.
+>
+
+Thanks for the link.  That's actually a paper I read a while back.  I think
+it is important to be able to show that significant entropy is not lost
+while filling memory with hash data.  However, the data written to memory
+does not need to be as indistinguishable from true random data as the final
+derived key.
+
+There is a simple way to achieve derived keys that are indistinguishable
+from true random data in systems where the data written to memory is easily
+distinguished from true random data.  Simply use a trusted cryptographic
+hash on the pasword in the beginning to create an intermediate derived key.
+ If the password is used to create data we write to memory, then do another
+iteration of the trusted hash to create the data used in filling memory so
+that it is not correlated in any way with the intermediate key.  Once
+memory hashing is complete, simply XOR it's result onto the derived key and
+then compute the trusted hash of this to create the final derived key.  No
+matter how non-random the computed memory based hash is, it cannot hurt the
+apparent randomness of the derived key.  Also, no significant entropy is
+lost.
+
+SFAIK, there's no reason memory needs to appear truly random.  For example,
+if Alexander were to use Salsa20/20 instead of Salsa20/8 in escrypt, but
+instead of writing out only the resulting hash he wrote out every
+intermediate computed value (there are very many values computed in
+Salsa20/20), he could easily fill memory as rapidly as he liked.  Entropy
+is collected in the end by pseudo-randomly hashing all of memory together,
+so there's no reason memory needs to appear random.
+
+Bill
+
+
+

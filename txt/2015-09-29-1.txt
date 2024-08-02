@@ -1,0 +1,122 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format (2)
+
+Message-ID: <5609D5E7.6010200@openwall.com>
+Date: Tue, 29 Sep 2015 03:05:59 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format (2)
+
+On 2015-09-28 14:12, Thomas Pornin wrote:
+/*
+  * Decode an Argon2i hash string into the provided structure 'pp'.
+  * Returned value is 1 on success, 0 on error.
+  */
+int
+argon2i_decode_string(argon2i_params *pp, const char *str)
+{
+#define CC(prefix)   do { \
+		size_t cc_len = strlen(prefix); \
+		if (strncmp(str, prefix, cc_len) != 0) { \
+			return 0; \
+		} \
+		str += cc_len; \
+	} while (0)
+>
+#define CC_opt(prefix, code)   do { \
+		size_t cc_len = strlen(prefix); \
+		if (strncmp(str, prefix, cc_len) == 0) { \
+			str += cc_len; \
+			{ code; } \
+		} \
+	} while (0)
+>
+#define DECIMAL(x)   do { \
+		char *dec_ep; \
+		(x) = strtoul(str, &dec_ep, 10); \
+ 		if (dec_ep == str) { \
+
+AIUI the decoder tries to be strict. Then perhaps it's worth to check 
+that 'str' doesn't start with ' ' or '-' here and try to catch overflows.
+
+Right now decoder accepts the following strings:
+
+"$argon2i$m= 120,t=5000,p=2"
+"$argon2i$m=-120,t=5000,p=2"
+"$argon2i$m=120000000000000000000000000000000000000,t=5000,p=2"
+
+(the last two only in 32-bit build due to the bounds checks later in the 
+code).
+
+			return 0; \
+		} \
+		str = (const char *)dec_ep; \
+	} while (0)
+>
+#define BIN(buf, max_len, len)   do { \
+		size_t bin_len = (max_len); \
+		str = from_base64(buf, &bin_len, str); \
+		if (str == NULL) { \
+			return 0; \
+		} \
+		(len) = bin_len; \
+	} while (0)
+>
+	pp->key_id_len = 0;
+	pp->associated_data_len = 0;
+	pp->salt_len = 0;
+	pp->output_len = 0;
+	CC("$argon2i");
+	CC("$m=");
+	DECIMAL(pp->m);
+	CC(",t=");
+	DECIMAL(pp->t);
+	CC(",p=");
+	DECIMAL(pp->p);
+	if (pp->m < 1 || (pp->m >30) 3) {
+
+Why not just compare with a constant here?
+
+		return 0;
+	}
+	if (pp->t < 1 || (pp->t >30) 3) {
+		return 0;
+	}
+	if (pp->p < 1 || pp->p 64) {
+
+255 here?
+
+		return 0;
+	}
+	if (pp->m < (pp->p << 3)) {
+		return 0;
+	}
+	CC_opt(",keyid=", BIN(pp->key_id, sizeof pp->key_id, pp->key_id_len));
+	CC_opt(",data=", BIN(pp->associated_data, sizeof pp->associated_data,
+		pp->associated_data_len));
+	if (*str == 0) {
+		return 1;
+	}
+	CC("$");
+	BIN(pp->salt, sizeof pp->salt, pp->salt_len);
+	if (pp->salt_len < 8) {
+		return 0;
+	}
+	if (*str == 0) {
+		return 1;
+	}
+	CC("$");
+	BIN(pp->output, sizeof pp->output, pp->output_len);
+	if (pp->output_len < 12) {
+		return 0;
+	}
+	return *str == 0;
+>
+#undef CC
+#undef CC_opt
+#undef DECIMAL
+#undef BIN
+}
+
+-- 
+Alexander Cherepanov
+

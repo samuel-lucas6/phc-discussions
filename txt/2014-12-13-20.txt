@@ -1,0 +1,32 @@
+phc-discussions - Re: [PHC] Re: Some KDF stumbling blocks, plus Common
+
+Message-ID: <20141213203443.GA18365@bolet.org>
+Date: Sat, 13 Dec 2014 21:34:43 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Some KDF stumbling blocks, plus Common
+
+On Sat, Dec 13, 2014 at 04:28:49PM +0000, Adam Back wrote:
+I think you are saying this would be slower, take more storage than the
+method I describe.  Do you see some advantage?
+
+In my method, the user needs not know the factorization of n at any
+point. This means that n can be shared by all users; the 300 blinding
+pairs can be shared as well. Thus, they can be hardcoded in the
+application, without requiring per-user storage of such data.
+
+
+I think your method loses information theoretic security because the 
+way you generate the blinding factor has number of values 
+c(300,150)<|n|.  With my method b is uniform random from [0,n).
+
+Ah, I see: the _delegation_ is information-theoretic secure. However,
+if the attacker can get a copy of the resulting hash value (the
+classic situation with a server authenticating user against a
+database of hashed passwords), then we are back to "normal" security
+(if you know the factorization of n, you can compute square roots
+modulo n).
+
+
+	--Thomas Pornin
+

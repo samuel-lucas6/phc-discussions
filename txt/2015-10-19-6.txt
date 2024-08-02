@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] BlaMka loses entropy
+
+Message-ID: <20151019190203.GA18449@openwall.com>
+Date: Mon, 19 Oct 2015 22:02:03 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] BlaMka loses entropy
+
+On Mon, Oct 19, 2015 at 11:17:44AM -0700, Bill Cox wrote:
+- Poor in-cache performance (about 3X slower than TwoCats)
+
+Are you referring to your ~1ms running time measurements at 4 MiB?
+
+If so, that's a non-issue.  I am puzzled why you keep bringing it up.
+
+I have yet to see any benchmarks showing Argon2 run much slower than
+TwoCats in terms of password hashing throughput (hashes per second on a
+fully loaded CPU).  Do you have such benchmark results maybe?
+
+Using MAXFORM on the scalar unit would solve 4 of my top 5 concerns.
+
+I'd say 3 out of 3:
+
+- Too much parallelism
+- Poor compute-time hardening (due to parallelism)
+- Somewhat poor GPU resistance.
+
+These are real issues.
+
+The
+poor in-cache performance is not easily fixed, since Argon2's state busts
+out of the SIMD unit registers and lives in L1 cache.  For low-memory
+in-cache memory hashing, I plan to replace the Argon2 block hash with most
+likely either the one from TwoCats or preferably Yescrypt if it is fast
+enough.
+
+FWIW, the final yescrypt will write at least as much data to L1 cache as
+Argon2 does (when running with PWXrounds=3; or 4 times that much data
+when running with the default PWXrounds=6).  A notable difference is
+that those writes won't be temporary for the current block's processing,
+but will also affect further blocks.  Per my recent testing, sequential
+writes to L1 cache are essentially free on modern x86 CPUs, even on
+Bulldozer (where they go to WCC and L2), so in a sense it's wasteful not
+to do those.  (OTOH, Argon2's are wasteful in that Argon2 does not take
+full advantage of them.  The ds flavor could possibly use them to update
+the S-boxes, much like yescrypt will.)
+
+If you'd like to run those password hashing throughput benchmarks I
+suggested above, I'd be interested if you include yescrypt-0.8+ in those
+as well (to be made public soon, or I may share it with you now), at the
+two PWXrounds settings I mentioned (3 and 6).
+
+Alexander
+

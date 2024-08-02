@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] GPU multiplication speed?
+
+Message-ID: <20140227143209.GA11200@openwall.com>
+Date: Thu, 27 Feb 2014 18:32:09 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU multiplication speed?
+
+On Thu, Feb 27, 2014 at 09:13:52AM -0500, Bill Cox wrote:
+Given this description, I would guess that Script is sped up on GPUs
+only for small memories, like the 128KiB used in LiteCoin.  Large
+memory hashes, such as 1GiB would be limited by memory space on the
+card, and the fact that instructions take something like 11-ish ns
+each.  If that's the case, GPUs should be very bad at large memory
+sized Script hashing.  Is this right?
+
+As I mentioned before, the threshold where current GPUs are on par with
+current CPUs per chip appears to be at around 4 MiB for scrypt, as we
+know from YAC mining.  How much slower the GPUs will become when the
+per-hash memory cost setting grows further we'll know in a few months
+when YAC moves to 8 MiB.  Indeed, you can simulate this right now (just
+hack a YAC miner's source code), but a monetary incentive might mean more.
+
+Also, on a GPU, there's nothing special about multiply (maybe 32 bit
+vs 24 is helpful by).  Any memory hashing algorithm will slow down a
+GPU so long as there are enough sequential operations that depend on
+the previous result.
+
+Right.
+
+There might or might not be a few cycles of extra latency for a
+multiply, but compared to the latency incurred with any instruction this
+is only a small advantage (for the defender).
+
+However, SHA-256, Blake2, and other hash
+functions have a lot of parallelism, so a GPU can interleave
+instructions that don't act on results from the prior few
+instructions, reducing the latency impact.
+
+As far as I'm aware, no current code takes advantage of this as it's
+incompatible with OpenCL and CUDA programming models, and as GPUs lack
+ability to issue more than one instruction per cycle from the same
+hardware thread (unlike CPUs).  Also, the parallelism available in those
+algorithms is insufficient to make it worthwhile to introduce any kind
+of data dependencies across threads.
+
+So e.g. in Litecoin and YAC mining, the parallelism comes purely from
+concurrent instances of scrypt.  Their number is doubled via scrypt's
+TMTO, though.  ... Oh and yes, this means that the 4 MiB I mentioned
+above actually means 2 MiB for a TMTO-unfriendly variation of scrypt.
+
+If this is correct, wouldn't an effective strategy be to have a long
+chain of sequential operations that depend on the prior result, and to
+
+We have this with bcrypt, yes.
+
+hash a lot of memory?
+
+Yes, but when it's a lot of memory your latency dependency reduces since
+your random memory accesses are not as rapid on the defender's system.
+
+It wouldn't have to be multiply - anything
+would do, such as a chain of addition, rotation, and XOR.  If I did
+this, causing an 11-ish cycle effective computation time, and hashed 1
+GiB, then a modern Nvidia GPU with 12GiB would only be able to compute
+12 hashes in parallel due to memory limitations, and his 11-cycle
+latency vs my 1-ish cycles for simple operations should limit his
+advantage to maybe 2x-ish?  If I run 2 threads, than would it be a
+1x-ish non-advantage?
+
+The advantage from GPUs (comparing currently available CPUs and GPUs)
+should become negative at a few MiB or (preferably) less.  For bcrypt,
+CPUs and GPUs are on par at bcrypt's 4 KiB. :-)
+
+Alexander
+

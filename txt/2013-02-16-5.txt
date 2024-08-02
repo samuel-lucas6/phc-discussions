@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] Different cost settings and optional input
+
+Message-ID: <20130216142415.GA29200@openwall.com>
+Date: Sat, 16 Feb 2013 18:24:15 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Milen Rangelov <gat3way@...il.com>
+Subject: Re: [PHC] Different cost settings and optional input
+
+Milen - I don't know if you have joined us on the discussions list or
+not yet, so I am CC'ing you just in case.  Please join us! :-)
+
+On Sat, Feb 16, 2013 at 12:22:39PM +0100, Jens Steube wrote:
+09:29:30 gat3way | Hey are you sure about that criterion:
+09:29:32 gat3way | "Ability to transform an existing hash to a different cost setting without knowledge of the password."
+09:29:52 gat3way | assuming that was possible, it means I can change cost to 1 then attack the hash :)
+09:39:47 jchillerup | i think it implies transforming it into only *more* expensive versions
+09:40:02 jchillerup | Otherwise it wouldn't make sense :)
+
+Of course, jchillerup is right. I think we should update the CFS to
+make that clear.
+
+I noticed this curious wording too (in one of the drafts), but I did not
+object to it because:
+
+1. We specify nearby that we'll evaluate "Effectiveness of the cost
+parameter (e.g. can the time and space expected requirements be
+bypassed?)"  Thus, password hashing schemes that allow for cost
+downgrades are discouraged.
+
+2. There may be time-memory trade-offs.  If someone clever comes up with
+a password hashing scheme where an existing hash may be transformed to a
+higher CPU cost but lower memory cost, or vice versa, without knowledge
+of the password - this may be fine, as long as this property is known
+and considered in the evaluation.  A password hashing scheme should not
+be automatically disqualified, nor necessarily discouraged, just for
+possessing this property.  In some cases, this property may be useful.
+
+Note that this potentially differs from scrypt's TMTO.  In scrypt, the
+TMTO is available for each individual scrypt computation, without having
+to do any precomputation (transforming the stored hash).  In #2 above, I
+am referring to a broader class of possible TMTOs, including those that
+may require significant amount of precomputation (just not knowledge or
+cracking of the actual password).
+
+In other words, I did not object because I did not want us to throw the
+potential baby out with the water.  I also did not explain this until
+now, though - perhaps I should have. :-)
+
+And maybe we should revise the wording somehow... or link to this sort
+of explanation, which we'd put somewhere (near the end of the FAQ, as
+perhaps this is not a very frequent question, yet it may come up more
+than once?)
+
+As to TMTOs in general, there are some pros and cons to having and not
+having them in a password hashing scheme.  (In fact, "not having" only
+means that the TMTOs are such that they're not lucrative for almost any
+attacker.  Not that they literally don't exist.)  I expect that some of
+the submissions of sequential memory-hard schemes will (deliberately?)
+allow for TMTOs, some will (deliberately?) defeat TMTOs, and some will
+have a Boolean parameter controlling that.  All of these are welcome.
+
+Alexander
+

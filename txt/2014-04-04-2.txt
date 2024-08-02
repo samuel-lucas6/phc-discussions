@@ -1,0 +1,36 @@
+phc-discussions - EARWORM review
+
+Message-ID: <CAOLP8p4hB0hNnKGggwDTsvL-_31C5w-y5DCD+eneBHCsw_GERA@mail.gmail.com>
+Date: Fri, 4 Apr 2014 05:17:17 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: EARWORM review
+
+I spent a couple of hours going through EARWORM.  I am impressed.  The
+only complaint I have is the use of PBKDF2.  Maybe in the tweak period
+EARWORK could adopt Solar Designer's latest hack and do a SHA256 on
+the password before calling PBKDF2.  I think that's a very nice way to
+eliminate the input collisions.
+
+The paper addressed every concern I had, and admitted every weakness I
+could find, including the input collisions due to PBKDF2.  I tested it
+on my development machine, and a single thread achieves about 12GiB of
+read bandwidth to memory, which is about the same as what my TwoCats
+does with two threads.
+
+It does require the AES SIMD instructions to run anywhere near this
+fast, but that's not a problem for a dedicated authentication server.
+For an authentication server using a large ROM, I think EARWORM it
+would be hard to beat.  It's very nice work.  I didn't even need to
+read the security proofs.  It's security is plain as day from the
+design and reliance on PBKDF2-SHA256 and AES-128.  Side-channel
+attacks are possible, as discussed in the paper, but if an attacker is
+already running processes on your authentication server, you've got
+bigger problems.
+
+Now I'm going to have to modify my "alternate win condition".  Now I'm
+just hoping to have the fastest memory hashing per thread not counting
+those annoying ROM based authentication server schemes :-)
+
+Bill
+

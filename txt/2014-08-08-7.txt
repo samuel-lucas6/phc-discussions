@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CAOLP8p5wcqU3hHSe_9MOc-eRnWtSTJoddvzJAS=OXBYWm3nKYw@mail.gmail.com>
+Date: Fri, 8 Aug 2014 18:20:39 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: Dmitry Khovratovich <khovratovich@...il.com>
+Cc: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>, Ben Harris <ben@...rr.is>
+Subject: Re: [PHC] Tradeoff cryptanalysis of password hashing schemes
+
+On Fri, Aug 8, 2014 at 5:40 PM, Dmitry Khovratovich <khovratovich@...il.com>
+wrote:
+
+First, I would not suggest DRAM for its rather high power consumption in
+the idle state. We assumed the use of SRAM, this particular design
+http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6193183
+>
+
+I still think this is quite strange, but I seem to know a bit about ASICs
+compared to most people on this list.  I could probably help a bit here.
+
+SRAM vs DRAM is a complex subject.  We even have DRAM on ASICs now days.
+I'm no ASIC RAM expert!  I've designed a couple of small ones, but Intel
+takes it to an art form.  Anyway, I'd be happy to offer my not-so-expert
+advice/review of your models when it comes to ASICs.
+
+The main problem is density, and the cost of real estate on an ASIC.
+Nothing is as cheap per bit as modern DRAM.  You can have 2^16 SRAMs on an
+ASIC if they are only a few bytes each.  In reality, you'll want something
+like at least 4K bits per SRAM (512 bytes), and you may have room for a
+megabyte or so of them, which would be 2,048 of them.  Also, ignoring the
+routing delays, power, and area between 2^16 SRAMs, with 2^16 address
+buses, 2^16 data in busses, and 2^16 data out buses is a mistake.
+
+As a general rule, if Intel makes it, that's about the max that is
+possilble.  You can have maybe 24MiB of static SRAM on chip that is *very*
+fast, but each bit will suck a lot of power.  To hash 1GiB, an ASIC
+*requires* external memory.  You can do it with cheap DRAM, or low-latency
+SDRAM, but there's probably some old low-power DDR2 thing that wins on the
+total cost of ownership spreadsheet.  I don't know which specific RAM
+architecture wins, but I'd bet DRAM over SRAM any day.  At least before we
+got to 22nm :-)
+
+>
+>The Argon ASIC has some really awesome DRAM!  I want some of that DRAM
+>that let's me r/w 21GiB in 0.02s!  I suspect there's a typo or I'm
+>misunderstanding the table...  Also, on my machine, 1GiB hashing using the
+>PHS interface to Argon takes 3.5 seconds (t_cost = 3, m_cost = 1024*1024, 1
+>thread, Argon PHS defaults).  It seems to be CPU bound rather than memory
+>bandwidth bound.  I would expect an ASIC to flip this situation so that it
+>becomes memory bandwidth bound.  Please let me know if I've compiled with
+>the wrong parameters or such!
+>>
+>
+This should not be a big surprise even if you do not consider our model
+with 2^16 memory banks. For example, recent GPUs have total memory
+bandwidth up to 400 GB/sec.
+>
+
+Actually, such RAM simply does not exist, and certainly cannot be
+integrated into an ASIC with today's tech.  I can hardly wait for it though!
+
+I would redo the model to have a standard external 1GiB DRAM bank.
+
+Bill
+
+
+

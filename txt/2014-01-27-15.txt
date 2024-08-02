@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <20140127222340.GA30957@openwall.com>
+Date: Tue, 28 Jan 2014 02:23:40 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Mon, Jan 27, 2014 at 04:54:27PM -0500, Bill Cox wrote:
+I was comparing Catena-3 graphs to Alexander's power-of-two graphs,
+and both did well in different areas.  Then I though, how about
+combining them?  So, instead of picking random locations within the
+
+By "random locations", do you mean secret-dependent (leaky) or not?
+
+sliding window, I pick bit-reversal based locations.  This results in
+the hardest to pebble DAGs so far for my pebbling algorithm.
+
+This is good news.  I was going to try the same for the cache timing
+resistant portion of computation in escrypt.
+
+It is curious (and unexpected by me) that bit reversal is better than
+"random" permutation.  I thought of also trying e.g. TEA block cipher at
+changing block size (to match the current sliding window size) and very
+low round count as an alternative to bit reversal.  It could be
+implementable in roughly as many instructions as bit reversal on CPUs
+lacking a bit reversal instruction.
+
+I'm thinking of using this without password dependent memory location
+reads for the first 50%, and then for the last 50%, I'll use the
+existing NoelKDF DAG, which will have a ton of edges back into the
+sliding bit-reversal DAG.
+
+Yes, I was thinking of doing something similar, except I'd probably pick
+50% of SMix first loop for secret-independent indexing, which translates
+to 25% of total running time and 1/12 of total AT cost.  Yes, 1/12 is
+not a lot, yet it may be a good tradeoff considering that cache timing
+attacks will likely be far less common than regular offline attacks.
+
+Alexander
+

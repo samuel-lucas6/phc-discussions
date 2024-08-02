@@ -1,0 +1,42 @@
+phc-discussions - Re: [PHC] Are password trailing 0's a problem?
+
+Message-ID: <CAOLP8p4GGFmbXzpCFkSdd_R=BrNVzZa1+YFTuuoioxy8COnOGg@mail.gmail.com>
+Date: Fri, 7 Mar 2014 19:20:49 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Are password trailing 0's a problem?
+
+On Fri, Mar 7, 2014 at 6:45 PM, Solar Designer <solar@...nwall.comwrote:
+BTW, Bill's choice of BLAKE2 for the sole cryptographic primitive, while
+sound technically, may be problematic for some prospective users.
+
+Good point.  I just read a bit more about SHA3, and it sounds like I
+might get more acceptance using Blake2...
+
+Maybe I should just plug SHA-256 back in like I had before, just for
+the hashing at the start and finish.
+
+>ISTM that it
+>would be embarrassing for the PHC winner to have less resistance to
+>generic attacks than a hash function should provide.
+>
+I agree.  So I am thinking of a suitably minimal change to scrypt's use
+of PBKDF2 so that the two problems pointed out in this thread today
+would not affect escrypt (except in scrypt compat mode).  Unfortunately,
+those minimal changes feel hackish.  For example, I could XOR the
+least significant byte of password length into each derived key block
+after the initial PBKDF2 call.  How does this sound to you?  (One byte
+should be enough since it contains all the info that is otherwise lost
+with padding.  And there's no endianness issue.)
+>
+Alexander
+
+I get a wiggy feeling now when stuff gets XORed together and then use
+the result directly, after Steve's attack on my original NoelKDF
+function, and after reading about the PBKDF2 chosen c attack which is
+only possible because they XORed results together.  XORing in the
+length is simple, but I might just go ahead and do the work of using
+Init, Update, and Finalize and hash in the input length directly.
+
+Bill
+

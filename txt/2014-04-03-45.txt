@@ -1,0 +1,82 @@
+phc-discussions - Re: [PHC] babbling about trends
+
+Message-ID: <20140403185046.GA14264@bolet.org>
+Date: Thu, 3 Apr 2014 20:50:46 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] babbling about trends
+
+On Thu, Apr 03, 2014 at 02:00:14PM -0400, Bill Cox wrote:
+Is it fair to say that the most interesting aspect of your entry is
+the delegation capability?
+
+That's the whole justification, yes. On the paper, using RSA-like
+computations _should_ make the function more vulnerable to GPU. I quite
+expected GPU to be very good at doing RSA. When I looked for figures,
+the best I found was a 2011 study which came to a different conclusion,
+namely that for RSA, CPU and GPU offered very similar throughput per
+dollar. This was a happy surprise.
+
+I still expect that someone will show up with a detailed analysis
+showing that a cheap ASIC can be built, which crunches Makwa hashes at
+high speed. The idea of Makwa is that delegation allows to enlist enough
+extra power to more than compensate for such effects.
+
+
+IIRC, there's no arbitrary hash function called during delegation.  Is
+it possible to add a memory-hard hash function call to the delegated
+password hashing?
+
+I cannot prove it to be impossible, but I don't know how to do such a
+thing. The RSA-based masking (in fact, more Rabin-based than RSA-based)
+is the only method I found to do delegation. Initially, I wanted
+something with elliptic curves (for purely aesthetic reasons), but I did
+not find anything.
+
+
+However, I get confused as to why this is better than just having a
+server master password used to decrypt password/user specific secret
+secondary keys?
+
+I, too, have trouble finding a realistic scenario where the shortcut is
+a really essential feature. The best I can think of is the following:
+the shortcut cannot be evaded.
+
+A shortcut can always be added with asymmetric encryption: there is an
+asymmetric key pair (Kpub,Kpriv), and when a password pw must be
+registered, the registering system stores both PHS(pw) and E_Kpub(h(pw))
+(the second value is the encryption with Kpub of h(pw) for a hash
+function h(), e.g. SHA-256). When a system (the same or another) must
+verify a password, then it either decrypts it (D_Kpriv(E_Kpub(pw)) = pw)
+if it has access to Kpriv, or it recomputes PHS(pw) otherwise. This
+scheme works with any password-hashing function h(), and the asymmetric
+encryption thing can be space-efficient if using, e.g., ECDH+AES (do
+some ECDH for key exchange, use AES to encrypt h(pw) truncated to 16
+bytes as a single block; encrypted value size will be 48 bytes: 32 bytes
+for a P-256 curve point, and 16 bytes for the AES output).
+
+With such a generic system, a rogue registration system could compute
+PHS(pw) faithfully, but produce random junk instead of E_Kpub(h(pw)).
+This would not be detected until a server knowing Kpriv comes around.
+This situation cannot arise if PHS(pw) has an inherent shortcut ability:
+namely, if a password can be verified at all with Makwa, then the
+shortcut MUST necessarily work.
+
+This is a pretty specific situation and I fail to imagine a plausible
+scenario where it would apply. But absence of proof is not proof of
+absence -- maybe someone has an idea where the shortcut is a killer
+feature ?
+
+
+In the case of Makwa, when the optional pre- and post-hashing are not
+applied, the shortcut actually turns into an escrow mechanism, which IS
+useful in some cases, e.g. to support authentication protocol such as
+APOP where the actual password must be known a priori by the server.
+There again, escrow can be added to any PHS with an extra asymmetric
+encryption. The ability of an algorithm to combine slow hashing and
+escrow is more a safety against implementation errors than an actual
+security feature.
+
+
+	--Thomas Pornin
+

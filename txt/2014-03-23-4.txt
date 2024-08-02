@@ -1,0 +1,110 @@
+phc-discussions - Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Message-ID: <20140323015724.GA27114@openwall.com>
+Date: Sun, 23 Mar 2014 05:57:24 +0400
+From: Solar Designer <solar@...nwall.com>
+To: Jeremy Spilman <jeremy@...link.co>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] "Why I Don't Recommend Scrypt"
+
+Jeremy,
+
+On Fri, Mar 14, 2014 at 04:35:37PM -0700, Jeremy Spilman wrote:
+There are a surprising number of features in the scope of  
+"password storage and verification" which could be bundled or not within  
+the underlying hashing function.
+
+I like the idea of a hash-agnostic API which can properly handle salting,  
+peppering, stretching, lengthening, serializing/deserializing, offloading,  
+and upgrading. Let the hash function provide the tunable [compute-hard,  
+memory-hard, ROM-port-hard] function, but where everything else lives one  
+layer up?
+
+This sounds cool in theory, and I think Jean-Philippe wanted this sort
+of submissions to PHC - not only self-contained schemes like most we've
+been discussing so far, but also generic schemes aimed to replace
+PBKDF2.  (Maybe Catena is a valid example of this.)
+
+However, how can you keep "stretching" at this higher level while also
+providing a "memory-hard" underlying function?  Wouldn't the stretching
+need to be inside that function, then?  Or would you move the
+memory-hardness to the higher level, too?  (If we treat Catena as such
+higher-level scheme, then it has its memory-hardness at this higher
+level.)  Efficiency (and thus security) would probably suffer, like it
+does in PBKDF2 (and I think in Catena too), but maybe for some use cases
+(what would they be?) that's an acceptable price for having a more
+generic scheme.
+
+>>Or even more advanced features such as the ability to
+>>delegate computation to an external untrusted system.
+
+>This is an interesting topic, which somehow we haven't touched on this
+>list yet, although at least Jeremy Spilman and I thought of it before.
+
+The approach I've been developing involves a Site handing just the hash of  
+a salted-stretched-password to an external service. The Service HMAC's  
+this hash with a Site-specific shared key and a Site-specific private key  
+to generate pseudo-random indices into a very large ROM-on-SSD. (I'm  
+currently running 16TB ROMs in multiple data centers if anyone is  
+interested in playing with this, please let me know)
+
+It's nice to hear you've implemented this by now.  Are your 16 TB ROMs
+on SSDs or on HDDs?
+
+How do you (re)initialize them?  e.g. are they filled from /dev/urandom
+(meaning you need to transfer 16 TB to each new data center?) or are they
+generated from a seed that you store in a safe place?  In the latter
+case, do you ensure a portion of the ROM can't be used to recompute the
+rest of it?
+
+The multiple data centers are for redundancy, right?  Do you use some
+custom protocol or DNS or anycast or a combination of these to route
+requests to portions of your Service?
+
+As you're aware, I've been considering setting up a service like this
+too. ;-)
+
+>Moreover, there are probably ways to
+>implement this feature as a built-in better than it'd be implemented
+>externally, by introducing blinding with some per-hash-computation
+>randomness rather than merely by relying on fixed secrets (the
+>difference is in how much metadata is leaked to the external party).
+
+I believe the lower-bound here is the external party will know that you  
+made a request (either a user tried to login, or the Site is generating  
+fake logins), and obviously the given input for each request, but the  
+external service would not know if that input corresponds to a successful  
+or unsuccessful login attempt.
+
+Assuming the external party is hostile, and saves every input you ever  
+send it, then the Service can presume a request with a duplicate input  
+means there's a user trying the same password twice, but still not know  
+anything about the password, which user, or even necessarily if it's a  
+valid password.
+
+Yes.  With the scheme you've described, which is pretty much what I had
+in mind as well, the Service can also estimate the number of (active?)
+user accounts, by counting different partial hashes.  In an active
+attack, probing for valid usernames might also be possible (depending on
+implementation and whether fake requests to the Service are made for
+unknown usernames).
+
+I think the key requirement is to treat the external party as untrusted,  
+i.e. they can't recover any plains, and there's no hostile output they can  
+provide back to you that would ever weaken your stored value or lead to  
+collisions. If the external service is compromised, the attacker gets the  
+metadata, but they don't get any passwords unless they compromise the Site  
+as well.
+
+If there's a way to reduce metadata leakage any further, I would be very  
+interested in this.
+
+Like I mentioned, I think something along the lines of RSA blinding
+could be used if it were a portion of hash computation that we were
+delegating (and we'd build the stretched portion of our scheme upon
+suitable primitives, which allow for blinded computation like that).
+
+For ROM lookups, I'm afraid this can't be done.
+
+Alexander
+

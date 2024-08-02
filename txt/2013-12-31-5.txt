@@ -1,0 +1,94 @@
+phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome
+
+Message-ID: <20131231042357.GA19163@openwall.com>
+Date: Tue, 31 Dec 2013 08:23:57 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+Bill,
+
+On Tue, Dec 31, 2013 at 05:42:41AM +0400, Solar Designer wrote:
+On Sun, Dec 29, 2013 at 05:29:02PM -0500, Bill Cox wrote:
+- All threads hash randomly from all of memory at the same time, so you
+can't run p smaller runs in series, where p is scrypt's parallelization
+parameter
+[...]
+
+http://www.openwall.com/lists/crypt-dev/2013/12/19/1
+
+I like this too. ;-)
+
+Looking at your code, you're resolving the higher area-time vs. number
+of thread synchronizations tradeoff differently than I did, though.
+I suggested having just one extra synchronization point (between the
+equivalent of SMix's two loops), whereas in your case the
+synchronization is continuous and the number of times a thread will have
+to wait for other threads' data to become available is not pre-specified.
+
+Here's an even worse problem:
+
+Your threads write "pages" of data, but do those pages correspond to a
+whole number of physical pages on a given system?  This requires
+page-aligned accesses and your "page" size being a multiple of the
+underlying hardware page size.  You could say that, yes, you'd use
+exactly 4 KiB pages on x86, and it would be sort of fine (although
+arguably going for a smaller size like 1 KiB provides some security
+advantage, if you could afford that).
+
+However, modern x86 CPUs (and modern CPUs implementing other archs as
+well) support larger page sizes as well, and e.g. the Linux kernel
+supports transparent huge pages.  This means that once your allocation
+grows large enough, you no longer know the underlying physical page
+size!  On x86, the pages can become 2 MiB or even 1 GiB (depending on
+how the system is configured).
+
+Moreover, huge pages are a must to avoid cache thrashing by page tables
+when doing random lookups over large allocations.  When testing with a
+112 GiB "ROM", I am seeing an almost 4x performance difference between
+4 KiB and 2 MiB pages (1900 c/s vs. 7300 c/s for password hashing, with
+certain otherwise constant settings, by 32 concurrent threads on the 2x
+E5-2670, 8x DDR3-1600 machine I had mentioned).  Even if your primary
+target is currently a smaller machine and no pre-initialized "ROM", huge
+pages are still highly desirable - e.g., I am seeing a ~20% speedup with
+the same page size change on a Bulldozer with a 5 GiB allocation (filled
+in only a few seconds, and with no "ROM").
+
+If your "pages" do not correspond to a whole number of physical pages,
+you'll run into false sharing between your threads when they happen to
+write into the same page.  This can truly kill performance, and this
+effect and its worst case extent won't be easily predictable.  Slowdowns
+by many orders of magnitude are possible.
+
+http://en.wikipedia.org/wiki/False_sharing
+
+Now, you could align to 2 MiB (on x86) and make this your "page" size,
+but what if the system is configured for 1 GiB transparent huge pages?
+Document this as unsupported?
+
+I mostly avoid this problem, as long as N is large enough, by having
+each thread fill its sub-region sequentially, and by having the reads
+made only from the sliding window (thus, by the time a thread starts
+writing near the end of its region, the next thread is most likely no
+longer reading near the beginning of its region because its window has
+likely already moved to start almost half way through its region).
+That's in SMix first loop.
+
+In SMix second loop, all threads only read (they do not write), which
+also avoids false sharing.
+
+An improvement, to deal with the risk of badly de-sync'ed threads, could
+be to allocate each thread's region separately, with at least a physical
+page gap inbetween them.  However, this is an implementation detail -
+can be implemented or not, without affecting how the password hashing
+scheme is defined.
+
+In your case, if you don't want to give up on the idea of having just
+one loop with frequent thread synchronization, you may have your threads
+write each to its own sub-region (rather than interleaved, as I think
+they do now), and calculate the page indices to read from differently
+(from two sub-indices, which you'd derive from the current hash
+separately and then combine into the index).
+
+Alexander
+

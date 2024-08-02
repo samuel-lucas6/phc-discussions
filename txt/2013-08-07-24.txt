@@ -1,0 +1,46 @@
+phc-discussions - Re: scrypt like hash, but with AES and HMAC-SHA-2
+
+Message-ID: <kttcmb$vo2$1@ger.gmane.org>
+Date: Wed, 07 Aug 2013 04:59:06 +0000
+From: Alex Elsayed <eternaleye@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: scrypt like hash, but with AES and HMAC-SHA-2
+
+CodesInChaos wrote:
+
+An hash I designed a couple of months ago:
+
+<snip>
+* Time/parallelism trade-offs are bad once parallelism exceeds defender's
+maximum parallelism
+
+I'm not entirely confident in the truth of this. It's one thing to assume 
+the attacker has more parallelism available, but they also can simply 
+parallelize their inputs. If M is the machine parallelism, and H is the hash 
+parallelism then the defender has one correct input and is thus constrained 
+by min(M, H).
+
+If the attacker is running a dictionary search their answer to "this 
+password hash is only parallelizable up to X" is going to be "Well then, if 
+I have N X available I'll just try X/N options at once." leaving them 
+constrained by min(M, N*H) where N is the number of candidate passwords. 
+
+With that, M is going to be the smaller branch in nearly all cases. Even 
+min(M, N) is going to usually end up as M.
+
+Although that does bring up an interesting thought: What about driving up 
+the cost via multithreading *badly*? Use nonlocal data by a data-dependent 
+schedule, forcing either frequent IPI/cache coherency traffic (high-
+parallelism user) or frequent task switches (low-parallelism user)?
+
+<snip>
+* Well defined character encoding: UTF-8
+
+That actually needs more info in order to be 'well-defined' - what 
+normalization form are you using? NFC? NFD?
+
+<snip>
+
+https://gist.github.com/CodesInChaos/6173041
+
+

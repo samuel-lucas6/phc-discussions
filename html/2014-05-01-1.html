@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] on timing attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/04/29/1">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/04/29/1">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140501044507.GA25157&#64;openwall.com&gt;
+Date: Thu, 1 May 2014 08:45:07 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] on timing attacks
+
+On Mon, Apr 28, 2014 at 04:25:34PM +0200, Kriszti?n Pint?r wrote:
+&gt; scenario: we can run a task on the same computer, or otherwise can
+&gt; listen in on its memory usage patterns (power analysis, etc). but
+&gt; otherwise we have no access to either any memory or on-disk databases.
+&gt; we can acquire a memory access fingerprint, that is, some
+&gt; characteristics of the pattern in which memory is accessed (number of
+&gt; cache misses in a time window, access of certain memory locations or
+&gt; blocks, etc). this fingerprint is unique to the password/salt
+&gt; combination. therefore we can check a password/salt hypothesis by
+&gt; running the algorithm against it, and matching to the access
+&gt; fingerprint.
+&gt; 
+&gt; granted, this attack is largely thwarted by secret salt. however, in
+&gt; some situations, for example in case of server relief, the salt might
+&gt; be available to the attacker, while the password hash is not.
+
+However, note that in case of "full" server relief there would be no
+secret-dependent memory lookups on the server (there would be only a
+quick last step, like HMAC), so that case doesn't fit your scenario.
+
+In case of "partial" server relief - where both the client and the
+server do a significant amount of processing - yes, your scenario may
+apply, and yes a (second) secret(*) salt for the server's portion of
+computation would mitigate it.  However, note that in that case without
+a second per-account secret salt another attack would be possible:
+precomputation of hashes of candidate passwords to the known salts
+(which are revealed to the client to allow for server relief) before the
+attacker gains access to the hashes.  That way, the attacker, due to
+advance planning, may quickly crack some passwords and access the
+corresponding accounts right upon gaining (perhaps read-only) access to
+the (otherwise too slow to compute) hashes.  Thus, the same mitigation
+is desirable _anyway_, even with fully cache-timing resistant hashes, if
+partial server relief is used at all.  With full server relief, this
+mitigation isn't even possible: it wouldn't actually mitigate the
+precomputation attack.
+
+Arguably, there are more significant problems with server relief here,
+than with cache timing leaks, although the corresponding attacks are
+different enough that they can't be directly compared as more vs. less
+significant outside of specific usage context.
+
+(*) In the above context, the salts only need to be secret as long as
+the hashes are, so they're not required to be any more secret than e.g.
+Unix password hashes' salts have traditionally been.  Storage along with
+the hashes is still OK.
+
+&gt; in general, salts are not considered secret, so accessing them or
+&gt; guessing them might a possibility.
+
+Historically, salts haven't been considered secret, but there's this
+precomputation attack and there are timing attacks on comparison of
+hashes (of course, it can also be dealt with by using a constant-time
+comparison function, if one is available or can be implemented).  Now
+side-channel attacks on hash functions themselves are added to these two
+attack categories, for a total of three (or are there more?)
+
+I think it's fair game to assume or stipulate that salts, while not
+secret for purposes of possible offline attacks, are stored along with
+the hashes and are not revealed separately, except if mandated by the
+protocol (such as for server relief), in which case some security
+tradeoffs are accepted (and need to be understood and possibly mitigated
+by other means).
+
+&gt; in short, correlation between secret information and memory access
+&gt; patterns not only offers a shortcut, but in fact opens up a new attack
+&gt; vector that previously was not present.
+
+I agree.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

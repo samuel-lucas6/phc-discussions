@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] A review per day - TwoCats
+
+Message-ID: <20140829012728.GA5030@openwall.com>
+Date: Fri, 29 Aug 2014 05:27:28 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - TwoCats
+
+On Thu, Aug 28, 2014 at 07:38:42PM -0400, Bill Cox wrote:
+Therefore, I decided to hash memory as fast as possible.  In
+single-thread mode, TwoCats I believe is the world's fastest hashing
+algorithm.
+
+It probably is.  yescrypt may achieve similar single-threaded speed with
+reduced round counts, but I chose its defaults to be optimal for
+multi-threaded rather than single-threaded use.  (Note that this does
+not necessarily mean use of multiple threads for computation of one
+hash, but rather use cases - which I think many of them are - where the
+cost settings are limited by total capacity of the machine, including
+its ability to run multiple tasks in parallel.)  Perhaps I should make
+this configurable.
+
+Another quality TwoCats might win at is multiplication latency hardening.
+By using scalar multiplication only, TwoCats probably squeezes more
+_sequential_ MULs per byte written than yescrypt does, at least with
+yescrypt's defaults that try to keep the SIMD multipliers busy on every
+clock cycle (meaning there must be much parallelism).  Again, I should
+make yescrypt's instruction-level parallelism configurable (right now,
+it's #define in -ref and fully hard-coded in -simd), which yescrypt's
+design deliberately allows for.
+
+One thing I screwed up was how to use t_cost.
+
+You can probably fix that during the tweaks period, if TwoCats becomes a
+PHC finalist.
+
+That's all I have for now!  Please feel free to dump on TwoCats!  It's
+my turn :-)
+
+OK, you asked for it.  I don't recall all of my complaints about TwoCats
+anymore, but I think its small random lookups, which are meant to be
+bcrypt-like, might not actually provide as much GPU resistance as
+bcrypt's did.  I think TwoCats makes them 256-bit only, meaning that on
+pre-AVX2 CPUs they might not be frequent enough, and you might not be
+making enough of them per byte read/written to the large arena.  Have
+you actually checked TwoCats vs. defense-optimized bcrypt running on the
+same CPU when exhausting the machine's capacity (e.g., 8 independent
+concurrent hash computations on your i7-3770), in terms of frequency of
+those small random lookups?  And then you need to factor in how soon
+their results are needed (the available parallelism, compare it against
+bcrypt's four S-box lookups) and the total size of your equivalent of
+bcrypt S-boxes (if 4x larger, then you probably have 4x more room for
+parallelism while staying the same as bcrypt in terms of GPU resistance).
+
+As I had mentioned, the results of such testing were one of my reasons
+to keep yescrypt's default pwxform rounds count no lower than 6, or
+alternatively I'd need to reduce instruction-level parallelism.  I think
+you did not include such criteria when deciding on the amount of work to
+do along with the main arena reads/writes in TwoCats.  You simply wanted
+to maximize your memory bandwidth usage, well and the number of
+sequential MULs, which is related, but not exactly it.
+
+That said, I think TwoCats is a very good PHC candidate!
+
+Alexander
+

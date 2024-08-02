@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <20140115145415.GA24953@openwall.com>
+Date: Wed, 15 Jan 2014 18:54:15 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+I've included links to more must-reads below, so the message Subject is
+even valid once again. ;-)
+
+On Wed, Jan 15, 2014 at 06:42:40AM -0500, Bill Cox wrote:
+On Wed, Jan 15, 2014 at 2:38 AM, Solar Designer <solar@...nwall.comwrote:
+On Tue, Jan 14, 2014 at 10:01:24PM +0000, Marsh Ray wrote:
+Predictable lookups defeat this approach.  With predictable lookups,
+we're relying almost exclusively on memory bandwidth for the time
+factor.  Not even on memory latency anymore.  That's only one constraint
+for the attacker, out of possible 3 constraints mentioned above.  This
+is a major drawback of Catena, etc.
+
+Hi, Alexander.  Thanks for suggesting this idea in the first place,
+and I hope you don't mind me using it.
+
+I am happy that you reuse my ideas.
+
+What should we call this sort
+of time-hardening using multipliers?  I'm thinking "sequential
+compute-hardened", "sequential time-hardened", "sequential
+multiply-hardened" or somthing like that.
+
+I didn't think of how to name it yet.  Some "compute-hardness" was
+considered in original scrypt - the paper and especially Colin's slides
+from Passwords^12 include hardware speed estimates for the various
+crypto primitives, in Mbps:
+
+http://passwords12.at.ifi.uio.no/Colin_Percival_scrypt/
+
+See the bullet points and formulas on page 50 and the table on page 55
+in Colin_Percival_scrypt_Passwords12.pdf.  Per this table, AES is two
+orders of magnitude worse for this purpose than Salsa20/8.  I think this
+approach (and thus the table) is wrong in considering only Mbps and not
+the latencies.  I guess there's not that much difference between AES and
+Salsa20/8 in terms of latency (when comparing implementations optimized
+specifically for low latency rather than for high throughput), and it is
+unclear which one of them wins.
+
+... so maybe a better name for the new concept would be "compute latency
+bound"?  We could then say that our KDF is "almost memory bandwidth
+bound, memory latency bound, and compute latency bound".  The "almost"
+here is because in practice we'd tend to bump into one of these three
+things before we bump into the other two, with the other two staying
+e.g. ~2x higher (providing good guarantee against much attack speedup).
+So I'm not sure.  Should we use the word "hardened" instead of "bound"
+for all three things, except for those that we actually deliberately
+bump into (rather than merely get close)?
+
+Besides integer multiply, I was considering floating-point, along the
+lines of DJB's hash127 - or even taking hash127 as the crypto primitive:
+
+http://cr.yp.to/hash127.html
+http://cr.yp.to/antiforgery/hash127-20040918.pdf
+
+But it does feel somewhat risky, and the latency guarantee is probably
+similar to that of the integer multiply (not the latency per se, but
+how it compares between CPUs and attack-optimized ASICs).  A possible
+advantage of the hash127 approach would be in using more of the die
+area, especially in defensive implementations on GPU and many-core archs
+(those many FPUs combined consume non-negligible die area).
+
+Alexander
+

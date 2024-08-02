@@ -1,0 +1,420 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - A review per day - Lyra2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;540B1DC5.6010005&#64;ciphershed.org&gt;
+Date: Sat, 06 Sep 2014 10:44:21 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: A review per day - Lyra2
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Summary
+- --------
+
+I'm taking this review as my chance to compare the three best Scrypt
+replacement algorithms.  See the attached spreadsheet for a quick
+summary of this comparison.  I give a 100 to the best algorithm in
+each category, and try to rate the merit on a scale from 0 to 100 on
+the rest.  Some other candidates would achieve a higher rating than
+these algorithms in some categories.  A lot of this is a matter of
+opinion, especially the relative scores which are in fuzzy units.
+
+Lyra2 is one of three serious entries that succeeds at improving over
+Scrypt.  There are some other entries that try, but fall short when
+hashing 1GiB rather than 1MiB.  A couple do a great job, such as
+EARWORM, but are not general purpose like Scrypt.
+
+The three serious potential Scrypt upgrades are Lyra2, TwoCats (my
+entry), and Yescrypt. IMO, any presentation contrasting the PHC
+entries that does not include at least one of these algorithms in
+their "winners" picks shows that the presenter does not understand the
+relative merits of the entries.
+
+While Lyra2 is an excellent entry, and a worthy upgrade to Scrypt, I
+prefer TwoCats over Lyra2, and Yescrypt over TwoCats.  I'll spend most
+of this long review contrasting these three algorithms.  It is not
+possible for me to do this in an unbiased way, and I apologize to the
+Lyra2 authors for this.  Please do chime in and correct me, and add
+additional comparison criteria.
+
+Basically, to be a decent upgrade to Scrypt, you need:
+
+- - A GPU defense strategy
+- - An ASIC defense strategy
+- - A fast hashing algorithm for filling memory - NOT a full
+cryptographic hash
+- - A method for lowering DRAM cache-miss penalties
+- - A Time-Memory Trade-off (TMTO) defense strategy
+- - Multi-threading support with data exchanges between threads
+- - Carefully tuned hashing optimized for SIMD
+- - Low dependence on special hardware
+
+Comparison
+- ----------
+
+Yescrypt wins at GPU defense, due to it's rapid unpredictable small
+memory reads from L1 cache.  Like bcrypt, Yescrypt issues multiple
+unpredictable small memory reads in parallel, to get to about 1/2 the
+number that bcrypt does when single-threaded.  TwoCats only issues one
+unpredictable read at a time, and performs them at about 1/3 the
+number as bcrypt when single threaded.  However, Yescrypt is designed
+to max out everything at the same time, including CPU cores, while
+TwoCats runs into memory bottlenecks on my test machine using only
+half the CPU cores.  This gives Yescrypt a 3X-ish advantage over
+TwoCats in unpredictable read rate, which likely translates into
+better GPU defense.  Lyra2 does small-ish unpredictable reads, but
+only once per Blake2b reduced round, which is several clock cycles,
+and several times slower than either Yescrypt or TwoCats.  This
+translates into weaker GPU defense, though I am not qualified to say
+by how much.
+
+ASIC defense for large memory hashing is excellent for all three,
+assuming Lyra2 becomes multi-threaded.  An ASIC attacker will quickly
+become memory bandwidth limited.  Practical ASIC attacks have at most
+about a 32 times higher memory bandwidth than a modern high-end CPU.
+This enables an attacker to run up to 32 times faster, but the expense
+per ASIC of such a system is likely similar to the cost of a desktop
+PC.  TwoCats and Yescrypt have multiplication chain compute-time
+hardening, which in some cases will limit an attacker's ability to
+hash at the full speed supported by his memory bandwidth.  In that
+case, Yescrypt and TwoCats will force an attacker to either make fewer
+guesses per second, or buy more memory so that more attacks can be
+interleaved, filling up memory bandwidth.  Yescrypt and TwoCats win
+over Lyra2 because of this.  TwoCat's multiplication chains are
+tunable, allowing it to tune the multiplication chain lengths to the
+hashing speed of the machine.  This allows TwoCats to be more
+multiplication chain hardened than Yescrypt in some cases.  The extra
+area on the ASIC needed by Lyra2 and Yescrypt computation logic vs
+TwoCats is tiny, as there would only be 32 copies at most.  TwoCats
+has a slight win here over Yescrypt.
+
+Against 1-8MiB on-chip memory hashing ASIC attacks, Yescrypt and Lyra2
+make increased use of the SIMD unit which will cause the AISC to be
+slightly bigger than when attacking TwoCats.  All three algorithms
+will max out the large memory access speed, but Yescrypt does two
+unpredictable reads in parallel, which should slow down the ASIC
+memory slightly.  On the other hand, multiplication chains might into
+play here.  The ASIC memory can be optimized for the algorithm in use,
+allowing much lower average latencies, and the right number of
+read/write ports.  Only the multiplication chains will keep an
+attacker from making full use of his improved memory speed.  I think
+Yescrypt and TwoCats tie here because TwoCat's better multiplication
+hardening and Yescrypt's slightly larger area may cause roughly equal
+grief to the attack.
+
+TwoCats and Yescrypt fair better than Lyra2 against and ASIC attack
+when hashing only 8KiB of memory.  With multiplication chains, an ASIC
+attack might still speed up TwoCats by 2X, and Yescrypt maybe 3X (a
+bit of a WAG here).  However the Blake2b hash was practically designed
+for an ASIC attack, and will run many times faster.  The lack of
+compute time hardening in Lyra2 will allow maybe a 10X speed increase
+for the attacker.  The area of the multipliers in TwoCats and Yescrypt
+also become a factor, being around the same size as the memory in
+Yescrypt's case, and about half that in TwoCat's case.  Because of the
+extra area required for Yescrypt hashing, I cannot predict which has
+the better ASIC defense.  I would call it a tie again between Yescrypt
+and TwoCats, with Lyra2 trailing by some distance.
+
+It may be common for some groups of users to run single-threaded,
+though I recommend against it in all cases except for single-core
+CPUs.  In that case, TwoCats wins in ASIC defense simply because it
+will fill more memory than either Lyra2 or Yescrypt.  A single TwoCats
+thread fills external memory over twice the speed of either Yescrypt
+or Lyra2.  When no SIMD unit is available, that ratio might increases
+by a factor of about 4, corresponding to the pipeline depth used in
+the SIMD units by Yescrypt and Lyra2.
+
+By the way, TwoCats and Yescrypt also beat bcrypt in tiny memory ASIC
+attacks.  Bcrypt may make 4 parallel unpredictable reads per cycle,
+but it does so to 4 separate super-tiny SRAMs, making them even
+faster, and it has zero compute-time hardening.
+
+For defense against cache-timing attacks, TwoCats wins.  A
+cache-timing upgrade is planned for Yescrypt, and Yescrypt may come
+out on top when this happens, but without an algorithm to test, it is
+impossible to say.  Lyra2 has a cache-timing resistant first loop,
+like TwoCats, but it uses a weak memory access pattern that leaves it
+vulnerable to a very high TMTO attack when cache-timing data is
+available.  Lyra2, IMO, should be upgraded to use something like the
+Gambit memory access pattern, which defended against my auto-pebbler
+attack far better.
+
+One of the most important applications for a password hashing
+algorithm of the strength that can be provided by these algorithms is
+user authentication on dedicated authentication servers.  Yescrypt
+clearly wins in this category, and in fact the algorithm seems to have
+been designed with this application as the primary target.  The extra
+security provided to small memory hashes of a few MiB with large ROM
+hashing puts it in a class only shared by EARWORM.  EARWORM was my
+other favorite for this category until I realized it has a weakness
+against distributed ROM attacks due to it's very low RAM usage.  As
+things stand, Yescrypt is easily the best algorithm for authentication
+servers in the competition.  It's weaknesses, such as not yet having
+any cache-timing defense, don't matter much in this application, and
+it's strengths really come to bear.  Yescrypt will keep 8 CPUs very
+busy in parallel while hammering memory at insane speeds, providing
+thousands of authentications per second, strengthened by ROM hashing
+in addition to megabytes of memory.  Even if the password database AND
+ROM leak to an attacker, a botnet will not be able to work on password
+cracking if the ROM is large enough.  There are many features besides
+this in Yescrypt for authentication servers.  In comparison, both
+TwoCats and Lyra2 opted for a bit more simplicity, and provide no
+authentication server specific features, such as ROM support.
+
+While all three have no requirement for special hardware, all three
+are tuned for modern x86 SIMD units.  TwoCats I think wins in
+adaptability to basic CPUs.  This is because it can run with a single
+32-bit width with far fewer instructions per byte of memory hashed.
+Yescrypt also has variable width SIMD loops, but it's pipeline depth
+is not currently variable, making it slow down somewhat on a basic
+CPU.  TwoCats wins here because it uses less pipelined parallelism.
+This is basically a duplicate of the single-threaded comments above :-)
+
+All three algorithms have variable hashing block sizes, enabling them
+to tune to a machine's DRAM cache miss penalty.  The longer the
+penalty, the more memory you want to read in one shot.  All three tie
+on this point, but win vs most of the other entries.  Every entry
+without a capability to read large blocks of memory at a time cannot
+supplant Scrypt.
+
+Lyra2 easily wins at TMTO defense.  Both Lyra2 and Yescrypt use
+increasing t_cost to improve TMTO defense, but Lyra2's decision to
+continue overwriting memory while reading I think makes it more TMTO
+resistant.  TwoCats as submitted uses t_cost poorly.  A revised
+version exists that will be submitted if allowed, which does increase
+TMTO resistance as t_cost increases, but this feature works better in
+Lyra2 and Yescrypt.  However, because TwoCats was designed as a single
+pass algorithm, it has the best TMTO resistance when t_cost turned
+off, meaning only one memory pass.  This is not a mode Lyra2 allows,
+but Yescrypt does, and both Yescrypt and TwoCats achieve higher
+memory*time defense as a result.
+
+All three have a TMTO defense that improves over Scrypt, but Lyra2
+sacrifices speed and thus time*memory defense in order to improve it's
+TMTO defense.  This lower time*memory defense may be the main reason I
+prefer TwoCats and Yescrypt.  TMTO attacks gain little against TwoCats
+in any configuration (maybe 10-15% time*memory benefit), and even less
+against Yescryt and Lyra2.  This is why I feel TMTO defense is not a
+very important factor when comparing these three algorithms.  If TMTO
+defense were paramount, I would choose Lyra2 as my favorite.  As it
+is, TMTO defense is good enough in all three.  A final note about
+TMTO: Yescryt and TwoCats both have techniques for mixing data between
+threads, making it difficult to benefit from running each thread
+sequentially.
+
+As for time*memory defense, Yescrypt, when run with t_cost == 0, has
+the same characteristics as TwoCats, filling memory linearly, never
+stopping until enough memory has been hashed.  This maximizes
+time*memory defense vs any other possible solution.  Lyra2 does at
+least two passes over memory, doing twice as many read/write
+operations per memory location.  This causes it to use half the memory
+as TwoCats and Yescrypt when memory bandwidth limited.  All of my ASIC
+attack plans so far would need only half the memory to attack Lyra2
+hashes, lowering it's time*memory defense by 2X.  However, a more
+sophisticated attack might be able to take advantage of the unfilled
+memory until it is needed, lowering the time*memory penalty to only a
+3/4ths of TwoCats and Yescrypt.
+
+For pure memory hashing speed per thread, TwoCats is the fastest,
+followed by Lyra2, and then Yescrypt.  However, this is a deliberate
+design choice by Alexander, and not significant weakness in Yescrypt,
+as he demonstrated by slightly tweaking Yescrypt to be virtually as
+fast per thread as TwoCats during a benchmarking fest.  The idea is
+that the best defense occurs when all parts of the CPU and memory are
+in use at the same time.  Yescrypt maxes out memory bandwidth at about
+a CPU's full parallelism, which is when all cores are used to hash at
+the same time.  TwoCats maxes out memory bandwidth with about 1/4 as
+many threads, and cannot employ all CPU cores at the same time like
+Yescrypt does.  The decision to max out CPUs vs trying to do the most
+possible with one thread is based on the importance of different
+scenarios.  For a low-powered single core processor, TwoCats will do
+better than either Yescrypt or Lyra2, because multiple threads will
+not help in that situation.  For high-end authentication servers
+protecting passwords for major corporations, Yescrypt wins by
+providing better computational hardness - an attacker will need many
+SIMD unit's worth of processing power to run as fast as the
+authentication server.  Once Lyra2 is upgraded with multi-threading,
+it should do better than TwoCats, but worse than Yescrypt at
+computational hardness (which is different than runtime hardness).
+IMO, computational hardness matters little, since even multipliers are
+tiny on an advanced ASIC.  Memory really is all that counts in terms
+of silicon expense.
+
+As for basic security, Yescrypt and TwoCats run well accepted
+cryptographic hash functions on all inputs at the beginning to create
+a derived key, and that key is hashed with the result of memory
+hashing again with the cryptographic hash function at the end.
+Regardless of any weakness in TwoCats or Yescrypt memory hashing, this
+scheme will preserve entropy and will always hash at least as securely
+as two applications of the cryptographic hash.  Lyra2 relies on the
+reduced Blake2b function's application over and over many times while
+hashing to cryptographically scramble it's sponge's state, and it
+relies on this slightly modified Blake2b function to not lose entropy.
+ The final output is squeezed from the sponge.  Because of this
+construction, Lyra2 hashing security needs careful analysis by hashing
+experts to verify it has no significant weakness.  I personally do not
+feel qualified to do it.  However, I do believe that they most likely
+got it right.  However, I would say TwoCats and Yescrypt win here, in
+being trivial to prove basically secure.
+
+TwoCats and Yescrypt win vs Lyra2 in terms of being ready for
+deployment.  Lyra2 still uses memset to clear buffers, just as a
+placeholder for the real function, and has no byte swapping to deal
+with big-endian machines.  There is no provision for locking memory
+from swap (mmap vs malloc).  It also still needs a thread upgrade,
+while TwoCats and Yescrypt are in theory ready, other than needing
+more review, for deployment now.  There are planned upgrades to
+Yescrypt, but nothing critical, while TwoCats has a modified t_cost
+loop that has not yet been submitted.  Lyra2 does not yet have a
+parameter estimation function, while Yescrypt and TwoCats do.  In
+reality, simply because Alexander makes so few mistakes, Yescrypt is
+the closest entry of the three to being ready for deployment, edging
+out a close win here vs TwoCats.
+
+Of the three, Lyra2 has the simplest and most elegant design.  The
+sponge construction was a pleasure to read, and cleverly done.
+TwoCats probably comes in second here, simply because it inherits no
+baggage from Scrypt, but complexity is a significant weakness of the
+full TwoCats algorithm, which is why I also wrote the very simple
+SinnyCat subset algorithm.  Starting with the complexity of Scrypt and
+building on it made Yescrypt more complex than Lyra2 or TwoCats.  I
+consider this to be the most significant weakness of Yescrypt, and the
+most significant advantage of Lyra2.
+
+Of the three, only TwoCats has a pluggable hash function, meaning that
+it can easily run with different secure cryptographic hashes.  The
+default is Blake2b for it's speed, but TwoCats comes with SHA256 and
+SHA512 enabled as well.  This is only a minor weakness in Yescrypt,
+because there is nothing in Yescrypt preventing this feature from
+being added.  However, in Lyra2 it is fairly difficult to change the
+underlying hash function.  Any change means that the algorithm needs
+to be reviewed again carefully for any cryptographic weakness by
+experts.  In contrast, any C programmer will find it trivial to change
+the hash in TwoCats.
+
+Yescrypt wins in another imporant category: ease of adoption.  While
+remaining compatible with Scrypt has made Yescrypt more complex than
+needed, it also makes it easier to deploy.  Anyone out there with
+Scrypt already can simply replace it with Escrypt, and enjoy the
+benefit of the higher speed in Alexander's implementation.  They can
+easily switch to stronger hashing techniques provided in Yescrypt at
+any time.  In contrast, users will have to learn about a whole new
+hashing scheme to adopt TwoCats or Lyra2.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUCx26AAoJEAcQZQdOpZUZXzAP/3tzSMN+zwJqxLFV+q2QODI5
+lfvKd1UrFa04C7BqHWvrMmJw1Mn4DSX9+mN1MfbR2Qa3p7sUDrpDrxjlC3DE8T0L
+D6FZXvK3NR1LFBBcS+XMsDwm66CxS4gDjHckS9QcRlFBxjofqI+3bvWL7FlrZnNp
+fNlnKWJUhIJIr/1Pc53E5jvPHL6CWZDjVskS99W+E6PMi+lkY5X9Aakqydm4/L/S
++MTGkOQmci2W610EwUIbo5soFPP/cwK2G64YdSBGZutNUExsl11+1XG7kCaTA5Tu
+zTCBtio9xMAh4PtbJEoV4ipfvVMGtj2I7mVrdPbLuAaZoHgjVx6A/A/PLZs7QbjV
+uPkeZp8bDiIzdbALWfqQQD+2KcjlfeIsnwstVFHBdXKj986UUbUl7PCvkfP4/r3V
+6xUHgmdntSTElqV1N2Xy9ULqJZBHQCR7ykygH7FvF6yjXegT3a4EaLxf9IAcCrSH
+wTtdeSsyJDqIvLY8atSQkWUXNBhHMd3f8fFuhhn493z8kDTURbJp2QDxNDVfLwA2
+2QWgvAyUSD9QrBuK5U6XKpl2JrvwqwQuQoY0dHcFGUA8JgdUqinAnRO1kHSSSfv0
+VJlRSKYtqWM9dgt2nViawPCfKnJjA0Mkv3K5t46nFX/z+rl2hjQDxtKoWzK4+lcZ
+OOqPSr2n0o/sXzjALiax
+=/67e
+-----END PGP SIGNATURE-----
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="3/1" rel="nofollow" download>Lyra2-TwoCats-Yescrypt-comparison.ods</a><strong>" of type "</strong>application/vnd.oasis.opendocument.spreadsheet<strong>" (48762 bytes)</strong></span>
+
+<span style="font-family: times;"><strong>Download attachment "</strong><a href="3/2" rel="nofollow" download>Lyra2-TwoCats-Yescrypt-comparison.ods.sig</a><strong>" of type "</strong>application/pgp-signature<strong>" (543 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Re: The best of the best, IMO
+
+Message-ID: <830927638.160388.1397437906703.open-xchange@email.1and1.com>
+Date: Sun, 13 Apr 2014 20:11:46 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: The best of the best, IMO
+
+On April 12, 2014 at 8:33 PM Bill Cox <waywardgeek@...il.comwrote:
+>
+By Script inspired, I mean algorithms that bust out of cache and do a *lot*
+of memory hashing, like Script.  To do that, an algorithm requires a
+strategy for mitigating cache-miss penalties.  Some entries look to me like
+simplified versions of Script, but those that dropped Script's ability to
+efficiently bust out of cache I put in the Bcrypt-like category.  I think
+it makes more sense to compare them against algorithms like Pufferfish and
+Battcrypt than against large memory capable algorithms like Lyra, Yescript,
+EARWORM, and TwoCats.
+
+Battcrypt should scale linear with memory usage. Since it encrypts blocks
+of 2 KiB at a time and the 4 KiB of s-boxes should stay in cache. The only
+problem is that Blowfish is slow compared to other algorithms. I think it's
+max speed is going to be around 185 MiB/s (3.5 GHz).
+
+Centrifuge would also be able to bust out of cache if they made "out"
+larger then once it's done shrink it down. Since this probably will have
+similar speeds to RC4 it will be 2.6 times faster than battcrypt because
+Blowfish takes 18 clocks/byte* vs 7 clocks/byte**. This is outdated since
+both of those were measured on a Pentium. Although Centrifuge doesn't swap
+for every byte of output, every block of "out" it swaps based on "t_cost"
+then encrypts "out" with AES. I'm guessing with AES-NI it might be a little
+slower than RC4.
+
+Really what it comes down to is we need to have optimize versions of them
+all, but this is a lot of work. Personally I'm probably just going to wait
+until next round when there are fewer to do.
+
+* https://www.schneier.com/blowfish-speed.html
+** https://en.wikipedia.org/wiki/RC4
+
+----
+Disclosure: I submitted battcrypt and Parallel.
+

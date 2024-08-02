@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Using multiply (Re: [PHC] A must read...)
+
+Message-ID: <20140116182825.GA6719@openwall.com>
+Date: Thu, 16 Jan 2014 22:28:25 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Using multiply (Re: [PHC] A must read...)
+
+On Wed, Jan 15, 2014 at 09:02:46PM -0600, Steve Thomas wrote:
+On January 15, 2014 at 11:45 AM Bill Cox <waywardgeek@...il.comwrote:
+>
+[...] 32x32 -32 Integer multiply seems solid and
+pervasive enough. Besides that, it's fast in our devices even
+compared to a custom ASIC, and it's a great operation for mixing bits,
+at least when one op is odd.
+
+Have you thought about doing 4 (or more) multiplies in parallel:
+4 multiplies with SSE4.1 (PMULLD _mm_mullo_epi32)
+8 multiplies with AVX2 (VPMULLD _mm256_mullo_epi32)
+16 multiplies with AVX-512 (VPMULLD _mm512_mullo_epi32)
+
+FWIW, I have usage examples of all of these in php_mt_seed:
+
+http://www.openwall.com/php_mt_seed/
+
+In order to reach full speed on Intel CPUs with HT and on AMD Bulldozer,
+I needed to interleave 4 instances (means 16+ concurrent 32-bit multiplies
+per thread: 4 per SIMD vector, and 4 in different pipeline stages).
+However, this turned out to be insufficient for Intel CPUs without HT
+(e.g., as tested on a Core i5), so I had to expand to 8 interleaved
+instances, which did the trick (this made those HT-lacking CPUs run
+about as fast as their HT-enabled counterparts).  Of course, all of
+this is with the maximum supported number of hardware threads running
+concurrently.
+
+When tying up memory with multiply latencies, we don't have to maximize
+the number of multiplies we compute in parallel, but it's nice to do so
+as well, as long as that does not reduce the minimum number of cycles
+for an ASIC attacker with even more parallelism.
+
+You can reorder the values in any order in SSE2 with PSHUFD
+(_mm_shuffle_epi32). Reordering the values in AVX2 and AVX-512 is
+trickier and may need multiple instructions.
+
+SSE4.1 has been on pretty much every Intel CPU since 2008. AVX2
+just came out last year with Haswell. I think integer AVX-512 will be on
+Skylake in 2015. They could delay integer operations until the next
+iteration in 2017 like they did with AVX/AVX2. AVX-512 should probably
+be considered since this competition will end when AVX-512 is
+estimated to be available or on the horizon.
+
+Meanwhile, we can use MIC on Xeon Phi to simulate AVX-512 for testing.
+The binary encoding is different, but many (most?) of the source code
+intrinsics are the same for MIC and AVX-512.
+
+As I had mentioned before, I am happy to grant PHC submission authors
+remote access to our AVX2 and Xeon Phi systems.  If interested, just
+e-mail me your desired login names and SSH public keys (off-list).
+
+Alexander
+

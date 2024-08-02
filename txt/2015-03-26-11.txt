@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <CAOLP8p6xrrFDGhmTACMQQ8yEv4EnAD0m_bBdRpGWV-J_bq_Esw@mail.gmail.com>
+Date: Thu, 26 Mar 2015 09:02:32 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 6:44 AM, Solar Designer <solar@...nwall.comwrote:
+
+Perhaps there are such real life cases, but I think they're relatively
+uncommon.  For those special cases, similar impact may be seen e.g. by
+simply happening to run on a CPU with a twice smaller L3 cache.  So not
+that big a deal for most real world cases.
+>
+Alexander
+>
+
+This needs more benchmarking and proper understanding of what's really
+going on, but my testing of both Scrypt and TwoCats shows that there is a
+fairly asymmetrical impact between SSE optimized pthreads and non-SSE
+optimized pthreads.  I added the number of TwoCats hashes to the output and
+re-ran these benchmarks, with 2 TwoCats threads, and one worker thread:
+
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork -h
+Usage: ./testwork numWorkers m_cost parallelism runTwocats
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 1 12
+2 0
+Total work: 172, total hashes: 0
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 1 12
+2 1
+Total work: 34, total hashes: 1854
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 0 12
+2 1
+Total work: 0, total hashes: 2266
+
+The SSE optimized memory hashing threads seems to be impacted less than the
+non-optimized worker thread.  This is also the case when when TwoCats runs
+with one thread:
+
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 1 12
+1 0
+Total work: 174, total hashes: 0
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 1 12
+1 1
+Total work: 61, total hashes: 1475
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ ./testwork 0 12
+1 1
+Total work: 0, total hashes: 1657
+
+Note that these are running on my Haswell Core i7 mobile processor with
+4MiB of L3 cache, not my desktop that I normally use for benchmarking.
+However, I found on multiple desktops that the relative impact is similar
+between the pthreads.
+
+My take away is that when running Scrypt-like hashing on the same CPU as
+other services, if there is going to be a runtime hit, it generally will
+delay the other services more than the hashing service.  I believe this is
+typically true, and not a special case.  If services are "charged" based on
+CPU runtime, the other services will be unfairly charged more.  If I were
+paying for a VM in the cloud, I certainly would not want any other VM on
+the machine running a memory-hard authentication service.  Also, given
+attacks like RowHammer and the potential for cache-timing, garbage
+collection, and other same-machine attacks, I strongly prefer the
+stand-alone authentication server approach.
+
+Bill
+
+
+

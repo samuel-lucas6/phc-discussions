@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+Message-ID: <20130417151000.GA17218@openwall.com>
+Date: Wed, 17 Apr 2013 19:10:00 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Let's not degenerate when if the PRF is too narrow for desired output
+
+On Wed, Apr 17, 2013 at 08:25:07AM -0400, Matthew Green wrote:
+I think this statement could be relaxed a bit, but I also agree that overall computational cost should be dominated by the work factor specified as input to the function -- it should not depend strongly (i.e., linearly) on output length.
+
+Exactly.
+
+By the way, this would seem to be an issue for scrypt as well, since it uses PBKDF2 for the final generation.
+
+scrypt uses PBKDF2 with 1 iteration.  Even if it did not use PBKDF2
+specifically, it'd have to spend roughly as much time producing the
+requested output length in some other way.
+
+Here's a related desirable property of a good PHS: its overall
+computational cost should not depend strongly (e.g., linearly) on input
+length as well.  If it does, we have two problems:
+
+1. The cost settings would have to be chosen with consideration of the
+maximum input length supported on a given system, so they would likely
+end up being lower than what could be afforded for typical input length.
+
+2. The input (password or passphrase) length would be leaked via timings.
+While such leaks are unavoidable e.g. with crypt(3)'s use of C strings, a
+strong dependency of PHS computation time on input length would make the
+leaks a whole lot worse.
+
+Since you mentioned scrypt's use of PBKDF2: it uses PBKDF2 to process
+the input as well, but it also does so with 1 iteration only.  Thus,
+problem 1 above does not apply (the computational cost is dominated by
+scrypt's SMix, not its initial and final uses of PBKDF2).  As to
+problem 2, perhaps there's a little bit of room for improvement here,
+but it's tricky and it remains not perfect even with the enhancements I
+can think of (e.g., looping over the same input for up to a given
+constant maximum length: can have same number of instructions, but not
+same memory access pattern like we'd have for an actual higher length).
+
+We should discuss whether we want this to be a criteria for PHC.
+
+I will definitely consider any proposed PHS that allows for much quicker
+computation of partial output (than full output) flawed.  While for some
+uses of the previous millennium's KDF this is excusable, for a PHS it is
+not, and it never was.  The requirements for a PHS are stronger than
+those for some uses of a KDF.
+
+Alexander
+

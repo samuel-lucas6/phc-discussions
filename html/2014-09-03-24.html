@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - A review per day - MCS_PHS</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="23">[&lt;prev]</a> <a href="25">[next&gt;]</a> <a href="../../../2014/09/04/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;5407857B.2060307&#64;ciphershed.org&gt;
+Date: Wed, 03 Sep 2014 17:17:47 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: A review per day - MCS_PHS
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+I almost decided to pass on reviewing MCS_PHS, because it's not really
+something I can evaluate properly, especially compared to some hashing
+experts on this list.  As far as I can tell, the main point is to
+introduce password hashing using the MCSSHA-8 function, the latest in
+a series of hash functions, one (or more?) of which was in the SHA3
+competition.  I see that there were security concerns about the prior
+versions, and I have absolutely no idea if there has been any
+cryptanalysis of this latest version.  To me, it just looks like
+hashing code :-)
+
+IMO, there is not much to review in MCS_PHS other than the the
+MCSSHA-8 hash function, which seems to be the majority of what is
+interesting here.  The wrapper is interesting, but it's a basic
+PBKDF2-like scheme, without an HMAC call, which I prefer.  It gets the
+input hashing right, without collisions, unlike PBKDF2-HMAC.
+
+I would prefer to see the code have the main part factored out, and
+instead of a do {...} while(0) with breaks in the middle, it could
+just return.  That would make the odd testing of loop conditions after
+the loop, with breaks inside the loop go away, too.  The outer
+if(t_cost) statement can be removed on line 88 since the for loop wont
+execute if t_cost is 0.
+
+On line 66, I became confused why hashing calls are needed to reduce
+the hash length from 64 to outlen.  Why not just truncate?
+
+Part of the difficulty reading this code comes from the declaration of
+the hash function:
+
+HashReturn Hash(DataLength hashbitlen,
+                       const BitSequence *data,
+                       DataLength databitlen,
+                       BitSequence *hashval);
+
+The parameter order is screwy!  I hope that word doesn't offend the
+author...  Normally we either keep length parameters next to the
+pointer they refer to, or the lengths together and the pointers
+together.  If these names mean what I think they mean, then there will
+be a lot of bugs when people try to use this.
+
+The code on line 91 confuses me as well:
+
+        if(outlen != 64) {
+            if(Hash(512,hash,outlen&lt;&lt;3,hash) ||
+Hash(outlen&lt;&lt;3,hash,512,hash)) {
+                dwErr = 2;
+                break;
+            }
+        } else {
+            for(i = 0; i &lt; 64; i++)hash[i] += (uint8_t)i;
+            if(Hash(512,hash,512,hash)) {
+                dwErr = 2;
+                break;
+            }
+        }
+
+For some reason, 64 is a magic number.  The upper hash calls seem to
+expand the outlen hash to 512 bits, and then compress them back to
+outlen.  Why?  The lower code adds different numbers to the hash value
+and then calls hash again.  I'm really confused.  If Hash is secure,
+why bother with this?
+
+I think the internal buffers need to be cleared before returning.
+Also, I didn't see the hashing context being cleared in the
+finalization.  These of course are no big deal, but I was hoping the
+hashing algorithm was ready for deployment, but the details aren't
+there, yet.
+
+So, overall, I don't know how to benchmark or rate MCS_PHS.  I see
+some oddities in the code, and the way it was written makes me fearful
+of using it.  If this is another one of those wonderful mathematical
+entries please ignore my review :-)  This looks like code written by a
+mathematician.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUB4V4AAoJEAcQZQdOpZUZrFwP/Aupvb2Eog0vb6hsu+oB3nqc
+5/5aQIzbqJwhvb0IPUYE1a6wk90ENvB1uzJ+6e7+ir3DllT46cbWS+VkTHbYE1x5
+tVSN7sjBMGAynSa5PM6NDPp+ObpunY/eoK+F84IQvZ+/lI40D3rhdVAopagTBwtF
+hPkxyG23pZmA5ZS7s5WCcG+CoFw2YR97FH2pbHC0ttARH/26Hlv0hBXBFPDzLnRD
+JZl9+di1TBsHCaI9pLDqIserC4m6FsgzopdgZQyFFoFa1VLmYjtY5RCKijVm3ubs
+jxN8Ra5H7NFQRxf2eZQWuQ88ZYURadmJqK8Rv/XqIM/tc08pGitRfxnsBoHzyV8W
+OibkgG0yMjw9X6DEkyakPahRabzlvi93x4cBT4n5cg3PL4Khn/DFwoP2SacAKatS
+26WiWKTdvBP2Ilx9ZY1Mh2gP2SacsJtQgbFAHmVYhqVxoyFgo0xjVquGDzI99OVV
+8TNdCcjAyiQ5swf7v9RBaKr9CsWfqlq2MAgjiy38y6dgW4k7DyIBxsdDByT4nOSK
+cVK796DwVKrvN1LZWq70CiGYGFOoYRoHskSSfCDlKLXhJvH3rPFAEZSCxTmD2xKX
+VkbHd/GNhYrH8pDBEkdQXWKxSl74R99ONdtRng52YvO0PUmvBgsthGbfK1MAF5D5
+2GYPBgYb5RmcEY8RAWwn
+=r0wC
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

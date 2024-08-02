@@ -1,0 +1,74 @@
+phc-discussions - Re: [PHC] Some updates on EARWORM
+
+Message-ID: <87mwl4m8zr.fsf@wolfjaw.dfranke.us>
+Date: Sat, 16 Nov 2013 14:39:36 -0500
+From: Daniel Franke <dfoxfranke@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some updates on EARWORM
+
+Solar Designer <solar@...nwall.comwrites:
+
+On Fri, Aug 23, 2013 at 09:44:18PM -0400, Daniel Franke wrote:
+
+>* I've cut CHUNK_WIDTH from 4 to 2, leaving CHUNK_LENGTH at 128. Testing
+>  on my workstation seems to indicate that neither the reduction in
+>  internal parallelism nor the increased frequency of random memory
+>  accesses results in any performance penalty.
+
+I've actually changed my mind again since I wrote this: I'm going with
+CHUNK_WIDTH=4, CHUNK_LENGTH=64. The wider internal state makes certain
+proofs simpler.
+
+This means that your memory accesses are to 4 KB regions (with
+sequential access within those regions), correct?  2*128*16 = 4096.
+
+Either way, yes.
+
+Is there a performance penalty with lower CHUNK_WIDTH or/and
+CHUNK_LENGTH?  If so, how bad is it e.g. for 2 KB, 1 KB, 512 bytes?
+
+There is. I don't have the figures handy. I'll retest this later today
+once I've gotten my code pushed.
+
+>* I wrote a GPU implementation of EARWORM today. It computes batches of
+>  256 workunits of a single hash computation, doing the initial and
+>  final PRF computations sequentially on the host, while farming out the
+>  expensive main loops to the GPU for parallel execution.  A 25600
+>  workunit computation over a 256MiB arena takes about 3.05 seconds on
+>  my Radeon 7850. The same computation on two CPU threads takes about
+>  2.25 seconds. I was struck by how similar these numbers are.
+
+My GPU code had a couple stupid bugs (no surprise at this point) that
+make these numbers completely bogus. The 7850 actually takes about 3x
+the time that the CPU does. It suffers from the same sort of bottlenecks
+that bcrypt does.
+
+Is this a defensive or offensive kind of implementation (if it were
+finished, optimized, cleaned up, etc.)?  It sounds like you're computing
+just one instance of EARWORM, but with some parallelism in it (albeit by
+far not enough parallelism to use a GPU optimally), so I assume
+defensive?  Anyhow, this doesn't tell us much about GPU attack speeds on
+EARWORM.
+
+Actually, this seems to be enough parallelism to use my (not very
+high-end) GPU optimially; though at this phase of experimentation you
+should take that claim with a grain of salt. Remember that each workunit
+already has considerable internal parallelism.
+
+It's a design goal of EARWORM that if the defender has GPUs available,
+he can use them just as effectively as the attacker can (even if they're
+not very effective for either side).
+
+>* I'll be posting reference and AES-NI-optimized implementations of
+>  EARWORM to GitHub this weekend, as soon as I'm done with some
+>  finishing touches on the test harness.  Note that these
+>  implementations are designed for benchmarking and validation only, and
+>  lack the user-level API that I plan to include in later
+>  implementations (Obviously, nobody should be using EARWORM in
+>  production right now anyway!).
+>
+Of course.  And I guess "this weekend" will be now. ;-)
+
+Yes. Thanks for giving me the necessary kick in the rear to get working
+on this again :-)
+

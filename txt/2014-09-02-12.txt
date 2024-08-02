@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] A review per day - Schvrch
+
+Message-ID: <20140902133958.GA23933@bolet.org>
+Date: Tue, 2 Sep 2014 15:39:58 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Schvrch
+
+On Tue, Sep 02, 2014 at 02:32:16PM +0200, Krisztián Pintér wrote:
+1. no, at this stage, we don't need input checking at all. this is not
+a library, but a reference. that is, documentation of the algorithm.
+
+Unfortunately, there are people who are using such reference code "as
+is", as if it was, indeed, a library. This is misguided in several ways;
+in particular, cryptographic algorithms should never be deployed
+anywhere until some considerable peer-review has occurred -- which is
+the point of the PHC. However, so it is.
+
+Therefore, why I agree with you that input checking is not _necessary_
+at this point (and thus should not be a requirement for authors), it is
+still a desirable thing, if it can be done easily, as is the case here.
+
+In fact, one may argue that if the reference code serves as documentation
+for the algorithm, then it would be best if it _also_ documented the
+algorithm's limitations on input password size. In the case of Schvrch,
+this would be done like this:
+
+    if (inlen 256) {
+            return -1;
+    }
+
+just before the memmove(). That way, everybody is happy: there is some
+input validation which avoids a buffer overflow, and the 256-byte limit
+is "documented" by an explicit piece of code.
+
+
+2, even in a library, i suggest using only assert-s, if at all. such a
+low level subprogram does not have any better means of communicating
+an error condition that should not happen in the first place.
+
+In the case of PHS(), it is defined as returning a status code (an
+"int"), so it has a way to report an error condition after all.
+
+Whether libraries should report abnormal input data with error codes or
+through more drastic measures (asserts, abort() calls...) is debatable,
+and indeed it is an old and ongoing debate. However, the PHS() API
+designers followed the "error code" path, so we may as well roll with
+it.
+
+
+--------------------------------------------------------------------
+
+On a more general basis, complete input validation can be hard, because
+C has a few nasty pitfalls. For instance, consider this line, again
+from Schvrch:
+
+    memcost = (m_cost + 1) * statelen;
+
+memcost is an "uint64_t", but m_cost is an "unsigned", and statelen is
+an "int". The C rules mandate that the multiplication will be done with
+the "unsigned" type (theoretically, it could be done with type "int" on
+an architecture with, say, a 16-bit "unsigned" and a 17-bit "int"; but I
+have never encountered such a system in practice). So, on a typical
+system (including PC, in both 32-bit and 64-bit modes), the "memcost"
+will never exceed 2^32, and, counterintuitively, it may be truncated
+silently. For instance, if you call PHS() with m_cost == 16777216, you
+end up with the same actual memory cost as if you had used m_cost == 0.
+This can be viewed as undesirable. Indeed, the Schvrch designers have
+apparently envisioned that the "memcost" could exceed 2^32, since they
+used a 64-bit type, but the actual computation truncates values to 32
+bits.
+
+Production-ready code (that we do NOT insist on having right now) would
+have to include proper casts and checks here. Right now, this kind of
+issue could bite researchers (i.e., us) if, for instance, we try to do
+some benchmarking with huge RAM. We could be _thinking_ that we are
+trying out the function with 4 GB memory cost, and instead end up using
+the function with 256-byte cost.
+
+Thus, while input validation is not strictly required, it is still good
+to have, even for research purposes.
+
+
+	--Thomas Pornin
+

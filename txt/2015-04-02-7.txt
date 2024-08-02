@@ -1,0 +1,111 @@
+phc-discussions - Re: [PHC] Compute time hardness
+
+Message-ID: <20150402115546.GA18989@openwall.com>
+Date: Thu, 2 Apr 2015 14:55:46 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Compute time hardness
+
+Disclaimer: this is really not my area.  I would have preferred to let
+someone else argue this.  But we don't appear to have anyone with just
+the right expertise in here.  Bill's expertise is probably the closest
+match among this community to what we'd need for this discussion.
+
+On Thu, Apr 02, 2015 at 09:21:35AM +0200, Dmitry Khovratovich wrote:
+On Wed, Apr 1, 2015 at 11:21 PM, Solar Designer <solar@...nwall.comwrote:
+>
+>But anyway, as 32-bit multiplication is equivalent to a sum of 16 (average) addends, it can not be more than 4x slower given sufficient area (which we have).
+>
+What are you averaging here?  I think we shouldn't.  I think it's 32.
+
+16 average non-zero addends. Very likely that no more than 24.
+
+You mean 16 average non-zeroes (across the 32 partial products) in any
+one bit position?  Yes, that's likely, but so what?  We don't know
+which ones are zero vs. not when we design the circuit - this will vary
+by its inputs.  So the delay is there all the time.
+
+So 4 or 5x extra depth assuming no other optimizations.
+
+5x, plus significant overhead.  As to possible other optimizations,
+that's interesting.  It'd be helpful to find any actual results on that.
+
+However, it is clear
+that the least significant bits of the final sum can be computed using
+only LSBs of intermediate sums, which makes the delay even smaller.
+
+I specifically considered this aspect when designing pwxform (there was
+even a thread in here on that very topic, which I started).  It tries to
+ensure the MSBs determine the overall delay of multiple rounds of
+pwxform.  The same can't be said of Blake2b's ADDs - there was no
+deliberate attempt to have their MSBs determine the overall delay.
+
+So I think it's 1 AND + 5 ADD.  And we shouldn't ignore that feeding
+each input bit to 32 ANDs probably requires buffers.
+
+We can assume that every bit has 32 copies, the area is still negligible.
+
+You mean by computing 32 independent instances of the inputs to the
+multiplier?  OK, but those instances' inputs come from a previous round
+of the same primitive, also involving a multiplier, and thus also
+needing 32 copies of their inputs each to avoid the original problem.
+Even if this chain is broken between pwxform invocations (just not
+between pwxform rounds), for 6 rounds we get over a billion of
+instances.  OK, it doesn't really have to be 32 copies - perhaps we can
+drive e.g. two or four AND gates from one output of a previous round
+with little additional delay introduced, and perhaps we can introduce
+some buffers before some of the multipliers (just not all) to break this
+chain.  But this is still significant overhead.  Also, the larger the
+circuit is, the larger the capacitances and the longer it takes for
+gates' inputs to settle.
+
+In that PhD thesis you referenced above, see page 136 (page 151 in PDF).
+It shows the summation network corresponds to 49% of total delay in
+their chosen multiplier.  In fact, it says: "The delay effects of the
+other pieces of a multiplier are at least as important as the summation
+network in determining the final performance."
+
+That's for the particular (Booth-3) multiplier scheme, not for a naive
+one where you only have a binary tree of additions.
+
+Fair enough.  The contribution of various components of a multiplier to
+its overall delay may be different.
+
+I guess the naive multiplier is slower overall, and I guess this is so
+obvious to experts they don't even talk about it, but it'd be nice to
+have this confirmed or disproved by an expert.
+
+The naive multiplier appears faster if we assume that gate delays are
+fixed and there are no other delays, and we merely count the circuit
+depth - but in practice many other factors affect the overall delay as
+well.  If the naive multiplier were faster, then wouldn't it be listed
+as the fastest or at least used as a baseline in that PhD thesis?  The
+fast multipliers given there are actually very large - I think they're
+on par with or even larger than the naive one.
+
+For example, their chosen multiplier design (not the absolute fastest,
+but also not the largest and not the most power hungry), achieving 3.5 ns
+typical (4.4 ns worst), "has about 60,000 bipolar transistors", and
+has die area 10 mm^2, and consumes 4.5W (at the old 0.6 um process).
+The fastest is 2.6 ns and is ~1.5x bigger and ~2x more power hungry.
+
+BTW, I am impressed they could effectively match a 1 GHz CPU's multiply
+latency at that old process.  Also, the use of primarily bipolar
+transistors is unusual.
+
+Can we estimate the number of transistors needed for a naive multiplier
+(minimizing solely the circuit depth)?  60,000 / 1024 partial product
+bits gives us 60 transistors per bit.  Perhaps half of them would be
+spent on the first set of additions (since 1024 is close to
+512+256+128+64 = 960 inputs to further additions).  If so, we have 30
+transistors to spend on one full adder, which is more than we need -
+which is 8 to 22, from what I could find.  Of course, we wouldn't use
+ripple-carry adders, but 30 transistors per bit feels about right for a
+carry look-ahead adder.
+
+So the circuit size appears on par with the naive one (and their fastest
+one is probably larger than the naive one).  Clearly, so much effort was
+put into this not just for the sake of weirdness.
+
+Alexander
+

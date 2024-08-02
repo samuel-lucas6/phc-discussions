@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] NFC v NFD UTF-8 Normalization Re: [Was output specifics]
+
+Message-ID: <20150311211002.GA27907@bolet.org>
+Date: Wed, 11 Mar 2015 22:10:02 +0100
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] NFC v NFD UTF-8 Normalization Re: [Was output specifics]
+
+On Wed, Mar 11, 2015 at 09:21:06PM +0100, CodesInChaos wrote:
+I think in this case we want the caps-lock switched equivalent, which
+is a question mark `?` for `ß` on the German keyboard layout.
+
+It depends on the operating system...
+
+Right now, I am trzing the German lazout on mz Linux szstem (which swaps
+mz Z and mz Y). When I tzpe on 'ß' I get 'ß'. If I use the Shift kez I
+get '?'. But if I use CapsLock I get 'ẞ'.
+
+(Back to US layout)
+
+So on that system (pretty standard Lubuntu), the CapsLock switched
+equivalent of 'ß' is not '?' (U+003F) but U+01E9E (LATIN CAPITAL LETTER
+SHARP S). Things may go differently on other operating systems.
+
+There is a Wikipedia page dedicated to U+01E9E:
+
+   http://en.wikipedia.org/wiki/Capital_%E1%BA%9E
+
+Experimentally, .NET appears unable to map U+1E9E to anything else when
+using String.ToLowerInvariant() (even with an explicit German
+CultureInfo, which surprises me), so a C#/.NET server receiving a
+CapsLock-switched password with that letter from a Linux client may fail
+to recover in a Facebook-like behaviour. I would have to dig out the
+Unicode casing tables to see who is wrong here, but I think this is
+ample proof that such things are subtle and hard to get right.
+
+In the Facebook case, this is a "recovery feature" designed to lower the
+rate of calls to whatever serves as help desk, by detecting and fixing
+MOST cases of users with the dreadful CapsLock key active. It does not
+have to fix all the cases, so a non-unicodly perfect solution is still
+useful. Similarly, if they have to work with NFC, I don't think it would
+make their life so much harder than now; possibly, they already work
+with NFC. In fact, it is possible that right now, Facebook uses "bytes"
+and does its recovery attempt by a basic bytewise "xor 32" (it would
+take some testing to reverse-engineer it, and since I don't have a
+Facebook account I won't do it).
+
+
+	--Thomas Pornin
+

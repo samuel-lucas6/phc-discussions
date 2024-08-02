@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: EARWORM review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p6=jurqWZvhUqow-wf7c3S=UK33axZObt1x0fHcqKqfdA&#64;mail.gmail.com&gt;
+Date: Fri, 4 Apr 2014 13:26:48 -0400
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: EARWORM review
+
+I got some sleep, and woke up with a crazy ASIC architecture to attack
+EARWORM.  I think it would be pretty devastating, though AES seems to
+be difficult to implement in FPGAs very well, so it's more of an AISC
+thing.  However, it requires a copy of the ROM, which may be difficult
+for an attacker to obtain.  This attack assumes the attacker has both
+a copy of the ROM and many millions of password hashes he wishes to
+brute-force guess.  This is not exactly a banana attack, IMO, but
+requiring the ROM, password database, and a budget to build the ASIC
+and this wild machine are going to limit this attack dramatically.
+
+To attack EARWORM hashes which are run on a 1TiB ROM authentication
+server, do the following:
+
+- Break up the 1TiB ROM into 256 4GiB ROMs.
+- Distribute these ROMs to 256 ASICs
+- Also give each ASIC 4GiB of scratchpad memory
+- Connect the ASICs in an 8-dimensional hypercube
+
+The idea is that each ASIC is streaming in data from it's ROM over and
+over, while computing workunits for many password guesses in parallel.
+ As the 512-bit scratchpads for each password guess are updated with
+their workunits, they are transmitted over the hypercube network to
+the ASIC that owns the next needed workunit.
+
+In this case, each ASIC would split up it's portion of the ROM into
+4096 1MiB "chunk areas" in external DRAM.  It would also store up to
+4GiB/64 = 64Mi password scratchpads, each representing a password
+guess in progress.  As it loads it's 4096 chunk areas sequentially,
+over and over, it computes all the workunit updates with as much
+parallelism as the ASIC can support, maybe 100-ish or even 1000-ish
+AESENC cores, pipelined maybe 6 deep.  That would be 600-ish to
+6000-ish AESENC executed in parallel per ASIC, or around 150K to 1.5M
+in total, applying AES-128 hashing to all of it's 512-bit scratchpads
+that are waiting on that specific chunk area to be applied.
+
+There would be thousands of such password scratchpads queued up for
+each chuck area scratchpad memory.  The ASIC would most likely be
+limited in how many AES-128 computations it could compute in parallel,
+which is a very large number.  There would have to be some extra bytes
+for each scratchpad indicating which password guess it belongs to, and
+how many workunits have been applied.  Maybe it's expected final hash
+should be included as well, so the ASICs could detect
+correct/incorrect guesses.  Just details...
+
+One reasonable defense against this attack would be to do memory-hard
+writes as well as reads, to maybe a few MiB per password hash.  This
+would cause my evil machine to need maybe 1000X more memory than I
+described, memory bandwidth would likely become the bottleneck, and
+the hypercube communication network might get overloaded.
+
+What do you think?  I had fun dreaming this one up!  I hope it's not
+too harsh... EARWORM looks like an easy finalist to me.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

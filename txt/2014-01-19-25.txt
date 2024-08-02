@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Native server relief support for password hashing in browsers
+
+Message-ID: <20140119222820.GA23153@openwall.com>
+Date: Mon, 20 Jan 2014 02:28:20 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Native server relief support for password hashing in browsers
+
+On Sun, Jan 19, 2014 at 09:21:51PM +0000, Poul-Henning Kamp wrote:
+Is client-side assistance without a secure tunnel ever practical ?
+
+I think that if client-side assistance is practical with a secure tunnel
+(and that's an "if", and will depend on use case), then it is likely
+also practical without a secure tunnel.
+
+Think of it this way: having a hash go over a potentially snooped upon
+wire is no worse than having a plaintext go over the same wire, but it
+may be better in two ways: by not immediately/always revealing the
+plaintext (possibly reused elsewhere and allowing for access to more
+than the target account) and by reducing server load (or increasing the
+total amount of hashing performed on client+server combined, thereby
+making password hashes at rest more resistant against offline attacks).
+
+Then, having client-side heavy hashing is a prerequisite for more
+advanced authentication schemes defeating replay and more (yet working
+over a snoopable channel).  Yes, the salt will need to be sent to the
+client, and that's a problem (which I've just commented on in the
+previous message).  Yet it may be done, with mitigations in place and
+tradeoffs considered.
+
+I spent a lot of time researching this some years back, and concluded
+that it wasn't worth it.
+
+It may often be not worth it.  Not necessarily always.
+
+Also, there are many Eves.  Failing to protect from some of them doesn't
+mean we shouldn't protect from any.
+
+That said, this may well be beyond scope of PHC (unless something
+unexpectedly clever yet simple emerges), and Catena's builtin "server
+relief" is only the tip of the iceberg.  It is very nice that Catena
+standardizes just one hash type for both server-only and client+server
+uses (without that functionality built in, it'd end up being 2+ hash
+type variations), but it doesn't address the more complicated issues.
+
+Alexander
+

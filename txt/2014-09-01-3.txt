@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] A review per day - PufferFish
+
+Message-ID: <54049797.4080201@ciphershed.org>
+Date: Mon, 01 Sep 2014 11:58:15 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - PufferFish
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 08/31/2014 12:05 AM, Bill Cox wrote:
+These reviews are exhausting, but fun!  I'll find more time
+tomorrow, but my initial thoughts for PufferFish:
+
+Nice, simple, clean, honest wana-be future of bcrypt.
+
+I'll probably find some crud in his code tomorrow, but I expect to 
+still be a PufferFish fan at the end of it.  Maybe I'll help him
+find a bug or two... unlike what happens when I read Solar
+Designer's code :-)
+
+Bill
+
+I read through the code.  I did not properly analyze it for security
+vs the original bcrypt.  I just read the code.  Others more familiar
+with bcrypt will have to do a proper cryptanalysis.
+
+In short, PufferFish is very similar to bcrypt, except that the 4
+S-boxes can be bigger, controlled by m_cost, and the iteration count
+is controlled by t_cost.  It uses 64-bit arithmetic, and just in case
+it's this modified version of BlowFish is not very secure, it hashes
+the inputs first with SHA512-HMAC.  The author got the details of the
+password and salt hashing right, working around the input collisions
+of HMAC.  Very nice!
+
+It also generates the output derived key with another round of SHA512,
+which gives me a bit more piece of mind.  I did not fully verify that
+no significant entropy is lost in the main algorithm, but it looks
+that way to me.
+
+I also did not benchmark it vs bcrypt, but it does look like it has 4
+parallel small data reads from the S-boxes, just like bcrypt, except
+that it does so 64-bits at a time rather than 32.  Like bcrypt, it
+probably needs no SIMD version.
+
+Overall, for an algorithm that simply wants to extend the life of
+bcrypt by using more than 4KiB of L1 cache and using 64-bit data
+types, PufferFish looks great.  It's nice to have an easy review for
+Labor Day :-)
+
+I still found some things to nit-pick about, though nothing significant:
+
+- - line 216, if the "settings" string is NULL, it looks like it will
+crash.  Add a check?
+- - The code has tabs followed by spaces, and indentation is off in my
+editor
+- - In the reference code, pufferfish.c line 155 has a comment says 256
+bits, but I think it should say 512
+
+Overall, this is very clean and easy to read code, even in the
+optimized version.  This project sticks to the spirit of bcrypt, and
+does not add significant complexity.  It also has a nice string
+conversion interface for it's parameters which looked well done to me.
+
+PufferFish appears to be a worthy replacement for bcrypt, IMO.
+
+That said, PufferFish is *not* a worthy replacement for Script.  Like
+several entries, it has no mechanism for reducing external DRAM
+latency penalties, and with small 64-bit unpredictable reads, it will
+run to slow for 1GiB hashing.  Like bcrypt, it has no cache timing
+resistance of any kind.
+
+PufferFish seems to be just what the author wanted it to be - a simple
+update to bcrypt.  For that goal, PufferFish seems to be a job well
+done.  If we want a low-complexity bcrypt replacement, this is
+probably it.  Again, it does not meet my criteria for "overall" winner
+since it does not replace Scrypt.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBJeTAAoJEAcQZQdOpZUZCBwQAJ05JkFDW/4m5Lyl6mwzkXJm
+GaqD7sj0rUcfPxa2unetmAiha5N4fdDvhR4aXoMIp/weiViVA2Gnlm+jmvm4NKyW
+uYszsCHB5lD+szhGVa2/BOEPAiC5qe942JAMR6Cx9jt/TmCjlVZd7xg2TxTfqbF5
+xQvqzN006AgQSfIzV/VcEWKEOW7ipfPEd2QngSvljS4ss0FF30sdxBzwGUYGSD2Y
+shlPzdZdchrGOCFAJFU71jxvVOtcfvAtrLlbcQov4xa8mWD/DYXVWRuXUvCptVg7
+dFvuY9ZVTozjdVrylI9zRu6F4H66G58AV6GlU/EsJdnIlZJzpt9QvpVKjV+v//r6
+TBJmRpWonVTf+GLJhN/l6M1vGdCbp9IpbM0fWVz+EovMBPb6fMYrzeSh0W3QxL2X
+TGOcweCzlsDDhYl6fviIigcho8pF2lZ6LTtIUlBVuQaGzczjnrRLk9VcPSqJbsL0
+DWmtxfuaxEQc4cOLYI6/+we83XvCDW4rWXGOz2XZNShppMx5h4+3NLT4tQhjDoaA
+PZtXNtr4oGE5REzUvj+ZpPxrcXdXp8yPAIMgYTRtXxUmF7cCM8utBu1Y4T1OJKO6
+TyWa5e0/cEUmUCjwb9a1hGfWKrDXtk0toH41rPN7uJZRCaAcjiAe6hFr/1lWx+05
+1hRqOG46o1hVHoI0OxJo
+=9EAp
+-----END PGP SIGNATURE-----
+

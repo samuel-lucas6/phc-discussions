@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140214112854.GA10268@openwall.com>
+Date: Fri, 14 Feb 2014 15:28:54 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Bill,
+
+On Fri, Feb 14, 2014 at 03:18:18PM +0400, Solar Designer wrote:
+I think we could optimize this better by hand, but as I wrote in another
+message we need the random lookups from "prev" (not from "from") anyway.
+So we'd need to benchmark and optimize the latter.
+
+When the randomly read block is in L1 cache anyway (which won't be the
+case for "from" in actual usage), randomly reading from "prev" is even
+slower, because the function becomes even more sequential:
+
+    for(i = 1; i < numblocks; i++) {
+        uint32_t j;
+        for(j = 0; j < blocklen; j++) {
+            uint32_t *from = mem + j;
+            value = (value * (*(prev + (value & mask)) | 3)) + *from;
+            *to++ = value;
+        }
+        prev += blocklen;
+    }
+
+This may be partially repaired by changing it to:
+
+            value = ((value | 3) * *(prev + (value & mask))) + *from;
+
+but it's still slower than original.
+
+You might want to decouple the multiply latency hardening from random
+reads (make it two separate chains, only joined at end of block).
+
+Alexander
+

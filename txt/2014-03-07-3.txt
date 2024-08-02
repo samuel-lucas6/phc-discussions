@@ -1,0 +1,70 @@
+phc-discussions - Re: [PHC] TigerKDF paper and code ready for review
+
+Message-ID: <20140307031448.GA21199@openwall.com>
+Date: Fri, 7 Mar 2014 07:14:48 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TigerKDF paper and code ready for review
+
+Bill,
+
+Some additions to what I wrote, for correctness:
+
+On Fri, Mar 07, 2014 at 06:45:52AM +0400, Solar Designer wrote:
+Now, I understand that it's wasteful to do lookups smaller than 16 bytes
+e.g. on Sandy Bridge and better (where we can do two 16-byte lookups
+from L1 cache per cycle, or only the same number of smaller lookups).
+Good news: to be as GPU-resistant as bcrypt, you don't need your lookups
+to be as small as bcrypt's.  Rather, you need them to be as rapid as
+bcrypt's, with results required as soon as bcrypt does, and with no more
+parallelism than bcrypt has.  (These last two conditions are actually
+one.)  It is not a problem per se if an implementation turns out to be
+more efficient using global rather than local memory, as long as the
+accesses are as rapid as bcrypt's.  Those conditions imply that it won't
+run faster than bcrypt, using either type of memory.
+
+There's an additional (implied) condition: the random lookups arena no
+smaller than bcrypt's 4 KiB.  (Otherwise more instances will fit in
+local memory.)
+
+So your comparison
+of GPU resistance vs. bcrypt's compares the wrong thing.  Now, if your
+random lookup results are not required as soon as bcrypt does require
+them (meaning you have more parallelism in one instance), you may in
+fact compensate for that by making the random lookups arena larger.
+
+BTW, why do you mention 32 KiB there?  Your random lookups arena is
+only 16 KiB, and you can't make it larger than that on current CPUs with
+32 KiB L1d cache and 2 hardware threads/core, without incurring much
+extra L1 cache thrashing.  TigerKDF's total memory usage is irrelevant.
+In other words, you may compensate for up to 4x more latency tolerance or
+parallelism than bcrypt has.  But you can't necessarily compensate for
+less frequent lookups (make them 2x+ less frequent than bcrypt's, and
+use of global memory becomes beneficial on HD 7970, regardless of lookup
+size).  I am fighting with the same problem in escrypt.  It's tough,
+especially when we consider running on smaller SIMD-less CPUs with
+settings that are also good for SIMD-enabled CPUs.  I'm afraid this
+combination of desirable properties - common settings for SIMD-less and
+SIMD-enabled (up to certain sane vector width), yet GPU resistance no
+worse than bcrypt's - is just not possible.  Have to tune for SIMD-less
+and SIMD-enabled separately if we don't accept giving up on having GPU
+resistance no worse than bcrypt's.
+
+My "not possible" applies in the context of this approach.  It is
+possible that another approach achieves similar GPU resistance, e.g.
+through rapid use of a CPU instruction that has no equivalent on GPUs
+and requires some local memory to emulate with acceptable efficiency
+(thus, limits the number of concurrent instances even if they otherwise
+use global memory).  Unfortunately, the most suitable such instructions
+(e.g. AES-NI) only exist on CPUs that are SIMD-enabled, so are of no
+help for SIMD-less CPUs.  Some x86 FPU peculiarity could work (no 80-bit
+floating-point in GPU hardware), but is not great to use.  Maybe some
+kinds of integer multiplication do the trick (e.g. 64x64->128 would
+probably require 4 multiply instructions even if 64x64->64 is available,
+and many more otherwise, although most of those 4 are independent, so
+could be issued without stalling).
+
+Yet I mostly focus on the bcrypt-like approach.
+
+Alexander
+

@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Scrypt can have highest time*average memory cost</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="9">[&lt;prev]</a> <a href="11">[next&gt;]</a> <a href="../../../2014/03/06/1">[&lt;thread-prev]</a> <a href="14">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140328210136.GA29271&#64;openwall.com&gt;
+Date: Sat, 29 Mar 2014 01:01:36 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Scrypt can have highest time*average memory cost
+
+On Thu, Mar 06, 2014 at 09:06:37AM -0500, Bill Cox wrote:
+&gt; I have been using time*cost as my basic measure of memory-hard KDF
+&gt; performance, but up to now I've only used peak memory usage rather
+&gt; than average.  Scrypt writes memory in the first loop, then reads
+&gt; memory in an unpredictable fashion in the second, while I read and
+&gt; write at the same time until memory is full.  It turns out that the
+&gt; Scrypt technique can achieve a higher average time*memory cost for the
+&gt; entire run, by 50%, even if both ways result in the same peak memory
+&gt; usage.
+&gt; 
+&gt; Peak memory usage is a very important number, but if an attacker is
+&gt; using a multi-CPU system with a very large shared memory, then he
+&gt; probably cares more about average memory than peak.
+
+You're normalizing for defender's peak memory usage, then looking at
+average memory usage.  That's one way to do it, yes.
+
+However, what if we normalize for defender's time per hash computed?
+When we do that, it turns out that scrypt reaches its highest normalized
+AT cost at 2*N (just the way it's defined), but yescrypt (yes, that's
+the new name) reaches the highest normalized AT cost (1.5 that of
+scrypt) at 4/3*N (and it drops to 4/3 of scrypt's at 2*N), and other
+schemes where the entire arena is randomly accessed while being filled
+(no sliding-power-of-2) potentially/theoretically reach the highest
+normalized AT cost (twice that of scrypt!) at N (no need for SMix's
+second loop at all, then - it only hurts this potential/theoretical
+highest normalized AT cost).
+
+When I say potential/theoretical, I mean that in those cases (unlike in
+current yescrypt) other factors appear, which may negatively affect the
+AT cost to real-world attackers: non-uniform distribution of accesses
+(allowing for potentially beneficial use of 2+ types of memory with
+different access speed or/and area or/and dollar cost), maybe slightly
+fewer different memory locations being read.  I previously wrote about
+those issues.  There are a few other considerations as well, including
+peak memory usage cost to defender (which the defender must provide
+capacity for, including for the worst case of highest concurrency and
+most unfortunate (de)sync).
+
+I did not realize the potential improvement was as high as 2/1.5 = 4/3,
+though.  I thought it was 1.5 / (4/3) = 9/8 based on AT cost seen at 2*N
+time (same as scrypt's), not having analyzed whether and how the
+maximums may have moved (I did that now).  I was willing to trade this
+9/8 potential improvement for the greater certainty that the
+sliding-power-of-2 approach provides.  Perhaps this is still a good
+tradeoff even with 4/3, but it's not as good as I had thought.  Anyway,
+I am sticking with the sliding-power-of-2 approach for now, and will
+revise/recommend 4/3*N as the default running time (achieving the 1.5
+normalized AT cost maximum vs. scrypt's).  This is actually good news to
+me (higher than I had thought normalized AT cost is reached, and at a
+lower running time).
+
+scrypt
+t       AT      AT/t    ATnorm
+1.00    0.00    0.000   0.000
+1.05    0.05    0.048   0.181
+1.10    0.10    0.091   0.331
+...
+1.90    0.90    0.474   0.997
+1.95    0.95    0.487   0.999
+2.00    1.00    0.500   1.000 &lt;==
+2.05    1.05    0.512   0.999
+2.10    1.10    0.524   0.998
+
+pow2
+t       AT      AT/t    ATnorm
+1.00    0.33    0.333   1.333
+1.05    0.38    0.365   1.391
+1.10    0.43    0.394   1.433
+...
+1.25    0.58    0.467   1.493
+1.30    0.63    0.487   1.499
+1.35    0.68    0.506   1.500 &lt;==
+1.40    0.73    0.524   1.497
+1.45    0.78    0.540   1.490
+...
+1.90    1.23    0.649   1.367
+1.95    1.28    0.658   1.350
+2.00    1.33    0.667   1.333
+2.05    1.38    0.675   1.317
+2.10    1.43    0.683   1.300
+
+wrap or mod
+t       AT      AT/t    ATnorm
+1.00    0.50    0.500   2.000 &lt;==
+1.05    0.55    0.524   1.995
+1.10    0.60    0.545   1.983
+...
+1.90    1.40    0.737   1.551
+1.95    1.45    0.744   1.525
+2.00    1.50    0.750   1.500
+2.05    1.55    0.756   1.475
+2.10    1.60    0.762   1.451
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

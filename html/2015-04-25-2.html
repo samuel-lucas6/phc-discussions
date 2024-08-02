@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - yescrypt AVX2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150425080959.GA17071&#64;openwall.com&gt;
+Date: Sat, 25 Apr 2015 11:09:59 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: yescrypt AVX2
+
+Hi,
+
+So I thought that AVX2 could be of significant help even when pwxform is
+tuned for 128-bit gather lanes, like we want it to be for better
+bcrypt-like anti-GPU on the (currently widespread) machines that can
+only do 128-bit SIMD and not wider yet.
+
+It appears that I was mostly wrong, speaking of AVX2 as implemented in
+Haswell.  My expectation for AVX2 working reasonably well even when
+"misused" like that was based on my previous experiments (unreleased)
+with 64-bit bcrypt-like S-box lookups in 128-bit SIMD code, on SSE*/AVX
+where we have _mm_loadl_epi64() and _mm_loadh_pi() to efficiently load
+64-bit halves of a 128-bit register.  On SSE4.1, there are also
+instructions to extract 32- or 64-bit words from anywhere in a 128-bit
+register.  I thought it'd be similar for 128-bit loads to 256-bit
+registers.  However, it turns out there's a 3 cycle latency to access
+the upper 128-bit halves of 256-bit registers on Haswell, such as with
+_mm256_inserti128_si256() and _mm256_extracti128_si256() or
+_mm256_permute4x64_epi64(), and the word-extract instructions do not
+directly operate on the upper 128 bits.  So it's 3 cycles to extract
+would-be S-box indices from there, and it's another 3 cycles to load the
+S-box lookup result in there.  Oops.
+
+Now, there may be hacks around some of this, such as by doing a 256-bit
+load from 16 bytes below the desired offset (thereby loading the lower
+128 bits with garbage and the upper 128 bits with what's needed) and
+then loading the lower 128 bits with what's needed there.  I've tried
+this, and it works, but at least without a change to data layout to make
+those 256-bit loads always (rather than half of the time) 256-bit
+aligned the performance is no better than with
+_mm256_inserti128_si256().  Also, when implementing at intrinsics level,
+I resorted to using a combination of _mm256_loadu_si256() and
+_mm256_blend_epi32(), since I guess _mm256_castsi128_si256() is not
+meant to be used on the left-hand side.  When implementing in assembly,
+I think it can be two loads (no need for a blend instruction), but I
+doubt it'd be any faster (same instruction count, and blend is fast).
+And I doubt the alignment would make all the difference, as I think
+Haswell has fast unaligned loads from cache (we are occasionally
+crossing a cache line, though).
+
+Samuel - any thoughts on accessing the upper 128 bits faster?
+
+So far, the best I achieved when going from AVX to AVX2 yet insisting on
+128-bit S-box lookups is:
+
+AVX:
+enchmarking 1 thread ...
+930 c/s real, 930 c/s virtual (1023 hashes in 1.10 seconds)
+Benchmarking 8 threads ...
+3410 c/s real, 433 c/s virtual (7161 hashes in 2.10 seconds)
+
+AVX2:
+Benchmarking 1 thread ...
+710 c/s real, 710 c/s virtual (1023 hashes in 1.44 seconds)
+Benchmarking 8 threads ...
+3580 c/s real, 458 c/s virtual (7161 hashes in 2.00 seconds)
+
+at 2 MB per hash on i7-4770K, with otherwise currently default yescrypt
+settings (PWXrounds=6, etc.)  As you can see, single thread performance
+went down by 24%, and 8-thread went up only by 5%.
+
+It's good news that attackers probably also can't use Haswell to attack
+yescrypt hashes tuned for older CPUs (with 128-bit S-box lookups) much
+faster.  It's bad news that defenders can't benefit from Haswell either.
+
+It looks like I might introduce separate pwxform settings for AVX2,
+using 256-bit S-box lookups.  Maybe I'll try 512-bit as well, and see if
+it becomes much weaker than bcrypt on Haswell or not (maybe target L2
+cache with the S-boxes, then).  (256-bit would definitely be fine in
+terms of bcrypt-like anti-GPU on Haswell.)  If it's fine then 512-bit
+would be preferable in order to avoid introducing yet another
+combination of settings for MIC and AVX-512.  Note: all of this fits
+into yescrypt and pwxform as currently specified.  We're only talking of
+adjusting the PWX* compile-time settings (and possibly making them
+runtime tunable), deviating from the current defaults, and producing
+optimized code for those (the -ref will run fine with only #define's
+changed).
+
+OTOH, we may be satisfied with the current defaults as being a good fit
+for up to x86/AVX and ARM/NEON, and appearing to defeat attacks with
+newer CPUs so far.  With these settings, Haswell performs almost like
+Sandy/Ivy Bridge do - no worse, but also no better.  Maybe that's fine.
+
+I've attached a patch containing my experiments, including several AVX2
+code versions of PWXFORM_SIMD.  All of those use 128-bit S-boxes so far.
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="2/1">yescrypt-0.7.1-avx2-hack1.diff</a><strong>" of type "</strong>text/plain<strong>" (19341 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

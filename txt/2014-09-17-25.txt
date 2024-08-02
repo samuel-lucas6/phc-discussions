@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] omegacrypt and timing
+
+Message-ID: <1847306529.485810.1410986145974.open-xchange@oxuslxltgw10.lxa.perfora.net>
+Date: Wed, 17 Sep 2014 15:35:45 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On September 17, 2014 at 2:41 PM Brandon Enright <bmenrigh@...ndonenright.net>
+wrote:
+>
+On Wed, 17 Sep 2014 13:50:01 -0500 (CDT)
+Steve Thomas <steve@...tu.comwrote:
+>
+To avoid misalignment, if you ran all 4 for round 1, and then
+selected the right one, then all 4 for round 2, then selected the
+right one, etc., you'd be doing 4x as many memory operations and
+you'd need a way of discarding the memory changes made by the 3
+wrong branches. Is this the attack you're suggesting?
+>
+>
+No, I'm saying that a GPU will waste clock cycles while not
+calculating the wrong data paths. This is do to it's conditional
+execution of instructions. If a thread is not suppose to run an
+instruction it will do a nop (no operation) instead.
+>
+Interesting. So let me make sure I understand what this attack would
+look like.
+>
+You'd N instances of OmegaCrypt on the GPU by allocating N ChaCha
+states and N large regions of memory. Then you'd allocate 4 threads
+(or maybe 5 if you need a master thread) for each OmegaCrypt
+instance and then 3N of the 4N threads would be able to
+data-dependently disable (nop) themselves each round. In this way you'd
+be able to keep 4N threads in sync with each other even though only 1N
+worth are doing useful work.
+>
+
+Ah, I get what the misunderstanding is. Each thread is running a different
+password guess and there are several threads running at the same time. They all
+have their own ChaCha state and memory. When they hit a branch some threads are
+set to not do anything while the other ones run.
+
+
+So a question about GPU memory. If you have a ton of threads each
+accessing memory at random, how well does this scale? It won't exhaust
+memory bandwidth but won't even a small number of threads exhaust
+the rate at which the memory can serve access from "cold"
+banks/blocks/regions?
+>
+
+It scales poorly that's why password dependent access is better than fixed
+access. With fixed access you get the full memory bandwidth (at least a lot).
+With random each thread request is for "bus width" of memory (commonly 128 to
+512 bits) to get their x bits that are needed.
+

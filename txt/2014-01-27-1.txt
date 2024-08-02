@@ -1,0 +1,81 @@
+phc-discussions - Re: [PHC] An argument for Catena-2
+
+Message-ID: <CALW8-7LYfG-kC1fm7EUC4XBSbWmnBsDMLguruxaP-aqzvFBHRQ@mail.gmail.com>
+Date: Mon, 27 Jan 2014 14:34:13 +0100
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] An argument for Catena-2
+
+Hi Bill,
+
+it seems that your 10X estimate is a bit pessimistic. If you have only half
+of memory available, you can split it in half and store every 4th point
+(v_i) from the first two rows in memory. Hence while computing the second
+row, you need on average 1.5 steps on the first row from a distinguished
+point to the immediate predecessor, and 2.5 steps on average in total.
+Having spent G steps for the first row, you need 2.5*G for the second row.
+
+The same holds for the third row, where for each new node you need on
+average 1.5 steps on the second row. As they cost 2.5 on average, you will
+need 2.5*1.5+1 = 4.75 steps on average for the third row, or 4.75*G in
+total. Overall, you need about (4.75+2.5+1)G=8.25G steps, which should be
+compared to 3G with the full memory available. Thus the penalty is 8.25/3 =
+2.75 .
+
+I have applied this algorithm to the example graph with g=3 from the Catena
+presentation, and obtained 66 steps, which perfectly matches the above
+estimate.
+
+
+In general, if you have 1/q of memory available, this algorithm gives G for
+the first row, ((2q-1)/2+1)G for the second row, and
+(((2q-1)/2+1)(2q-1)/2+1) for the third row, or (q^2+3q+2.25)G in total,
+which should be compared to 3G. The overall penalty is quadratic of q, but
+grows not so fast. At q=10 the penalty is 44X. The second row calculation
+can be further optimized.
+
+Best regards,
+Dmitry
+
+
+On Sun, Jan 26, 2014 at 9:32 PM, Bill Cox <waywardgeek@...il.comwrote:
+
+I've done some more work on my pebbling program, and tested Catena-2
+against Catena-3.  Catena-3 does have a much higher penalty for
+attackers using a TMTO, however, I think Catena-2 may be good enough.
+>
+When I save 1 memory location for Catena-2, I get a 50% recalculation
+penalty.  No one is going to try and save 1 memory location against
+Catena-2.  When I try something reasonable, like half, then I get a
+recomputation penalty of over 10X.  Compute cores are cheap compared
+to memory, so maybe I can run parallel cores and reduce the runtime
+penalty, but I doubt I can get that 10X to run enough in parallel to
+get the recomputation time to below 2X.  I should write some more code
+to determine how much parallelism is available in the recomputations.
+My guess is it is not enough to make it worthwhile.
+>
+I benchmarked Catena-2, and it is running 3.4X faster than Scrypt,
+compared to 2.6X faster for Catena-3.  It's still 2.6X slower than
+NoelKDF for the same memory, which is right in the middle of the
+theoretical range of 2X to 3X.  It does 2 reads and 2 writes to every
+memory location, compared to 1 read and 1 write for NoelKDF, which is
+where the 2X lower bound comes from.  When memory bandwidth limited,
+we should see a 2X difference.  For compute limited situations,
+Catena-2 does 3X more computation than NoelKDF for the same memory
+size, which is where the 3X upper bound comes from.
+>
+Performance does matter.  I'll do some more analysis on the chances of
+a parallel attack against Catena-2 succeeding, but for now I'm leaning
+towards Catena-2 for a cache-timing attack resistant algorithm.
+>
+Bill
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

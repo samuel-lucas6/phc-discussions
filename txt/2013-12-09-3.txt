@@ -1,0 +1,68 @@
+phc-discussions - Re: [PHC] Intentionally increasing password hash collisions
+
+Message-ID: <52A6148C.1010809@defuse.ca>
+Date: Mon, 09 Dec 2013 12:05:48 -0700
+From: Taylor Hornby <havoc@...use.ca>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Intentionally increasing password hash collisions
+
+On 12/09/2013 10:55 AM, Matt Weir wrote:
+1) If an attacker gains access to the hashes but does not have access to
+the individual user accounts, (an example would be a SQL injection attack
+with only SELECT privileges), then by cracking the hash they can log in as
+the user
+
+2) The attacker is attempting to gain knowledge about user's raw password
+for use in attacking other sites/services.
+
+The core idea behind this submission is that it may be worth giving up the
+security in use case 1, as well as making it possible for an attacker to
+log into a site via a collision, with the end goal of making use case 2
+more costly for an attacker. Or to put it another way, there's a lot of
+sites on the internet that are not valuable to users, but are valuable to
+attackers looking to steal credentials for use in attacking more valuable
+sites.
+
+I'm inclined to like this idea, but three objections are always raised,
+and never seem to be resolved:
+
+1. Game theory: A rational website would not decrease its own security
+to make the user's account on other websites (business competitors) more
+secure.
+
+2. "Experienced" users cannot choose their own level of security. They
+are forced to have their security downgraded because other users are
+re-using passwords on other websites when they are not. They're using a
+64-character random ASCII password but someone could still log in to
+their account after a million online requests. This almost punishes good
+user behavior.
+
+3. Rate limiting and account lockout across the Internet is hard.
+
+You can't just sleep(5000) before each authentication request, because
+requests can be made in parallel. You can't rate limit based on the
+source address, since it's easy to get tons of IPs (botnets, IPv6). You
+can rate limit based on the account, but this makes it easier to DoS a
+specific user and doesn't stop attackers from sending parallel requests
+to many *different* accounts.
+
+If hashes are 20 bits, and the attacker has 2^20 IP addresses, I don't
+see how you could reasonably prevent them from getting into at least one
+account without knowing the real password.
+
+I am very interested to see if you've solved any of these problems.
+
+This idea was also discussed after I proposed it to the GRC newsgroups
+in 2011, there might be something useful there:
+
+https://www.grc.com/x/news.exe?utag=&group=grc.techtalk.cryptography&from_up=6913&from_down=6853&cmd_down=View+Earlier+Items
+
+See the thread "Are Short Password Hashes Safer?", which starts with
+
+https://www.grc.com/x/news.exe?cmd=article&group=grc.techtalk.cryptography&item=6849&utag=
+
+(I am "FireXware")
+
+-- 
+Taylor Hornby
+

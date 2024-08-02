@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Interest in specification of modular crypt format</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2015/09/25/3">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2015/09/25/3">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150926020600.GA11236&#64;openwall.com&gt;
+Date: Sat, 26 Sep 2015 05:06:00 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On Fri, Sep 25, 2015 at 04:32:01AM +0300, Solar Designer wrote:
+&gt; For example, by value of first B64 char:
+&gt; 
+&gt;  0 to 47 - 1 char, range 0 to 47
+&gt; 48 to 55 - 2 chars, range 48 to 559 (using 3+6 bits of the two chars)
+&gt; 56 to 59 - 3 chars, range 560 to 16943 (2+12 bits)
+&gt; 60 to 61 - 4 chars, range 16944 to 541231 (1+18 bits)
+&gt; 62       - 5 chars, range 541232 to 17318447 (0+24 bits)
+&gt; 63       - 6 chars, range 17318448 to 1091060271 (0+30 bits)
+
+Attached is an implementation of the above.  There are two functions:
+
+char *encode64_uint32(char *dst, size_t dstlen, uint32_t src);
+const char *decode64_uint32(uint32_t *dst, const char *src);
+
+encode64_uint32() encodes the number in src into the string pointed to
+by dst, and returns a pointer to right after the encoded number.
+
+decode64_uint32() decodes the number in the string src into dst, and
+returns a pointer to right after the encoded number.
+
+Both functions return NULL on error.
+
+As you can see, the encoding/decoding functions are quite simple.
+
+The program also includes unit tests for these functions, including
+testing them exhaustively on the 32-bit range (yes, including beyond the
+expected valid range, making sure the failures outside of that range are
+as expected).  All of these tests pass for me.  (I should also add tests
+of decode64_uint32() on invalid inputs.)
+
+Build and run the program with:
+
+gcc sim-encode.c -o sim-encode -s -O2 -march=native -fopenmp -Wall &amp;&amp; ./sim-encode
+
+The output for a handful of special values is:
+
+0       .
+47      j
+48      k.
+559     rz
+560     s..
+16943   vzz
+16944   w...
+541231  xzzz
+541232  y....
+17318447        yzzzz
+17318448        z.....
+1091060271      zzzzzz
+1091060272      couldn't encode
+2147483647      couldn't encode
+2147483648      couldn't encode
+4294967295      couldn't encode
+
+I chose to use a big-endian order, which felt consistent with use of the
+first character to specify the magnitude of the number.
+
+Any comments?
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="1/1">sim-encode.c</a><strong>" of type "</strong>text/x-c<strong>" (4701 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

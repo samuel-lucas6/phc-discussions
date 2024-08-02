@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] Different cost settings and optional input
+
+Message-ID: <512015B3.3030705@bindshell.nl>
+Date: Sat, 16 Feb 2013 15:26:43 -0800
+From: Jeremi Gosney <epixoip@...dshell.nl>
+To: Marsh Ray <maray@...rosoft.com>
+CC: Jens Christian Hillerup <jens@...lerup.net>, 
+ Jens Steube <jens.steube@...il.com>,
+ "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Different cost settings and optional input
+
+On 2/16/2013 2:51 PM, Marsh Ray wrote:
+>-----Original Message-----
+>From: jenschristian@...il.com [mailto:jenschristian@...il.com] On Behalf
+>>
+>However, this attack is not that important I'd argue, because if two equal
+>passwords *exist* it is likely that that password is in some dictionary anyway,
+>or that they originate from the same person.
+A grand total of 38 of the top 100 passwords did not appear in the Twitter blacklist.
+Solar would probably have a better sense of things, but my feeling is that probably of all the passwords that have been chosen by exactly two users independently, most of them are not in a dictionary.
+
+There was at least a 21% overlap between LinkedIn passwords, and
+passwords leaked on other sites. And an additional 31%+ were simple
+permutations of passwords used on other sites (e.g., + 1.)  Just
+something to think about.
+
+I've tried to convince people of the merits of the following scheme:
+Use a fixed salt 
+
+Fixed salts would give the attacker an advantage, and ultimately defeat
+the purpose of salting.
+
+or otherwise allow the comparison of hashes.
+Maintain a dictionary or other database of 'seen' hashes across all users. 
+
+This could easily backfire on you. Any mechanism you employ that enables
+you to know if two users have the same password, will also enable an
+attacker to know if two users have the same password. Building a
+dictionary for the defender also builds a dictionary for the attacker.
+
+Incorporate the latest breaches into your dictionary.
+
+We recently helped a customer implement this functionality, except the
+check is done against the blacklist before hashing, not after. If the
+user selects a password that has been compromised on another website,
+the password is simply rejected and the user is told to select another
+password.
+
+This check is also performed upon authentication as well (again,
+pre-hashing), so that the next time the user authenticates, they are
+notified that their password has been compromised on another site, and
+are prompted to reset their password.
+
+Thankfully we are not on the hook for maintaining this blacklist though.
+
+If new user B selects a password (or it appears in a new breach) that is the same as existing user A, force B to select another one and immediately *disable* user A until A successfully performs a password reset operation.
+>
+No one seems to care much for this proposal though :-)
+
+Yes, I can see how that proposal would not be very popular :)
+
+Jeremi
+

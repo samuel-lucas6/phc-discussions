@@ -1,0 +1,37 @@
+phc-discussions - RE: [PHC] pre-hashed passwords?
+
+Message-ID: <009f01d060d6$ffcc47b0$ff64d710$@acm.org>
+Date: Tue, 17 Mar 2015 10:22:51 -0700
+From: "Dennis E. Hamilton" <dennis.hamilton@....org>
+To: <discussions@...sword-hashing.net>
+Subject: RE: [PHC] pre-hashed passwords?
+
+ -- in reply below to --
+From: Jean-Philippe Aumasson [mailto:jeanphilippe.aumasson@...il.com] 
+Sent: Tuesday, March 17, 2015 06:09
+To: discussions@...sword-hashing.net
+Subject: [PHC] pre-hashed passwords?
+
+(After reading this nice post about passwords including null bytes:
+http://blog.ircmaxell.com/2015/03/security-issue-combining-bcrypt-with.html)
+
+Has anyone already seen password hashes "pre-hashing" a password, to
+handle length limitations? Things like
+
+password_hash(hash('sha256', $password, true), PASSWORD_DEFAULT)
+
+password_hash(hash_hmac('sha256', $password, $key, true), PASSWORD_DEFAULT)
+
+<orcmid 
+   PBKDF2 does that when the password length exceeds a block-size 
+   limitation. I have also seen deployed usage of PBKDF2 where all 
+   passwords are pre-hashed (and therefore within the limitation).  
+   (Unfortunately, there is a resulting pass-the-hash attack in 
+   the case at hand.)
+
+   If you are going to do this, it seems to me that an HMAC 
+   form should be used, with a likely-unique key (some transform 
+   of a crypto-quality IV, for example).
+</orcmid>
+
+

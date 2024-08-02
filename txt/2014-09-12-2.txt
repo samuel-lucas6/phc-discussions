@@ -1,0 +1,147 @@
+phc-discussions - Schvrch is broken
+
+Message-ID: <1317715678.125583.1410494654142.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Thu, 11 Sep 2014 23:04:14 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Schvrch is broken
+
+Huh so there's a lot of reading I need to do on this list. I think Bill is
+writing a novel. Which is awesome I'm not complaining. :( Bill found the
+constant time attack when m_cost = 0 too. Dang he found the bug on line 107 too.
+OK done reading, this is a new attack.
+
+
+Bug in the code line 107:
+state[j] = memstate[j * (i + 1)];
+should be
+state[j] ^= memstate[j * (i + 1)];
+
+-----
+
+Bill talked about the constant time attack well here it is, using t_cost =
+100000 and m_cost = 0:
+PHS(out, sizeof(out), "password", 8, "salt", 4, 100000, 0);
+Took 202.904215 ms:
+d3e788856af8b578 9ce287e7d1df9a07 3eedf954dc8b51f4 19a08fc1c71b584a
+
+PHS_Fast(out, sizeof(out), "password", 8, "salt", 4, 100000, 0);
+Took 0.011470 ms:
+d3e788856af8b578 9ce287e7d1df9a07 c11206ab2374ae0b e65f703e38e4a7b5
+2c18777a95074a87 631d78182e2065f8 3eedf954dc8b51f4 19a08fc1c71b584a (bit
+inverted)
+
+-----
+
+Using t_cost = 100000 and m_cost = 50000, this should need 12,800,256 integers
+but only 4,790,112 (37.42%) are accessed (on this line "state[j] ^= memstate[j *
+(i + 1)];"). Since stir() is sequential and not memory hard, we don't even need
+to waste memory for the integers that are not accessed. Bill talked about what
+is needed to do that so I'll skip to the fun part.
+
+-----
+
+The way stir(), revolve(), and evolve() work you don't need to use more than a
+constant amount of memory for memstate and it takes a lot less time. You just
+need to run stir(memstate, memcost, rounds) skipping revolve() and evolve().
+Xoring the required elements from memstate (as they are generated) and you'll
+have the resulting hash, but you won't know what parts of the hash are bit
+inverted. So you need to:
+{a, b, c, d} = targetHash
+{a2, b2, c2, d2} = calculatedHash
+if ((a == a2 || a == ~a2) &&
+    (b == b2 || b == ~b2) &&
+    (c == c2 || c == ~c2) &&
+    (d == d2 || d == ~d2))
+
+For the advanced attackers you can xor parts of the hash together. This cancels
+out elements from memstate and reduces the highest element used from memstate.
+So you can exit stir() even sooner.
+
+For m_cost = 5000:
+The current version (with the bug on line 107 "state[j] = memstate[j * (i +
+1)];"):
+hash[0]:           250 elements, highest is 1275511
+hash[1]:           249 elements, highest is 1275511
+hash[2]:           249 elements, highest is 1275511
+hash[3]:           248 elements, highest is 1275511
+hash[0] ^ hash[1]:  13 elements, highest is  105277
+hash[0] ^ hash[2]:   3 elements, highest is  110278
+hash[0] ^ hash[3]:  14 elements, highest is  115279
+hash[1] ^ hash[2]:  14 elements, highest is  110278
+hash[1] ^ hash[3]:   3 elements, highest is  115279
+hash[2] ^ hash[3]:  15 elements, highest is  115279
+
+hash[0] ^ hash[1] is the best one at 105277 (exits stir() after 8.22% done and
+only needs 0.0010% of the elements)
+Here's some of the data since these are small:
+hash[0] ^ hash[1] =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[70014]^m[75015]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]
+hash[0] ^ hash[2] = m[30006]^m[70014]^m[110022]
+hash[0] ^ hash[3] =
+[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[35007]^m[70014]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]^m[115023]
+
+
+if you make these changes to PHS()
+...
+line 102: stir(memstate, memcost, rounds);
+
+uint64_t *m = memstate;
+uint64_t x =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[70014]^m[75015]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021];
+printf("hash[0] ^ hash[1] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[1] = %016" PRIx64 " (bit inverted)\n",   ~x);
+x = m[30006]^m[70014]^m[110022];
+printf("hash[0] ^ hash[2] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[2] = %016" PRIx64 " (bit inverted)\n",   ~x);
+x =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[35007]^m[70014]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]^m[115023];
+printf("hash[0] ^ hash[3] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[3] = %016" PRIx64 " (bit inverted)\n\n", ~x);
+
+line 104: for(i = 0; i < (memcost / statelen); i++)
+...
+
+...
+line 113: evolve(state, statelen);
+printf("hash[0] ^ hash[1] = %016" PRIx64 "\n", state[0] ^ state[1]);
+printf("hash[0] ^ hash[2] = %016" PRIx64 "\n", state[0] ^ state[2]);
+printf("hash[0] ^ hash[3] = %016" PRIx64 "\n", state[0] ^ state[3]);
+line 114: memmove(out, state, outlen);
+...
+
+and run "PHS(out, sizeof(out), "password", 8, "salt", 4, 100000, 5000);" you'll
+get
+hash[0] ^ hash[1] = 1fed1ca1d9a16bba
+hash[0] ^ hash[1] = e012e35e265e9445 (bit inverted)
+hash[0] ^ hash[2] = 5e22f6055939feb8
+hash[0] ^ hash[2] = a1dd09faa6c60147 (bit inverted)
+hash[0] ^ hash[3] = 24fe13471b920ba1
+hash[0] ^ hash[3] = db01ecb8e46df45e (bit inverted)
+
+hash[0] ^ hash[1] = e012e35e265e9445
+hash[0] ^ hash[2] = 5e22f6055939feb8
+hash[0] ^ hash[3] = db01ecb8e46df45e
+
+
+
+The fixed version (without the bug on line 107 "state[j] ^= memstate[j * (i +
+1)];"):
+hash[0]:           234641 elements, highest is 1275511
+hash[1]:           235722 elements, highest is 1275511
+hash[2]:           233827 elements, highest is 1275511
+hash[3]:           234609 elements, highest is 1275511
+hash[0] ^ hash[1]: 233315 elements, highest is 1275256
+hash[0] ^ hash[2]: 230860 elements, highest is 1275256
+hash[0] ^ hash[3]: 233506 elements, highest is 1275001
+hash[1] ^ hash[2]: 229977 elements, highest is 1245676
+hash[1] ^ hash[3]: 232139 elements, highest is 1275256
+hash[2] ^ hash[3]: 232134 elements, highest is 1275256
+
+hash[1] ^ hash[2] is the best one at 1245676 (exits stir() after 97.30% done and
+only needs 17.96% of the elements)
+
+If you want the code I used to generate this I can post it but it's messy :).
+The code requires four times the memory requirement to calculate the hash
+normally, but this only needs to run once for each m_cost.
+

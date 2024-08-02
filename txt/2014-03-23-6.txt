@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] Transforming hash to different cost setting
+
+Message-ID: <CAOLP8p55jXQ+mJAU30Z36Y5_W7BYxO0RxQOhFiV=pFEGbefwWA@mail.gmail.com>
+Date: Sat, 22 Mar 2014 22:44:11 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Transforming hash to different cost setting
+
+On Sat, Mar 22, 2014 at 6:02 PM, Solar Designer <solar@...nwall.comwrote:
+Just don't approximate area-time as "peak memory usage * time" for the
+whole upgraded hash, because its memory usage drops back to zero on each
+upgrade, whereas a never-upgraded hash's memory usage is monotonically
+non-decreasing.  We need to compare the area below those "curves", but
+they're of different shape, so we can't make conclusions on how the area
+differs by looking only at the peak.
+>
+Here are the numbers:
+>
+http://thread.gmane.org/gmane.comp.security.phc/504/focus=639
+>
+Alexander
+
+I was afraid you were integrating the memory*time rather than just
+using peak memory * time.  A sophisticated attacker would do this.
+This applies to integrated memory*time performance of our memory
+hashing algorithms as well.  Script has the best integrated potential
+performance possible of algorithms that start from scratch (no shared
+ROMs), doing a pure write loop followed by a pure read loop.
+
+I thought a bit about algorithms in between those like TwoCats and
+Script.  Could we get TMTO resistance hashing the prior block with a
+much smaller random previous block of memory?  That would give us
+closer to Scrypt average time*memory performance, while still creating
+difficulties for an attacker doing a TMTO.  In the first cache-timing
+resistant loop, this fails because an attacker could just keep the
+small blocks of memory he knows will be accessed, but in the
+unpredictable loop, it seems to work.  There is also a problem reading
+small random blocks because cache miss penalties could limit the time
+saved making the prior random block small.
+
+A possible solution is to hash the immediately prior block with a
+small pseudo-random block determined in the previous block hashing
+cycle, so we can prefetch the small prior block in time for hashing it
+in this cycle.
+
+It's probably a good thing there's not much time left in the PHC
+contest for testing out such ideas.  I'm way behind at work!
+
+Bill
+

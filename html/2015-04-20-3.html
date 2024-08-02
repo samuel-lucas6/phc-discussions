@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] enhancing Argon2 (was: Competition process)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150420184152.GA13297&#64;openwall.com&gt;
+Date: Mon, 20 Apr 2015 21:41:52 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] enhancing Argon2 (was: Competition process)
+
+Dmitry, all -
+
+On Mon, Apr 20, 2015 at 06:16:49AM +0300, Solar Designer wrote:
+&gt; On Sun, Apr 19, 2015 at 08:40:06AM +0300, Solar Designer wrote:
+&gt; &gt; I now think it'd be best to use the same approach I had suggested and
+&gt; &gt; Bill implemented for TwoCats.  Since you're already fully loading the
+&gt; &gt; SIMD units with BLAKE2b rounds, use the scalar units for a single
+&gt; &gt; pwxform lane chain.  This wouldn't really be pwxform - it would be
+&gt; &gt; neither parallel, nor wide since it'd be locked to just one lane.  So no
+&gt; &gt; tunable parallelism there.  But other than that, it'd be the same thing,
+&gt; &gt; and by tuning the total number of rounds for this un-pwxform that you
+&gt; &gt; perform per your 1 KB block, you'd achieve the equivalent of the desired
+&gt; &gt; tunable latency and parallelism limitation.  All with just one parameter.
+&gt; &gt; And no need to introduce data dependencies between your BLAKE2b rounds,
+&gt; &gt; then.  So this replaces my two-bit tunable parallelism idea.
+&gt; 
+&gt; I've tried implementing and benchmarking this - please see the attached
+&gt; patch.  For latency hardening equivalent to yescrypt current defaults -
+&gt; so with 6 un-pwxform rounds per each of Argon2's BLAKE2b rounds (of
+&gt; which it has 16 per 1 KB) - the performance impact on FX-8120 (whatever
+&gt; I happened to test on) at 1 GB is only 15% for 1 thread, 5% for 8
+&gt; threads.  In fact, even at double the latency hardening (12 un-pwxform
+&gt; rounds per BLAKE2b round), the performance impact is 40% for 1 thread,
+&gt; but only 10% for 8 threads (relative to original Argon2).  This is for
+&gt; benchmarks inclusive of the memory allocation overhead, though.  The
+&gt; impact would be relatively higher with overhead excluded.
+
+I inadvertently made the S-boxes size (total for two of them) 4 KB in
+the above benchmarks.  I intended them to be 8 KB, like with yescrypt's
+current defaults.  Correcting this (patch attached), I get 23%
+performance impact for 1 thread, and 6% for 8 threads.  That's still
+relative to unmodified Argon2, at 6 un-pwxform rounds, 1 GB.
+
+A concern is that when the defensive running time is limited by this
+scalar chain, we're making Argon2 more susceptible to CPU attacks, where
+the attacker would interleave 2+ instances (and more RAM is typically
+available in the system anyway).  This is partially mitigated by us
+being close to bumping into L1 data cache size, but nevertheless it is a
+concern.  For this reason, maybe a smaller default un-pwxform rounds
+count (such as 3 or 4) should be chosen, especially at low (defensive)
+thread counts.
+
+&gt; I think these numbers are very good.  I recommend that this change be
+&gt; completed (need to initialize the S-boxes properly, and decide on which
+&gt; state[] elements and how are passed through this chain) and merged in
+&gt; (also need to implement it into the non-SIMD version).
+
+I still think so.
+
+I now put the high 32 bits of the final output of the multiplication
+chain into state[0]'s low 32 bits, which I think are then used for phi:
+
+		phi = _mm_extract_epi32(prev_block[0], 0);
+
+BTW, this SSE4.1 intrinsic (found in original argon2d-opt-sse.cpp) may
+be replaced with SSE2's _mm_cvtsi128_si32().
+
+Since we have 8 parallel BLAKE2b's, it may be elegant to split our
+64-bit chain as 8 one-byte inputs/outputs into each BLAKE2b (perhaps in
+addition to using 32-bit values in state[0] and state[63]).  We could
+also merge them in-between the two groups of 8 BLAKE2b's.  Would this
+help increase the latency of tradeoff attacks?  Without thinking of this
+much yet, my gut feeling is that it won't, but it'd be some additional
+state information that is normally not stored, and that the tradeoff
+attacks will need to store (or they'd in fact incur a latency increase).
+Very little of it, though.  So probably not worth the overhead.  Yet I
+thought I'd bring this up for discussion.
+
+To increase the latency of tradeoff attacks, I think BlaMka may be used
+(along with an un-pwxform chain like this, which serves its different
+purpose - hardening non-tradeoff latency and providing some anti-GPU).
+
+Alexander
+
+<span style="font-family: times;"><strong>View attachment "</strong><a href="3/1">Argon2-latency-hardening2.diff</a><strong>" of type "</strong>text/plain<strong>" (6592 bytes)</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

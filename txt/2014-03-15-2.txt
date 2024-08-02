@@ -1,0 +1,39 @@
+phc-discussions - Re: [PHC] HKDF has collisions with different salts
+
+Message-ID: <9A043F3CF02CD34C8E74AC1594475C737238C191@uxcn10-6.UoA.auckland.ac.nz>
+Date: Sat, 15 Mar 2014 01:38:19 +0000
+From: Peter Gutmann <pgut001@...auckland.ac.nz>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] HKDF has collisions with different salts
+
+Bill Cox <waywardgeek@...il.comwrites:
+
+>FYI, if you want to use HKDF and want the output to change with any change in
+>input, you have to add the salt length to the input key material.
+>
+>HKDF inherits the same input collisions from HMAC that PBKDF2 inherited, but
+>they apply to salt instead of the password, which is of course much better.
+>Still, I want the output has to change when *any* input changes, preferably
+>with no known collisions.
+>
+>Just adding the saltSize parameter to the key material I pass to HKDF. That
+>fixes the issue.
+
+This dates back to Abadi and Needham's "Prudent Engineering Practice for
+Cryptographic Protocols", circa 1996 or so.  One of their design principles
+was "every message should say what it means", i.e. there should be no
+ambiguity about interpreting its content.  Take for example SSHv1
+fingerprints:
+
+  hash( n || e )
+
+where n and e are the raw values.  This creates an equivalence class of keys
+where you can interpret the composite string 'n || e' as a variety of
+different keys based on which bits you choose to be n and which you choose to
+be e.  So defining an input format that makes it very clear what data belongs
+to which element is critically important.  This can be done either explicitly
+(PBKDF2 does this, with distinct input parameters for the salt, iteration
+count, and secret value), or explicitly (by defining a marshalled format for
+the data for a generic KDF).
+
+Peter.

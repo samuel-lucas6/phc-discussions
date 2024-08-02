@@ -1,0 +1,47 @@
+phc-discussions - Re: [PHC] Best RNG for filling memory?
+
+Message-ID: <CAOLP8p4bOsn-gE89Re2t641tevtJrG6C4RroJPTFDuaa1F2UNA@mail.gmail.com>
+Date: Wed, 25 Dec 2013 14:10:39 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Best RNG for filling memory?
+
+Wow, this stuff is a *lot* more interesting than I thought at first, but
+that's pretty typical when working on hard problems.  My version of my
+hashing function from yesterday had me pretty happy when I went to bed, but
+Xmas morning, I woke up realising I had at least two rookie flaws.
+
+First, my page size is currently 16KB, small enough to fit on low-end ARM
+L1 caches, yet large enough to mitigate cache miss penalties.  The problem
+with using a page size larger than a cache line and the RNG state is that
+instead of having external DRAM, a custom ASIC could just store the state
+of the RNG needed to generate that page, on-chip, and re-generate the page
+data as needed, without any external DRAM at all.  The state for MARC4 is
+256 bytes + 3 8-bit indexes, which is a whole lot smaller than 16KB.  Other
+RNGs have even smaller state.  So, we want to fill the DRAM pipe
+efficiently without a lot of cache miss penalties, so we need to read large
+pages.  On the other hand, we can't allow those pages to be re-generated
+on-chip from less data than is on the page.  I haven't figured this one out
+yet, but it's fun to think about.  Maybe having a whole page of RNG state
+could work...
+
+Second, I only used the salt to initialize the RNG, hoping that I could
+better protect the password in case the large memory array got cached to
+disk.  I'm not that comfortable having 1GB of MARC4 data out there to be
+analyzed to try and guess the key.  However, writing to memory is slower
+because of page allocation while we fill memory than reading memory later.
+ A common case is likely to be when users what to write to a lot of memory,
+and then just randomly hash through it once, as this maximizes the cost of
+the external RAM to do the hashing while minimizing runtime for that much
+memory.  An attacker could initialize the RAM from the salt, and then do
+only the second part - the hashing - once per password guess, cutting the
+time by over 2X per guess.  While that might not be a killer, I suspect all
+the good entries into this contest will be free of such flaws.  So, how do
+I force the entire memory to depend on the password without risking some
+attack on the stream itself?  One way would be to use a better cipher than
+MARC4.  Is Blake2 considered a better RNG without long term correlations
+like ARC4?  Or would it be better just to keep the password from impacting
+what we write to DRAM at all, and accept the improved attack?
+
+
+

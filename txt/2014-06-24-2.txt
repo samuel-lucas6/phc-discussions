@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] not bossy
+
+Message-ID: <20140624004820.GA6402@openwall.com>
+Date: Tue, 24 Jun 2014 04:48:20 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] not bossy
+
+On Tue, Jun 24, 2014 at 01:17:17AM +0100, Samuel Neves wrote:
+Might as well take this chance to make this public, someone may find it useful: https://github.com/sneves/avx512-utils
+
+This is a small header file that can be used to compute VPTERNLOG immediates at compile time, via an expression that
+resembles normal code (see example). It requires a modern C++11 compiler; coincidentally, most compilers that support
+AVX-512F at this point also support C++11 (Intel 14.0.1+ and GCC 4.9+; Clang supports AVX-512, but does not seem to have
+the intrinsics yet). You can see the resulting assembly code of  the example here: http://goo.gl/mrDjbd
+
+Cool.  I chose "Compiler: g++ (GCC) 4.9.0", and the "Assembly output"
+displays the four MD5 functions and SHA-2's Maj() and Ch() as just one
+instruction each.  Still I think in actual implementations we'll want to
+hard-code the truth table imm8 value, for portability and to reduce the
+risk of miscompiles.
+
+In PHC context, this means that with AVX-512 SHA-2 will be faster yet,
+but not necessarily so for the defender.  There has to be sufficient
+SIMD parallelism (at least 16x for SHA-256, at least 8x for SHA-512)
+within one instance of the PHS to fully exploit this speedup potential
+for defense, rather than leave much of it available to attackers only.
+
+Unfortunately, as discussed before, for sequential memory-hard schemes
+extra parallelism is undesirable, so this actually emphasizes that
+parallelism needs to be tunable (as not all CPUs will have 512-bit SIMD
+and not all builds will make use of it even where available).
+
+Alexander
+

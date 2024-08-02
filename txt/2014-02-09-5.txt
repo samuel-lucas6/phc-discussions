@@ -1,0 +1,54 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <52F71671.9050909@dei.uc.pt>
+Date: Sun, 09 Feb 2014 05:47:29 +0000
+From: Samuel Neves <sneves@....uc.pt>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On 09-02-2014 03:49, Solar Designer wrote:
+#define _mm_mullo_epi32(a, b) \
+	_mm_unpacklo_epi32( \
+	    _mm_shuffle_epi32(_mm_mul_epu32((a), (b)), 0x08), \
+	    _mm_shuffle_epi32(_mm_mul_epu32(_mm_srli_epi64((a), 32), \
+	    _mm_srli_epi64((b), 32)), 0x08))
+#endif
+>
+Instead of _mm_srli_epi64(..., 32), we may use _mm_srli_si128(..., 4) -
+which of these is faster and which is slower varies by CPU type.
+
+I managed to shave one instruction (cycle) off in two different ways,
+one requiring SSE4.1, the other only SSE2. Both run at same speed.
+
+__m128i _mm_mullo_epi32(__m128i xl, __m128i yl)
+{
+    __m128i xh = _mm_shuffle_epi32(xl, _MM_SHUFFLE(3,3,1,1)); // x3 x3 x1 x1
+    __m128i yh = _mm_shuffle_epi32(yl, _MM_SHUFFLE(3,3,1,1)); // y3 y3
+y1 y1
+    __m128i pl = _mm_mul_epu32(xl, yl); // XXX x2*y2 XXX x0*y0
+    __m128i ph = _mm_mul_epu32(xh, yh); // XXX x3*y3 XXX x1*y1
+#if SSE2_ONLY
+    ph = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(pl),
+                                         _mm_castsi128_ps(ph),
+                                         _MM_SHUFFLE(2,0,2,0)
+                                        )
+                         ); // x3*y3 x1*y1 x2*y2 x0*y0
+    return _mm_shuffle_epi32(ph, _MM_SHUFFLE(3,1,2,0)); // x3*y3 x2*y2
+x1*y1 x0*y0
+#else
+    ph = _mm_shuffle_epi32(ph, _MM_SHUFFLE(2,2,0,0)); // x3*y3 x3*y3
+x1*y1 x1*y1
+    return _mm_castps_si128(_mm_blend_ps(_mm_castsi128_ps(pl), //
+BLENDPS instead of VPBLENDD to be Avoton-compatible
+                                         _mm_castsi128_ps(ph),
+                                         0x0A // 0b1010
+                                        )
+                           ); // x3*y3 x2*y2 x1*y1 x0*y0
+#endif
+}
+
+One note: since we're doing two PMULUDQ, and they cannot be dispatched
+in the same cycle, the lower bound for the latency of any accurate
+emulation is 6 cycles.
+
+

@@ -1,0 +1,127 @@
+phc-discussions - [PHC] Interdependence of t_cost and m_cost parameters
+
+Message-ID: <CA+aY-u5Qt_=Od7fgqO1vUZr1upC67rSXdgRM196u-nNF2BiwNg@mail.gmail.com>
+Date: Sun, 11 Aug 2013 22:31:28 +0100
+From: Peter Maxwell <peter@...icient.co.uk>
+To: discussions@...sword-hashing.net
+Subject: [PHC] Interdependence of t_cost and m_cost parameters
+
+On 11 August 2013 19:51, Dennis E. Hamilton <dennis.hamilton@....orgwrote:
+
+I'm always having difficulty understanding the interdependence that might
+exist between t_cost, m_cost and, to a related degree, also outlen.
+>
+
+In an obvious sense, this is going to vary algorithm-by-algorithm.
+ Hypothetical algorithm A might operate on a trade-off basis between time &
+memory cost while another, B, may be designed in such a manner that the two
+are entirely orthogonal.
+
+I'd suggest the important thing is that the parameters are fully documented
+and an evaluation of potential issues addressed by each designer, e.g. it
+is one thing for a defender to be able to set a memory:calc trade-off, it
+is an entirely different kettle of fish for the attacker to be able to
+change their route of calculation to set the memory cost to nil at the
+expense of increased time (which is usually far preferably for the
+attacker).
+
+
+
+>
+Here are some considerations I have.  I don't know how these fit with what
+others assume the interdependencies might be, or whether the
+interdependencies are simply left wide open, including when and where step
+functions arise.
+>
+ - Dennis
+>
+MY APPRAISAL OF THE SITUATION:
+>
+It is generally easy to have t_cost be directly related to a linear work
+factor apart from any step functions that may arise in conjunction with
+outlen.  Alternatively, a PHS could amortize t_cost when there is some
+outlen-related timing-step increase.  There is such an increase with
+PBKDF2, for example.  While the t_cost doesn't have to adjust for
+differences in terms of processor performance, it would be useful to have
+the effect be smooth, whatever the relationship is.
+>
+
+Again, I'd suggest this be left to each designer but to be decided upon and
+fully documented.  For example, I would not personally create a t_cost with
+a linear relationship, Moore's law is exponential in growth so it seems
+more natural to pick a logarithmic scale for t_cost.
+
+Similarly, I'm personally not particularly concerned about t_size being
+impacted by outlen as it isn't a data-dependent parameter and, irrc, you
+can have a valid submission to the PHC with a fixed output length of 16
+bytes.
+
+
+
+>
+Amortizing t_cost against m_cost is tricker.  That is, it is difficult to
+work out the combinations if m_cost also has step-function costs.  It is
+also not clear what the difference between m_cost 1 and m_cost 2 might be
+and whether a given implementation has step functions here too (in which
+case t_cost could be amortized once again).
+>
+
+Again, would this not vary with each algorithm?
+
+
+
+>
+Note 1: I am also assuming that, whatever the m_cost is, with the other
+parameters fixed, the result should be cryptographically unrelated to a
+result produced for any other m_cost value.  The prospect of t_cost, m_cost
+password-hash collisions with all other parameters the same must be
+negligible.
+>
+
+That would seem a sensible stipulation.  Perhaps have the parameters form
+part of the input to the actual password hash function?
+
+
+
+
+>
+Note 2: A requirement that I have for iterative password-hashing
+procedures is that I can have a version that will operate with a specific
+time threshhold and then report the t_cost that was achieved along with the
+resulting hash.  That becomes the known t_cost value for verification.
+ I've not considered m_cost in practical cases that have come up.  (Given a
+threshold t in milliseconds, the resulting t_cost
+value is one for which the hash is produced in the approximate interval
+[t, 3t/2].)
+>
+
+Well, m_cost is in a naive manner more amenable, for most algorithms I'd
+imagine the storage space required for m_cost would be easy to calculate.
+ What is less obvious is the implication of using, say 64Mb, for a hash
+calculation... what impact does that have on other parts of the system, do
+we have to start thinking down the line re potential paging issues (parts
+of hash calculation ending up in swap), will the attacker's technology
+improve to handle much larger amounts of memory efficiently/at low cost?
+
+
+
+>
+Note 3: If I wanted variable m_cost control, I'm thinking that the
+procedure in (Note 2) would take an m_cost suggestion and that procedure
+would deliver the t_cost and m_cost values that were used in a generation
+that satisfied the specified time threshold.  That seems definitely
+trickier.  Interesting, but trickier.
+>
+
+In a practical sense, it's not particularly tricky: like you intimated, fix
+m_cost at the desired storage requirement then specify your desired
+time-limit and run the hash function enough times to calculate a median
+value for t_cost that centres the execution time around your time-limit.
+
+The problem is understanding the impact on aspects such as CPU cache,
+virtual memory, system bus, number of hash invocations per unit time, what
+else is running on the system, etc, then balancing that against attackers'
+resources.
+
+
+

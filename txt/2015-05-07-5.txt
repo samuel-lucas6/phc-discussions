@@ -1,0 +1,225 @@
+phc-discussions - Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Message-ID: <20150507191100.GA14690@openwall.com>
+Date: Thu, 7 May 2015 22:11:00 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates "mechanical" tests (ROUND2))
+
+Marcos,
+
+On Thu, May 07, 2015 at 01:08:13PM -0300, Marcos Simplicio wrote:
+It took some time, but we finally completed the GPU benchmarks mentioned
+in the e-mail below, both for Lyra2 and yescrypt. We did not use djm34's
+yescrypt GPU implementation mentioned in another thread, though, because
+while Lyra2 has been in their repository for a few months, we had
+already adapted the yescrypt-opt version when we learned the news a few
+days ago... Some optimizations made there might apply to our code too,
+so we will take a look.
+
+Yes, djm34's code looks more optimal to me.  yescrypt-opt actually isn't
+as optimized as yescrypt-simd, not only in terms of lacking explicit SIMD.
+It also includes blk{cpy,xor}, whereas those are avoided in -simd and
+are avoidable in -opt.  I just didn't bother yet (in part because their
+relative performance impact is lower when the code is non-SIMD; but on
+GPU you get SIMD code, it's just implicit).
+
+This makes me wonder: are you benchmarking your CUDA code against
+yescrypt-simd or possibly against yescrypt-opt on CPU?  Your
+readme_attacks.txt says: "We used the PHC code for each algorithm and
+the fastest version (generally, the vectorized version)."  This suggests
+that you used yescrypt-simd on CPU, but I'd like to make sure.
+
+Anyhow, the partial results indicate that Lyra2 is actually more
+GPU-resistant than yescrypt for a memory usage of 256 kB to 2 MB, at
+least for our GPU (GeForce GTX TITAN),
+
+This is very interesting if so.  But I don't buy your results yet, as I
+explained in another message.  Your reported yescrypt CPU speeds are in
+weird units, and if I try to convert them (even though they can't be),
+I get way lower speeds than what I am seeing.
+
+Your readme_attacks.txt says "The password derivation time is the total
+test time divided by number of passwords tested." under "GPU attacks".
+Great, but is it the same on CPU?  If not, that's wrong.  If yes, it
+doesn't match my results (by far).
+
+I think you actually used a different metric on CPU, per readme_attacks.txt:
+
+"The CPU benchmarks focused in legitm usage of the kdfs.
+
+	To obtain the medium execution time:
+	- We executed "n" times each derivation;
+	- With the parameters seted accordingly with parallelism and memory usage desired."
+
+While this would make sense for KDF use at large m_cost, it doesn't for
+password hashing use at low m_cost.  You should use a throughput figure
+for CPU, just like you do for GPU.
+
+in all test scenarios we considered, namely:
+
+1) Different block lengths (C=128 and C=256 for Lyra2, yescrypt's
+defaults), degrees of parallelism (1, 2 or 4, for both algorithms), and
+passes through memory (T=0 and 2 for yescrypt, T=1 for Lyra2, since this
+corresponds both to minimal and "same number of passes through memory"
+for the schemes).
+
+OK.  I suggest that you lock p=1 and add 12 threads externally for both
+yescrypt and Lyra2, for your E5-2430.
+
+2) Different attack geometries, scripting to find the best GPU
+throughput (i.e., the number of parallel guesses that resulted in the
+lowest time taken per test) and also testing the number of threads per
+warp that would give the best results (32 threads per warp means full
+warp occupation, but the best throughput is obtained with 8 threads per
+warp and one warp per block).
+
+This sounds good to me.  Locking p=1 should save you time on this.
+
+The numbers in the GPU are equivalent for Blake2b and BlaMka, so we
+included just the former here (note: since BlaMka is slightly slower
+than Blake2b in the CPU, the advantage of the GPU over the CPU when
+BlaMka is employed should be slightly higher too, but the GPU still
+loses in most scenarios).
+
+Makes sense.  MUL isn't expected to be much slower than simpler
+operations on GPU.
+
+Since the results may change to other GPUs, we placed the code employed
+in our git (https://github.com/leocalm/Lyra/tree/master/GPU_attacks ),
+so anyone can confirm/refute our numbers. Also, any bug report or
+optimization suggestion is very welcome! We tried a few tricks and
+checked the test vectors, but we may have missed something.
+
+I appreciate this.  I took a look via GitHub's web interface.
+Unfortunately, this fails:
+
+$ git clone https://github.com/leocalm/Lyra/tree/master/GPU_attacks
+Cloning into 'GPU_attacks'...
+error: The requested URL returned error: 403 while accessing https://github.com/leocalm/Lyra/tree/master/GPU_attacks/info/refs
+fatal: HTTP request failed
+
+On 26-Mar-15 15:24, Solar Designer wrote:
+On Thu, Mar 26, 2015 at 02:29:29PM -0300, Marcos Simplicio wrote:
+Yes, and in your CPU benchmarks too, so you'd be comparing GPU attacks
+on Lyra2 vs. bcrypt at the same defensive running time for them (on CPU).
+
+We did not include bcrypt to the benchmarks because we wanted to have
+comparisons against a memory-hard scheme, so we did so for yescrypt.
+
+I'd make sense to include bcrypt, too.  Especially if you claim that
+your GPU outperforms CPU at yescrypt despite of pwxform's rapid random
+lookups, it becomes extremely relevant that you show the same for
+bcrypt, because yescrypt-simd's rapid random lookups are on par with
+bcrypt's when both are run defensively on a modern x86 CPU.
+
+(Of course, I expect that your results will change once you correct your
+methodology.)
+
+yescrypt as currently defined might or might not see a lot of use, but
+bcrypt is already in use and there are already results for its GPU
+unfriendliness.  So far, it runs very slow on GTX TITAN such as yours,
+much slower than on CPU (at full thread count, indeed).
+
+There are promising (for attackers) results for bcrypt on NVIDIA
+Maxwell, though: up to 14440 c/s at stock clocks, 16890 c/s at +225 MHz
+o/c on Titan X as per benchmarks by Jeremi Gosney (thanks, Jeremi!)
+For comparison, i7-4770K runs bcrypt defensively at 4300 c/s and attacks
+it at 6600 c/s.  All of this is for bcrypt cost 5.
+
+It is still unclear if there is a point in which yescrypt becomes more
+GPU-resistant than Lyra2, but it does not appear to be at 256 KB or
+higher, at least for our GPU.
+
+Maybe, or maybe not.  Let's see proper benchmarks, then revisit this. :-)
+
+Alexander: is there a memory range in which the table look-ups are
+expected to make a large difference? I mean, we are testing smaller
+ranges now, but since the tests take quite some time due to the search
+for the best attack geometry, your suggestions on where to start would
+be welcome.
+
+I'd use 128 KB to 2 MB at p=1 simply because these are most practically
+relevant for this test.
+
+It might be that things are fine at 128+ KB even without the rapid
+random lookups on specific GPUs.  My goal was to have some assurance of
+being no worse than bcrypt, and this provides it.  We never know what
+the bottleneck might be on a future device.  Right now, the sheer size
+of X (the current block) at r=8 might be sufficient (but I am skeptical
+about this, see below).  On another device, it might not be.
+
+The GPU attack benchmarks reported for scrypt so far show huge
+difference for r=1 vs. r=8, with the latter being much more GPU
+resistant.  128 KB with r=1 is Litecoin, and we know that it runs on
+GPUs very fast (they make it 64 KB via TMTO, though).  I am skeptical
+when people say (based on actual benchmarks, of course) that r=8 runs
+more than 3x slower.  I think this might very well be an attack
+implementation shortcoming that might be repaired.  Specifically, while
+I fully agree that r=8 might reduce the number of current instances by 8
+times if we fit X in local memory, this might mean that placing it in
+global memory becomes more optimal.  And once we do, I don't see it as
+very different from other blocks being read from and written to V.
+That's where my "3x" comes from.  And 3x slower than Litecoin is still
+very fast (just not as fast).
+
+In our current experiments with POMELO on GPU, we're also testing 8 KB
+and 32 KB.  I don't see these as practically relevant (given that even
+glibc managed to use 128 KB for its descrypt code for what, 2 decades
+now?) but they are fine to include when we're figuring things out.
+
+BTW, yescrypt adds 8 KB S-boxes to what's requested by m_cost.  So when
+you request 128 KB, you actually get 136 KB, etc.  For 8 KB requested
+(at PHS m_cost=0), this means you get 16 KB... but at sizes this low
+other overhead plays a role as well anyway.
+
+The only situation in which we got Lyra2 running faster on our GPU than
+on our CPU was for p=1 and 8 threads per warp (for 256KB).
+
+You mean when you used unoptimal settings on GPU and didn't fully use
+the CPU?  This doesn't count, for either or both of these reasons.
+
+So you would be fine, except that ...
+
+For yescrypt,
+that happened in most of our tests (see graphs in the third column:
+anything below 1 means that the GPU is winning).
+
+... your methodology looks flawed, for both Lyra2 and yescrypt.
+
+So at this time we don't know much about either Lyra2's or yescrypt's
+performance on GPU.  Not from these results yet, at least.
+
+Actually, we did some testing with yescrypt code (e.g., commenting some
+lines) and it appears that the table lookups do not make much difference
+on this range, but what is hurting the GPU is rather the memory
+transference from/to the X and Y buffers. We would have to execute a
+runtime analyzer to be sure, though, which is in our TODO list.
+
+I've indirectly commented on this above.  I did expect the X and Y
+buffers to have this sort of effect, after I saw people's benchmarks of
+scrypt at r 1.  However, I think pwxform rapid lookups are still
+needed as well.
+
+Even if we look at local memory usage (so disregard the fact that X and
+Y are candidates for global memory at not as much overhead as would be
+seen for S-boxes), X and Y are 2 KB combined at r=8.  pwxform S-boxes
+are 8 KB.  So that's a 5x increase in local memory needed per instance
+when we add the S-boxes.  If this has no performance effect, there's
+something wrong/suboptimal with the attack.
+
+Oh, or do you mean you preserved the local memory allocation for the
+S-boxes, but did not use them?  Then your results make more sense to me.
+It is possible that you bumped into another performance bottleneck,
+making this one irrelevant in your case.
+
+Anyway, we need proper benchmarks first.
+
+I am sorry that my messages might sound dismissive.  Once again, I
+appreciate your work on this a lot, and I think you got very close to
+producing valuable results here.
+
+Thanks again,
+
+Alexander
+

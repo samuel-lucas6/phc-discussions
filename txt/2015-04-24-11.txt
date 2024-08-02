@@ -1,0 +1,41 @@
+phc-discussions - Re: [PHC] Client-side hashing (was side-channel stuff)
+
+Message-ID: <1055025524.602579.1429915241792.JavaMail.open-xchange@oxuslxltgw06.lxa.perfora.net>
+Date: Fri, 24 Apr 2015 17:40:41 -0500 (CDT)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Client-side hashing (was side-channel stuff)
+
+On April 24, 2015 at 10:01 AM Sascha Schmidt <sascha.schmidt@...-weimar.de>
+wrote:
+>
+Server relief, keyed hashing and client-independent updates are all
+important features. The problem is that one can only have two of the
+three at the same time. It maybe possible to get them to work
+together, but this will result in a lot of different code branches
+depending on the number of updates and so on.
+>
+
+You can have all three if you change "keyed hashing" to "server secret". They
+achieve the same thing but server secret is more general. Anyways I like to
+encrypt the hash, so that after a break-in you can rotate keys without user
+input. To upgrade (if you are using an HSM) you need to copy all the hashes to
+an offline computer so you can safely decrypt them. Also I consider server
+secret to be outside of the PHC. Since encryption should be done on an HSM and
+we can't have bindings for all current and future HSMs or whatever.
+
+
+h = fastHash(password, salt)
+for u = 1 to upgrade
+{
+  h = fastHash(slowHash(h, t_cost, m_cost))
+  t_cost = increaseTCost(t_cost)
+  m_cost = increaseMCost(m_cost)
+}
+return encrypt(h, key) // HSM? :)
+
+
+P.S. For encrypt(), I'm a fan of ECB if h fits in the block size or null IV
+CBC-CTS. These are the cheapest safe modes for this. You could do AEAD but
+that's like using bazooka to kill a fly.
+

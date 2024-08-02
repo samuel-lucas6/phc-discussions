@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] on timing attacks
+
+Message-ID: <20140501130858.GA32442@bolet.org>
+Date: Thu, 1 May 2014 15:08:58 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] on timing attacks
+
+On Thu, May 01, 2014 at 08:45:07AM +0400, Solar Designer wrote:
+Historically, salts haven't been considered secret, but there's this
+precomputation attack and there are timing attacks on comparison of
+hashes (of course, it can also be dealt with by using a constant-time
+comparison function, if one is available or can be implemented).  Now
+side-channel attacks on hash functions themselves are added to these two
+attack categories, for a total of three (or are there more?)
+
+I think it's fair game to assume or stipulate that salts, while not
+secret for purposes of possible offline attacks, are stored along with
+the hashes and are not revealed separately, except if mandated by the
+protocol (such as for server relief), in which case some security
+tradeoffs are accepted (and need to be understood and possibly mitigated
+by other means).
+
+I think it is my cue to point out that with Makwa, the delegation allows
+to offload the bulk of the computation to an untrusted system (who can
+be the client itself) without revealing anything, in particular without
+giving away the salt. And, more generally, since the system to which
+computation is delegated does not receive anything secret, it cannot
+leak any secret either.
+
+There can be side-channel leaks on the source system -- the server --
+but since that system does not have to do the heavy computational work,
+suboptimal but leak-safe implementation techniques can be used. In a
+basic Makwa implementation, the password _length_ may leak, but not the
+password contents, and that's for a one-shot initial operation which is
+done within microseconds, so the attack window is not wide.
+
+
+	--Thomas Pornin
+

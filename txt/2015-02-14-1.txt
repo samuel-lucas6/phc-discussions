@@ -1,0 +1,83 @@
+phc-discussions - Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+Message-ID: <CAOLP8p5-xP3Cg57LA=oBx3QUCLDocKu6QcSAiMTukF+w9wropQ@mail.gmail.com>
+Date: Sat, 14 Feb 2015 06:15:50 -0800
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Tradeoff cryptanalysis of Catena, Lyra2, and generic
+ memory-hard functions
+
+On Fri, Feb 13, 2015 at 1:43 PM, Marcos Simplicio <mjunior@...c.usp.br>
+wrote:
+
+Well, maybe we did something wrong in our benchmarks then, because our
+implementations are comparisons done in v2 are faster than Yescrypt with
+minimal parameters for both functions, both with 1 thread and with
+multiple threads...
+>
+
+Sorry, my mistake!  I've been preoccupied with moving to California and
+changing fields.  I missed the new version of Lyra2.
+
+With Yescrypt becoming simpler, and Lyra2 becoming faster and adding
+multi-threading, these algorithms seem to be converging on the right
+solution, IMO.
+
+However, these benchmarks refer to yescrypt v0. Are your comments
+referring to v1?
+
+
+Yes. Sorry.
+
+
+I agree that going below 1 round in Lyra2 is not a great option, but I'm
+not sure about the mixing ability of yescrypt's dedicated function when
+compared with Blake2. I mean, for a internal of 1024 bits, 1 round of
+Blake2 ensures that every bit of the internal and external states depend
+on every input bit. Does yescrypt's function do the same? (note: this is
+really a question, not a "provocation" of any sort). Because if it does
+not, then in theory Blake2 could be reduced even more to match
+yescrypt's diffusion capabilities (although personally I would not
+recommend it).
+
+
+Yescrypt should be run with 1 round when compared to Lyra2 or any algorithm
+using one round of Blake2b reduced round.  I think Yescrypt will run faster
+when run this way, simply because it does one write in the second loop,
+rather than Lyra2's two writes.  However, it's not a large difference, and
+Lyra2 does gains some extra TMTO resistance as a result.
+
+Once you get to this level of optimization, the differences matter less.
+If you can run enough threads to max out your memory bandwidth, higher
+hashing speed wont help.  Otherwise, I'd be upset that TwoCats is no longer
+in the running :-)  I still claim having the fastest memory-hard entry for
+the single-thread case.
+
+
+>
+- You're notion of "memory*time" cost in this paper is wrong, leading to
+bizaar and wrong conclusions about Lyra2
+>
+I did not check the article in detail, but in Lyra2's v2 document we did
+try to take into account Dmitry's attack (as originally described):
+>
+
+Dmitry's claim that he found an 8X reduction in memory*time cost through a
+TMTO attack against Lyra2 is wrong, by any sensible definition of
+time*memory cost.  That claim is actually why I felt I should respond.
+
+
+1) We got a ~16 times slow down with minimum time_cost = 1 (the minimum
+parameter) for a 1/2 TMTO, even when exploring parallelism (end of
+section 5.1.4); and
+>
+
+I like that time_cost can now be set to 1.  I don't see any reason for
+running with higher values.  TMTO resistance is good, but not at the
+expense of memory*time defense.
+
+Bill
+
+
+

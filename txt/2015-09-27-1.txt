@@ -1,0 +1,88 @@
+phc-discussions - Re: [PHC] Interest in specification of modular crypt format
+
+Message-ID: <5607E758.7060306@openwall.com>
+Date: Sun, 27 Sep 2015 15:55:52 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Interest in specification of modular crypt format
+
+On 2015-09-25 04:32, Solar Designer wrote:
+On Mon, Sep 07, 2015 at 01:55:30PM +0300, Solar Designer wrote:
+>If we continue to build upon the traditional crypt(3) alphabet and
+>encoding (like the above specification for scrypt does), then I'd also
+>like to include a way to represent the numeric parameters in a more
+>compact form: let the little-endian encodings be truncated when the
+>values are small.  So e.g. instead of:
+>>
+>$7$C6..../....SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>it would be valid to use:
+>>
+>$7$C6$/$SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>or if we want to keep the number of '$' characters fixed, then either
+>require the '$' delimiters to always be present or maybe introduce '+'
+>or '=' for truncation (a character already used in the other base64
+>encoding's alphabet, so likely safe to use):
+>>
+>$7$C6+/+SodiumChloride$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D
+>>
+>The savings for classic scrypt are small, but with yescrypt's additional
+>parameters they are more significant.
+>
+BTW, an even more compact encoding of numeric parameters is possible,
+through having the first B64 character of every number encode whether
+and how many additional characters are expected for that number.  Small
+numbers e.g. up to 31 or 47 would be encoded with just one B64 character
+and no other character needed to indicate this short encoding length.
+This would be similar to how UTF-8 works, with 7-bit ASCII only needing
+one octet per character.  And we would get similar tradeoffs, too. ;-(
+We would need to decide whether overlong encodings would be possible
+(and their use would then be forbidden in the spec, much like Thomas'
+current spec forbids leading zeroes in decimal numbers) or whether there
+would be only one way to encode a given number without us having to
+explicitly forbid anything.  We can do the latter by starting each of
+the larger sub-ranges right where the previous sub-range ended:
+>
+For example, by value of first B64 char:
+>
+  0 to 47 - 1 char, range 0 to 47
+48 to 55 - 2 chars, range 48 to 559 (using 3+6 bits of the two chars)
+56 to 59 - 3 chars, range 560 to 16943 (2+12 bits)
+60 to 61 - 4 chars, range 16944 to 541231 (1+18 bits)
+62       - 5 chars, range 541232 to 17318447 (0+24 bits)
+63       - 6 chars, range 17318448 to 1091060271 (0+30 bits)
+>
+This unnecessarily(?) allows going 1.6% higher than 2^30, which would
+have been the desired maximum for (ye)scrypt's numeric parameters, but
+on the bright side the non-overlapping ranges result in there being only
+1 way to encode a given number, and some encodings are shorter (e.g. for
+512 to 559, which would otherwise require 3 chars).  If a wider range
+needs to be encoded, we can limit the 1-char range e.g. to 0 to 31 (and
+proceed to up to 7 chars and 36+ bits), but I actually wanted to avoid
+the risk of ever hitting 2^31 here (would be risky if implemented with
+signed int somewhere, e.g. in a scripting language that uses signed
+32-bit int behind the scenes).
+>
+Is this unjustified complexity or is it a good way to achieve several
+goals at once (very compact encoding, no two ways to encode a number,
+use of only the B64 alphabet with no need for an "end of number" char,
+no way to hit 2^31)?
+
+The problem with this approach is that the encoding is closely tied to 
+the range of allowed values. Argon2 spec says that the range for p is 
+1..255 while m and t can go upto 2^32-1. Should they use the same 
+encoding? Should it be the same as for (ye)scrypt?
+
+Relatively widely used encoding for similar cases is Variable-length 
+quantity[1]. There is even "Base64 VLQ" in Source Map[2] but it encodes 
+a sign in a least significant bit which could inconvenient if we want to 
+encode unsigned integers only.
+
+[1] https://en.wikipedia.org/wiki/Variable-length_quantity
+[2] 
+https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k
+
+-- 
+Alexander Cherepanov
+

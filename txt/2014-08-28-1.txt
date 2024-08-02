@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation
+
+Message-ID: <CAG+Gt9b-CfyuHzJgW32kYRbB0YkuTFxnx6KuQLN9VEdb_nzkhw@mail.gmail.com>
+Date: Thu, 28 Aug 2014 13:59:08 +1000
+From: Rade Vuckovac <rade.vuckovac@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] What Microsoft Would like from the PHC - Passwords14 presentation
+
+schvrch and cache-timing.
+
+
+PHC candidate ‘schvrch’ is in the category of ‘memory access pattern is
+independent of the password’, therefore it is not side channel resistant
+(Microsoft slides). In the time of submission it was not clear what
+strategy should be employed to do some memory hardening. But now there is
+one simple/maybe naïve strategy to make ‘schvrch’ side channel resistant.
+
+
+The solution is motivated by advice for AES implementors (Cache-timing
+attacks on AES, Daniel J. Bernstein). One recommendation to remedy some of
+the timing leaks is to keep everything in cache, which in practice is not a
+trivial task. The guess is that mentioned remedy can be similarly obtained
+if everything is kept outside of cache. That option is far from optimal in
+AES case. However in the password hashing realm (optimisation is not
+imperative) non-cacheable memory option may be proven effective:
+
+
+1st it is relatively easy to allocate non-cacheable memory (comparing to
+keeping everything in cache). It is not portable but it seems that every
+major OS supports that option.
+
+
+2nd From attacker and defender point of view, a memory accessed randomly
+significantly larger (scrypt recommendation for example) than available
+caches, non-cacheable memory allocation might be more optimal than using
+cache and frequently swapping cache with RAM.
+
+
+With that approach cache timing is easily avoidable and attacker do not
+have significant advantage using a cache because the non-cacheable memory
+use in this case is more optimal.
+
+
+'Schvrch' candidate modification of above is easy. In memory hardening
+section, predictable loop indexing will be changed from j = 0, 1, 2 … to
+supposedly random j = last modified element modulo array length. Also
+filling of non-cacheable memory will be changed from stir/seeding to
+filling memory from state array evolution and transforming that memory with
+random indexing looping as above. All that will effectively halve time cost
+of memory hardening part. Details of new ‘schvrch’ version will be posted
+in the near future.
+
+
+If above strategy is proven viable, than the Microsoft slides category 2
+schemes (schemes with memory access pattern dependant on the password)
+might not be problematic any more.
+
+
+Regards, Rade
+
+
+On Sat, Aug 16, 2014 at 4:17 AM, Marsh Ray <maray@...rosoft.comwrote:
+
+ Passwords14 presentation: What Microsoft Would like from the PHC
+>
+>
+>
+Slides attached.
+>
+>
+>
+Video: https://www.youtube.com/watch?v=Kr6ruthF_4k
+>
+>
+>
+Thanks again to Per, Jeremey, and everyone for making it such a great
+conference!
+>
+>
+>
+-          Marsh
+>
+
+
+

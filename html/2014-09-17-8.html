@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] omegacrypt and timing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="10">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;541962CC.9040302&#64;ciphershed.org&gt;
+Date: Wed, 17 Sep 2014 06:30:36 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 09/17/2014 05:53 AM, Krisztián Pintér wrote:
+&gt; On Wed, Sep 17, 2014 at 11:30 AM, Bill Cox 
+&gt; &lt;waywardgeek&#64;...hershed.org&gt; wrote:
+&gt;&gt; However, AntCrypt, OmegaCrypt, and Schvrch all tried to
+&gt;&gt; introduce data based branching
+&gt; 
+&gt; i picked omegacrypt because i just spotted this. out of the 3, 
+&gt; antcrypt seems to be the worst, the other two can get away with 
+&gt; some blinding (dummy operations), but you can't compensate for 
+&gt; differences in floating point, as the timing is just unknown and 
+&gt; depends on zillions of factors, including the data itself.
+&gt; 
+
+I forgot to mention POMELO.  It also does data-based branching to
+thwart SIMD.  That's 4 entries with the same idea!
+
+Of the four, AntCrypt does the best job of making it's case for using
+data-based branching for SIMD defense.  I think OmegaCrypt, POMELO,
+and Schvrch do too little data-based branching to badly hurt a GPU
+attack.  The GPU can simply execute each case serially, and only write
+data for the selected case, so with N cases, a GPU will not slow down
+by more than a factor of N.
+
+I would love to explore more in this direction of data-based branching
+for GPU defense.  None of these code bases seems like the right
+starting point, so... I think may have some fun hacking up a non-entry.
+
+Of all the authors, I think I win at using other people's good ideas
+:-)  I bet I can make something cool with this one.
+
+Specifically what I'm thinking of is a simple m_cost loop like my
+original "keystretch" algorithm, but I'd replace hashing with with
+3-cycle AND/OR/ADD/SUB-XOR-ROTATE combinations.  Like Schvrch and
+POMELO, I'd drop an calls to existing cryptographic hashes, and depend
+on the unpredictable 3-instruction combinations to randomize a "state".
+
+I think I'll go code it and post back :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUGWLIAAoJEAcQZQdOpZUZOgoQAKakzgffcA4UDQ0YVF8UdLZw
+OlkW+86jKQLgZw0ybM7zanx8WsNtGMlb+BAUWHk3vfvzsyaQnxXa/V5Jqy+sOxZA
+bDl++C8EwlZj+Zeaq+9QsQ/Q5LZ5b2KOvljwvOh+OVUOqS9XfzfKbUTvowmhvNxG
+hBdRz+gl5acvsuN7jWHL3iZonkj1UUFOxCuz/UtKzsiHzhCYx/kAThztRCbsDoAl
+wNVNNF8iEH2Ghu/wT3FurmXUIXYf3eEGJCgfEPDue57ZGv5k7QdkCRh6i+gs5MWt
+F+vy74/GrTGrWDrmMEHJUhDMq7fgHj/dbAGjY8ypUW65jKRg5RFA7s/5rmqPHnLf
+y7C+a8V5L6cezCoYEXASjl0OWqhTdKSv3tZWVX7C+rZPh4R4g9ceXbEE+1GS8Ntd
+gUROW5SMlYOW3erbuuSvloezqMIPV4N9sICH4YbsHu/ZnW1xYJ8Jx1j9zFMHfHwv
+7+ZieMjmPTo7Cq966gWmTvWO15sTwNHAC8zo4uzVlnsKKXZUtWWbnNGwZbTSi1dG
+LmyRqc3CBzsE2iV+oVE3+wEshRERhbFOvYzkWrY8g2xEYGNzAsmSA3iz9nYbHJ5n
+si+sAgGxdnW/NvH7HD+maK6ZYV44gWFJCmowzcwa/cCJwL9Rt9e9zsqf0vZAu0Zq
+GVIaQQWYraJNJKACeQ8k
+=K0VJ
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

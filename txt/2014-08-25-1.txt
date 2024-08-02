@@ -1,0 +1,82 @@
+phc-discussions - Re: Tradeoff cryptanalysis of password hashing schemes
+
+Message-ID: <CALW8-7JjZYeCQMh4QQ6paq9WEQ1E7__PydH1y_VNChi4bJLX=g@mail.gmail.com>
+Date: Mon, 25 Aug 2014 12:58:22 +0400
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: Tradeoff cryptanalysis of password hashing schemes
+
+As there are questions on this mailing list on how we got our energy & size
+estimates, here is a short insight.
+
+A naive (no tradeoff) implementation of a password hashing scheme on ASIC
+with up to a GByte of RAM would use only a tiny portion of memory at every
+step. When the memory is not used, it still consumes power to sustain the
+state values. An energy-efficient adversary would use the memory that
+minimizes the total energy spent: for reading, writing, activating, etc.
+There exist low-power static RAM designs, of which the following two are
+interesting (we used [1]):
+[1] 850 MHz, 65nm design with retention mode leakage 0.1 mW (10^{-4} Watt )
+per MBit and active energy (read/write) 0.0001 J (10^-4) per GBit.
+[2] 333 MHz, 65nm design with retention mode leakage 0.00015 mW (10^{-7}
+Watt ) per MBit and active energy (read/write) 0.0004 J (10^-3.5) per GBit.
+
+1 GByte of [1] occupies 12,000 mm^2, and of [2] -- 5,000 mm^2. This is
+certainly larger than the current CPU/GPU chip sizes (500-700 mm^2 for
+recent Intel and nVidia designs), but comparable to largest CMOS sensors
+(40,000 mm^2 and more) and  certainly smaller than a single wafer. In fact,
+our own tradeoffs do not explicitly require all the memory being on a
+single chip, but it should have reasonable latency (<5 cycles).
+
+Quite clear, for different schemes and different tradeoffs an adversary
+would employ different types of RAM, maybe more energy-efficient. So our
+estimates give an upper bound. If you want to count the energy consumption
+of your favorite SRAM or DRAM design in some particular tradeoffs, you're
+welcome to submit the power numbers.
+
+[1] http://dx.doi.org/10.1109/JSSC.2012.2191316
+[2] http://dx.doi.org/10.1109/NVSMW.2008.34
+
+Best regards,
+Dmitry
+
+
+On Wed, Aug 6, 2014 at 9:31 PM, Dmitry Khovratovich <khovratovich@...il.com>
+wrote:
+
+Hi all,
+>
+here is the link to the slides of the talk I have just given at
+PasswordsCon'14. It investigates time-memory tradeoffs for PHC candidates
+Catena, Lyra2, and Argon, and estimates the energy cost per password on an
+optimal ASIC implementation with full or reduced memory.
+>
+https://www.cryptolux.org/images/5/57/Tradeoffs.pdf
+>
+Additional comment: It is a standard practice in the crypto community to
+give explicit security claims for the recommended parameter sets so that
+cryptanalysts could easily identify the primary targets. Many PHC
+candidates do not follow this rule by not only missing these claims but
+also concealing the recommended parameters. As a result, cryptanalysts like
+me spend valuable time attacking wrong sets or spreading the attention over
+multiple targets.
+>
+Remember: third-party cryptanalysis increases the confidence in your
+design, not decreases it (unless it is badly broken). Analysis of a 5%-part
+of your submission (one of 20 possible parameter sets) is little better
+than no analysis at all. It is also worth mentioning that to make fair
+comparison of candidates, benchmarks and performance discussion in general
+should cover recommended parameter sets only.
+--
+Best regards,
+Dmitry Khovratovich
+>
+
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+
+

@@ -1,0 +1,50 @@
+phc-discussions - Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+Message-ID: <20150704184522.GA25281@openwall.com>
+Date: Sat, 4 Jul 2015 21:45:22 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Memory-hard proof of work with fast verification (CPU Hash)
+
+On Sat, Jul 04, 2015 at 11:22:03AM -0700, Bill Cox wrote:
+Why is shared access to ROM where each process needs to read random blocks
+from ROM faster than shared access to read/write RAM?
+
+It usually is not.
+
+Aren't both I/O bandwidth limited?
+
+They are.
+
+Why would RAM bandwidth be lower?
+
+It wouldn't.
+
+The ROM block hash needs to be fast to fill the memory bandwidth.  I would
+use a 2-round Yescrypt hash (or something even faster) in this case.
+
+GPUs have enough compute power that you'd be able to bump into the
+memory bandwidth even without having to lower the round count if it were
+e.g. scrypt's Salsa20, however:
+
+Small
+rapid unpredictable read/writes to the small RAM are also needed to defeat
+today's GPUs, but Yescrypt already has this.
+
+This changes things dramatically, likely introducing a new bottleneck
+(on purpose).
+
+In my previous reply, I deliberately did not consider yescrypt's
+pwxform.  It sounded like you wanted to consider specifically the ROM
+defense.  So I was thinking more like scrypt enhanced to have a ROM,
+without also having other changes that I made in yescrypt.
+
+With Yescrypt's further GPU defense, I think it would be fine.
+
+Sure, but this makes your 512 MB ROM sort of irrelevant for GPU attacks.
+They can have that 512 MB in their GPU card's RAM, and will run almost as
+fast (for a trivial enhancement of scrypt) or just as slow (for yescrypt
+with pwxform).
+
+Alexander
+

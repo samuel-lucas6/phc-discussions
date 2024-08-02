@@ -1,0 +1,80 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <CAOLP8p5ngeRCofX3ZDa2S7nD9Le4LXQw8=jO=w_XKyGXDeq7nA@mail.gmail.com>
+Date: Thu, 26 Mar 2015 06:33:54 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 2:00 AM, Solar Designer <solar@...nwall.comwrote:
+
+The 10x is a huge exaggeration.  I won't believe you when you say you
+measured this on a currently typical machine unless and until you show
+specific numbers confirming it.  There must have been an error or
+something special about your measurements.
+>
+
+10X is exaggerated, but not by much.  Results from my laptop this morning
+say that my "worker' threads are slowed down by up to 4.97X when TwoCats is
+running.  I was off by a factor of 2X :-)
+
+I wrote up a simple "testwork" program that runs "workers" in parallel with
+TwoCats hashing.  The worker threads do non-SIMD read/write to L3 cache in
+a loop, and increment a counter once they've done it all.  They do some
+multiplies and adds in each loop iteration.
+
+The worst case is when I have only 1 worker, using 4MiB of memory (my L3
+cache size on my laptop), while TwoCats uses 2 threads to hash 4MiB.  The
+workers slow down by less each when I add more workers.  With 2 workers,
+the slow-down is less than 2X for the workers.  Here's my run output:
+
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ time ./testwork
+1 12 2 0
+Total work: 169
+
+real 0m1.001s
+user 0m1.000s
+sys 0m0.000s
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ time ./testwork
+1 12 2 1
+Total work: 34
+
+real 0m1.001s
+user 0m2.554s
+sys 0m0.192s
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ time ./testwork
+2 12 2 1
+Total work: 118
+
+real 0m1.003s
+user 0m2.780s
+sys 0m0.104s
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$ time ./testwork
+2 12 2 0
+Total work: 210
+
+real 0m1.001s
+user 0m1.991s
+sys 0m0.004s
+waywardgeek@...wardgeek-glaptop:~/projects/twocats/twocats$
+
+Here's the inner loop of the worker threads:
+
+for(uint32_t i = 0; i < len; i++) {
+            mem[i] ^= (mem[(i*i*i*i) % len] + i) * (i | 1);
+}
+
+The actual "work" done does not have a huge impact on the outcome.  The
+important thing is that the worker needs all of its L3 data.  I see use
+cases in real life that suffer from this problem when running SSE-optimized
+Scrypt.  This effect causes the cost of running Scrypt on servers to be
+fairly optimistic compared to what we estimated it costs to use 1 core for
+a given runtime.
+
+This impact is not an issue when Scrypt is running by itself, or when
+multiple copies are running in parallel on an authentication server.
+
+Bill
+
+
+

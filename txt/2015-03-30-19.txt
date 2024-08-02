@@ -1,0 +1,100 @@
+phc-discussions - Re: [PHC] On the Test Results (paper from Milan Broz)
+
+Message-ID: <551995BF.7090608@gmail.com>
+Date: Mon, 30 Mar 2015 20:28:15 +0200
+From: Milan Broz <gmazyland@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] On the Test Results (paper from Milan Broz)
+
+Hi,
+
+thanks for the feedback!
+
+On 03/30/2015 07:26 PM, Stefan.Lucks@...-weimar.de wrote:
+Dear Milan,
+
+> https://github.com/mbroz/PHCtest/blob/master/output/phc_round2.pdf
+
+thank you for your work!
+
+We (the Catena team) have two comments, a minor one and a major one.
+
+1. The minor one is that the output length for Cartena *appears* to be 
+limited to 64 bytes. But, if you really need longer outputs, it would be 
+straightforward to employ Catena-KG, the key generation variant of Catena. 
+Apart from key generation, we cannot think of any reason why one would 
+want to use longer password hashes, but there is nothing so special about 
+key generation, that you cannot use it for ordinary password hashing, if 
+you want to.
+
+I am fully aware of Catena-KG KDF (Algorithm 6 in your paper). But because
+I am using 64bytes output, I simplified this test and used output
+of PHC directly.
+You are right that the output length chart is misleading
+here, it should use Catena-KG. Will try to fix that or mention this explicitly.
+
+Basically it was intended to measure PHC() function only.
+(The same problem is for battcrypt, it also defines final iterative
+hashing for KDF mode which I did not use.)
+
+Side note: For Truecrypt in XTS mode and chained 3 ciphers you will
+need 3 x 512bits key (256bit tweak key + 256bit enc. key in XTS mode),
+so 1536 bits = 192 bytes.
+This is the longest output (with real-world example) I have ever seen for FDE systems.
+
+2. The major concern is about your test for the KDF mode.
+
+In our design document, we have been very specific that we suggest to use 
+Catena-Butterfly, for the case that the defender's memory is quite 
+limited, and the defender desires to push back all attackers with even 
+less memory (per core). On the other hand, we explicitly recommend 
+Catena-Butterfly if the defender is going to use plenty of memory, 
+definitively with 100 MB or more.
+
+Well, I read recommendations in section 7 and just used Butterfly.
+I think I should include both instances then to avoid your concern.
+
+But it does not change statement that the run time 30s for Butterfly version,
+and 1G memory is just too long. It fits other use cases but not this one.
+
+Catena-Dragongly is definitely better from this point of view.
+
+Using the Catena-Axungia tool,
+
+   https://github.com/medsec/catena-axungia
+
+we measured the following values:
+
+ 		1MB     100MB   1G
+Dragonfly	0.008   0.20    3.14
+Butterfly	0.034   1.78    33.7
+
+Yes, this is a nice tool. (Just it was not yet available when I run tests.)
+
+Our values for Catena-Butterfly are slightly faster than the one you 
+measured. This is not an issue. We guess, our machine is 5--10% faster 
+than the one you used.
+
+But unfortunately, you didn't benchmark Catena-Dragonfly, even though that 
+is the variant we recommend for big memory.
+
+I will add it to tests.
+
+Thanks,
+Milan
+
+
+As the results show, Catena-Dragonfly can easily allocate and use the 
+required memory while maintaining a speed of <<1 second (for 100 MB) or 
+<<20 seconds (for 1 GB).
+
+So long
+
+Stefan
+
+
+------  I  love  the  taste  of  Cryptanalysis  in  the morning!  ------
+uni-weimar.de/de/medien/professuren/mediensicherheit/people/stefan-lucks
+--Stefan.Lucks (at) uni-weimar.de, Bauhaus-Universität Weimar, Germany--
+
+

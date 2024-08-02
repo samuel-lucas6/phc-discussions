@@ -1,0 +1,52 @@
+phc-discussions - Re: [PHC] TwoCats multiplication chain
+
+Message-ID: <20140625052241.GA14423@openwall.com>
+Date: Wed, 25 Jun 2014 09:22:41 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sun, Jun 22, 2014 at 03:13:02AM +0100, Samuel Neves wrote:
+On 06/21/2014 10:06 PM, Solar Designer wrote:
+An attack which I think we haven't mentioned yet is speculative
+computation of multiple possibilities of the next MUL before a previous
+MUL completes.
+
+This may have been considered before, but I couldn't find it on this list. Have you considered modular multiplication
+instead?
+
+I had not considered it.  Thank you for bringing this up.
+
+It does a much better job at mixing the bits evenly (and not only from right-to-left), and should be more
+effective against the kind of attack you describe. The friendliest modulus for CPUs might be 2^n - 1. For example,
+here's x86 code for multiplication modulo 2^32-1:
+
+    # compute eax * edx mod 2^32-1
+    mul edx      # edx:eax = eax * edx
+    add eax, edx # edx*2^32 + eax = (edx*1 + eax) mod 2^32-1
+    adc eax, 0   # addition above may overflow
+    # handle special case eax*edx mod 2^32-1 = 2^32-1 = 0
+    # potentially unnecessary
+    # a branch could be faster here, since it's quite predictable
+    sub eax, -1  # CF set on eax != 2^32-1
+    sbb eax,  0  # always add 1 back, except on 2^32-1
+
+It's a little trickier with SIMD, due to the required shuffling and lack of explicit carries, but I think it could also
+be made reasonably fast.
+
+While the code above looks fast, it is roughly twice slower than a MUL
+alone - so not a good enough idea for dealing with a potential attack
+that might allow for up to a 2x speedup.  The special case handling
+(last sub/sbb) could probably be omitted, but the "adc eax, 0" results
+in just two possible (non-)changes to eax (either there was carry or not),
+which looks very susceptible to a similar kind of speculative processing
+that we wanted to mitigate.
+
+So while it could be a good idea in terms of bits mixing, I think it is
+not good enough to implement with individual instructions (until a CPU
+gets a single instruction like this, with same latency as MUL alone).
+
+Thanks again,
+
+Alexander
+

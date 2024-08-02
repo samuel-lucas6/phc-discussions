@@ -1,0 +1,72 @@
+phc-discussions - RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+Message-ID: <DM2PR03MB559C5455E0989A4A6F87E88A7A80@DM2PR03MB559.namprd03.prod.outlook.com>
+Date: Wed, 1 Jul 2015 17:48:31 +0000
+From: Marsh Ray <maray@...rosoft.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+Perhaps I misread, thinking of your description of a Turing machine which uses data-dependent addressing. If memory addresses are fixed in advance only by the salt, is it so easy to prove the resulting system is Turing complete?
+
+
+-           Marsh
+
+From: Marsh Ray [mailto:maray@...rosoft.com]
+Sent: Wednesday, July 1, 2015 10:30 AM
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Password hashing as a self-overwriting Turing machine
+
+It resists side-channel attacks based on memory access timing: all
+memory indices are controlled by pseudo-random data generated from
+the salt, while operations and their order are controlled by
+pseudo-random data generated from the salt *and* password.
+
+By definition, the salt is not secret. In some use cases, e.g., document encryption, it is even shipped along with the ciphertext.
+
+So assuming I know the salt, and I am able to observe via a timing side channel the first few memory accesses from hashing the correct password, then I am able to reject an incorrect guess at the password without having pay most of the cost that should be imposed by the work factor, no?
+
+- Marsh
+
+From: denis bider [mailto:pwhashing@...isbider.com]
+Sent: Wednesday, July 1, 2015 9:14 AM
+To: discussions@...sword-hashing.net<mailto:discussions@...sword-hashing.net>
+Subject: [PHC] Password hashing as a self-overwriting Turing machine
+
+Dear password hashing gentlemen - and potentially ladies?
+
+I'm over a year late to the party. However, I have in the past two months designed an algorithm which may deserve a nod in its direction, due to insight I haven't noticed being used as directly elsewhere.
+
+My premise is that, while a password hashing algorithm must be written *carefully*, this does not mean it has to be *complex*. The way I see it, the principal goals of anti-brute force password hashing are as follows:
+
+- Entropy preservation. (Obvious.)
+
+- Irreducibility. The algorithm cannot be reduced to a simpler version that executes faster in the general case, for a large proportion of inputs. Nevertheless - and this is important in this case: optimizations that require knowing the password are irrelevant, because the attacker has achieved their goal if they know it.
+
+- Non-trivializability on easily obtainable alternate hardware. If an algorithm is to normally run on a 64-bit server, then it should perform most cost-effectively in that environment, not on an AMD GPU. A good password hashing algorithm is platform specific, and chosen for a particular usage case and platform. A different algorithm should be used if the main usage case is e.g. a 32-bit client.
+
+Finally, there are other goals an algorithm ought to meet. Resistance to side channel attacks and garbage collection attacks are among them.
+
+What I believe to be worthwhile in my design is that, in order to achieve these goals, it does not use a complex algorithm with a fixed order of instructions. Instead, we first use a trusted algorithm, SHA-512, to generate random data dependent on the salt and password; and then we interpret and execute that data as a self-overwriting Turing machine composed of entropy-preserving operations. The Turing machine is allowed to run for a fixed number of operations, but its memory access pattern is random (dependent on the salt), and its order of operations is random (dependent on the salt and password). The result is a cryptographic digest of the state of the Turing machine, after the specified number of operations.
+
+If this design has been done well, then I believe it to be irreducible. This is for similar reasons as that the halting problem cannot be solved in the general case, in a way more efficient than actually running the algorithm.
+
+The resulting design looks very simple. It comprises 115 lines of code found in the "BusyBeaver" function, starting on line 290 in BusyBeaver.cpp, found in the following archive (23 kB):
+
+http://www.denisbider.com/BusyBeaver-20150630.zip
+
+My implementation attempts to be specific to the x64 platform. It uses SHA-512 to generate pseudo-random data, which favors the 64-bit CPU. The Turing machine uses operations that a 64-bit processor does well. It uses an amount of memory that fits CPU cache sizes, but doesn't fit into local memory of a GPU compute unit. I've hired a colleague for the purpose of testing this; we have not been able to come up with a faster AMD GPU implementation than what runs on a comparable x64 CPU.
+
+The algorithm resists side-channel attacks based on execution timing. The number of operations is constant, and so is the amount of time to process them. It resists side-channel attacks based on memory access timing: all memory indices are controlled by pseudo-random data generated from the salt, while operations and their order are controlled by pseudo-random data generated from the salt *and* password. A wrapper provides resistance to garbage collection: the salt and password are hashed at start, so that the plaintext can be erased before proceeding with the rest of the algorithm.
+
+I understand that a majority of you have an academic background, and will expect this kind of work to be presented as a paper. Unfortunately, I do not have this experience. It would be challenging for me to write a paper that would live up to the standards of your community. The way I am presenting this work is the best way I can. However, I don't believe that this implies that this approach is without value.
+
+My background is 20 years of experience in C++ development and applied crypto usage. I am a co-founder and developer-in-chief at Bitvise, a small company specializing in SSH software for Windows. Our current plan is to use the above algorithm for password hashing in the next version of Bitvise SSH Server.
+
+If someone finds it worthwhile to research this design further, in a more formal manner, please be welcome. I present it because I think it is an interesting design. This is not to say that other designs you have considered might not have more features. However, I think the simplicity of this approach is valuable.
+
+Best regards,
+
+denis bider
+
+
+

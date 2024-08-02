@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/02/13/24">[&lt;prev]</a> <a href="2">[next&gt;]</a> <a href="../../../2014/02/13/24">[&lt;thread-prev]</a> <a href="2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;76baae165d0a438c8fb759c6a0770160&#64;BY2PR03MB074.namprd03.prod.outlook.com&gt;
+Date: Fri, 14 Feb 2014 01:44:14 +0000
+From: Marsh Ray &lt;maray&#64;...rosoft.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+&gt; I just have trouble empathizing with a sys-admin who can't even allow for 1ms and 1MB for
+&gt; authentication.  When I think of harnessing GPUs for authentication, I imagine many cores
+&gt; per user authentication and high values of pepper, rather than 1 tiny wimpy core for a
+&gt; whole password hash.  It just seems a bit cheapskate-ish to me, but I really don't know
+&gt; anything about the world of high volume traffic data centers.  If they're really that
+&gt; cheap, it seems to me they should be doing the server-relief thing.
+
+One word: "cloud". Virtualization and multi-tenant hosting has been around forever, but it's only increasing for the forseeable future. Today it's common for web apps to share a single physical server with a few - to dozens - of other datacenter customers. The most economical hosting plans oversubscribe CPU cores many times over (i.e., you get what you pay for). This provides great gains in economic and energy efficiency most of the time.
+
+You can imagine what happens if every customer starts running functions that contend for the memory bus for measurable amounts of time. The occasional 1 ms login might not be too bad (better than an initial SSL/TLS handshakes actually), but as that increases at some point the latency goes all hockey-stick. So admins should be forgiven in advance if they seem reluctant to tune their work factors based on performance under ideal conditions.
+
+But of course, this is all by design of PHC. If there were some way that the operation could be made more efficient for the defender running on special datacenter hardware, then the attacker could opt to use that too. So it seems the best we can do is ensure everyone suffers equally to a degree chosen by the admin :-)
+
+- Marsh
+----------------------------
+My own opinions, usual disclaimers apply.
+
+
+
+-----Original Message-----
+From: Bill Cox [mailto:waywardgeek&#64;...il.com] 
+Sent: Thursday, February 13, 2014 2:36 PM
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 12:52 PM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; On Thu, Feb 13, 2014 at 12:21:40PM -0500, Bill Cox wrote:
+&gt;&gt; What is it about bcrypt's memory access pattern that is hard for GPUs?
+&gt;
+&gt; Very frequent unpredictable 4-byte lookups.  If they go to external 
+&gt; memory, they'd incur very high latency and fetch entire cache lines 
+&gt; (wasteful).  Even with local memory, latency is pretty high (compared 
+&gt; to
+&gt; L1 cache on CPU).  Normally, the latency would be hidden by having 
+&gt; more instances run in parallel, but there's currently not enough local 
+&gt; memory to run even the bare minimum needed to keep all execution units 
+&gt; in use at all (thus, many are 100% idle).  So it's a combination of factors.
+
+I just tested the impact of unpredictable lookups on NoelKDF's hash function.  Instead of hashing:
+
+    value = value*(*prev++ | 3) + *from++;
+    *to++ = value;
+
+I tried:
+
+    value = value*(*prev++ | 3) + *(from + (value &amp; mask));
+    *to++ = value;
+
+This makes the next "from" address unpredictable and dependent on the next value of value (I really need to rename this).  It slowed down single-threaded hashing of 2GB from 0.76 seconds to 2 seconds.  If instead of unpredictable, all I need is pseudo-randomized, I got about
+0.95 seconds when I replaced *from++ with *(from + (*prev &amp; mask)).
+
+It looks like there is a penalty to pay for unpredictable lookups.  Is (*prev &amp; mask) enough to cause problems for GPUs, or since *prev is calculated many cycles earlier, do I really need (value &amp; mask)?
+
+I think custom ASICs could eliminate the delay caused by using either (value &amp; mask) or (*prev &amp; mask) when reading out of on-chip cache.
+It just needs the value at this address by the time the 3-cycle multiply finishes.  I was surprised that (value &amp; mask) caused my Ivy Bridge CPU so much grief.  I thought 3 cycles would be enough to do the mask operation and load from L1 cache.  Apparently not...
+
+&gt;&gt; What I currently do for GPUs is to allow for memory sizes as low as 
+&gt;&gt; 1MB,
+&gt;
+&gt; How is this something you do "for GPUs"?
+
+Knowing almost nothing about GPUs, I assumed they had at least 1MB of cache per core... this is obviously wrong, so I'll change it to KB instead of MB.  Is this fine enough, or should I have the user specify the block size and number of blocks instead?
+
+&gt;&gt; with block sizes as low as 4 bytes, and if that hashes to quickly, 
+&gt;&gt; there is a repetition factor that increases the inner loop 
+&gt;&gt; calculations to run as long as you like.
+&gt;
+&gt; Oh, so you support block sizes this small.  Good.  What's not so good, 
+&gt; though, is that such small block sizes at total sizes exceeding CPUs' 
+&gt; L1 cache are slow on CPU - you have that same problem with fetching 
+&gt; entire cache lines, etc.  They're only good for L1 cache.
+&gt;
+&gt;&gt; I guess my 1MB may be too
+&gt;&gt; coarse, but below 1MB just seems like giving up on memory hardness.
+&gt;
+&gt; Yes, giving up on memory hardness for ASICs - but not on let's say 
+&gt; local memory hardness for current GPUs yet.  There may be use cases 
+&gt; where the defender would want such low settings for other reasons, and 
+&gt; it's our job to provide no-worse-than-bcrypt security at those low settings.
+&gt;
+&gt;&gt; Is something like this what is required?
+&gt;
+&gt; Yes, but I think we need at least 2 levels: one is with tiny 
+&gt; bcrypt-like accesses to a block of data that fits in L1 cache on 
+&gt; defender's systems, and the other with larger block-sized accesses.  
+&gt; An easy way to do that would be to treat each block as the arena for a 
+&gt; bcrypt-like algorithm, and to have that algorithm inside our 
+&gt; BlockMix-alike.  However, this is suboptimal in that an optimal block 
+&gt; size in terms of TLB misses is something like 1 KB, whereas an optimal 
+&gt; bcrypt-like arena size is in the range of 4 KB to 32 KB (currently).  
+&gt; I am playing with 12 KB or 16 KB for the bcrypt-like S-boxes, which 
+&gt; lets me run two threads/core and still fit in 32 KB L1 cache, along with the current ~1 KB'ish blocks.
+&gt;
+&gt; Alexander
+
+I see.  This explains better why you suggested a while back that I do hashing from randomized locations within  a block.  I thought you were just concerned about mixing data better, and I care little about that, so long as an attacker still has to do everything I do.
+
+It's interesting how we come to different solutions based on what we know... I'm still not completely sold on doing randomized lookups within a block if it slows the defender down 20-30% for addresses computed much earlier, and 2X for addresses computed just in time.
+This wont slow down FPGA and ASIC based attackers at all, but it will hurt the defender... just my point of view coming from a world where FPGAs and ASICs are the most important things in life :-)
+
+However, I do see your point were we should be better than bcrypt in most real-world situations.  I've read criticism of Scrypt compared to bcrypt for very low memory applications.  I just have trouble empathizing with a sys-admin who can't even allow for 1ms and 1MB for authentication.  When I think of harnessing GPUs for authentication, I imagine many cores per user authentication and high values of pepper, rather than 1 tiny wimpy core for a whole password hash.  It just seems a bit cheapskate-ish to me, but I really don't know anything about the world of high volume traffic data centers.  If they're really that cheap, it seems to me they should be doing the server-relief thing.
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

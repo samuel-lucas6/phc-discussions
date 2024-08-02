@@ -1,0 +1,46 @@
+phc-discussions - Generalised password hashing for arbitrary proof of work
+
+Message-ID: <CAMtf1Hu7TD8GYt6QEX48s-i5t9QqU8L-rLSQwAmmaVYjN+MXhQ@mail.gmail.com>
+Date: Mon, 8 Sep 2014 12:00:10 +0800
+From: Ben Harris <ben@...rr.is>
+To: discussions@...sword-hashing.net
+Subject: Generalised password hashing for arbitrary proof of work
+
+I've been looking at Cuckoo Cycle (
+https://github.com/tromp/cuckoo/blob/master/cuckoo.pdf?raw=true) as a proof
+of work function recently. The tl;dr is that it is a graph theoretic PoW
+that is dominated by memory access time. In the interests of discussion,
+I'll suggest a replacement to Catena's lambda-BRH for a Cuckoo Cycle proof
+of work function.
+
+Cuckoo cycle has variables N, M and H, takes an arbitrary input and outputs
+H 64-bit positive integers (value less than M). N is the number of nodes in
+the graph, M the number of edges, and H the target length of a hash
+collision cycle.
+
+In the standard case, M is N/2 and H is 42. This way only allows for a 2.2%
+chance of solution, for password hashing >99% chance of solution is
+desired. At M = 0.75*N, the chance is >99% and the memory load is 4 reads
+and 1.2 writes per M. Memory requirements are M bits + some fraction of N.
+As the chance of all 42 edges in the cycle falling only within one half of
+the nodes is extremely small (0.5^42), attempting the process with even M/2
+memory is practically impossible. The author estimates 67% of the runtime
+is DRAM memory latency.
+
+lambda-BRH as a function takes a garlic value and an hash-size input, then
+outputs a hash-size output.
+The proposed CC_0.75_42 takes the same inputs and outputs. The value N is
+hash-size*2^garlic, M is floor(0.75*N) and H is 42. To convert the 42
+64-bit integers into a hash-size output, sort them ascending, concatenate
+together, prepend with the input and hash. If more than one solution is
+found, use the one with the smallest first value (when sorted ascending).
+If no solution is found (extremely unlikely) restart with a different salt
+value (only needs to be done the first time the salt is created).
+
+This keeps all the extra features of Catena, but loses the secret
+independent memory access.
+
+https://github.com/tromp/cuckoo
+
+
+

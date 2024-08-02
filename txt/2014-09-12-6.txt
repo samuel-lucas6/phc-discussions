@@ -1,0 +1,154 @@
+phc-discussions - Re: [PHC] A review per day - Lanarea
+
+Message-ID: <54136008.9040700@ciphershed.org>
+Date: Fri, 12 Sep 2014 17:05:12 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Lanarea
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+As promised, though a bit late, here is my review of Lanarea.
+
+While the code is beautifully written, it fails badly at protecting
+passwords.  Lanarea can be sped up in an ASIC attack per core by
+approximately the expected speed-up of Blake2b, somewhere on the order
+of 10X-ish.  Lanarea is so slow that most use cases for Lanarea would
+fit hashing memory into L1 cache, allowing very many copies to be
+implemented on a single ASIC.  An ASIC attacker would gain both a high
+compute time advantage and parallel computation advantage.  Overall
+ASIC resistance seems to be lower than for bcrypt.
+
+Lanarea runtime is O(m_cost^2*t_cost), and over 99% of the runtime is
+due to full memory Blake2b computations.  As a result, realistic
+hashing sizes for Lanarea
+
+32KiB benchmark
+- ---------------
+
+PHCtime ./phs-lanarea 1 128
+Allocating matrix of size 2048x16 = 32768
+Initializing matrix
+Processing t_cost loop 0
+Processing t_cost loop 1
+Processing t_cost loop 2
+Processing t_cost loop 3
+Setting output
+
+d9 04 54 1d 15 05 6c ad
+b5 9b 85 a8 8c e1 c4 97
+a9 21 9c 88 aa 14 78 76
+91 8f c5 6d b9 11 41 3a      32 (octets)
+
+
+real	0m0.607s
+user	0m0.607s
+sys	0m0.000s
+
+Note that this is with minimum t_cost = 1, and only 16KiB of memory!
+It stil takes 0.6 seconds!  It also fits in L1 cache, so there were no
+cache misses in this benchmark.
+
+256KiB benchmark
+- ----------------
+
+PHCtime ./phs-lanarea 1 1024
+Allocating matrix of size 16384x16 = 262144
+Initializing matrix
+Processing t_cost loop 0
+Processing t_cost loop 1
+Processing t_cost loop 2
+Processing t_cost loop 3
+Setting output
+
+0c f2 db 38 fb c6 ca 50
+f7 c1 d7 2a 09 26 7c d5
+f4 46 a3 1d 13 51 74 38
+f1 84 24 81 28 6c 93 7f      32 (octets)
+
+
+real	0m37.626s
+user	0m37.636s
+sys	0m0.000s
+
+
+This is only 256KiB, which fits in my L2 cache, yet it takes 37
+seconds!  It is not practical to consider even memory of this tiny for
+actual password hashing.  Users will not be patient enough.
+
+Slowing down Lanarea seems to have been a primary goal.  For example,
+memory initialization is about 100X slower than the next slowest
+entry.  Per byte initialized, Lanarea calls the full Blake2b on 288
+bytes.  This can be sped up in an optimized version by feeding the 256
+bytes from digits of pi and e in first, and then doing a Blake2b on
+the remaining 32-byte hash to produce a new 32-byte output hash.
+However, only one of those bytes is used for memory initialization.  A
+trivial 64X speedup with no loss of security would be to use all 64
+bytes of Blake2b output, rather than just 1.
+
+Memory initialization is very fast compared to the t_cost rounds.  For
+every 16 bytes of memory hashed in the Lanarea t_cost loop, *all* of
+memory is re-hashed by the full Blake2b.  There's comments in the
+paper and code about causing cache misses, but the reality is that
+Lanarea code runs < 1% of the total time compared to Blake2b.
+
+There was a comment in the code about causing cache misses.  I thought
+this was a mistake, because the address is at most 8KiB forward in
+memory from the current position, and an attacker could just pre-load
+the next 8KiB into cache.  However, since *all* memory is re-hashed
+with Blake2b after every 16 bytes, it is true that only the most
+recent memory will be in cache, and this likely would cause cache
+misses.  However, these 16 L1 cache misses will not take enough time
+to count compared to hashing all of memory with full Blake2b.
+
+I have a lot of other concerns about Lanarea, but I should move onto
+the next review.  Here are some of my notes:
+
+- - r is at most 255 larger than y, and since rows are only 16 bytes,
+that's only 4KiB at most.  This is unlikely to cause even an L1 cache
+miss, while the code says it is designed to cause cache misses
+- - there are two 1-byte unpredictable reads per inner loop, which might
+provide some GPU resistance, if it weren't for the rehashing of all
+memory every 16 bytes.
+- - m_cost gets multiplied by rowSize so it is just matrixSize.  Using
+m_cost instead of matrixSize is confusing in some places.
+- - Care seems to be taken to present the matrix data to blake2b for
+hashing in each inner loop in a diagonal pattern.  However, it wont
+make any improvement in security, and should be left out.
+- - It has the typical input collisions due to Blake2b XORing onto their
+state.  Additional trailing 0's sometimes don't result in a different
+hash.
+- - Why run the loop multiples of 4 times times t_cost?  Isn't it
+already slow enough?
+- - output loop runs in (outlen/32)*matrixsize time - very slow, but
+nothing compared to the main loop
+
+Lanarea needs a lot of work.  I think hashing all of memory with
+Blake2b every 16 bytes is a bug.  When fixed in the most obvious way
+(move Blake2b hashing to the next outer loop), then Lanarea will
+suffer from a massive TMTO attack, very similar to the one against
+Schvrch.
+
+Lanarea does not make it on my list of algorithms I wish to see in the
+second round.
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUE2AEAAoJEAcQZQdOpZUZr7YQAJAftcShtI+rHEvrHUQOAiAG
+WYHHmvB/oF5PTN9jyER2l47ptXfRpMzdKuF8m++nfk13BVVz+j5wicr9FXEtElzh
+TNB99YIyFBI67Y6gppeAPZAVWULLAJTRZmfheBJEoVZ2VePRfFfIZ9qder96ajVw
+1iQsC0Y7QEYTsfBCKp2JV6WNWWKL34Nf1Qo7ktFs9vV1WFlv2RxwlzxE71WPJLv+
+Rj/Rd2mYzyxiUvWPC+4k+A5HD/DuH9cXtVPXxCb8nMHJ+9x+LC5ZHj+jKBH0mbD5
+upBnYC70cnPv9c4bhhWBOQQ3jYiIT0bQON6Q75TPaZ/dn0RC7hxFfC5rnb+Vg775
+HUniW/455DL5eB1zHZAWOa60HWV793iyXaLwtbIDY0IJh5Itx9nv6AnZoLDYeDc4
+KPrHuKDnB+N1nxWnpiI3s+gsIde+9GP9c4KnRfS/WeQywBIJcA9/gF6GvXn4TtXO
+LWvGs7Cu7Yro+q4yo8b+c7L5LhvjCK4XPnkMRTdmGgqKFfeU5rvMCB7ll0OF+WJa
+awdwVNTEtWL7xtyqjSd0PxNnYNzg804nf3Kxfc2OwfJEBmodNQuwX8wdNcQzfbc2
+Dx56oX0XhWQidn42pSQaVsFprO17GHILAnAftMFTKXpGWeB5kG+68nAI8emuBMSm
+SCNeta89+MFKLdbswtD3
+=2+Ux
+-----END PGP SIGNATURE-----
+

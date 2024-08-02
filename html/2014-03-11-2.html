@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] multiply latency reduction via table lookups</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140311043412.GA12707&#64;openwall.com&gt;
+Date: Tue, 11 Mar 2014 08:34:12 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] multiply latency reduction via table lookups
+
+On Mon, Mar 10, 2014 at 08:57:58PM -0400, Bill Cox wrote:
+&gt; This thread has me thinking that we can compute-time harden our PHSs
+&gt; (for Password Hashing Schemes) with L1 cache access times, as an
+&gt; alternative to multiplication, if we want to.  There's a reason we
+&gt; don't use small RAMs to accelerate multiplication: they're too slow!
+&gt; 
+&gt; Doing 32-byte random lookups in L1 cache and hashing it with one other
+&gt; 32 byte value, and writing it back to yet another random lookup, would
+&gt; run really fast on Haswell, and I do not believe it would be easy for
+&gt; an ASIC attacker to do better.
+
+Is the "writing back" part essential?  What if the writes are many times
+or even orders of magnitude less frequent than reads?  Isn't it
+sufficient to ensure the data is dependent on the password and salt (so
+must be stored in a RAM rather than a ROM)?  Frequent writes would hurt
+performance on CPUs with write-through L1 cache, including Bulldozer.
+Another drawback of frequent writes is that some of them may eventually
+propagate to main memory even on systems with write-back caches, which
+would waste some memory bandwidth.
+
+&gt; It would have to be done carefully, since we also want to write to as
+&gt; much memory as possible to maximize time*memory cost for an attacker,
+&gt; so somehow we'd need to figure out a strategy for hammering L1 cache
+&gt; without cache miss penalties while at the same time filling external
+&gt; DRAM at the bandwidth it can support.  The multiplications seem to
+&gt; happen in parallel on the scalar unit, while memory hashing can happen
+&gt; in the SIMD unit.  Is it possible to do something similar with cache
+&gt; vs external DRAM hashing?
+
+Yes, escrypt tries to do that.  I thought TigerKDF did too.
+
+&gt; I don't know how to do both at the same time... Alexander?  This seems
+&gt; like your kind of thing.
+
+The L1 cache reads may be made from the sub-block processing function.
+This may be happening while further sub-blocks are being prefetched (the
+prefetch instructions are issued when processing of a new block starts).
+This is what escrypt does.
+
+BTW, with blocks as large as what you use (multiple KiB rather than up
+to 1 KiB as I normally test escrypt with), the number of pending
+prefetches would definitely exceed what's supported in hardware.
+I don't know what exactly happens then (are some prefetch instructions
+simply ignored? or are there CPUs where they'd block?)  I tested this
+briefly, and somehow didn't run into any significant performance
+penalty, but I think there must be room for optimization there (this may
+be a reason why I am not getting much of a speedup for larger r) - e.g.,
+for r &gt; 8, we could be doing the prefetches in groups of 16 (or even
+fewer?) 64-byte sub-blocks, just a few sub-blocks before they're
+processed.  I haven't tried that yet, focusing on r &lt;= 8 for other
+reasons I mentioned (in other postings in here).
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

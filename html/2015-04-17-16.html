@@ -1,0 +1,258 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] "Attack on the iterative compression function"</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="15">[&lt;prev]</a> <a href="17">[next&gt;]</a> <a href="13">[&lt;thread-prev]</a> <a href="17">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150417191605.GA27212&#64;openwall.com&gt;
+Date: Fri, 17 Apr 2015 22:16:05 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] "Attack on the iterative compression function"
+
+Dmitry,
+
+On Fri, Apr 17, 2015 at 10:55:31AM +0200, Dmitry Khovratovich wrote:
+&gt; On Thu, Apr 16, 2015 at 3:01 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt; &gt;
+&gt; &gt; Yes, now I can see how the shuffling may affect this.  Original scrypt's
+&gt; &gt; sub-block shuffling appears to double the latency of your attack at each
+&gt; &gt; level of the recomputation tree.  Correct?
+&gt; 
+&gt; Possibly. But there is always an option to store some extra subblocks
+&gt; so that latency decreases further...
+
+Yes.
+
+I think it would help this community if you try applying your attack to
+scrypt proper.  Initially for storage of just the last sub-blocks (in
+addition to some full blocks), and then (after publishing your initial
+results) also for storage of arbitrary sub-blocks.  Try to identify
+which ones and how many are optimal to store.  Perhaps the "how many"
+will vary depending on the higher-level TMTO factor that you apply, so
+perhaps the SMix-level and BlockMix-level TMTO factors would need to be
+optimized together.
+
+The scrypt paper is very careful when it talks about a "constant factor"
+without specifying any upper bound on it, so it won't exactly be a break
+of scrypt if you show that this constant factor is higher than is
+possible with an SMix-level attack alone.  But it will be a significant
+new result.
+
+&gt; &gt; I guess original scrypt's sub-block shuffling is defined in the exact
+&gt; &gt; way it is in order to ensure that two successive applications of the
+&gt; &gt; shuffling don't cancel each other.  However, I don't immediately see a
+&gt; &gt; specific reason to have this requirement, and from the point of view of
+&gt; &gt; maximizing latency in your attack, simple reverse order of sub-blocks
+&gt; &gt; (e.g., "B_15 xor B_14", "B_14 xor B_13", etc. written to new B_0, B_1,
+&gt; &gt; etc. instead of the current "B_15 xor B_0", "B_0 xor B_1", etc.) feels
+&gt; &gt; like it'd work best.  I haven't thought this through yet.  I'd
+&gt; &gt; appreciate your thoughts on the reverse order of sub-blocks idea.
+&gt; 
+&gt; An attacker would just store every $q$-th subblock thus spliting the
+&gt; entire block into segments.
+
+Yes, I've been thinking in this same direction after I sent the previous
+message.
+
+&gt; Then the recomputation can be contained to segments and parallelized,
+&gt; like in our attack on Catena.
+&gt; 
+&gt; First I intended to write that playing with subblocks just complicates
+&gt; the security. However, I have realized,
+&gt; that it might be possible to devise a rigorous approach to that. To
+&gt; figure out how the latency is affected by tradeoffs,
+&gt; we consider a _stack_ of compression functions (BlockMixes, Argon2d
+&gt; permutation, etc.) and mount a tradeoff attack on it.
+&gt; The attacker's goal is to reduce the latency by careful storing of
+&gt; subblocks (or their parts). We could give extra power to the attacker
+&gt; by assuming he knows the recomputation tree structure in advance
+&gt; (always true for data-independent addressing), so he might want to
+&gt; store different subblocks in different blocks.
+
+Right.
+
+So maybe you can start with scrypt proper, as I suggested above?
+
+&gt; &gt;&gt; Our approach is to avoid this
+&gt; &gt;&gt; situation for all, requiring that there simply must not be any
+&gt; &gt;&gt; tradeoff attack on the compression function, or, in other words, the
+&gt; &gt;&gt; computational latency must be tradeoff-resistant. The Argon2
+&gt; &gt;&gt; parallelism that you have mentioned is somewhat unavoidable if we want
+&gt; &gt;&gt; this resistance.
+&gt; &gt;
+&gt; &gt; Yes, I figured this out yesterday.
+&gt; &gt;
+&gt; &gt; I think it's avoidable, but a possible reduction of parallelism just
+&gt; &gt; does not occur with your approach naturally, and it'd cost a few extra
+&gt; &gt; XORs or such to introduce it.  Looking at it from a different angle,
+&gt; &gt; maybe this is your opportunity to easily introduce tunable
+&gt; &gt; instruction-level parallelism (have a couple of flags dictate whether to
+&gt; &gt; introduce or skip those extra data dependencies).
+&gt; 
+&gt; I think now it should be easy to add some chaining at 25% cost or so,
+&gt; which increases the normal latency and avoids parallelism. Still,
+&gt; this chaining will be subject to tradeoffs, so the tradeoff latency
+&gt; will be pretty much the same as now.
+
+Right.  Yet I think this combination makes sense.
+
+You currently have 8 parallel BLAKE2b's.  With a two-bit tunable
+parallelism parameter, you can introduce optional data dependencies
+between every BLAKE2b, between every other, between two groups of four,
+or none (as it is currently).
+
+I think the "between two groups of four" mode would result in a
+negligible performance cost on current CPUs.
+
+Maybe it's best to use 64-bit ADDs (maybe SIMD) rather than XORs for
+those data dependencies.  Whatever maximum amount of defensive
+processing you can do there in 1 clock cycle.
+
+&gt; &gt; I confirm your analysis.
+&gt; &gt;
+&gt; &gt; I assume the C(q) and D(q) figures are currently inexact, for the reason
+&gt; &gt; you mention ("have to plug yescrypt mode of operation (and its
+&gt; &gt; addressing) into our ranking method"), but they look sane to me, and the
+&gt; &gt; combination with your attack on BlockMix_pwxform looks correct to me.
+&gt; &gt;
+&gt; &gt; I hope that yescrypt's D(q) will turn out to be slightly higher than
+&gt; &gt; what you included here once you consider yescrypt's Wrap().  I guess
+&gt; &gt; your current C(q) and D(q) assume modulo division in place of Wrap()?
+&gt; 
+&gt; No, I used the real Wrap(). Without wrap the numbers would be smaller.
+&gt; But I did not exploit Wrap(), i.e. the storing algorithm does not know that
+&gt; you never refer to first blocks.
+
+You mean when moving the last 1/2 sized window to higher offsets?
+
+There's a swap-out and swap-in (for SMix2) possibility here, which is
+why I claim a lower area-time: 1/3+1/3 rather than 1/2+1/3 (for
+SMix1+SMix2), so 80% of what's theoretically possible for same running
+time.  Is this what you mean you could have exploited, or do you have
+additional ideas?
+
+&gt; I have posted the code that I used to generate the numbers online:
+&gt; <a href="https://github.com/khovratovich/Tradeoff" rel="nofollow">https://github.com/khovratovich/Tradeoff</a>
+&gt; The output .log file that is created contains the numbers. As
+&gt; explained in our earlier paper,
+&gt; the ranking method has parameter &lt;q&gt; (segment length). We run 100
+&gt; tests on each q from 2 to 80,
+&gt; and cluster tradeoffs that have the memory reduction around 1/D for
+&gt; all integer D.
+&gt; 
+&gt; It lacks comments and is quite a mess, but at least people will see
+&gt; where the numbers are coming from.
+&gt; 
+&gt; In order to get the numbers for other values of t, you just change the
+&gt; constant 1.33 in main() to the number of passes.
+
+Thank you!  I haven't looked yet, but I intend to.
+
+&gt; &gt; You make two observations: about late inter-lane diffusion, and about
+&gt; &gt; recovering missing blocks subblockwise.  It appears that you currently
+&gt; &gt; only make use of the latter observation.  Do you think the former is of
+&gt; &gt; any use in an attack?
+&gt; 
+&gt; It is just an extra parallelism. As long as it is fully employed by
+&gt; the defender, I do not see an attack.
+
+OK.
+
+&gt; &gt; Thanks again,
+&gt; 
+&gt; You're welcome!
+
+This is best tradeoff analysis of yescrypt so far.  Very helpful.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

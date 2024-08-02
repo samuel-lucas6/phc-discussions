@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+Message-ID: <532AD966.4090101@Oracle.COM>
+Date: Thu, 20 Mar 2014 12:04:54 +0000
+From: Darren J Moffat <Darren.Moffat@...cle.COM>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Supporting AVX2/SSE2 or not with a single binary
+
+
+
+On 03/20/14 00:54, Bill Cox wrote:
+One reason I think we see applications running without SSE/AVX2
+support is that operating systems don't want to support two versions
+of a binary, and they have to support older machines.  The Blake2 code
+I've read does not provide for a single binary that supports both - I
+have to link either to the blake2-ref code or the blake2-sse code.  My
+TwoCats code has inherited this limitation, since I used the Blake2
+code as a roadmap for figuring out how SSE2 works.  These guys over on
+StackOverflow think they've got code to detect SIMD support and allow
+a single binary to support both:
+>
+http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
+>
+How cool is StackOverflow?  So, is this the right way to build
+high-speed crypto binaries now days?
+
+This is something we have to deal with for the crypto libraries in 
+Solaris.  We need a single set of binaries that run on systems with 
+various different CPU capabilities.
+
+The linker/loader on Solaris has the ability to build a single ELF 
+binary with multiple implementations of the same functions based on the 
+CPU capabilities (we call them HWCAP) and the runtime loader 
+automatically selects the correct one based on which CPU you are running 
+on.  For testing and debug purposes you can tweak the list of CPU 
+features that the runtime loader selects on via the LD_HWCAP environment 
+variable.
+
+The assembler also automatically tags the output files with an 
+indication of which CPU features (instruction sets) it used.
+
+I don't know if this functionality is available on other systems though.
+
+For example our crypto library is tagged as:
+	ELF 64-bit LSB dynamic lib AMD64 Version 1 [SSE2 SSE CMOV]
+which is what file(1) shows. If instead I use elfdump and ask it to show 
+me the capabilties sections I get this:
+
+Capabilities Section:  .SUNW_cap
+
+  Object Capabilities:
+   index  tag           value
+     [0]  CA_SUNW_HW_1  0x1820     [ SSE2 SSE CMOV ]
+
+  Symbol Capabilities:
+   index  tag           value
+     [2]  CA_SUNW_ID    0x1629     i86pc-aesni
+     [3]  CA_SUNW_HW_1  0x4001820  [ AES SSE2 SSE CMOV ]
+
+
+  Symbol Capabilities:
+   index  tag           value
+     [5]  CA_SUNW_ID    0x1b7e     i86pc-clmul
+     [6]  CA_SUNW_HW_1  0x8001820  [ PCLMULQDQ SSE2 SSE CMOV ]
+
+   Symbols:
+
+
+So You can see we have multiple different implementations of aes based 
+on which instructions are available and the runtime loader does the 
+selection for us.
+
+-- 
+Darren J Moffat
+

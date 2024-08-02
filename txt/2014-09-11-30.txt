@@ -1,0 +1,75 @@
+phc-discussions - Re: [PHC] A review per day - Lyra2
+
+Message-ID: <54120B54.8000103@larc.usp.br>
+Date: Thu, 11 Sep 2014 17:51:32 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Lyra2
+
+Hey again,
+
+I have made some tests with Samuel Neves's suggestion and it is
+light-years better than whatever we were considering in terms of
+security! We still have to check the performance, but the a+b+2a*b
+approach is certainly an excellent idea!
+
+BR,
+
+Marcos.
+
+
+On 11-Sep-14 15:58, Marcos Simplicio wrote:
+Thanks for the suggestion! That is actually quite similar to what we
+were thinking (but had not tested the underlying properties): we would
+be basically replacing the message input itself in Blake2's original G
+function by the result of a multiplication (without the "2*"). We will
+certainly keep your variant in mind!
+
+And do not worry: we are thinking about giving it a different name just
+to be sure there is no confusion (as fans of Street Fighter, we are
+using "Blanka" as codename for "Blake with multiplies" so far :) ).
+
+BR,
+
+Marcos.
+
+
+On 11-Sep-14 15:35, Samuel Neves wrote:
+>On 09/11/2014 06:00 PM, Marcos Simplicio wrote:
+>>Well, we have been taking a look at the literature but only a few
+>>algorithms do employ multiplications in their design and even fewer are
+>>not considered broken or weakened...
+>>>
+>>Considering the great performance provided by Blake2 (since it can beat
+>>MD5 and remain secure, I do not expect to find anything nearly as
+>>good!), we are actually considering adding multiplications to it and see
+>>what happens in terms of security and performance. It would at least be
+>>one alternative to plain Blake2 (we are not planning to force any choice
+>>for "f" anyway). I hope Samuel Neves and the other authors of Blake2 do not
+>>mind.
+>>>
+>>I would gladly use your multiplication chain for the sake of testing
+>>too, but I would not recommend it until further analysis (please do not
+>>take this personally, but I'm paid to be paranoid :) )
+>>>
+>>
+>I can't speak for all of BLAKE2 team, but making some BLAKE2 variant is fine by me, so long as it's made explicit that
+>it's not the "real" BLAKE2.
+>>
+>Let me offer a suggestion: replace the '+' operation in the core permutation by f(x, y) = 2*x*y + x + y. This is a latin
+>square (invertible on both operands), like addition, and in my tests shows extremely quick diffusion (around twice as
+>fast to achieve full diffusion than the BLAKE2 version). This can be seen as the Z/2^nZ counterpart to NORX's f(x, y) =
+>x ^ y ^ ((x&y) << 1).
+>>
+>On the 32-bit version of the permutation, it is straightforward to replace vpaddd with vpmulld + vpaddd. For the 64-bit
+>version, there is no direct replacement, so the 64-bit multiplication must be emulated, or implemented without SIMD.
+>Luckily, the upcoming Skylake processors will include the vpmullq instruction with the AVX-512 instruction set, which
+>puts SIMD back on the table.
+>>
+>>
+>>
+>>
+>>
+>>
+
+

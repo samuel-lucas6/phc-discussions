@@ -1,0 +1,26 @@
+phc-discussions - Re: [PHC] Bandwidth hardened algorithms?
+
+Message-Id: <09F8A016-28B7-485A-B546-434526685AFB@gmail.com>
+Date: Thu, 16 Jul 2015 20:59:31 +0200
+From: Dmitry Khovratovich <khovratovich@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Bandwidth hardened algorithms?
+
+
+
+Disconnected ASICs would lose quite badly, since the CPU miner is reading 8 KiB per hash at 20 GiB/s, while a disconnected ASIC must compute 2 4-MiB Yescrypt hashes in series.  We chose these computations to be 1 ms (by adjusting t_cost) for the CPU defender.  There is no way the ASIC can do this more than 10X faster, so each hash will require (1ms + 1ms)/10 = 0.2ms.  This is only 5,000 hashes per second.  In comparison, the CPU defender fills 20GiB of memory bandwidth reading 8KiB of memory per hash.  This is over 2.6 million hashes per second.  The CPU defender is over 500X faster than the 4MiB ASIC.
+
+A more interesting ASIC attack is when we have 8192 ASICs with 4MiB networked together.  In this case, each ASIC holds 4 MiB of the ROM data, for a total of 32 GiB.  To compute Yescrypt(4KiB_block(i1), 4KiB_block(i2)), ASIC_i2 must transmit 4KiB_block(i1) to ASIC_i1.  This is only 4KiB transmitted, compared to the CPU/DRAM case where the CPU reads 8KiB.  However, to be comparable in speed to the CPU case, the ASICs need a routing network capable of 8192*10GiB/s ==8192*10GiB/s out.  The total bandwidth of this random-routing network is over 80 TiB/s.  The challenge is to design the router so that it does not dominate the cost.
+
+No, why having separate ASIC for each i1? Instead let each ASIC select its nonce, calculate i1,i2 and run two yescrypts afterwards. Then there almost no communication between them, so 8192 guys can do even more per second, 2^25 as I calculated
+
+
+
+At a minimum, the routing network requires 10 times 10-gigabit pins per ASIC.  An Achronix FPGA has 64 of these pins, and in theory costs around $600.  However, they also have to connect to other nodes in the routing fabric.  I do not know how to do this routing without several layers of these FPGAs.  Their cost would dominate in my designs.
+
+A custom routing ASIC which maximizes bandwidth while minimizing cost would work out better.  If I remember correctly, GDDR5 DRAMs have about 20 GiB/s bandwidth and only cost around $11 for the small ones at this speed.  If we could for $10 build a routing ASIC with 10GiB/s in and out, we'd cost-reduce the router considerably.  Maybe it could be done for $100 per hashing-ASIC node.
+
+This is what the threat landscape looks like for bandwidth-hardening PoW, SFAICT.
+
+Bill
+

@@ -1,0 +1,118 @@
+phc-discussions - Re: [PHC] Some updates on EARWORM
+
+Message-ID: <20131116234645.GA10653@openwall.com>
+Date: Sun, 17 Nov 2013 03:46:46 +0400
+From: Solar Designer <solar@...nwall.com>
+To: Daniel Franke <dfoxfranke@...il.com>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] Some updates on EARWORM
+
+On Sat, Nov 16, 2013 at 02:39:36PM -0500, Daniel Franke wrote:
+Solar Designer <solar@...nwall.comwrites:
+On Fri, Aug 23, 2013 at 09:44:18PM -0400, Daniel Franke wrote:
+>* I've cut CHUNK_WIDTH from 4 to 2, leaving CHUNK_LENGTH at 128. Testing
+>  on my workstation seems to indicate that neither the reduction in
+>  internal parallelism nor the increased frequency of random memory
+>  accesses results in any performance penalty.
+
+I've actually changed my mind again since I wrote this: I'm going with
+CHUNK_WIDTH=4, CHUNK_LENGTH=64. The wider internal state makes certain
+proofs simpler.
+
+OK.  I look forward to reading your proofs.
+
+Is there a performance penalty with lower CHUNK_WIDTH or/and
+CHUNK_LENGTH?  If so, how bad is it e.g. for 2 KB, 1 KB, 512 bytes?
+
+There is. I don't have the figures handy. I'll retest this later today
+once I've gotten my code pushed.
+
+How do you explain this performance penalty, given that you prefetch the
+data?  Is it TLB misses?  Is it memory latency?  (The time to process
+2 KB not enough to cover the full latency of the concurrent prefetch?
+No, on a CPU this should be more than enough.)  Is it loop overhead?
+
+What page size are you (or the OS) using for the arena[] allocation?
+With 2 MB pages, 256 MB may fully fit in the TLB.
+
+My GPU code had a couple stupid bugs (no surprise at this point) that
+make these numbers completely bogus. The 7850 actually takes about 3x
+the time that the CPU does. It suffers from the same sort of bottlenecks
+that bcrypt does.
+
+bcrypt is actually very different: it makes 32-bit accesses, whereas the
+GPU is only able to fetch full cache lines from global memory (and with
+huge latency).  So a bcrypt/GPU implementation trying to use global
+memory ends up transferring lots of data that the code doesn't actually
+need.  This is a reason why implementations of bcrypt on GPU that only
+use local memory (and deliberately don't even try to use all computing
+resources, because there's not enough local memory to use them all) end
+up being faster.
+
+scrypt as used in Litecoin, on the contrary, needs 128-byte chunks of
+data, so is reasonably friendly to GPU implementations.  Along with a 2x
+TMTO, it ends up being 10x+ faster on high-end GPUs than on CPUs.
+
+EARWORM's memory access pattern is similar to scrypt's, although the
+chunks are larger than Litecoin's and prefetching is possible.  EARWORM
+is memory bandwidth bound, and GPUs generally have more memory bandwidth
+than CPUs.  So with a proper implementation and sufficient parallelism
+you should get EARWORM to run a few times faster on GPU than on CPU.
+
+There's a reason why it might not work that way, though: the larger
+chunks might fill up the GPU's local memory and caches before the GPU
+chip's external bus is made full use of.  (Yes, this does become similar
+to bcrypt using local memory and leaving most other resources idle as a
+result.)  The workaround would be to fetch portions of chunks, process,
+discard, fetch further portions, ... refetch, ...
+
+Is this a defensive or offensive kind of implementation (if it were
+finished, optimized, cleaned up, etc.)?  It sounds like you're computing
+just one instance of EARWORM, but with some parallelism in it (albeit by
+far not enough parallelism to use a GPU optimally), so I assume
+defensive?  Anyhow, this doesn't tell us much about GPU attack speeds on
+EARWORM.
+
+Actually, this seems to be enough parallelism to use my (not very
+high-end) GPU optimially; though at this phase of experimentation you
+should take that claim with a grain of salt. Remember that each workunit
+already has considerable internal parallelism.
+
+Yes, I'll take it with a grain of salt.  I think you're underestimating
+just how much parallelism your GPU needs to cover the memory latency,
+although your prefetch-friendly algorithm potentially helps GPUs a lot,
+perhaps much more than it helps CPUs.  Are you somehow triggering
+prefetches in your GPU code too?
+
+According to
+http://en.wikipedia.org/wiki/Comparison_of_AMD_graphics_processing_units#Southern_Islands_.28HD_7xxx.29_Series
+a 7850 has 153.6 GB/s memory bandwidth.  This is 3x faster than
+quad-channel DDR3-1600.
+
+It's a design goal of EARWORM that if the defender has GPUs available,
+he can use them just as effectively as the attacker can (even if they're
+not very effective for either side).
+
+Sure.  I think it should be a common design goal for all PHC submissions
+that whatever kind of hardware is not much more beneficial to attackers
+than it may be to defenders.
+
+When you make a password hashing scheme that targets solely memory
+bandwidth, and it is used with memory sizes (soon to be) available on GPU
+boards (or an efficient TMTO is possible), you should expect that GPUs
+will run it a few times faster than CPUs - at least in optimized
+attacks, where extra parallelism is available (many candidate passwords).
+
+What _might_ save EARWORM from GPU attacks is that it actually targets
+not only memory bandwidth, but also this 4 KB chunk size per instance -
+which might not leave enough parallelism for a GPU (even in an attack
+scenario) or might force the GPU to do the discard/refetch thing I
+mentioned above (thereby wasting some of the GPU's memory bandwidth).
+
+Yes. Thanks for giving me the necessary kick in the rear to get working
+on this again :-)
+
+You're very welcome.  I am happy that you're working on this. :-)
+
+Alexander
+

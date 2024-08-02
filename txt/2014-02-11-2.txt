@@ -1,0 +1,92 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140211070006.GA24992@openwall.com>
+Date: Tue, 11 Feb 2014 11:00:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Mon, Feb 10, 2014 at 06:03:33PM -0500, Bill Cox wrote:
+On Sun, Feb 9, 2014 at 9:46 PM, Solar Designer <solar@...nwall.comwrote:
+Do we have any 32x32->64 in Java(Script) at all, whether signed or
+unsigned?  I'm not familiar with Java(Script).
+
+Java has 64-bit integer multiply, but it's signed.  There are no
+unsigned operations in Java, only signed.
+
+If Java's multiplies are not widening, the sign bits on inputs don't
+matter, and it's up to us how to treat the output.  So I see no problem
+with this.  We can have 32x32->64 implemented using signed 64x64->64,
+where the sign bits on 64-bit inputs would be zero anyway, or we could
+have 32x32->32 or 64x64->64 treated by us as unsigned.  We'll also need
+to be doing ADDs and bitwise ops on such "signed" values.  In C,
+overflowing signed int is undefined behavior.  Is it defined in Java?
+Apparently, it is OK in Java:
+
+https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
+
+"When a mathematical operation cannot be represented using the supplied
+integer types, Java's built-in integer operators silently wrap the
+result without indicating overflow."
+
+JavaScript has only floating point, but the various JiT compilers all
+seem to have ways to infer integer operations.  I think it depends on
+the specific compiler, but my tests in Chrome's JavaScript without
+compiler-specific hints were very slow for integer operations (10X
+slower or more than C).  I have been told that with good hints, 2X is
+achievable, but I assume this is versus single-thread non-SIMD.
+
+I think fast ints in JavaScript are accessed via the typed arrays
+extension, and it appears to provide for SIMD support:
+
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
+http://www.khronos.org/registry/typedarray/specs/latest/
+
+Unfortunately, it's up to 32-bit int only (both signed and unsigned),
+and 32- and 64-bit float.
+
+JavaScript's native numeric type is 64-bit float:
+
+http://www.2ality.com/2013/10/safe-integers.html
+
+As a somewhat crazy option, we could consider 32x32->53, implementable
+via any of: 32x32->64 int, 64x64->64 int, or 64-bit float, including in
+SIMD form where available.  This could maximize the number of archs and
+languages where this can be implemented efficiently, including with
+SIMD, but it does add risk when implemented with floating-point.  Subtle
+floating-point implementation bugs resulting in small precision errors
+would be fatal.
+
+I suppose an implementation in JavaScript without typed arrays could try
+64-bit floating-point first, and upon failed login try recomputing the
+client-side portion of hashing using emulated 32-bit ints and deriving
+32x32->53 from those (less dependency on floating-point precision then).
+It'd only retry login if the recomputed hash is different from what was
+tried first.  Too crazy?  I probably wouldn't do something like that
+myself, but providing the option (masking to 53 bits) for others to do
+crazy things like that may be OK.
+
+VMULPD working on 4 packed 64-bit floats is 5 cycles latency, 1 cycle or
+better throughput (is listed at 0.63c throughput in
+GenuineIntel00306C3_Haswell*.txt) on all CPUs supporting it (both Intel
+and AMD), it seems.  Masking the right bits in inputs/outputs will add
+some overhead, though.  There's no point in using it on 32-bit inputs,
+since PMULUDQ is about as fast, is available starting with older CPUs,
+and avoids the need to mask the inputs.
+
+Just thinking aloud.
+
+I agree unsigned is prefered.  Java can add a few instructions to
+emulate unsigned if needed.
+
+I think this is not needed - we can simply treat its signed ints as
+unsigned, as long as we don't do right shift and division.
+
+The hybrid that uses 64-bit memory read/write, but only a 32x32->64
+multiplication had some extra overhead for converting from 64-bit to
+32-bit.
+
+Can you show the instructions that were generated for this?
+
+Alexander
+

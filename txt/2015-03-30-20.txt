@@ -1,0 +1,61 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150330201500.GA31125@openwall.com>
+Date: Mon, 30 Mar 2015 23:15:01 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Tue, Mar 31, 2015 at 02:08:34AM +0800, Hongjun Wu wrote:
+3)  A strong hash function is not needed for POMELO.
+     I believe that POMELO  is much stronger than any existing hash
+function for the KDF/PH applications.
+
+Most likely it is, but the confidence in it is currently lower than e.g.
+in SHA-2 family functions.
+
+(For performance reason, a strong
+hash function has to be sufficiently fast and small.  So even in a very
+strong hash function, not many operations can be used for processing a
+message block.)
+     In the POMELO report, I did not talk much about POMELO against
+preimage and collision attack. I can explain more in the updated report.
+     When I was designing POMELO v2,  only the memory hardening security
+worth my analysis.   The preimage and collision security are trivial.
+
+Of course, it's much easier (in fact, trivial as you say) to achieve
+preimage and collision resistance in PHC candidates than in fast
+cryptographic hashes.  The problem, though, is that "much easier" and
+even "trivial" do not necessarily imply "has been achieved".
+
+If you tried to, I think you would be able to deliberately construct a
+PHC candidate that would appear OK at first glance, but would not be
+preimage or/and collision resistant.  Right?  And this might happen
+unintentionally, too.
+
+Simply speaking, the state size of POMELO is too large comparing to a hash
+function, and the operations used in a cryptographic hash function
+(compression function) is much less than that used in POMELO.
+     Some example: considering SHA-512, there are only 64+64 = 128 simple
+steps to compress a 128-byte message (if we consider message expansion as
+64 steps); while in POMELO v2, there are about 3*256 = 768 steps when
+m_cost = 0, t_cost = 0.     In POMELO v2, in order to prevent password
+hashing being too fast, it is required that m_cost + t_cost >= 5.  It means
+that POMELO v2 consists of at least 32*256+512 = 8704 steps, far more than
+that in a compression function of SHA-512.
+
+Simply comparing the number of operations is not convincing enough.
+For example, what if most of those cancel out, or are reversible, or if
+there are tiny biases that add up to something significant after so many
+steps?  This is almost certainly not the case, but until shown otherwise
+the possibilities are there.
+
+A more realistic risk is issues with how the password and salt inputs
+are processed early on.  Things like the original bcrypt $2$'s trivial
+collisions for "ab" vs. "abab", etc.
+
+I think it's reasonable that people want an analysis of POMELO's basic
+security.
+
+Alexander
+

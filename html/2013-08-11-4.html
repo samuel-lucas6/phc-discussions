@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] C99 in reference implementations</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="3">[&lt;thread-prev]</a> <a href="../../../2013/08/12/5">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;005801ce96b4$bf387130$3da95390$&#64;acm.org&gt;
+Date: Sun, 11 Aug 2013 10:03:47 -0700
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] C99 in reference implementations
+
+I think I'm being misunderstood.  
+
+I personally use Clean C when I want to be producing highly-portable C code, not as a way to produce C++ code.
+
+For me, the use of casts is bearable and, in the case of PHS, I don't see it as much of a problem.
+
+Also, the signature for PHS is already fixed, so it strikes me that is a sufficient constraint (including not depending on stdint.h types at the interface).
+
+(To allow the C Language solution to be called from C++, the usual conditional use of 
+'extern "C" { ... }' wrappers is used in the PHS.h header, of course.)
+
+Finally, I am intrigued by the possibility of not requiring malloc in the first place.  It seems that one way to add to the storage cost is by using a mechanism that employs recursive descent in a way that can't be avoided in a brute-force attack and that can't be parallelized in any useful way.  That way, storage cost involves growth of the amount of stack required.  Having the recursion levels be such that they can't individually be profitably farmed out to a GPU is then the challenge.
+
+ - Dennis
+
+PS: It strikes me that requiring more storage is a complicated situation, whereas simply increasing the work factor on the time dimension seems more easily manageable as processing capabilities increase with time, especially if the PHC solution is not amenable to much parallelization.  I'm willing to implement a storage factor.  I'm just not clear this is a very good first-order provision.
+
+-----Original Message-----
+From: Rich Felker [mailto:dalias&#64;...ifal.cx] 
+Sent: Saturday, August 10, 2013 17:08
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] C99 in reference implementations
+
+On Sat, Aug 10, 2013 at 04:18:19PM -0700, Dennis E. Hamilton wrote:
+
+&gt; &lt;stdint.h&gt; is implemented in Visual Studio 2010. (There is also
+&gt; &lt;cstdint&gt;) as a counterpart in C++ which uses a proper namespace,
+&gt; etc.)
+&gt; 
+&gt; For older versions of Microsoft Visual Studio, you can find
+&gt; third-party versions on google code, github, and elsewhere. Just
+&gt; search for "stdint.h visual studio".
+&gt; 
+&gt; My recommendation would be to use Clean C (C Language that is C++
+&gt; compatible) and also limit the solution to the free-standing subset
+
+I would strongly disagree with calling this "clean C". The language
+which is the intersection of C and C++ is very ugly; in particular, it
+forces you to use casts which are anti-idiomatic in C and hide bugs or
+result in difficult to maintain code. The best example of casting the
+result of malloc, which is against best practices of:
+
+    T *p = malloc(sizeof *p); // OR
+    T *p = calloc(sizeof *p, n);
+
+C and C++ are very different language, both in terms of subtle
+semantic differences and extreme differences in which idioms
+constitute best practices versus bad coding. Compiling C code as if it
+were C++ is inviting bugs, and serves no purpose, since well-factored
+C code for use in C++ projects can simply be kept in separate C source
+files or libraries.
+
+Rich
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

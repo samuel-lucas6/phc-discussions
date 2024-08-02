@@ -1,0 +1,98 @@
+phc-discussions - Re: [PHC] babbling about trends
+
+Message-ID: <CAOLP8p7u8nXCahm6fEJm=Cdf7t5r1OQoCPd59HXS6489iWwgbg@mail.gmail.com>
+Date: Thu, 3 Apr 2014 13:50:03 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] babbling about trends
+
+On Thu, Apr 3, 2014 at 1:05 PM, Krisztián Pintér <pinterkr@...il.comwrote:
+>
+for some time we have a lot of talk around here about like GPU, cache
+lines, etc. this got me thinking. maybe we focus too much on today, as
+opposed to tomorrow?
+2a. memory
+>
+memory will no doubt be cheaper and cheaper. the question is whether
+we will use more RAM or will it level out at 16G or 64G or something.
+more precisely, what will be the price of RAM in a typical computer 10
+years from now? because if it drops significantly, we lose edge. if a
+computer of 2025 will have 64G RAM, but it will cost 1/100th of
+today's price of 8G, attackers' cost drop significantly.
+
+Interesting points.  I read this article in EETimes last week that
+argues that Intel's FinFets are not the way to go:
+
+http://www.eetimes.com/author.asp?section_id=36&doc_id=1321674
+
+The argument is that the cost per gate, at least for FinFets, is
+increasing at each new process node, rather than decreasing, and that
+this trend will continue.  That basically means Intel CPUs are built
+with technology that has already reached the end of Moore's Law, which
+argues that the *cost* for a given function (specifically RAM) would
+drop over time exponentially.  Integration densities are continuing
+for a few more generations, but our high-end CPUs may go up in cost
+over time.
+
+He also argues that plain old planar fets have a couple more
+generations where the cost per gate will continue to decrease,
+indicating RAM has not yet hit the wall.  However, without some new
+innovation, RAM stops getting cheaper per bit in just a few years.
+
+2b. architectures
+>
+this is really a mystery. my prediction is: single core performance
+will not increase that much, but parallelism will explode. i also
+envision the merger of CPU and GPU, and larger control over the low
+level parallelism (GPU-like approach wins). as well as increase in
+register space. at this point, regular crypto will be done entirely
+within the CPU, using no RAM at all. long term keys will be kept in
+registers, etc. i also forecast disappearing significance of cache, as
+regular memory access times will catch up.
+
+I think most people would agree that performance per core has already
+hit a wall, and that with increasing integration, we'll have even more
+cores, and bigger GPUs integrated into CPUs.  However, RAM latency has
+also hit a wall for similar reasons.  As we have more integration, we
+can have wider and higher performance interfaces to RAM, so bandwidth
+will continue to increase, but the time cost for a cache miss will
+flatten out.  It seems to me that we will be sticking with our L1 and
+L2 caches long term, and L3 has always been a design choice.
+
+I think the entries that hammer cache at high speed, and which can
+increase in size as the cache level they target increases, will do OK
+on long-term runtime hardening.  There doesn't seem to be much
+increase in L1 cache size anymore, but it's bandwidth keeps
+increasing, and the largest cache (either L2 or L3) still increases
+with process node.  Cache bandwidth based runtime hardening does seem
+to require unpredictable reads to defend against custom ASICs, but not
+GPUs.  The Bcrypt-style entries fitting in L1/L2 should do OK, though
+many of these cores can be integrated on an ASIC, and that integration
+level is still increasing.  The ones doing unpredictable small reads
+at high bandwidth, taking up a lot of the largest cache should do well
+long term, IMO.
+
+Algorithms dependent on external cache bandwidth limits seem
+susceptible to government-scale attackers who are about the only guys
+with enough cash to integrate the hashing cores directly onto the
+latest DRAM chips.  This would mostly eliminate the bandwidth
+limitation, for hashes that fit into one DRAM chip.
+
+conclusion
+>
+i think we need to consider such long-term arguments when judging
+proposals. we need to understand that "exhausting L2 cache this that"
+kind of arguments does not hold up very well in a potential future
+with no such thing as an L2 cache. they also does not hold up very
+well in existing systems with no L2 cache. i'm not saying these
+arguments are pointless, but their scope is limited, and this
+limitedness is to be considered.
+
+I disagree that L2 cache is going anywhere.  Unless we have a major
+technology shift, I don't see it.  CPUs, more and more over time, are
+just small blobs on chips that contain more and more cache RAM.  Small
+unpredictable L2 cache reads at high access rates should remain
+strong, given current tech trends.
+
+Bill
+

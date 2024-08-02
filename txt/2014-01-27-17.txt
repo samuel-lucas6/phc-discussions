@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Combining sliding window and bit-reversal
+
+Message-ID: <CAOLP8p6zkKF0WV2Wi2dxDQDVZeecJKJFnPL+0CYxbnNtvt9L_w@mail.gmail.com>
+Date: Mon, 27 Jan 2014 18:25:34 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Combining sliding window and bit-reversal
+
+On Mon, Jan 27, 2014 at 5:23 PM, Solar Designer <solar@...nwall.comwrote:
+On Mon, Jan 27, 2014 at 04:54:27PM -0500, Bill Cox wrote:
+>I was comparing Catena-3 graphs to Alexander's power-of-two graphs,
+>and both did well in different areas.  Then I though, how about
+>combining them?  So, instead of picking random locations within the
+>
+By "random locations", do you mean secret-dependent (leaky) or not?
+
+I meant the non-leaky kind, such as the output of a simple random
+number generator, seeded the same way each time.  I'm only doing
+hacking a pebbling algorithm testing the cache-timing resistant
+portion of an algorithm.
+
+>sliding window, I pick bit-reversal based locations.  This results in
+>the hardest to pebble DAGs so far for my pebbling algorithm.
+>
+This is good news.  I was going to try the same for the cache timing
+resistant portion of computation in escrypt.
+
+Great minds think alike :-)
+
+It is curious (and unexpected by me) that bit reversal is better than
+"random" permutation.
+
+I don't know how much to read into what the pebbling algorithm is
+telling me.  It does not do as good of a job as I can do by hand.  It
+does a good job of pebbling anything that can be pebbled without
+recalculations in most cases, but it gets confused when doing tons of
+recalculations.  I now "fix" pebbles at fixed distances in that case,
+and it helps.
+
+That said, the difference I'm seeing between bit-reversal and
+pseudo-random is pretty close to 2X.  Catena-3 with it's simple first
+row was not doing as well at the 1/8th defense as your sliding-window,
+though it has a nice sharp edge at the 1/4 point.  When I put a
+sub-catena-7 DAG in the first row, it does about as well as your
+sliding window at the 1/8 memory TMTO point.
+
+predict./pebble -p 81 -m 512 -s 14 sliding_window
+========== Testing sliding_window
+Total pebbles: 81 out of 512 (15.8%)
+Recalculation penalty is 100.1426X
+Mid-cut size: 125 (24.4%)
+
+predict./pebble -p 81 -m 512 -s 16 catena
+========= Testing catena
+Total pebbles: 81 out of 512 (15.8%)
+Recalculation penalty is 10.7422X
+Mid-cut size: 128 (25.0%)
+
+Here's Catena enhanced with the subgraph in the 1st row:
+
+predict./pebble -r -p 81 -m 512 -s 16 catena
+========= Testing catena
+Total pebbles: 81 out of 512 (15.8%)
+Recalculation penalty is 216.3555X
+Mid-cut size: 128 (25.0%)
+
+Here's the combined sliding window and bit-reversal:
+
+predict./pebble -r -p 81 -m 512 -s 16 sliding_reverse
+========= Testing sliding_reverse
+Total pebbles: 81 out of 512 (15.8%)
+Recalculation penalty is 355.5449X
+Mid-cut size: 135 (26.4%)
+
+Bill
+

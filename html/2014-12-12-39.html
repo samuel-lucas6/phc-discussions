@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Some KDF stumbling blocks, plus Common "memory-hard" approaches and
+ amortized attack costs.</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="38">[&lt;prev]</a> <a href="../../../2014/12/13/1">[next&gt;]</a> <a href="../../../2014/12/13/2">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAAS2fgRDVsnzCp1n8OD69ONuREN7E2DqWH8TGboHjkKK_Z8p1Q&#64;mail.gmail.com&gt;
+Date: Fri, 12 Dec 2014 22:38:05 +0000
+From: Gregory Maxwell &lt;gmaxwell&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Some KDF stumbling blocks, plus Common "memory-hard" approaches and
+ amortized attack costs.
+
+Greetings,
+
+I'm writing the group as a developer of the Bitcoin reference
+software, and editor of the Bitcoin Improvement Proposals (BIP)
+process, among other projects, where I am a consumer of KDF functions
+on more or less on behalf of hundreds of thousands of users.
+While opinions about Bitcoin (and it's ecosystem) are justifiably
+mixed-- it's experimental technology after all-- it's hard to deny
+that Bitcoin has upped the stakes for security, resulting in real
+consequences for weaker constructions far more often that found
+elsewhere.
+
+Normally my first approach to password security in this space is to
+advise against depending on them, or using them at all:   Users are
+remarkably poor sources of entropy and if they do manage a secure
+password human memory is fallible enough that they'll forget it,
+resulting in loss or requiring a risky recovery mechanism. All that
+said, reality intervenes and sometimes a password is the best tool
+available.
+
+There a couple of reoccurring issues that have arisen that inhibit the
+use of good KDFs (or result in otherwise acceptable KDFs being
+deployed with snake-oil grade parameters like ten iterations of
+sha2-pbkdf2).
+
+One is that developers will say they are using function-X but then do
+so with parameters which make its properties completely meaningless.
+While flexibility is important, I would recommend requiring minimum
+parameters which actually would be expected to deliver benefits over
+using plain sha2-pbkdf2 for a similar amount of time; so that bad
+implementations have a little less ability to trade on a good
+function's name. Likewise, the use of per-user salt is frequently
+omitted, making pre-computation attacks highly effective and giving a
+massive multi-target gain.
+
+Another is that (again, for better or worse), many developers are
+targeting inefficient execution environments:  Javascript in web
+browsers, python running on rasberrypi, etc.  In one benchmark a
+carefully optimized JS sha256 based iterated KDF was found to run
+approximately 2000 times slower than a moderately optimized C
+implementation on the same host.  With this kind of gap no KDF with
+acceptable performance to the user is likely to present a meaningful
+hurdle to attackers. It seems that regardless of the function's
+specific construction far too much attacker-gap will be lost if a
+native implementation is not available in these environments.  One of
+the benefits of this competition may be justifying a native
+implementation of a function, but there may be specific requirements
+which could preclude it which should be sorted out in advance. I don't
+work for a browser vendor (anymore) but e.g. I imagine that no one
+would want a function that would allow arbitrary web-pages to allocate
+two gigabytes of ram. If tweaks are required to actually get the
+functions deployed, they should happen.
+
+A third is that some applications must support small memory embedded
+devices. For example, hardware wallets with 128kbytes ram. Cost, power
+usage, durability against sidechannels, etc. all contribute to memory
+limitations on these devices. Additional ram is not an option, the
+option is to instead use a malware infested desktop PC or smartphone
+or not use a KDF.
+
+These devices are never themselves going to support KDFs with compute
+or memory hardness beyond snake-oil levels.  I am saddened that none
+of the proposals supported delegation scheme with
+information-theoretic security ( which are possible,
+<a href="https://bitcointalk.org/index.php?topic=311000.0" rel="nofollow">https://bitcointalk.org/index.php?topic=311000.0</a> ) but not surprised
+since I was unable to come up for a construction for one which
+achieved the memory hardness properties which are currently
+fashionable for KDFs.   Even lacking that, any of these devices will
+need a delegation scheme of some kind. If one isn't supported they
+will either reject the strong KDF or achieve one informally via
+pre-processing.  e.g. H1||H2 = HMAC(salt,password)   Key =
+H(StrongKDF(H1,user)||H2) .   It would be be preferable if such
+delegation were specified explicitly rather than applications rolling
+their own incompatible and potentially less secure versions.
+
+It's also the case that some protocols may need to fix parameters due
+to a lack of a place to store and provide them.  Where that happens,
+the parameters often get set at fairly minimal levels, these schemes
+also get deployed without salting making matters worse. Delegation
+allows for stronger parameters to be set, since users on the fringe
+could be accommodated via delegation.
+
+I am pleased to see that the recent finalist email had mentioned
+side-channel attacks as a consideration. Some functions in this space
+have very strong data dependent memory accesses, which could defeat
+their security even compared to a basic non-iterated hash, e.g. when
+coupled with zero knowledge authentication schemes.
+
+One of the most difficult elements for me in considering the popular
+memory hard functions is that the security argument given for their
+advantage over functions like PBKDF2 is incomplete:  E.g. C.
+Percival's venerable scrypt paper gives an attack model centered on
+the _manufacturing_ costs of 130nm silicon (which is massively
+outdated but a useful order of magnitude for relative comparison
+purposes) and ignores operating costs completely.  We know from very
+considerable experience (the Bitcoin network has provably performed on
+the order of 2^82 executions of sha256) that compute intensive
+hardware build on modern processes (e.g. 28nm) cost more in operating
+energy than they do in manufacture after only on the order of 60 days
+of use, these figures are robust and appear to apply to COTS hardware
+like GPUs too.   An effect of memory hard functions constructed with
+conventional hardware is that they shift costs from energy into gate
+count.  This will have the effect of increasing the amortization
+advantage for an attacker:
+
+An attacker who is attacking SHA256 must continually burn energy as
+much as he attacks, keeping his machine going for years at a time from
+target to target does not reduce his costs per attack substantially.
+An attacker attacking a memory hard function which packed all of its
+costs into the upfront manufacturer would see substantial reductions
+in their cost if they were able to continue applying their machine
+again and again.  This is functionally similar to pre-computation
+attacks on unsalted password hashes which have been devastatingly
+effective: The attacker sinks a large upfront cost which is
+independent of the number of users they will attack and then
+additional users have a low marginal cost.
+
+I have not yet had a chance to review all the finalists, but I
+previously checked several of the candidates and could not find a more
+holistic cost argument about costs which included operating costs. (If
+one exists, please point me to it!)
+
+Another area of concern is that C-RAM
+(<a href="http://www.eecg.toronto.edu/~dunc/cram/" rel="nofollow">http://www.eecg.toronto.edu/~dunc/cram/</a>) or through-silicon-vias may
+yield considerable custom hardware gains for these memory intensive
+functions, while basic compute grinding circuits are generally much
+better studied and the optimization space is more clear. Many memory
+hard functions also leave significant portions of the user's expensive
+computer idle, leaving attacker-cost on the floor which could
+otherwise be used. Others have mentioned botnets.
+
+When considering the potential of state level attackers  (consider: A
+_single_ F-18 fighter costs around $30 million dollars) concerns
+around amortization and architectural gap reduction seem pretty
+material. (Keep in mind that there are publicly known state operated
+general purpose computers with over 1 petabyte dram).
+
+A simple PBKDF2 has a strong argument for the minimum energy cost to
+attack it, not just on a desktop but for the best possible attacker
+barring any computer engineering or mathematical breakthrough.
+
+I think it's likely the case that these concerns I've raised are real
+but do not offset the advantages but without a persuasive analysis on
+the lower bound costs that considers these effects if the user
+tolerance allows enough iterations of a basic sha2-pbkdf2 to make the
+cost high enough for the security objective of the application then it
+would currently seem unwise to me to use another function where the
+cost is less easily established and may be orders of magnitude lower
+than expected (especially against attackers with hundreds of millions
+of dollars of paid-off cracking hardware). E.g. a $1bn defence is
+enough and can be achieved with 99.9% certainty with construction A,
+another construction with an expected $10bn security level but a 5%
+chance of &lt;$500 million security against an amortized attacker  would
+not be a good choice.
+
+An argument that a new KDF was better on conventional end-user
+hardware even if the attacker's hardware were free would, if possible,
+be a useful tool in establishing that KDF as a dominant choice.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

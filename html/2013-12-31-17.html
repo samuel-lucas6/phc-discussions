@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Initial hashing function. Feedback welcome</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="16">[&lt;prev]</a> <a href="../../../2014/01/01/1">[next&gt;]</a> <a href="13">[&lt;thread-prev]</a> <a href="../../../2014/01/02/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;op.w8zcittsyldrnw&#64;laptop-air.hsd1.ca.comcast.net&gt;
+Date: Tue, 31 Dec 2013 15:21:55 -0800
+From: "Jeremy Spilman" &lt;jeremy&#64;...link.co&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Initial hashing function. Feedback welcome
+
+If you're willing to make a trivial modification the PBKDF2, you don't  
+have to keep the password around past even the first hash...
+
+PBKDF2:
+      result = step = HMAC(Password, Salt || 1)
+      for 2..n
+         result ^= step = HMAC(Password, step)
+
+Modified:
+      result = HMAC(Password, Salt)
+      for 2..n
+         result = HMAC(Salt, result)
+
+Or if for some reason you really want to XOR 'step' into 'result' (in  
+order to prevent hypothetical short cycles, which SHA256 protects against  
+anyway)...
+
+      result = step = HMAC(Password, Salt)
+      for 2..n
+         result ^= step = HMAC(Salt, step)
+
+
+On Tue, 31 Dec 2013 08:48:39 -0800, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+
+&gt; On Mon, Dec 30, 2013 at 8:42 PM, Solar Designer &lt;solar&#64;...nwall.com&gt;  
+&gt; wrote:
+&gt;&gt;&gt; - 2048 rounds of PBKDF2_SHA256 are used at the start to generate an
+&gt;&gt;&gt; intermediate derived key.
+&gt;&gt;
+&gt;&gt; I dislike this.  It's very wasteful in use cases where our total running
+&gt;&gt; time is very limited.  This may be all running time we can afford (if at
+&gt;&gt; all), not leaving any time for the memory-hard portion.
+&gt;
+&gt; I made the number of SHA-256 rounds selectable, from 1 up.
+&gt;
+&gt; I don't think I described the purpose of the sha256 rounds very well.   
+&gt; 2048 rounds takes 2.5ms on my linux box using scrypte's sha256.c for  
+&gt; PBKDF2-&gt;SHA256 key derivation.  If I do this and then clear the  
+&gt; password, the plaintext password is only there for 2.5ms.
+&gt;
+&gt; After that, I do a huge memory hash, and I feel it is common for this  
+&gt; sort of memory hog of a process  get swapped out (if mlock is disabled  
+&gt; or not &gt;working or available).  Maybe other processes will be swapping  
+&gt; and the whole thing is so slow that the user closes his laptop, and  
+&gt; hibernation writes &gt;out the contents of RAM to SSD, where files aren't  
+&gt; even erased if you overwrite them with 0's.  By doing that 2.5ms of key  
+&gt; derivation as a pre-process, &gt;which is tiny compared to the 1s-ish  
+&gt; desired for a strong KDF, we make it harder for an attacker to discover  
+&gt; the password.  Even if he extracts the &gt;intermediate derived key, he'll  
+&gt; need a decent graphics card to get enough speed to brute-force attack a  
+&gt; password which is protected with 2048 rounds &gt;of SHA256.  With custom  
+&gt; hardware, the 2048 rounds provides essentially zero protection, but how  
+&gt; many password crackers out there have such &gt;custom hardware?  Surely the  
+&gt; NSA, but hopefully not many scammers.  My personal preference would be  
+&gt; to devote about 1% of the key hashing time &gt;to this task, which on my  
+&gt; machine would be 8192 rounds.
+&gt;
+&gt; There's a lot of talk about not writing data derived from the password  
+&gt; data to memory to avoid such an attack, but I've convinced myself that  
+&gt; we have &gt;to write password-derived data to memory to build a memory-hard  
+&gt; KDF, There seems to be no way around it.  I prefer for that data to be  
+&gt; somewhat &gt;safe - not NSA safe, but average-joe cracker safe.
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

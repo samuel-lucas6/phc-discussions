@@ -1,0 +1,87 @@
+phc-discussions - Re: [PHC] A review per day - Makwa
+
+Message-ID: <20140905203703.GA29183@bolet.org>
+Date: Fri, 5 Sep 2014 22:37:03 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A review per day - Makwa
+
+On Fri, Sep 05, 2014 at 01:40:45PM -0400, Bill Cox wrote:
+The concern I am working through right now is trying to convince
+myself that Makwa will have good long cycle lengths when squaring over
+and over, with effectively zero chance of getting a weak cycle where
+finding the square root is many times easier.
+
+If you can find small cycles then you can factor the modulus.
+
+Indeed, choose a random x modulo N. Probability that x is a quadratic
+residue modulo p is about 1/2. Probability that x is a quadratic residue
+modulo q is also about 1/2. You can compute the Jacobi symbol of x relatively
+to n, which will be 1 or -1; the computation is easy (see the Wikipedia
+page: http://en.wikipedia.org/wiki/Jacobi_symbol ). We are here
+interested in values x such that the Jacobi symbol (x|n) = -1: these
+are exactly the values which are a square modulo p but not modulo q,
+or are a square modulo q but not modulo p. Probability of a random x to
+be such a value is about 1/2, so finding one is easy.
+
+Suppose that such a x generates a small cycle. You can them compute
+x^2, x^4, x^8... and so on, until you complete the cycle: you end up
+with a value y which is such that y^2 = x^2 modulo N. However, y is
+a quadratic residue, but x is not, so y != x; and since (x|n) = -1,
+x cannot be equal to -y either. The consequence is that y-x is a
+multiple of p and not q, or of q and not p. A simple GCD computation
+between y-x and N reveals p or q, and N is factored.
+
+Therefore, if the probability of hitting a small cycle is not
+negligible, then you have an efficient factoring algorithm. Since
+integer factorization is hard for 2048-bit RSA-like moduli, small cycles
+will not be reachable in practice, even if you try hard.
+
+
+
+The notion of "safe prime" has been coined at various times, not always
+for the same values. Usually, a prime p is called "safe" if (p-1)/2 is
+also prime (note that it is not exactly the same meaning as the one you
+use). That specific notion of safe prime was about resistance to a
+factorization algorithm known as the "p-1 method", which works for
+integers N = pq where p-1 is the product of only small integers (this is
+called a "smooth integer"); in that sense, selecting your prime factors
+(for RSA key pair generation) to be "safe" (in that sense) guaranteed
+that the "p-1 method" was not applicable.
+
+However, this was overkill. The probability that p-1 was sufficiently
+smooth for a random prime p is extremely small, far into the "utterly
+negligible" area. For a 1000-bit random integer x, the average size of
+the largest prime factor of x is about 624 bits (this is linked to the
+Golomb-Dickman constant). I am too lazy and rushed right now to
+compute the probability that, by generating random 1000-bit integers,
+you hit a value whose largest prime factor is less than 2^80, but it
+is negligible (less than 1 in 2^200).
+
+In the case of short cycles for Makwa, similar results hold. I don't
+have time right now to quantify it (I'll try later this week-end), but
+probability of finding a small cycle will be negligible (which explains
+why it does not work in practice as a factorization algorithm).
+
+
+Yet another way to see it is the following: if you hit a short cycle,
+short enough to be walked extensively, then you are breaking Rabin
+encryption.
+
+
+
+To sum up, trying to generate p and q factors with special properties ot
+ensure a lack of short cycles is mostly wasted CPU, since purely random
+primes will already ensure it with overwhelming probability. You _can_
+apply extra checks or insist on "safe prime" for some notion of "safe",
+but the benefits will be only psychological, not cryptographic: this
+won't improve security in any tangible way, but it may help you sleep at
+night.
+
+Since I personally don't have qualms with regards to short cycles, I did
+not enforced any such "safe primes" in the modulus generation tool
+provided with the Makwa reference code.
+
+
+	--Thomas Pornin
+

@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Re: Lyra2 initial review</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="8">[&lt;thread-prev]</a> <a href="../../../2014/04/17/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;534F0E5B.3070704&#64;larc.usp.br&gt;
+Date: Wed, 16 Apr 2014 20:12:27 -0300
+From: Marcos Simplicio &lt;mjunior&#64;...c.usp.br&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Re: Lyra2 initial review
+
+OK, I was going home after the last e-mail, but I have to avoid
+misunderstandings here: the SSE code is actually Samuel Neves's, so he
+is the real mage behind internal optimizations (we are far from being
+the most SSE/AVX-savy team in PHC...)
+
+As for Blake2b's internals, we like to think that what we lack in
+SSE/AVX expertise we have in cryptography (or at least in the ability to
+understand other people's work on cryptography ;-) ). In summary:
+sponges need a good permutation function "f" at their core, and our
+review of the literature (see section 4.4) showed that Blake2b's
+function is a very good example of such functions. Hence, at first sight
+it is natural to plug one thing into the other. Then, all we did was to
+keep the capacity (the last 256 bits) hidden, which is is essential for
+the security proofs of sponges. The reduced number of rounds in the
+algorithm's core is actually J. Daemen and V. Rijmen's "Alred" idea with
+which we worked in the past. As for the question "is it secure?", as a
+crypto-guy I cannot say for sure without independent cryptanalysis, but
+this combination of "Sponge + Blake2b's permutation + Alred" does seem
+to me as something very promising.
+
+Marcos.
+
+PS.: Blake2b's team is aware of our work and did not complain (at least
+yet...) about this construction, so it seems like a nice fit :)
+
+
+
+On 16-Apr-14 19:09, Bill Cox wrote:
+&gt; On Wed, Apr 16, 2014 at 2:32 PM, Bill Cox &lt;waywardgeek&#64;...il.com&gt; wrote:
+&gt; 
+&gt;&gt; I think there may be a bug in sse/Sponge.c.  If not, at a comment
+&gt;&gt; explaining how this works is in order.  Here's the Blake2b implementation:
+&gt;&gt;
+&gt;&gt; static inline void blake2bLyraSSE(__m128i *v){
+&gt;&gt;     __m128i t0, t1;
+&gt;&gt;
+&gt;&gt;     ROUND(0);
+&gt;&gt;     ROUND(1);
+&gt;&gt;     ROUND(2);
+&gt;&gt;     ROUND(3);
+&gt;&gt;     ROUND(4);
+&gt;&gt;     ROUND(5);
+&gt;&gt;     ROUND(6);
+&gt;&gt;     ROUND(7);
+&gt;&gt;     ROUND(8);
+&gt;&gt;     ROUND(9);
+&gt;&gt;     ROUND(10);
+&gt;&gt;     ROUND(11);
+&gt;&gt; }
+&gt;&gt;
+&gt;&gt; Here's the ROUND definition:
+&gt;&gt;
+&gt;&gt; #define ROUND(r) \
+&gt;&gt;   G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+&gt;&gt;   G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+&gt;&gt;   DIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+&gt;&gt;   G1(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+&gt;&gt;   G2(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]); \
+&gt;&gt;   UNDIAGONALIZE(v[0],v[2],v[4],v[6],v[1],v[3],v[5],v[7]);
+&gt;&gt;     ROUND_LYRA(11);
+&gt;&gt; }
+&gt;&gt;
+&gt;&gt; Macros can be really weird, but it looks to me like ROUND(r) is not a
+&gt;&gt; function of r.  This might cause the SSE version to have an insecure PRK.
+&gt;&gt;  However, it generates the same hash result as the reference version.  Is
+&gt;&gt; this macro really doing a proper Blake2b round, or is this some altered
+&gt;&gt; version?
+&gt;&gt;
+&gt;&gt;
+&gt; I dug into this.  It's cool, and shows that the Lyra2 team:
+&gt; a) Isn't afraid to muck with the internals of Blake2b
+&gt; b) Knows a lot more about Blake2b than me!
+&gt; 
+&gt; The macro ROUND does not in Lyra2's version depend on r.  This corresponds
+&gt; to running Blake2b while compressing all 0's.  When compressing 0's, all
+&gt; the Blake2b rounds do the same thing, so you can simplify the code and get
+&gt; rid of the r variable.
+&gt; 
+&gt; I was concerned that squeeze might reveal all the state bits, making it
+&gt; simple for an attacker to predict future bits as more are squeezed.
+&gt;  Lyra2's sponge has a 1024 bit state, the same that is hashed in rounds of
+&gt; Blake2b.  Lyra2 squeezes only 768 bits before applying 12 rounds of
+&gt; Blake2b's compression G function with 0's for input.  Thus, an attacker is
+&gt; missing 256 bits of the internal state each time, and likely cannot make
+&gt; any predictions about what will come out to the sponge next.  I was
+&gt; wondering why Lyra2's block size is 96 bytes while Blake2b hashes 128 bytes
+&gt; of state in it's rounds.  I think this may be the reason.
+&gt; 
+&gt; Lyra2's version of Blake2b skips the initialization from IV and two
+&gt; variables called f and t.  It also skips compressing the state down to 512
+&gt; bits at the end by XORing the upper half onto the lower half.  I assume
+&gt; they understand what's going on in Blake2b well enough to make these
+&gt; choices confidently.  I'll need to have the rationale explained to me.
+&gt; 
+&gt; Bill
+&gt; 
+
+---
+This email is free from viruses and malware because avast! Antivirus protection is active.
+<a href="http://www.avast.com" rel="nofollow">http://www.avast.com</a>
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

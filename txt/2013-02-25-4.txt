@@ -1,0 +1,67 @@
+phc-discussions - Re: [PHC] Any "large verifiers" on the panel?
+
+Message-ID: <CAEw2jfyVt52wNjUszf=EB0o2KySEjUx0=2MyuyqzcE8XnNkD4g@mail.gmail.com>
+Date: Mon, 25 Feb 2013 17:21:41 +0100
+From: Patrick Mylund Nielsen <patrick@...rickmylund.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Cc: Marsh Ray <maray@...rosoft.com>, Jeffrey Goldberg <Jeffrey@...dmark.org>
+Subject: Re: [PHC] Any "large verifiers" on the panel?
+
+On Mon, Feb 25, 2013 at 2:34 PM, <Stefan.Lucks@...-weimar.dewrote:
+
+On Sun, 17 Feb 2013, Marsh Ray wrote:
+>
+ While I'm not at liberty to disclose the exact number of password
+>authentications we process, I can say that it really comes down to deciding
+>how much CPU load you're willing to put on the system. Many systems, you
+>specify a password only once to login, and everything after that is done
+>with cookies. So even a very high work factor setting may not represent a
+>noticeable hit on overall server load.
+>>
+>
+Ouch! So I log in once at your site (*), and soon close the connection.
+But, since one or more cookies are left on my computer, any trojan that
+later takes over my computer will be able to log in at your site, again?
+>
+That is really poor security, and a good reason to delete cookies very
+frequently, I think!
+>
+>
+Yeah, but this is not avoidable if you have any kind of session mechanism,
+and whether it uses a memory-hard function or not. You can't protect
+against somebody taking over a user's machine. You can protect against
+somebody taking over a server and trivially gathering all its users'
+passwords.
+
+
+>
+ Another anecdote comes from Moxie Marlinspike when he was at Twitter. We
+>were discussing memory-hard password hashing functions, and his response
+>was to the effect of "yeah we would definitely not be able to handle near
+>as many simultaneous auths as we do now if the shared memory bus of the
+>multicore server were constantly saturated."
+>>
+>
+Indeed, that is an issue for memory-hard password hashing functions.(**)
+>
+Actually, the current way of applying a password-hashing function by the
+server is sub-optimal, at least.
+>
+Ideally, given a (slow, memory-hard, or whatver) function F and a
+cryptographic hash function H, the password hash should be X :=
+H(F(password, salt, ...)). Now, the client could compute Y := F(password,
+salt, ...), and the server would only have to compute H(Y). So the server
+would neither need many CPU cycles, nor much memory -- and still, password,
+cracking would not get any simpler.
+>
+The only assumption is that F cannot be so slow or memory-demanding that
+it would not run reasonably fast on the client at hand.
+>
+>
+Yes, client would be great, but as it is, most applications (i.e. web
+applications) don't have a way to run an efficient KDF client-side.
+Hopefully some subset of the functions PHC selects could be added to e.g.
+the WebCrypto API.
+
+
+

@@ -1,0 +1,78 @@
+phc-discussions - Re: [PHC] simplifying yescrypt
+
+Message-ID: <20150130234653.GA20846@openwall.com>
+Date: Sat, 31 Jan 2015 02:46:53 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] simplifying yescrypt
+
+On Tue, Oct 21, 2014 at 06:04:40AM +0400, Solar Designer wrote:
+More detail on one of the possible changes:
+
+On Tue, Oct 21, 2014 at 05:58:37AM +0400, Solar Designer wrote:
+- Drop support for ROM access frequency mask.  In practice, this will
+mean no ROM-on-SSD support (only ROM-in-RAM will be supported).  The
+reason why I am considering dropping this is that in most cases where I
+would have recommended use of ROM-on-SSD I would _also_ recommend
+simultaneous use of ROM-in-RAM, and then it would need to be two ROMs,
+with different access frequency, resulting in even greater complexity.
+Perhaps just one mask (only for the ROM-on-SSD) would be enough even in
+that two-ROMs case, though.
+
+My options are:
+
+1. Leave things as-is, meaning that "large" yescrypt users (on dedicated
+authentication servers) will have to choose either ROM-in-RAM or
+ROM-on-SSD, but not both at once (well, except possibly by chaining two
+invocations of yescrypt, which is a suboptimal hack).
+
+2. Add support for two ROMs at once.
+
+3. Drop support for controlling ROM access frequency (and thus for
+ROM-on-SSD).
+
+I implemented option #3 in the yescrypt tweaks I submitted yesterday.
+
+(I am likely to submit another tweaked revision before the deadline, so
+probably only that later one will be published, unless something
+prevents me from submitting it in time.  But this change will stay
+either way.)
+
+Obviously, only #3 fits the topic of this posting, but I'd like this
+community's opinions on which option is best.  Technically, I'd be able
+to introduce #1 or #2 in a superset of yescrypt later even if I go with
+#3 now, so the question may be whether we want ROM-on-SSD considered a
+supported feature in PHC context (in the PHC candidate or in a currently
+existing superset of it).
+
+For ROM-in-RAM, there's normally no reason to use a mask other than 1,
+which means that 1/2 of reads (and obviously none of the writes) are
+from ROM.
+
+BTW, the current API is defined to be extensible to multiple ROMs:
+
+typedef yescrypt_region_t yescrypt_shared1_t;
+typedef struct {
+	yescrypt_shared1_t shared1;
+	uint32_t mask1;
+} yescrypt_shared_t;
+
+As you can see, it mostly already has the complexity that would be
+associated with two ROMs.  yescrypt_shared_t struct would become e.g.:
+
+typedef struct {
+	yescrypt_shared1_t shared1, shared2;
+	uint32_t mask1;
+} yescrypt_shared_t;
+
+On the other hand, removing the mask (and thus keeping just ROM-in-RAM)
+would allow for:
+
+typedef yescrypt_region_t yescrypt_shared_t;
+
+and the extra struct would be gone.
+
+I removed the extra struct as described above.
+
+Alexander
+

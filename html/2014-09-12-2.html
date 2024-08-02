@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Schvrch is broken</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;1317715678.125583.1410494654142.open-xchange&#64;oxuslxltgw06.lxa.perfora.net&gt;
+Date: Thu, 11 Sep 2014 23:04:14 -0500 (CDT)
+From: Steve Thomas &lt;steve&#64;...tu.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Schvrch is broken
+
+Huh so there's a lot of reading I need to do on this list. I think Bill is
+writing a novel. Which is awesome I'm not complaining. :( Bill found the
+constant time attack when m_cost = 0 too. Dang he found the bug on line 107 too.
+OK done reading, this is a new attack.
+
+
+Bug in the code line 107:
+state[j] = memstate[j * (i + 1)];
+should be
+state[j] ^= memstate[j * (i + 1)];
+
+-----
+
+Bill talked about the constant time attack well here it is, using t_cost =
+100000 and m_cost = 0:
+PHS(out, sizeof(out), "password", 8, "salt", 4, 100000, 0);
+Took 202.904215 ms:
+d3e788856af8b578 9ce287e7d1df9a07 3eedf954dc8b51f4 19a08fc1c71b584a
+
+PHS_Fast(out, sizeof(out), "password", 8, "salt", 4, 100000, 0);
+Took 0.011470 ms:
+d3e788856af8b578 9ce287e7d1df9a07 c11206ab2374ae0b e65f703e38e4a7b5
+2c18777a95074a87 631d78182e2065f8 3eedf954dc8b51f4 19a08fc1c71b584a (bit
+inverted)
+
+-----
+
+Using t_cost = 100000 and m_cost = 50000, this should need 12,800,256 integers
+but only 4,790,112 (37.42%) are accessed (on this line "state[j] ^= memstate[j *
+(i + 1)];"). Since stir() is sequential and not memory hard, we don't even need
+to waste memory for the integers that are not accessed. Bill talked about what
+is needed to do that so I'll skip to the fun part.
+
+-----
+
+The way stir(), revolve(), and evolve() work you don't need to use more than a
+constant amount of memory for memstate and it takes a lot less time. You just
+need to run stir(memstate, memcost, rounds) skipping revolve() and evolve().
+Xoring the required elements from memstate (as they are generated) and you'll
+have the resulting hash, but you won't know what parts of the hash are bit
+inverted. So you need to:
+{a, b, c, d} = targetHash
+{a2, b2, c2, d2} = calculatedHash
+if ((a == a2 || a == ~a2) &amp;&amp;
+    (b == b2 || b == ~b2) &amp;&amp;
+    (c == c2 || c == ~c2) &amp;&amp;
+    (d == d2 || d == ~d2))
+
+For the advanced attackers you can xor parts of the hash together. This cancels
+out elements from memstate and reduces the highest element used from memstate.
+So you can exit stir() even sooner.
+
+For m_cost = 5000:
+The current version (with the bug on line 107 "state[j] = memstate[j * (i +
+1)];"):
+hash[0]:           250 elements, highest is 1275511
+hash[1]:           249 elements, highest is 1275511
+hash[2]:           249 elements, highest is 1275511
+hash[3]:           248 elements, highest is 1275511
+hash[0] ^ hash[1]:  13 elements, highest is  105277
+hash[0] ^ hash[2]:   3 elements, highest is  110278
+hash[0] ^ hash[3]:  14 elements, highest is  115279
+hash[1] ^ hash[2]:  14 elements, highest is  110278
+hash[1] ^ hash[3]:   3 elements, highest is  115279
+hash[2] ^ hash[3]:  15 elements, highest is  115279
+
+hash[0] ^ hash[1] is the best one at 105277 (exits stir() after 8.22% done and
+only needs 0.0010% of the elements)
+Here's some of the data since these are small:
+hash[0] ^ hash[1] =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[70014]^m[75015]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]
+hash[0] ^ hash[2] = m[30006]^m[70014]^m[110022]
+hash[0] ^ hash[3] =
+[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[35007]^m[70014]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]^m[115023]
+
+
+if you make these changes to PHS()
+...
+line 102: stir(memstate, memcost, rounds);
+
+uint64_t *m = memstate;
+uint64_t x =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[70014]^m[75015]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021];
+printf("hash[0] ^ hash[1] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[1] = %016" PRIx64 " (bit inverted)\n",   ~x);
+x = m[30006]^m[70014]^m[110022];
+printf("hash[0] ^ hash[2] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[2] = %016" PRIx64 " (bit inverted)\n",   ~x);
+x =
+m[5001]^m[10002]^m[15003]^m[20004]^m[25005]^m[35007]^m[70014]^m[80016]^m[85017]^m[90018]^m[95019]^m[100020]^m[105021]^m[115023];
+printf("hash[0] ^ hash[3] = %016" PRIx64 "\n",                   x);
+printf("hash[0] ^ hash[3] = %016" PRIx64 " (bit inverted)\n\n", ~x);
+
+line 104: for(i = 0; i &lt; (memcost / statelen); i++)
+...
+
+...
+line 113: evolve(state, statelen);
+printf("hash[0] ^ hash[1] = %016" PRIx64 "\n", state[0] ^ state[1]);
+printf("hash[0] ^ hash[2] = %016" PRIx64 "\n", state[0] ^ state[2]);
+printf("hash[0] ^ hash[3] = %016" PRIx64 "\n", state[0] ^ state[3]);
+line 114: memmove(out, state, outlen);
+...
+
+and run "PHS(out, sizeof(out), "password", 8, "salt", 4, 100000, 5000);" you'll
+get
+hash[0] ^ hash[1] = 1fed1ca1d9a16bba
+hash[0] ^ hash[1] = e012e35e265e9445 (bit inverted)
+hash[0] ^ hash[2] = 5e22f6055939feb8
+hash[0] ^ hash[2] = a1dd09faa6c60147 (bit inverted)
+hash[0] ^ hash[3] = 24fe13471b920ba1
+hash[0] ^ hash[3] = db01ecb8e46df45e (bit inverted)
+
+hash[0] ^ hash[1] = e012e35e265e9445
+hash[0] ^ hash[2] = 5e22f6055939feb8
+hash[0] ^ hash[3] = db01ecb8e46df45e
+
+
+
+The fixed version (without the bug on line 107 "state[j] ^= memstate[j * (i +
+1)];"):
+hash[0]:           234641 elements, highest is 1275511
+hash[1]:           235722 elements, highest is 1275511
+hash[2]:           233827 elements, highest is 1275511
+hash[3]:           234609 elements, highest is 1275511
+hash[0] ^ hash[1]: 233315 elements, highest is 1275256
+hash[0] ^ hash[2]: 230860 elements, highest is 1275256
+hash[0] ^ hash[3]: 233506 elements, highest is 1275001
+hash[1] ^ hash[2]: 229977 elements, highest is 1245676
+hash[1] ^ hash[3]: 232139 elements, highest is 1275256
+hash[2] ^ hash[3]: 232134 elements, highest is 1275256
+
+hash[1] ^ hash[2] is the best one at 1245676 (exits stir() after 97.30% done and
+only needs 17.96% of the elements)
+
+If you want the code I used to generate this I can post it but it's messy :).
+The code requires four times the memory requirement to calculate the hash
+normally, but this only needs to run once for each m_cost.
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

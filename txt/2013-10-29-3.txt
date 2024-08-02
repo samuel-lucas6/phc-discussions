@@ -1,0 +1,82 @@
+phc-discussions - Re: [PHC] Post-hoc Strengthening
+
+Message-ID: <op.w5o9ofzwyldrnw@laptop-air>
+Date: Mon, 28 Oct 2013 22:03:41 -0700
+From: "Jeremy Spilman" <jeremy@...link.co>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Post-hoc Strengthening
+
+Sorry, my pseudo-code for PBKDF2 should have read:
+
+   result = step = HMAC(Password, Salt || 1)
+   for 2..n
+     result ^= step = HMAC(Password, step)
+
+I implemented and checked against RFC6070 vectors to be sure this time ;-)
+
+That means you CAN'T increase iteration count without starting over, even
+if you know the password, since 'step' is discarded.
+
+The most easily 'extendable' version is the same...
+
+    result = HMAC(Password, Salt || 1)
+    for 2..n
+       result ^= HMAC(Salt, result)
+
+Again, I can't see how it makes a difference in terms of security to hash  
+before or
+after the XOR, or to iterate HMAC using salt instead of password -- I'd  
+love to hear
+if/why I'm wrong on that.
+
+Thanks,
+Jeremy
+
+On Mon, 28 Oct 2013 17:34:19 -0700, Jeremy Spilman <jeremy@...link.co 
+wrote:
+
+You don't *need* the original password in order to strengthen a hash, but
+it tends to get overcomplicated if you try to strengthen a hash value
+without it.
+>
+But it doesn't need to be this way... Take PBKDF2 for example, and lets
+also assume the 'derived key' length is equal to the HMAC block size to
+further simplify things:
+>
+     result = HMAC(Password, Salt || 1)
+     for 2..n
+       result ^= HMAC(Password, result)
+>
+It's clear we can increase iteration count without starting from the
+beginning, but we would need to know the password, which defeats the  
+point.
+>
+Versus a slight tweak to PBKDF2 which would have made it trivial to allow
+post-hoc strengthening without the password:
+>
+     result = HMAC(Password, Salt || 1)
+     for 2..n
+       result ^= HMAC(Salt, result)
+>
+Maybe there's a reason to *require* the password to keep creating work  
+past
+the first iteration, but at first glance I don't see it.
+>
+In case it's not clear, the use case here is writing a background task
+which can strengthen the password hashes for all users in the database,
+without having to touch your production code for validating logins.
+>
+Simple post-hoc strengthening without needing the password sounds like a
+great property for a password-hashing algorithm to have.
+>
+It's obviously a bit harder to achieve this property on memory-hard
+hashing functions since, to state the requirement differently, it  
+requires
+recovering full state of the hashing function from just whatever is  
+stored
+in the user table.
+>
+Thanks,
+Jeremy
+
+

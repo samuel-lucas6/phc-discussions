@@ -1,0 +1,46 @@
+phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+Message-ID: <20140104070932.GA2918@openwall.com>
+Date: Sat, 4 Jan 2014 11:09:32 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 04, 2014 at 09:27:24AM +0400, Solar Designer wrote:
+8 threads:
+
+$ ./run_noelkdf 
+83D88DFC80995C63A9807583A3D56DBD88CE79757E382A56149C9E1BE07BD716
+
+real    0m0.666s
+user    0m1.620s
+sys     0m2.416s
+
+I've tried adding the restrict keyword, 8x unrolling the loop, and/or
+reducing PAGE_LENGTH to 4 KB and even less - and none of this has
+significantly affected the running time on the test above.  I've also
+tried increasing PAGE_LENGTH to 64 KB (beyond L1 data cache size), which
+also left the speed almost unchanged.
+
+I guess the current code might be bumping into the memory bandwidth
+available via non-SSE instructions used on 4 KB pages and without
+software prefetching.  (As to why exceeding L1 cache with PAGE_LENGTH
+seems OK then, my guess is that L2 cache speed is just good enough for
+sequential access when the same loop is bumping into memory speed.)
+If so, this is as good as a reference implementation can achieve, but of
+course for performance we're going to care about optimized rather than
+reference implementations.  (And I think PAGE_LENGTH will need to be
+less than 16 KB there.)
+
+Also, the total running time of this test program might be dominated by
+the memory allocation overhead time.
+
+Speaking of sequential vs. random access within a page, if we have a
+page fit in L1 cache I think we can/should as well benefit from L1
+cache's ability to give us random words just as fast as sequential.
+But let's not forget about SIMD.  This is similar to what bcrypt does
+(and it happens to defeat GPUs in this way), but it's SIMD-unfriendly
+(on current CPUs).
+
+Alexander
+

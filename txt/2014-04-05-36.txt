@@ -1,0 +1,62 @@
+phc-discussions - Re: [PHC] Quick gripe... in case there's ever another contest
+
+Message-ID: <20140405191448.GA8325@bolet.org>
+Date: Sat, 5 Apr 2014 21:14:48 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: Poul-Henning Kamp <phk@....freebsd.dk>
+Cc: discussions@...sword-hashing.net
+Subject: Re: [PHC] Quick gripe... in case there's ever another contest
+
+On Sat, Apr 05, 2014 at 06:52:28PM +0000, Poul-Henning Kamp wrote:
+Password scrambling is a systems function, systems are written in C.
+
+However, I am not talking about the _deployed_ implementation, which
+will be written in whatever is most convenient and efficient on a
+specific architecture. I am talking about the reference implementation,
+which is not meant to actually hash user passwords, but to serve as the
+testbed for the deployed implementation. The reference implementation
+should work everywhere, always producing the same outputs on the same
+inputs.
+
+If you prefer, the _reference_ implementation is the "portable" one,
+which works everywhere but (possibly) slowly, while the _deployed_
+implementation is the "optimized" one, which runs fast on a specific
+architecture but (possibly) incorrectly on others. When you have
+actual passwords to hash, you want to use the optimized code, not the
+portable code, because password hashing is a muscle contest between
+attacker and defender; as the defender, you want muscle.
+
+In fact, the reference implementation should not run anywhere except on
+the implementer's desktop system, to help him produce the optimized
+implementation. Similarly, the reference implementation shall be
+readable, clear, even if clarity comes at the expense of performance.
+
+Of course, if the optimized implementation is ALSO portable and
+readable, so much the better, but that's not its main role.
+
+
+My point is that you will rarely get such a reference implementation
+(works everywhere) with C. It is possible to write portable C code, but
+that's quite beyond simply sticking to "plain ISO C"; you also have to
+avoid all the undefined and implementation-defined behaviours that C is
+so full of. E.g. don't do unaligned accesses or anything which violates
+type aliasing rules (so any endian-sensitive trick is right out); don't
+right-shift a negative integer; don't actually overflow or underflow a
+signed computation; stick to unsigned types with definite sizes (such as
+uint32_t) or add masks everywhere; and so on. This can be done.
+
+But it is utopic to hope that the average "reference code" submitted by
+an algorithm designer will achieve such portability. In practice, if you
+take a random submitter's code from a crypto competition, you can
+already consider yourself lucky if it works on BOTH a 32-bit and a
+64-bit PC running Linux + gcc and "basic" optimization flags. If it also
+works on a Sparc system (big-endian, does not tolerate unaligned
+accesses), open some Champagne to celebrate.
+
+
+(Which all amounts to say that one-size-fits-all libraries, portable AND
+readable AND optimized, are a rarity.)
+
+
+	--Thomas Pornin
+

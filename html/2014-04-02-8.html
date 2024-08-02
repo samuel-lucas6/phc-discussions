@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Doubts about AntCrypt floating-point use</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="../../../2014/04/01/16">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;533BEEFA.7090303&#64;rub.de&gt;
+Date: Wed, 02 Apr 2014 13:05:30 +0200
+From: Ralf Zimmermann &lt;ralf.zimmermann&#64;....de&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Doubts about AntCrypt floating-point use
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hey everyone,
+
+First of all, thanks for all the feedback and opinions on the AntCrypt
+submission and sorry for the late answer(s).
+
+Let me try to address the latest questions and doubts below and keep
+the discussion running :)
+
+Cheers,
+Ralf Zimmermann
+
+**********************************
+On the discussion on the floating point operations:
+**********************************
+On 04/02/2014 12:55 AM, Poul-Henning Kamp wrote:
+[..]
+&gt; I must admit that I had not previously considered floating point
+&gt; in this context.
+
+I agree that the use of floating point operations is an unusual
+approach for cryptographic primitives and we had a lot of discussion
+internally as well. The decision to use them was made very late
+(that's why we submitted shortly before the deadline) and we put them
+as ideas into the function list and source code to start a discussion
+about it - which worked surprisingly well and fast. :)
+
+&gt; There are certainly some (minor) disadvantages with respect to 
+&gt; ensuring correct rounding behaviour and minimizing entropy loss, 
+&gt; but thanks to IEEE those should be manageable problems.
+
+We did neglect to specify some important details, for example the
+rounding mode and the precision, which are both important for
+portability. We should have used (and written about) the IEEE 754
+definitions and might have avoided some of the doubts.
+
+Of course, we should have added this to the reference implementation
+as well (my fault, I quickly wrote it down), i.e., using the
+fesetround() function and verify which operations in the math library
+are IEEE conform *cough* to estimate the impact on the portability.
+
+Any more feedback, discussions and ideas on the use of floating point
+operations is very welcome.
+
+&gt; Calling library trig functions is bit too optimistic though.
+Very true, we did not check about the precision and iirc trig
+functions are not covered at all by the IEEE standard (?). We will
+check this and probably have to remove them, if there is no standard
+covering them.
+
+&gt; But pulling in FP also means that you can pull all the
+&gt; "non-giraffe mathematics"[1] into the cryptographic playpen.
+&gt; 
+&gt; Think about the potential Mandelbrots fractals or The Lorentz 
+&gt; Attractor has as "dial-a-hardness one-way functions[2][3].
+&gt; 
+&gt; It probably is about high time that we eject the "integers-only" 
+&gt; dogma in the non-symmetric parts of cryptography.
+&gt; 
+&gt; Thanks to AntCrypt for inspiring that thought.
+&gt; 
+&gt; Poul-Henning
+&gt; 
+&gt; 
+&gt; [1] "Modulus arithmetic is to math, what the giraffe is to 
+&gt; zoology."
+&gt; 
+&gt; [2] Not to mention the vast improvement of aesthetic quality in 
+&gt; crypto-paper illustrations.
+&gt; 
+&gt; [3] At the absolutely ridiculous upper end of FP-password hash 
+&gt; functions, you take each byte of your password as a signed 8 bit 
+&gt; integer and plug it into the GISS climate model at initial 
+&gt; temperature at particular grid-points in 1900, and see if you get 
+&gt; the right level of water in a harbour of your own choice in 2100.
+**********************************
+
+**********************************
+On the effect of the construction on GPU/FPGAs:
+**********************************
+On 04/01/2014 11:34 PM, Bill Cox wrote:
+[..]
+&gt; Clearly he'll have to change his functions to eliminate the trig. 
+&gt; Either that or provide software versions that always yield the same
+&gt; result. He did say that he may want to update the function list in
+&gt; the "tweak" period, so I think he should be allowed to move away
+&gt; from the trig stuff, and maybe floating point all together, and
+&gt; replace them with more portable simple one-line functions like the
+&gt; ones he has.
+We hope that the discussions here and our own tests will provide a
+good set of such functions and other ideas we did not think about.
+
+Apart from that, we should try to evaluate if the scheme itself -
+given a set of "good" functions (however we define them) - is usable.
+Of course, the functions have an efficiency impact in the end, but we
+hope that the surrounding construction is strong enough.
+
+&gt; That said, while the pseudo-random function sequence may frustrate 
+&gt; current GPUs (does it?), it wont be a problem for FPGAs and ASICs 
+&gt; that will simply compute each in parallel and have a mux on the 
+&gt; output to select which one is next.
+I don't know about GPUs. The construction should lead to forced
+branching, which will slow down the GPUs. As this is bound to
+happen a lot, we hope that the slow-down will have a visible effect.
+
+For FPGAs, it will still be annoying, as it uses up LUTs and makes the
+routing slightly worse. Of course, we could increase the effect by
+putting in more complex functions into the pseudy-random function
+sequence, and/or by changing the datapath from 32-bit to 64-bit or
+128-bit.
+
+An implementation will be restricted by the construction however, as -
+like you said - you need to evaluate all n functions (however many we
+will have in the end) in a sequence. Thus, you need area for every of
+those functions. That is no big deal as the functions are small, but
+you also need to spend at least n clock cycles (no latency for FP
+operations) and cannot easily make use of a fully pipelined design due
+to possible collisions in subsequent calls.
+
+The second aspect are the multiplexers. Every function needs to have:
+1) an input multiplexer to choose between the memory output (state[j])
+and the result of all other functions.
+2) a control signal to choose the appropriate input from the mux
+
+In the current version, this control signal takes one out of all
+outputs and uses some bits from the selected signal, taking another
+multiplexer and logic (as every function must be executed only once),
+adding to area and the critical path. (*)
+
+These are all small things, but they will get annoying if you try
+to utilize your FPGAs as good as possible, as the effect on the
+routing increases.
+
+&gt; Also, the author may be mistaken about how large floating point 
+&gt; operations are in silicon now days.  A 64-bit multiplier is at 
+&gt; least half the size, if I'm not mistaken, of a floating point 
+&gt; multiplier with a 64-bit mantissa.  Multiplications are good, 
+&gt; though.
+I looked at the double precision tables for the existing Xilinx IP
+Cores. Depending on the availability of DSP hardcores and the latency
+setting, the implementation is not too small.
+
+But I must admit, that I did not have time to implement an FPGA design
+yet, which we should do for benchmarking in any case.
+
+&gt; With the limited memory (32 KiB is suggested), it also is a target 
+&gt; for the multi-CPU thingies.
+You can always adjust the memory by increasing the m_cost parameter. I
+think we wrote 32 KiB (?) as a suggested minimum.
+
+To be honest: we did not write a real recommendation, as we also lack
+the GPU implementation of an attack, and only after both FPGA and GPU
+attack are benchmarked, we can optimize and tweak the construction.
+
+&gt; 
+&gt; Apologies to the author... sorry, you were at the top of the list.
+Don't be, we are glad to get feedback and improve the construction :)
+&gt; 
+&gt; Bill
+&gt; 
+
+(*) Please note that this is a data-dependent branch using "secret"
+data and we are currently waiting for internal feedback on a possible
+change here, which keeps the "pseudo-random" sequences but where the
+data does not depend on the secret state.
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. &amp; Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+<a href="http://www.emsec.rub.de" rel="nofollow">http://www.emsec.rub.de</a>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - <a href="http://www.enigmail.net/" rel="nofollow">http://www.enigmail.net/</a>
+
+iEYEARECAAYFAlM77vMACgkQ/N3XAntS/5a8MACgjMdZ0hsG69PCsetbYkTlU7BR
+BWgAnR6GnGPVgbBC95azJlcIeKNS5cS6
+=CRVQ
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

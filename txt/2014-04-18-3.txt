@@ -1,0 +1,79 @@
+phc-discussions - Re: Non-temporal writes and uninitialized memory
+
+Message-ID: <CAOLP8p5Y2cB0QXKOEvwN04Mutmo83_9BFYXr=SkB7SoB_b=+og@mail.gmail.com>
+Date: Fri, 18 Apr 2014 16:19:38 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Non-temporal writes and uninitialized memory
+
+I've attached my code that demonstrates the difference in temporal writes
+to initialized vs uninitialized memory, along with a Makefile that works in
+64-bit Arch Linux.
+
+Here's runtime data for "foo" and "bar".  Foo does no temporal writes to
+DRAM, and Bar does only temporal writes to DRAM, but they do the same
+computation.  This is for one iteration, which means they are writing to
+uninitialized memory.  They each are reading the previous "block" of
+memory, a pseudo-random prior block, doing a couple mixing instructions,
+and writing to the output block.  They are processing 2 GiB of memory:
+
+temporal_hacktime foo
+counter 4016075129
+
+real    0m0.361s
+user    0m0.250s
+sys     0m0.110s
+
+temporal_hacktime bar
+counter 4016075129
+
+real    0m0.403s
+user    0m0.300s
+sys     0m0.100s
+
+Foo, the version without non-temporal writes, is much faster!
+
+For this next run, I edited foo.c and bar.c so that the outer loop iterates
+10 times, rather than once.  The first iteration writes to uninitialized
+memory, but the next 9 will write to initialize memory, and these
+iterations dominate runtime:
+
+temporal_hacktime ./foo
+counter 3129101245
+
+real    0m3.775s
+user    0m3.673s
+sys     0m0.100s
+
+temporal_hacktime ./bar
+time ./foobar
+counter 3129101245
+
+real    0m2.724s
+user    0m2.620s
+sys     0m0.103s
+
+This time, bar, the version with temporal writes is much faster!
+
+I also wrote a longer version that does not use temporal writes for the
+first loop, but does use the for the next 9 iterations.  It's the file
+called foobar.c, and foobar is the fastest of them all:
+
+temporal_hacktime ./foobar
+counter 3129101245
+
+real    0m2.683s
+user    0m2.577s
+sys     0m0.107s
+
+I think this can be used to make Yescript and Lyra2 faster.  TwoCats,
+because it always fills new memory, will still hash more memory in a given
+length of time, but Lyra2 and Yescript should be able to achieve higher
+bandwidth using temporal writes in their second loops.
+
+Bill
+
+
+
+Download attachment "temporal_hack.tgz" of type "application/x-gzip" (880 bytes)
+

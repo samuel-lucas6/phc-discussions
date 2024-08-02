@@ -1,0 +1,119 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150325094015.GA10374@openwall.com>
+Date: Wed, 25 Mar 2015 12:40:15 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Wed, Mar 25, 2015 at 09:48:06AM +0100, Milan Broz wrote:
+On 03/25/2015 05:49 AM, Solar Designer wrote:
+I think you should include more info on your two test platforms.  Most
+notably, the specific CPU types and clock rate.
+
+OK, I am trying to avoid these test to be presented as a performance tests
+because with reference implementations it would be unfair.
+
+Anyway, there is already lscpu for both platforms in git
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/lscpu
+
+https://github.com/mbroz/PHCtest/blob/master/output/round2_PPC64/lscpu
+(This is quite a big machine, actually running Fedora for some Red Hat
+distro development I have access to)
+
+Thanks!
+ 
+The charts showing real memory usage and real time vs. the cost
+parameter values might be useful, but it would also be useful to see a
+cross-chart of real memory usage vs. real time (with the lowest time cost
+setting supported by each scheme) and with growing memory cost setting
+(this is how you'd control the real time).
+
+Isn't it what Figure 1 already shows?
+
+No.
+
+Or you mean some combination?
+
+Yes.
+
+(tcost is minimal for each candidate there, memory cost is increasing and chart
+shows real memory use + real run time).
+
+Yes, but the x-axis is in different units for different candidates.  I'd
+like a chart combining the data for y-axes from these two charts, using
+one of these on the new chart's x-axis and the other on y-axis.
+
+Lyra2 is surprisingly fast.  That's nice.  Your table does not give
+exact numbers for candidates meeting your requirements, though - maybe
+you can add that (for their lowest supported t_cost)?
+
+For the last KDF test the exact input parameters are in Table 5, times
+are in log directory. For example with the minimal t_cost:
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/m_kdf/lyra2.dat
+https://github.com/mbroz/PHCtest/blob/master/output/round2_Lenovo_X230_i5_16G/m_kdf/lyra2-sse.dat
+
+So it's 515 ms for the SIMD-enabled Lyra2 to reach 1 GB.  Including
+memory (de)allocation overhead, right?
+
+I did not want to modify default internal configurations (and I think it
+should not be even needed. Give users some knobs and they'll find insecure
+combination and will use it as the default... well, joking :-)
+
+This is always a concern, yes.
+
+Why I do not use multiple threads is based on disk-encryption my use case:
+
+In general, FDE-enabled disk can be moved between several machines with
+completely different performance and hardware configurations.
+
+On slow machine unlocking should take more time and it would be
+probably acceptable (in some reasonable limits).
+
+But if it cannot be unlocked at all (cannot run parallel threads) it is
+unacceptable for the user (usability fail). Security/usability tradeoff...
+
+No, this particular tradeoff does not exist.  You can always run the
+would-be-threads sequentially (or switch between them).  e.g. I've been
+testing yescrypt with p=41 on a machine with 8 logical CPUs, running
+only 8 threads at a time.  In the current submitted yescrypt code,
+OpenMP takes care of that.  Or you can simply build without
+multi-threading support (neither OpenMP nor anything else) and still be
+able to compute a p 1 derived key, just slower as you say.
+
+The real tradeoff is that excessive parallelism weakens security: the
+attacker might need less memory (presumably expensive) per compute core
+(presumably cheap).  For this reason, maybe yescrypt's default pwxform
+rounds count isn't best for your use case.  It works better for user
+authentication where the parallelism comes from concurrent requests
+anyway.  There's another reason for the 6 rounds, though - this achieves
+bcrypt-like rate of S-box lookups, needed to ensure bcrypt-like GPU
+attack resistance.
+
+The second reason is that it can could run in a very limited environment
+(a bootloader for full system encryption) where threads are not easily manageable.
+
+So you can run a thread-less build.  No problem there.  You just need to
+provide the memory...
+
+...Speaking of which: this is where a security/usability tradeoff
+actually exists.  If you use e.g. Lyra2 or YESCRYPT_RW and require 1 GB,
+you'd have a really hard time computing on a machine with less RAM than
+that since we're deliberately discouraging TMTO attacks (and thus
+legitimate uses as well).  Classic scrypt and YESCRYPT_WORM solve
+this, at the expense of lower area-time product and TMTO-friendliness
+for attackers as well.  (I think there is not yet a defender-friendly
+implementation of classic scrypt, nor YESCRYPT_WORM, for uses on lower
+memory machines.  But it's just a matter of implementation.  This can be
+implemented easily when the need arises.)  <plug>I think yescrypt is the
+only entry in this competition that retained this flexibility.</plug>
+
+Unfortunately, the security impact of YESCRYPT_WORM (vs. _RW) is very
+significant.  It's almost the same as going back to classic scrypt,
+with only minor tweaks added (such as the garbage collector attack
+resistance I mentioned earlier today).  (In part, this is deliberate: to
+ease implementation of YESCRYPT_WORM by slightly revising existing
+implementations of classic scrypt.)
+
+Alexander
+

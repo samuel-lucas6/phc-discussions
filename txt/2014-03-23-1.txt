@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] TwoCats multiplication chain
+
+Message-ID: <CAOLP8p71zNat8n_qQG3HRJ+GzUMOjf8WXMj=GWEeew+jT+nxoA@mail.gmail.com>
+Date: Sat, 22 Mar 2014 20:13:29 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] TwoCats multiplication chain
+
+On Sat, Mar 22, 2014 at 3:16 PM, Solar Designer <solar@...nwall.comwrote:
+Bill,
+>
+In current TwoCats, you have:
+>
+                // Compute the multiplication chain
+                for(uint32_t k = 0; k < multiplies; k++) {
+                    v = (uint32_t)v * (uint64_t)oddState[k];
+                    v ^= randVal;
+                    randVal += v >32;
+                }
+>
+I think this has twice lower ASIC attack latency than what you
+probably expected.  Here are some test questions: can the next
+multiplication start being computed before the previous one completes?
+Can this reduce total latency for two multiplications, and by how much?
+>
+In a 32x32 multiplier, the highest latency is for bit 31 of the result.
+I look at these diagrams when considering what happens there:
+>
+http://www10.edacafe.com/book/ASIC/Book/Book/Book/CH02/CH02.6.php?interstitial_displayed=Yes#pgfId=167904
+>
+In your code, only one of the partial products for bit 31 depends on the
+previous iteration's bit 31 of v.  Thus, almost all of the partial
+products can start being computed before bit 31 of the previous
+iteration's v is ready.
+>
+I think "randVal += v >32;" limits the speedup from such overlapped
+computation to a factor of 2, since each bit from 32 to 63 depends on
+bit 31 of the multiplicand, and this addition with carry makes all of
+them potentially propagate to bit 31 of randVal, and thus to v, but this
+final propagation only happens with a delay of one loop iteration.
+>
+I think changing the multiplication chain to:
+>
+                for(uint32_t k = 0; k < multiplies; k++) {
+                    v = (uint32_t)v * (uint64_t)oddState[k];
+                    randVal += v >32;
+                    v ^= randVal;
+                }
+>
+defeats this attack.  Unfortunately, this has slightly lower efficiency
+for the defender (more time is spent on latencies of non-multiplication
+operations, which don't cost as much latency in ASIC).
+>
+On a related note, now that you've moved to 32x32->64, which is
+lossless, I think you don't need oddState[] anymore (you can use state[]
+directly, without the "| 1").
+>
+Alexander
+
+Yep.  You're right.  Thanks for finding this.  I'll make an upgrade to
+reduce this compute time optimization.
+
+Bill
+

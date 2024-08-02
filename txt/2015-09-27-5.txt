@@ -1,0 +1,101 @@
+phc-discussions - Re: [PHC] Specification of a modular crypt format
+
+Message-ID: <56085DA3.6030308@openwall.com>
+Date: Mon, 28 Sep 2015 00:20:35 +0300
+From: Alexander Cherepanov <ch3root@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Specification of a modular crypt format
+
+On 2015-09-13 21:26, Thomas Pornin wrote:
+  -- The encoding should be deterministic: for a given set of parameters,
+  salt value and hash output, there shall be only one valid hash string.
+  Having a deterministic output makes it much easier to verify an
+  implementation against test vectors. It also helps interoperability.
+
+I applaud this idea and I think it's worth to be retained.
+
+The parameters MUST appear in lexicographic order
+of their names (using ASCII codes: '-', then digits, then letters).
+
+This requirement seems to be a bit artificial. IMHO it's better to fix 
+the order of parameters in every particular function instead of globally 
+for all functions.
+
+While lexicographic order permits to catch some bogus hashes without 
+knowing the function you cannot fully verify parameters in a generic way 
+anyway.
+
+If the function expects no parameter at all, then the complete list,
+including its terminating '$' sign, is omitted.  However, any decent
+password hashing function should have at least one configurable cost
+parameter, so in practice the parameter list is always present. Note
+that the '=' sign may appear within the complete string only as part of
+a list of parameters.
+
+It's not clear why omitting '$' is a good choice (but I'm not saying 
+that it's definitely a bad choice). It makes parsing for the specific 
+function easier but makes generic parsing harder (you need to search for 
+'=' between the second and third '$'). E.g. one could want to 
+differentiate between a "salt string" and a "hash string" without diving 
+into function specifics.
+
+Are functions without parameters worth to be covered at all?
+
+Consumers of salt strings and hash strings MUST validate the provided
+string, and reject invalid strings. In particular, they must verify
+that all parameters are present, in due order, with their unique valid
+encoding.
+
+Yay!
+
+ B64
+ ---
+
+    -- If the last group does not contain exactly three bytes, then:
+       1. The group is completed with one or two bytes of value 0x00,
+          then processed as above.
+       2. The resulting sequence of characters is truncated to its
+          two first characters (if the group initially contained a single
+          byte) or to its first three characters (if the group initially
+          contained two bytes).
+ >
+ A B64-encoded value thus yields a string whose length, taken modulo 4,
+ can be equal to 0, 2 or 3, but not to 1.
+
+It should probably be mentioned here that some trailing bits in the last 
+(incomplete) group must be validated to be zero on decoding.
+
+For Argon2
+==========
+>
+For Argon2, the following is specified:
+>
+   -- The identifier for Argon2d is 'argon2d'.
+>
+   -- The identifier for Argon2i is 'argon2i'.
+>
+   -- The parameters are:
+>
+      ** m    Memory size, expressed in kilobytes, between 1 and (2^32)-1.
+              Value is an integer in decimal, over 1 to 10 digits.
+
+Hm, there seems to be some indeterminism in Argon2 itself here? 
+According to spec: "The actual number of blocks is $m'$, which is $m$ 
+rounded down to the nearest multiple of $4p$."
+
+      ** p    Degree of parallelism, between 1 and 64.
+              Value is an integer in decimal, over 1 or 2 digits.
+
+In Argon2 v1.2.1, p could be up to 255.
+
+Rationale
+=========
+>
+The format is inspired from what already exists for Unix crypt() and
+/etc/shadow files. Its alphabet is limited to: [a-zA-Z0-9./$=-]; as
+
+',' should be added to the alphabet. It's used between parameters.
+
+-- 
+Alexander Cherepanov
+

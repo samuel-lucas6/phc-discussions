@@ -1,0 +1,64 @@
+phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)
+
+Message-ID: <CAOLP8p56JNaYa1eP4Fo+8+qHE40Mq_7fSb6F_MOsKVoyytHS0A@mail.gmail.com>
+Date: Fri, 24 Jan 2014 09:03:51 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)
+
+On Fri, Jan 24, 2014 at 4:46 AM,  <Stefan.Lucks@...-weimar.dewrote:
+On Fri, 24 Jan 2014, Solar Designer wrote:
+>
+>If this corresponds to a substantial portion of the full hash
+>computation, then that attacker hasn't gained all that much - only a
+>speedup of their offline attack by a certain factor, which we may try to
+>make reasonably small.
+>
+>
+Agreed, the speed-up by knowing the memory-access pattern is low, if you
+just count the clock cycles. For scrypt, the speed-up would be about two.
+But you seem to overlook a crucial point.
+
+The scrypt author did an amazing job, IMO, but one thing he seemed not
+to understand very well is the complexity of Salsa20/8.  I think in
+custom hardware, this should be about a 1ns per iteration inner loop,
+producing 64 bytes, or 64GB/second on a single tiny core.  This is
+much more than 2X of what we can do on a single CPU.  This one reason
+scrypt has fallen to GPU attacks to some extent.  Just counting clock
+cycles is a lot harder than it used to be!  I'm guessing you cut your
+teeth on assembly code in the 80's or 90's, when counting clocks still
+worked.  I miss those days.  Personally, I'm counting on the latency
+of sequential multiply operations to thwart an attacker from speeding
+up hashing by more than 2X.  These shift, XOR, and ADD operations
+don't do the job.
+
+Once you know the memory access pattern, one can sort out wrong password
+candidates almost *memoryless*. Thus, the attacker can run the attack on a
+memory-constrained massively parallel hardware (e.g., run on a GPU with
+thousands of cores, using only the L1 caches) -- completely defeating the
+entire purpose of using a memory-intense password-hash function!
+
+Yep.  This is the entire reason for my interest in hard-to-pebble
+hashing algorithms.  It remains a conundrum.  We certainly can do a
+better job making an attacker use more memory with random password
+dependent reads/writes.  How much speed/memory are we willing to give
+up to be more cache timing resistant?
+
+The only difficulty is to gather the required information about the memory
+access pattern ("which cache lines may have been read in the first few
+iterations of scrypt").
+>
+Stefan
+
+Scrypt does no password dependent memory access while filling memory.
+With a more compute intensive (in an ASIC) hashing function, it would
+be compute-time-hardened.  But, the attacker still gets to run in L1
+cache on his GPU cores, increasing his attack speed 1000X-ish -- I
+hate trying being specific when Alexander is here to give me the real
+numbers :-)  How many script instances can a GPU run in parallel if it
+does not try to save any of the computed data?  How fast do they run?
+
+Bill
+

@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Reworked KDF available on github for feedback: NOELKDF</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="13">[&lt;prev]</a> <a href="15">[next&gt;]</a> <a href="10">[&lt;thread-prev]</a> <a href="15">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p58NXTT7u4yvewN5rUNGBW1mFbQw8HgeVTzbai-k75Gyg&#64;mail.gmail.com&gt;
+Date: Sat, 4 Jan 2014 11:31:49 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Reworked KDF available on github for feedback: NOELKDF
+
+On Sat, Jan 4, 2014 at 1:31 AM, Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+
+&gt; Two more comments on it:
+&gt;
+&gt; This appears to select the random page index based on the first
+&gt; uint64_t of a page:
+&gt;
+&gt;         // Select a random from page
+&gt;         fromPage = mem + PAGE_LENGTH*(*prevPage % i);
+&gt;
+&gt; and you appear to be computing uint64_t's of a page sequentially, in
+&gt; increasing order.  Thus, the next random page index becomes known
+&gt; almost as soon as you've started processing a page.  This may be
+&gt; intentional (e.g., EARWORM deliberately allows for one-ahead prefetch,
+&gt; but it targets memory bandwidth and doesn't try to be sequential
+&gt; memory-hard), but probably it is not (it provides extra parallelism and
+&gt; allows for much higher latency memory to be used efficiently, which
+&gt; you're not making use of - at least not yet - so it benefits attackers).
+&gt; scrypt uses the last (not the first) element of a block to determine the
+&gt; random index.
+&gt;
+
+I had the same thought when I wrote that, but then I realized that I can
+compute the last index just as quickly as the first, since they do not
+depend on each other.  Unless I take your advice and reduce parallelism by
+some tunable parameter, there's no way to force the page to be computed
+before the next address is known.
+
+I'm not convinced that reducing this sort of parallelism is desirable, but
+if it is, it should be tunable as you suggest.  An ASIC based attacker is
+going to be memory bandwidth limited almost regardless of our attempts to
+limit parallelism, IMO.  They probably have a bigger serial execution speed
+benefit in a custom ASIC than they have memory bandwidth benefit.  I think
+we're more likely to hurt ourselves more than an attacker with limits on
+parallel execution.  For example, I know of no recent Android phones or
+Windows laptops that don't have some graphics acceleration ability.
+ Attackers can use GPUs, but so can most users.  GRAM is often faster than
+the CPU's main memory.  We could likely get closer to the attacker's speed
+using our own GPUs by default.  With the multi-threading layout I'm
+currently using, we could run threads on the GPU to max out GDRAM
+simultaneously with running SIMD instructions on the CPU to max out DRAM
+bandwidth.  GDDR5 has amazing bandwidth, so well tuned implementations
+should use this in the future.  If I max out both my GDDR5 and DDR3 memory
+busses, good luck to any attacker trying to beat my speed without paying as
+much as me for RAM.
+
+The reference implementation shouldn't touch the GPU, but a speed freak who
+loves optimizing low level parallel execution... I'm not naming names here,
+but I could sure use help in this area... such a speed freak would love to
+max out both bandwidths at the same time.
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

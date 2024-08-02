@@ -1,0 +1,95 @@
+phc-discussions - Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+Message-ID: <533D19B5.3060607@rub.de>
+Date: Thu, 03 Apr 2014 10:20:05 +0200
+From: Ralf Zimmermann <ralf.zimmermann@....de>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] data-dependent branching (Re: [PHC] A little nit which
+ bothers me...)
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+While you are correct about running this in parallel (by spending some
+area) and discarding the output, there is a small advantage by using
+data dependent operations in my opinion:
+
+Let's say you use those four functions and just do x ^= y, then x +=
+y, then x -= y, then x <<<= y (assuming that you somehow cannot
+combine addition and subtraction just for the sake of the argument).
+You need area for all 4 operations (again assuming you cannot reuse
+the adder). This is exactly the same area for the operation as if you
+did this in parallel and discarded the unused results.
+
+But in this scenario, you can pipeline the sequence, adding a pipeline
+stage between the operations. Thus, after the initial pipeline delay,
+you receive a result of the full sequence (all functions in a row)
+every clock cycle.
+
+The idea of the data dependent sequence we aimed for in AntCrypt is to
+enforce the sequence (all functions in a row) but *without* the
+possibility of a pipelined version by only adding the pipeline
+registers: you have to execute all functions in parallel in every step
+and then continue with *one* of the results in *one* of the other
+functions.
+
+This means, you cannot use an initial delay and afterwards receive the
+result every clock cycle, *unless* you unroll it and spend area for
+all functions in every pipeline step (please correct me if I am wrong,
+maybe I did not think this through correctly?).
+
+This does not matter if you use friendly functions like XOR, shift,
+etc., but we hope that using more complex but still CPU friendly
+functions (this is why we tried floating-point), the area consumption
+*may* hurt a little more.
+
+@Bill: Of course you are correct and memory usage in memory-restricted
+environments may be a better way to annoy FPGAs. But as we primarily
+included the branching to slow down GPUs, we thought about how it may
+still add a little bit to FPGAs :)
+
+Cheers,
+Ralf
+
+On 04/03/2014 05:04 AM, Peter Gutmann wrote:
+Bill Cox <waywardgeek@...il.comwrites:
+
+>Data dependent branching doesn't seem to buy as much ASIC
+>resistance as some PHC submitters seem to think, IMO.
+
+Nor do data-dependent ops, which came up in a private discussion
+some time ago (and were quickly shot down).  Imagine something like
+(in simplified form):
+
+switch( x & 3 ) { case 0: x ^= y; break; case 1: x += y; break; 
+case 2: x -= y; break; case 3: x <<<= y; break; case 4: puts( "WTF"
+); }
+
+The idea is that this is difficult to pipeline since each op is
+data- dependent, however if you use speculative execution and run
+each step in parallel (easy on an FPGA/ASIC) and then discard all
+the ones that weren't needed, you lose any advantage you've
+gained.
+
+Peter.
+
+
+- -- 
+============================================
+Dipl.-Inform. Ralf Zimmermann
+EMSEC - Embedded Security Group
+Dept. of Electr. Eng. & Information Sciences
+Ruhr-University Bochum, ID 2/627, 44801 Bochum
+Phone: +49 (0)234 32-27815
+Fax: +49 (0)234 32-14389
+http://www.emsec.rub.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlM9GaMACgkQ/N3XAntS/5bbhwCgtDl1H9jtSYyXazuDtoMGuYtG
+LWkAoI2WKu0KXLktfODsSTNFUWbzB3ue
+=u7DT
+-----END PGP SIGNATURE-----
+

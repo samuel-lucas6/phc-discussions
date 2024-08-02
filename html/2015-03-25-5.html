@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="../../../2015/02/19/2">[&lt;thread-prev]</a> <a href="../../../2015/07/02/8">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150325055646.GA7127&#64;openwall.com&gt;
+Date: Wed, 25 Mar 2015 08:56:46 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Overview of PHC Candidates and Garbage-Collector Attacks
+
+Hi Jakob et al.,
+
+On Wed, Oct 29, 2014 at 06:38:26PM +0100, Jakob Wenzel wrote:
+&gt; under the following link you can find an overview of all PHC
+&gt; candidates which are not yet withdrawn:
+&gt; 
+&gt; <a href="https://eprint.iacr.org/2014/881.pdf" rel="nofollow">https://eprint.iacr.org/2014/881.pdf</a>
+
+I notice that the "19 Feb 2015" revision of this report still talks
+about yescrypt v0.  FYI, yescrypt v1 contains tweaks to make it less
+susceptible to garbage collector attacks.  Specifically:
+
+In YESCRYPT_RW mode, when the requested memory usage is at least 16 MB
+(per thread if applicable) and N / p is at least 256 (which it almost
+always should be), a 64 times smaller instance of yescrypt (and with
+forced t=0) is computed first and its result replaces the input password
+for further computation.  This means that when invoked with t=0, a fast
+hash of the plaintext password has to remain in memory only during
+roughly 1/65th of the total running time, after which point only a
+weaker yescrypt hash has to remain in memory.  (For higher t, the fast
+hash may be replaced relatively even sooner.)  For example, when invoked
+for KDF use with the target memory usage of 1 GB, initially a 16 MB hash
+is computed.  Also, it is intended that the full-sized yescrypt hash
+computation will naturally overwrite the pwxform S-boxes and the initial
+smaller portion of the V array.  (This isn't fully taken advantage of in
+the current submission package yet, where I minimized diffs from the
+previous revision instead.  I intend to correct this in the next update.
+That's just an implementation detail not affecting the hash values.)
+
+I think this ~1.5% performance cost (or even less with higher t) is
+acceptable for the added garbage collector attack resistance.  I am less
+comfortable with the complexity cost, though, and especially with the
+semi-arbitrary threshold for enabling this feature.  Unfortunately,
+there has to be a threshold like this, or the alternative would have
+been to disallow too-small yescrypt calls where N/64 would be too small
+to make any sense.  I opted for having the threshold rather than for
+adding artificial limitations on what yescrypt parameters are possible.
+
+Additionally, g &gt; 0 results in similar behavior to what I described
+above, but with 4x size growth (not 64x) for each of g iterations.
+Since with g &gt; 0 each step uses at least the supplied N or higher (never
+smaller), there's no threshold needed.  Moreover, this functionality
+(and its effect on GC attacks) is available in YESCRYPT_WORM mode as well.
+
+I chose to restrict the initial 1/64 step to YESCRYPT_RW mode for
+multiple reasons, including consistency with this mode's naming and ease
+of addition of YESCRYPT_WORM functionality without YESCRYPT_RW support
+on top of existing scrypt implementations - yes, this is something I'd
+expect to be happening.  Those YESCRYPT_WORM hashes will avoid the HMAC
+"collisions", will support t &gt; 0 and server relief and upgrades, yet
+will require only minimal code additions on top of scrypt to implement.
+
+(I need to update the submission package to reflect the above in the
+specification document.)
+
+To summarize, if I understand your definitions correctly, yescrypt v1 is
+GC and WGC attack resistant when (g &gt; 0) OR (YESCRYPT_RW flag is set
+AND per-thread memory &gt;= 16 MiB AND N / p &gt;= 256).
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

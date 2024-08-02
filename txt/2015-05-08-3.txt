@@ -1,0 +1,176 @@
+phc-discussions - [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates
+ "mechanical" tests (ROUND2))
+
+Message-ID: <554D33D2.9020203@larc.usp.br>
+Date: Fri, 08 May 2015 19:08:18 -0300
+From: Marcos Simplicio <mjunior@...c.usp.br>
+To: discussions@...sword-hashing.net
+Subject: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC candidates
+ "mechanical" tests (ROUND2))
+
+-------- Forwarded Message --------
+Assunto:     Re: [PHC] GPU benchmarks: Lyra2+yescrypt (was: Another PHC
+candidates "mechanical" tests (ROUND2))
+Data:     Thu, 7 May 2015 22:11:00 +0300
+De:     Solar Designer <solar@...nwall.com>
+Responder a:     discussions@...sword-hashing.net
+Para:     discussions@...sword-hashing.net
+
+
+
+Marcos,
+
+On Thu, May 07, 2015 at 01:08:13PM -0300, Marcos Simplicio wrote:
+>It took some time, but we finally completed the GPU benchmarks mentioned
+>in the e-mail below, both for Lyra2 and yescrypt. We did not use djm34's
+>yescrypt GPU implementation mentioned in another thread, though, because
+>while Lyra2 has been in their repository for a few months, we had
+>already adapted the yescrypt-opt version when we learned the news a few
+>days ago... Some optimizations made there might apply to our code too,
+>so we will take a look.
+
+Yes, djm34's code looks more optimal to me.  yescrypt-opt actually isn't
+as optimized as yescrypt-simd, not only in terms of lacking explicit SIMD.
+It also includes blk{cpy,xor}, whereas those are avoided in -simd and
+are avoidable in -opt.  I just didn't bother yet (in part because their
+relative performance impact is lower when the code is non-SIMD; but on
+GPU you get SIMD code, it's just implicit).
+
+
+Our GPU specialist is taking a look at it. We will update our graphs
+with the new values if djm34's is indeed faster.
+
+This makes me wonder: are you benchmarking your CUDA code against
+yescrypt-simd or possibly against yescrypt-opt on CPU?  Your
+readme_attacks.txt says: "We used the PHC code for each algorithm and
+the fastest version (generally, the vectorized version)."  This suggests
+that you used yescrypt-simd on CPU, but I'd like to make sure.
+
+We actually tried every version, and kept the fastest one in each
+platform: our GPU code is based on yescrypt-opt (and also Lyra2
+non-SSE), while our CPU code is yescrypt-simd (the one you named "best"
+in the repository).
+
+
+>Anyhow, the partial results indicate that Lyra2 is actually more
+>GPU-resistant than yescrypt for a memory usage of 256 kB to 2 MB, at
+>least for our GPU (GeForce GTX TITAN),
+
+This is very interesting if so.  But I don't buy your results yet, as I
+explained in another message.  Your reported yescrypt CPU speeds are in
+weird units, and if I try to convert them (even though they can't be),
+I get way lower speeds than what I am seeing.
+
+Your readme_attacks.txt says "The password derivation time is the total
+test time divided by number of passwords tested." under "GPU attacks".
+Great, but is it the same on CPU?  If not, that's wrong.  If yes, it
+doesn't match my results (by far).
+
+I also discussed that in another thread: our numbers are way closer to
+those obtained by Milan than yours are (again, this does not mean any of
+them are wrong, since the platforms are different). Hence, while you
+have all the right to take our numbers with skepticism, they are not as
+strange as you suggested.
+
+Anyway, the CPU and GPU tests are independent, so the comparisons
+suggested in the third column of our figures can be updated simply by
+dividing new/our CPU numbers by new/our GPU numbers for any algorithm
+having a GPU implementation.
+
+
+I think you actually used a different metric on CPU, per
+readme_attacks.txt:
+
+"The CPU benchmarks focused in legitm usage of the kdfs.
+
+    To obtain the medium execution time:
+    - We executed "n" times each derivation;
+    - With the parameters seted accordingly with parallelism and memory
+usage desired."
+
+While this would make sense for KDF use at large m_cost, it doesn't for
+password hashing use at low m_cost.  You should use a throughput figure
+for CPU, just like you do for GPU.
+
+Like Milan Broz's tests, I imagine, which makes perfect sense. We will
+use the exact same methodology for p=1 (as done already) to 12.
+
+
+>Since the results may change to other GPUs, we placed the code employed
+>in our git (https://github.com/leocalm/Lyra/tree/master/GPU_attacks ),
+>so anyone can confirm/refute our numbers. Also, any bug report or
+>optimization suggestion is very welcome! We tried a few tricks and
+>checked the test vectors, but we may have missed something.
+
+I appreciate this.  I took a look via GitHub's web interface.
+Unfortunately, this fails:
+
+$ git clone https://github.com/leocalm/Lyra/tree/master/GPU_attacks
+Cloning into 'GPU_attacks'...
+error: The requested URL returned error: 403 while accessing
+https://github.com/leocalm/Lyra/tree/master/GPU_attacks/info/refs
+fatal: HTTP request failed
+
+Please try to get it from the root directory:
+https://github.com/leocalm/Lyra/
+
+
+>On 26-Mar-15 15:24, Solar Designer wrote:
+>On Thu, Mar 26, 2015 at 02:29:29PM -0300, Marcos Simplicio wrote:
+>Yes, and in your CPU benchmarks too, so you'd be comparing GPU attacks
+>on Lyra2 vs. bcrypt at the same defensive running time for them (on
+>CPU).
+>>
+>We did not include bcrypt to the benchmarks because we wanted to have
+>comparisons against a memory-hard scheme, so we did so for yescrypt.
+
+I'd make sense to include bcrypt, too.  Especially if you claim that
+your GPU outperforms CPU at yescrypt despite of pwxform's rapid random
+lookups, it becomes extremely relevant that you show the same for
+bcrypt, because yescrypt-simd's rapid random lookups are on par with
+bcrypt's when both are run defensively on a modern x86 CPU.
+
+
+That makes sense, and can be added to our TODO list and eventual
+academic publication (thank you for the advice!).
+
+
+>The only situation in which we got Lyra2 running faster on our GPU than
+>on our CPU was for p=1 and 8 threads per warp (for 256KB).
+
+You mean when you used unoptimal settings on GPU and didn't fully use
+the CPU?  This doesn't count, for either or both of these reasons.
+
+It is actually:
+
+1) Optimal settings for GPU: the setting with highest throughput
+2) One possible setting for CPU: it corresponds to a a constrained
+device that cannot afford GiBs of memory in their KDF operation, or to
+lightly loaded server (e.g., it cannot afford to use a lot of memory
+because it was designed for peak usage much higher than the current one,
+or because other tasks consume a lot of memory and, thus, the
+authentication processes should not get too much memory).
+
+So, I would say it does count, but also that there is also a wider
+picture that would be interesting to explore (="highly loaded server"),
+much like done in Milan Broz's Figure 10.
+
+[...]
+I am sorry that my messages might sound dismissive.  Once again, I
+appreciate your work on this a lot, and I think you got very close to
+producing valuable results here.
+
+I respectfully disagree that we have no valuable results yet, for the
+reasons mentioned above and in the previous e-mail. However, we do
+prefer constructive criticism (as you provided!) to plain acceptance,
+since this will help to improve this study.
+
+Hence, there is absolutely no need to apologize: quite the opposite,
+even though we do not agree with every point you raised, we are very
+thankful for the feedback! It will probably save us a lot of work
+responding to peer reviewers in the future :)
+
+BR,
+
+Marcos.
+

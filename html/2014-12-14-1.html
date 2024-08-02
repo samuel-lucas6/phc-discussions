@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Re: Some KDF stumbling blocks, plus Common</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="../../../2014/12/13/21">[&lt;prev]</a> <a href="../../../2014/12/15/1">[next&gt;]</a> <a href="../../../2014/12/13/21">[&lt;thread-prev]</a> <a href="../../../2014/12/15/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20141214162435.GA32143&#64;bolet.org&gt;
+Date: Sun, 14 Dec 2014 17:24:35 +0100
+From: Thomas Pornin &lt;pornin&#64;...et.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Re: Some KDF stumbling blocks, plus Common
+
+On Sat, Dec 13, 2014 at 10:45:06PM +0000, Adam Back wrote:
+&gt; A master secret that could break all wallets is not something that
+&gt; would be easily accepted in a system with security requirements as
+&gt; high as bitcoins.  That requires all users to trust some central
+&gt; entity to delete the factorisation.
+
+That kind of thing could be handled "procedurally". For instance, some
+sort of ceremony where a few well-known persons gather together (people
+with high programming expertise), implement a RSA modulus generator that
+does not save the private factors, and run it. This is all done with
+auditors and witnesses and a camera to upload the whole thing to youtube
+afterwards. This could be organized during some security event, e.g.
+Passwords15 or something like that (note: make sure that the beer is
+made available only _after_ the procedure).
+
+Maybe there is some group RSA key pair generation algorithm that could
+be used ? I'll have to look it up (I had not found anything previously,
+but maybe I did not look hard enough).
+
+
+&gt; Another alternative is to use an RSA UFO however their characteristics
+&gt; are poor, and also vulnerable to speedup via pre-computation (of
+&gt; partial factoring).
+
+I had investigated it, but partial factoring really kills the thing: if
+we work modulo a big n and hash password m with m^e mod n, and the
+adversary knows one prime factor r of n, then he can work modulo r;
+given m^e mod n, he can compute m^e mod r, and since r is prime he can
+obtain m mod r, which is deadlier than a simple speedup.
+
+
+
+Thinking more about it, I came to conclusion that my blinding is not
+really different from yours; it is rather an improvement; but it can
+extend the usability. Let's define some notations:
+
+  Let n = pq be some big composite integer. Let w be the work factor,
+  and let e be an exponent derived from w. In your proposal,
+  e = (2^w) - 1 and (I suppose) such that e is relatively prime to both
+  p-1 and q-1; thus e is a valid RSA exponent and exponentiation with e
+  is a permutation of integers modulo n. In Makwa, I set e = 2^w and I
+  arrange for p and q to be both equal to 3 modulo 4; in that case,
+  exponentiation with e is a permutation of quadratic residues modulo n
+  (about 1/4th of all integers modulo n are quadratic residues).
+
+  I chose e = 2^w because it made optimal implementation easier. With
+  e = 2^w - 1, in a square-and-multiply algorithm, you can get some
+  speedup with window-based optimizations, if you use enough RAM. The
+  speedup is slight (you save some multiplications but still have to
+  compute the squarings) but I did not want some snarky cryptographer to
+  point it out and tout it as a "break" so I went to e = 2^w, where only
+  the squarings remain. The flip side of it is that I need a Blum
+  modulus, and must take care of living in QR(n) (the quadratic
+  residues), so the very first squaring is still done client-side.
+
+  Anyway, the exact choice of e does not matter much here. Hashing of
+  password pw is done by padding pw into some integer m modulo n and
+  then computing m^e mod n (the padding is very important here because
+  RSA and Rabin are malleable, meaning that (m^e)*(m'^e) = (m*m')^e, so
+  without a proper padding, an attacker running an exhaustive search
+  might be able to mutualize some exponentiations).
+
+Once such a function is defined, we want to be able to delegate the
+bulk work to a potentially hostile external server. So we use blinding.
+A blinding pair (x,y) is such that y = x^e mod n. If you have such a
+pair, then the procedure is simple:
+
+  - compute u = x*m mod n
+  - send u to the delegation server (along with n and w)
+  - the delegation server returns v = (x*m)^e mod n
+  - compute the hash value h = v/y mod n
+
+There can be some extra conditions on (x,y) to avoid leakage (e.g. in
+Makwa, x and m must be quadratic residues).
+
+Now the creation of the blinding pair is a puzzler, because of the
+following:
+
+  - The delegation server, being untrusted, MUST NOT learn the value
+    x (first element of the blinding pair). Otherwise, it could deduce
+    m from the received value u.
+
+  - A given blinding pair (x,y) may be used repeatedly for a given
+    password m, but not for two distinct passwords m1 and m2; otherwise,
+    the delegation server (or an eavesdropper) may learn m1/m2 and then
+    deduce things about both m1 and m2 (this depends heavily on the
+    details of the padding).
+
+  - Generating a new random blinding pair is as expensive as computing
+    a hash. It can be done efficiently if you know p and q, but then,
+    if you know p and q, you can also compute the whole hash yourself.
+
+As I understand it, the usage context that we are talking about is that
+of a brain wallet, which is similar (conceptually) to password-based
+encryption for a file containing some confidential data (the wallet
+simplifies things by "just" generating the ECDSA private key directly
+instead of producing a symmetric key to encrypt a random ECDSA private
+key, but that does not change things much here). Then I confess that
+I don't really see how you can use your blinding in that setup:
+
+  - A blinding pair can be generated efficiently when n itself is
+    produced (with the knowledge of the factors p and q). However, one
+    has to assume that the hashing will be performed at a time when p
+    and q are no longer available, because otherwise you could use p and
+    q to compute m^e efficiently, without needing any delegation.
+
+  - Due to the cost of generating on-the-fly a random blinding pair when
+    p and q are not known, it does not make much sense to do that at
+    hashing time: instead of producing a new blinding pair, just use
+    your CPU to compute the hash directly, without needing delegation.
+
+  - But since the x value in a blinding pair must be kept secret, then
+    you must have some safe storage for that, which raises the question:
+    if you have a safe storage for a secret value, why oh why would you
+    use password-based KDF ? Simply store your ECDSA private key there,
+    and be done with it.
+
+As far as I can see, in the brain wallet scenario, your proposal can be
+summarized as follows (it is possible that I did not get it right, so
+please correct me if that's the case):
+
+  * You generate a new n, x, and y when the password is chosen or
+    changed.
+
+  * The wallet has some local storage, where (x,y) is stored. We assume
+    that any compromise of this storage will be through a wholesome
+    theft of some device, which will not go unnoticed.
+
+  * Whenever you need to hash m, you use the stored blinding pair for
+    delegation. An hostile delegation server learns nothing.
+
+  * If the wallet is stolen then the thief must still pay the full
+    price of computing the expensive hash (and he could already have
+    done it with the ECDSA public key alone).
+
+  * HOWEVER, if the device thief also has access to an instance of the
+    delegation protocol (through eavesdropping or collusion with the
+    delegation server), then he gets both x and x*m mod n, from which he
+    immediately deduces m. If the padding that transforms the password
+    pw to m is some (fast) hash, then the attacker does not get the
+    password itself, but a way to run a fast dictionary attack, which is
+    almost as good (or bad, depending on point of view).
+
+This last point is the crucial one. This is the one that my proposal
+tries to fix.
+
+Now enters Makwa. Well, not exactly Makwa; the core Makwa function is
+the description of the padding and squarings. The delegation can be
+thought of as an implementation issue. Yet, in the Makwa proposal, I
+also describe (and implement) a mechanism for delegation, that expands
+on the idea of the blinding pairs. The main idea is that if (x,y) and
+(x',y') are blinding pairs, then so is (x*x',y*y').
+
+  + Instead of generating one blinding pair, I generate 300 of them. If
+    this is done at the same time as n is generated, then this is still
+    reasonably efficient. If the factors p and q are not known, the 300
+    pairs can still be produced, at the same cost as 300 full hashes.
+
+  + Whenever the password must be hashed, a new random blinding pair is
+    produced, by multiplying together a random selection of some of the
+    300 pre-generated pairs. That new pair is used for one delegation,
+    then discarded. The generation of such a pair is more expensive than
+    its actual use, but still tolerable in many context (it amounts to
+    300 multiplications modulo n, about half the cost a RSA private key
+    operation).
+
+  + The 300 "source" blinding pairs need no confidential storage. They
+    can even be shared between several users (subject to the trust issue
+    about proper generation of n and discarding of the prime factors).
+
+This system increases some costs, but fixes the "secure storage" issue.
+If a brain wallet uses this delegation system, then the device thief no
+longer gains anything by stealing the device, even if he colludes with
+the delegation server. This actually allows the device to be
+"virtualized": since it contains only public data, you can upload it on
+some server, and the "brain wallet" really becomes a brain-only wallet.
+
+When I designed Makwa, I primarily focused on the "authentication
+server" scenario, in which the server will normally produce its own
+modulus n and use it for hashing the passwords of thousands (or
+millions) of users. However, it can still be applied to password-based
+encryption. Though my delegation mechanism has some non-negligible
+storage costs (about 150 kB for the 300 source pairs), this is only
+public data that can be shared with other users, so I believe that cost
+can be easily absorbed in many contexts.
+
+
+Does all of this makes sense ?
+
+
+&gt; ps it would be nice if could cite my proposal if you are still able to
+&gt; revise the paper submission as I presume it predates your work, and is
+&gt; strongly related.
+
+I was not planning of making a new package version, but if I do then
+I'll be sure to include some reference to you. Do you have some
+"official" publication beyond the Web forum entry quoted earlier ?
+
+
+(As Leibniz once remarked, new ideas are always "floating around" so
+when you think of some new scientific advance, it is almost guaranteed
+that there is someone, somewhere else, thinking the same thing at the
+same time. In my case, I came upon Makwa, including its delegation
+system, in March 2013. The weather was inordinately mild and even the
+snow was thawing, so I was walking back from work. Nietzsche has
+famously said that "all truly great thoughts are conceived while
+walking"; I don't know if Makwa qualifies as a "truly great thought" but
+I can confirm that walking is the good way to get ideas.)
+
+
+	--Thomas Pornin
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

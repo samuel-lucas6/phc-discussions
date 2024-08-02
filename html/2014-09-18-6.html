@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] omegacrypt and timing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="5">[&lt;prev]</a> <a href="7">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href="7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;541AB1E0.7080308&#64;bindshell.nl&gt;
+Date: Thu, 18 Sep 2014 03:20:16 -0700
+From: epixoip &lt;epixoip&#64;...dshell.nl&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On 9/17/2014 11:42 PM, Krisztián Pintér wrote:
+&gt; epixoip (at Thursday, September 18, 2014, 12:37:49 AM):
+&gt;&gt; No
+&gt;&gt; threats are excluded from the threat model, but the access vector,
+&gt;&gt; complexity, probability, and impact are all a factor in determing
+&gt;&gt; whether a threat actually poses significant risk.
+&gt; so your point is that the attack i have outlined earlier is
+&gt; insignificant? can you explain why?
+
+The theoretical attack you first outlined identifies a possible
+early-reject for an offline attack. If you know how long omegacrypt
+takes to hash the correct password for the target user on the target
+hardware, you can abort your offline cracking attempts early if they
+take longer than that to run.
+
+To support this attack, you would first need the hash+salt for the
+target user and side channel access. Once you have that, you then need a
+way of measuring the time it takes for omegacrypt to run when the target
+user authenticates with a correct password.
+
+The threat model starts with the attacker already knowing the hash+salt,
+so you get that for free. However, as a passive attacker, you have no
+real way of triggering an authentication attempt with the correct
+password, so that's your first hurdle. Measuring omegacrypt's execution
+time on the target system with enough granularity to show a variance for
+the correct password vs. incorrect password is the second hurdle, which
+may pose quite the challenge as an unprivileged user.
+
+The last hurdle is actually using this information to gain some sort of
+advantage. This means writing a cracker that is able to determine if the
+execution time for each hashing operation has exceeded the target
+runtime, and if so, reject the password candidate -- in less time than
+it would take to just let the algorithm run to completion. This
+early-reject check would not be applicable to every hashing operation,
+as some will likely complete before the target runtime and the algorithm
+will run to completion regardless. So you will only be gaining an
+advantage (if you can even call it an advantage) 25-75% of the time, and
+a 25% chance of no advantage at all, and that's only if you can find a
+way to abort quicker than it takes to just let the algorithm run to
+completion.
+
+So access requires a shell on and/or physical access to the target
+hardware, complexity is very high, probability is very low, and impact
+is also very low / none. This translates into very low / no risk.
+
+For the second attack you kind of outlined, you imagine a timing attack
+where the attacker can infer the actual password itself without having
+the hash or salt, but maybe some partial knowledge about the password. I
+don't think this is even possible. Maybe if you had the salt it would be
+possible, but would still be highly improbable.
+
+
+&gt; imagine a dedicated
+&gt; authentication server. it does nothing but receives a password via the
+&gt; local network, checks it out, and returns a validity flag. then takes
+&gt; the next password. the beginning and end of validation is clearly
+&gt; marked by the network activity. all i need to do is to do traffic
+&gt; analysis, possibly via EM detection, and i have timing information.
+&gt; how is that insignificant?
+
+I suppose this is your explanation of how you would ascertain total
+omegacrypt execution time. This seems entirely implausible, but even so,
+my answer above still stands. I don't see any real advantage being
+gained by this theoretical side channel.
+
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] omegacrypt and timing</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="1">[&lt;prev]</a> <a href="3">[next&gt;]</a> <a href="1">[&lt;thread-prev]</a> <a href="3">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140921122340.GA8198&#64;openwall.com&gt;
+Date: Sun, 21 Sep 2014 16:23:40 +0400
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] omegacrypt and timing
+
+On Sun, Sep 21, 2014 at 06:39:52AM +0000, Brandon Enright wrote:
+&gt; Instead of having 4 (or N) fixed branch paths each with a fixed number
+&gt; of instructions for each path, I suggest the following logic would
+&gt; defeat the selective NOPing ability by making the worst case too bad:
+&gt; 
+&gt; while (coinflip()) {
+&gt;    do_some_work();
+&gt; 
+&gt;    while (coinflip()) {
+&gt;       do_some_more_work() {
+&gt; 
+&gt;        [...]
+&gt;           [...]
+&gt; 
+&gt; Using a structure like this ends up being even simpler than N different
+&gt; fixed branches and the worst case needed to keep threads in sync is
+&gt; unbounded.  Even if an implementer were to cap each while (coinflip())
+&gt; loop to 20 iterations (for example) 20 * 20 * [...] is far, far more
+&gt; costly than the average case actually taken by the code.
+&gt; 
+&gt; I will explore this area of branching more and if OmegaCrypt makes it
+&gt; to the next round I will replace the current 4 branches with something
+&gt; more robust like above.
+&gt; 
+&gt; Of course, I'd love to hear any thoughts / analysis on this idea.
+
+This sounds like an extension of "Deep enough tree (not just an if/else
+in a loop) to make eager execution inefficient" as listed on this slide:
+
+<a href="http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00068.html">http://www.openwall.com/presentations/Passwords12-The-Future-Of-Hashing/mgp00068.html</a>
+
+changing the nested if's to nested variable iteration count loops.  I am
+not sure which is the simpler way to slow down GPUs.  6 levels of nested
+if's with same/similar instruction count code paths for each of the 64
+possibilities would be pretty effective, but perhaps with loops you can
+achieve a similar effect with fewer than 6 and maybe avoiding similarity
+between the pieces of code matters less then (since you also have the
+different iteration counts), perhaps at a cost of making side-channel
+and total running time leaks worse.
+
+As the slide also says, "Beware of side-channel leaks - a sufficient
+reason not to use data-dependent branching", and here's why:
+
+Secret-dependent memory lookups are bad enough already.  We need a very
+good reason to step into the less tested and not so well understood
+territory, especially in terms of side-channel leaks.  Does adding
+secret-dependent branching enable a substantially better defense than we
+can achieve with secret-dependent memory lookups alone?  This is unclear.
+If we accept some side-channel risk, I'd prefer to focus on improving
+secret-dependent memory lookups - and indeed, this is what I was working
+on for yescrypt.
+
+That said, some diversity in PHC candidates is welcome, so thank you for
+exploring this area further.
+
+BTW, in case we want to credit anyone for introducing secret-dependent
+branching for password hashing or key derivation, I don't know if Adobe
+or Alec Muffett with SunMD5 was first to do it.  I heard of Adobe's use
+of secret-dependent branching many years later than of SunMD5's.
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

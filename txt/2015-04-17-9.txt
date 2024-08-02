@@ -1,0 +1,99 @@
+phc-discussions - Re: [PHC] winner selection
+
+Message-ID: <20150417134856.GA22275@bolet.org>
+Date: Fri, 17 Apr 2015 15:48:56 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] winner selection
+
+On Fri, Apr 17, 2015 at 03:11:32AM +0100, Samuel Neves wrote:
+This recent paper [1], which I admittedly cannot understand, claims
+big advantages versus a CPU; a second paper [2] claims 7210 2048-bit
+modular exponentiations per second on an NVIDIA GTX 580, which may
+translate roughly to 14+ million modular multiplications per second. I
+would expect that Makwa's squaring, without the need for
+square-and-multiply or windowed exponentiation, can be made somewhat
+faster. [3] uses floating-point arithmetic instead and claims speedups
+(110 million modular multiplications/s), but they don't go above
+1024-bit modular arithmetic, making performance hard to compare
+accurately.
+
+I unfortunately cannot read Japanese either. I don't have access to the
+two other articles, only the abstracts.
+
+One important point to check about the second article is whether it
+talks about generic 2048-bit modular exponentiations, or about 2048-bit
+RSA -- because the latter case implies a 4x speedup (thanks to the CRT).
+If we are talking about 7210 RSA-2048 private key operations per second,
+then this shall be compared with what a basic CPU can do. I have a
+server with a "Intel(R) Xeon(R) CPU E3-1220 V2 @ 3.10GHz" quad-core CPU
+(so says Linux), that can do about 3280 RSA-2048 private key operations
+per second (840 per core, using OpenSSL's implementation); while the GTX
+580 is twice as fast (subject to the details of the quoted article, that
+I cannot access), it may also be more than twice as expensive(*).
+
+In all generality, a benchmark for password hashing must ultimately
+relate to dollars; you need to compute the average cost of trying out a
+password. In fact you will get two costs: one for buying the hardware,
+and one for running the hardware (the first one is amortized over time,
+the second one is not since it is about power consumption and cooling).
+>From the figures I got, for Makwa cracking, these costs will be of the
+_same magnitude_ for CPU and for GPU. However I don't know which way the
+balance tilts. Maybe CPU allow twice as many password hashes per second
+for a given budget, compared to GPU; or maybe the reverse. Details
+matter a lot here, and I am trying to motivate people to investigate
+these details (which is why I am making "bold claims").
+
+I totally agree that Makwa is not completely comparable to bcrypt here,
+because with bcrypt it is rather obvious that the CPU wins (though
+people have tried, the GPU is still substantially lagging behind).
+However it is still unclear whether GPU can be _more_ than merely
+comparable to CPU, when counted in dollars. As long as the GPU is not
+more efficient than the CPU, then Makwa still fulfills the required
+property (i.e. defender's hardware is optimal).
+
+
+Additionally, a stronger integer multiplier would make a big
+difference here, and this seems like a more plausible inclusion in
+future GPUs than some mechanism that improves bcrypt performance
+significantly.
+
+To this I agree. To help with bcrypt, one should have an array of
+independently running CPU, each with a bit of RAM, like (say) the Cell
+processor; GPU are steadily going far into the other direction
+(generalized SIMD, interleaved execution, pre-core registers but not
+RAM).
+
+Whether GPU will gain a stronger multiplier remains to be seen, though.
+It's the 'G': as long as it means "graphics", then there is little
+pressure for higher-precision multiplications (3D rendering does not
+need a lot of precision); but if it shifts to "general" (e.g. for
+physics simulations) then high-precision multiplications may become more
+commonplace.
+
+
+	--Thomas Pornin
+
+(*) This leads me to the following remark: even if the attacker has to
+use what is basically a PC, because GPU/FPGA/ASIC are not a cost
+effective solution for the function he tries to attack, he still can
+choose the kind of PC that best suits his needs. A typical server, like
+mine, will be optimized for "normal server stuff", which is why I got a
+Xeon-branded CPU with a substantial amount of cache (I did not choose
+the hardware, this is the "generic server" I got from the provider, and
+I rent it for 30 EUR per month). The attacker may possibly use quite
+cheaper CPU if he does not need some features. In particular, cache size
+is likely to be unimportant, both for "compact" functions like Makwa and
+bcrypt, that fit in L1 cache, and for "large" memory-hard functions, for
+which most memory accesses will hit uncached areas anyway (this depends
+a lot on how the function is designed, of course).
+
+Thus, in all generality, proving that "CPU is better than other
+architectures" does not immediately mean that the defender's hardware is
+optimal; furthermore, when counted in dollars, the cost difference
+between distinct brands of CPU may well dwarf out the difference between
+a server CPU and an off-the-shelf GPU -- and the cost for support
+hardware (motherboards, cooling) is also an important factor. Maybe we
+are not looking at the right metric here. Maybe the real danger for
+password hashing is not oversized GPU, but Raspberry-Pi clusters.
+

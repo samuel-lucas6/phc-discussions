@@ -1,0 +1,35 @@
+phc-discussions - Re: [PHC] yescrypt throughput vs. PWXrounds
+
+Message-ID: <20150403194147.GA28866@openwall.com>
+Date: Fri, 3 Apr 2015 22:41:47 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] yescrypt throughput vs. PWXrounds
+
+On Fri, Apr 03, 2015 at 09:05:59PM +0300, Solar Designer wrote:
+rounds  2 MB            128 MB          2 MB + 2 GB ROM
+6       2772 / 511      30 / 7          2592 / 486
+4       3653 / 691      32 / 9          3269 / 647
+2       5340 / 1077     33 / 13         4288 / 974
+1       6454 / 1451     33 / 15         4760 / 1255
+[...]
+When much of the RAM portion fits in a cache, there's significant
+speedup from lower PWXrounds, even when running 8 threads.  However, the
+speedup is not enough to keep the compute hardening per time the same.
+For example, 2772*6 / (3653*4) = 1.14, but 6/4 = 1.5, and
+2772*6 / (5340*2) = 1.56, but 6/2 = 3.  So going for PWXrounds = 2 would
+halve the compute hardening per time.
+
+For a moment, I forgot what I was calculating here, and used the wrong
+figures to arrive at "would halve the compute hardening per time".
+Actually, 2772*6 / (5340*2) = 1.56 is the reduction in compute hardening
+(and in frequency of S-box lookups), and it's not exactly that bad.
+For going from 6 to 4 rounds, the reduction in compute hardening is only
+2772*6 / (3653*4) = 1.14.
+
+It would actually be worse for the larger memory usage and many threads
+case, with e.g. 30*6 / (33*2) = 2.73 times reduction in compute hardening
+when going from 6 rounds to 2, yet achieving only 10% defensive speedup.
+
+Alexander
+

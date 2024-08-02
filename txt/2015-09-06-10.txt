@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] Where do authors get these numbers?
+
+Message-ID: <20150906072416.GA31014@openwall.com>
+Date: Sun, 6 Sep 2015 10:24:16 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Where do authors get these numbers?
+
+On Sun, Sep 06, 2015 at 07:28:44AM +0100, Samuel Neves wrote:
+On 09/06/2015 07:16 AM, Dmitry Khovratovich wrote:
+What CPU exactly are you testing on? That one has 2.1 GHz. We detected quite big difference in cycle/byte performance on similar CPU with different frequencies.
+
+Cycles per byte are meant to be independent of the CPU frequency. When external memory gets involved, things do get a
+little more complicated, though.
+
+Is it possible that such differences are caused by Turbo Boost? Some processors overclock more than others; in
+particular, a 2.1 GHz 4600U chip will overclock to 3.3 GHz, whereas a (say) 3.5 GHz 4770k chip will 'only' overclock to
+3.9 GHz. Thus the former chip's timings will be significantly more distorted by Turbo Boost than the latter's, even
+though they should both report roughly the same cycle-per-byte value in theory.
+
+A solution is to measure the actual frequency with the intended number
+of cores under load (same number as in the target code's benchmark),
+verify it against the CPU documentation, and if it matches (it does for
+me, on many different CPUs), then just use that and not the CPU's base
+clock rate for calculating cycles per byte, etc.
+
+Wikipedia has convenient tables, and so far I haven't found any errors
+in them.  For 4600U:
+
+https://en.wikipedia.org/wiki/List_of_Intel_Core_i7_microprocessors#.22Haswell-ULT.22_.28SiP.2C_dual-core.2C_22_nm.29
+
+2.1 GHz + either 9 or 12 turbo bins (100 MHz each), so 3.0 GHz with both
+cores in use, 3.3 GHz with 1 core in use.
+
+CPUs usually do run at the max turbo rate for the given number of cores
+in use.  In my testing so far, this is always the case for 1 core in
+use, and is usually the case for all cores in use.
+
+Alexander
+

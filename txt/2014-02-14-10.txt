@@ -1,0 +1,85 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p4iH5zxLz0EXjueNMxUmXbG8vcQRrnUzA57eBbY4eMw5w@mail.gmail.com>
+Date: Fri, 14 Feb 2014 09:00:29 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Fri, Feb 14, 2014 at 6:28 AM, Solar Designer <solar@...nwall.comwrote:
+Bill,
+>
+On Fri, Feb 14, 2014 at 03:18:18PM +0400, Solar Designer wrote:
+>I think we could optimize this better by hand, but as I wrote in another
+>message we need the random lookups from "prev" (not from "from") anyway.
+>So we'd need to benchmark and optimize the latter.
+>
+When the randomly read block is in L1 cache anyway (which won't be the
+case for "from" in actual usage), randomly reading from "prev" is even
+slower, because the function becomes even more sequential:
+>
+    for(i = 1; i < numblocks; i++) {
+        uint32_t j;
+        for(j = 0; j < blocklen; j++) {
+            uint32_t *from = mem + j;
+            value = (value * (*(prev + (value & mask)) | 3)) + *from;
+            *to++ = value;
+        }
+        prev += blocklen;
+    }
+>
+This may be partially repaired by changing it to:
+>
+            value = ((value | 3) * *(prev + (value & mask))) + *from;
+>
+but it's still slower than original.
+
+Actually, my little test loop above always has *from in L1 cache
+because it it always points to the first block of mem.  The actual
+loop in NeolKDF does read from a random previous block.
+
+I am not yet able to explain this.  I compared the generated assembly
+code, and the loops are very similar, with only scalar instructions
+generated.  The mask operation comes right after the multiply where it
+seems like it should happen in parallel.  When I iterate the inner
+loop 10X to amplify the impact of this effect versus memory
+allocation, I see that changing the from pointer to mem + (value &
+mask) versus (mem + j) results in almost a 2X slowdown.  This is nuts!
+
+When I switch to randomizing the "prev" address, the same slowdown
+happens, but just a bit worse, likely due to the increased sequential
+work required.
+
+You might want to decouple the multiply latency hardening from random
+reads (make it two separate chains, only joined at end of block).
+>
+Alexander
+
+I see you've suggested this multiple times :-)  It's a fantastic idea,
+and I am going to play around with it.  I agree that with this idea,
+it should be possible to max out bandwidth while having solid
+multiplication-time hardening, at least for CPUs with SSE.  On CPUs
+without SSE, the multiplication hardening would be diminished, but as
+you suggested, this may be a good thing, since those older CPUs may
+have inefficient multiplication anyway, and we'd likely be better off
+going for max memory bandwidth in that case.  Throwing in a
+cryptographic hash after every block hash is another great idea I will
+play around with.  That's a good way to combine the multiplication
+chain and SSE chains.
+
+You're simultaneously suggesting how to max out the bandwidth,
+alleviate what is likely to be seen by the PHC as a serious weakness
+(billion non-crypto-hashes in series), how to address bcrypt, and
+GPUs.  I guess I've said before that it's hard for me to claim being
+the primary author of NoelKDF, rather than the code monkey
+implementing the great ideas from SolarDesigner and Christian Forler.
+However, I'm a pretty good code monkey.
+
+This small random read runtime penalty is driving me crazy.  If it
+were just my Ivy Bridge processor, I could maybe explain it as a weird
+Intel/gcc quirk.  I just don't see how to explain this happening on
+both Intel and AMD processors while the assembly code looks about
+right.
+
+Bill
+

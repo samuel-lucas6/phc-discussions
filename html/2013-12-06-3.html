@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - RE: [PHC] blakerypt sequential memory-hard function</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="2">[&lt;prev]</a> <a href="4">[next&gt;]</a> <a href="2">[&lt;thread-prev]</a> <a href="4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;00c801cef2d0$ac72b100$05581300$&#64;acm.org&gt;
+Date: Fri, 6 Dec 2013 14:15:28 -0800
+From: "Dennis E. Hamilton" &lt;dennis.hamilton&#64;....org&gt;
+To: &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: RE: [PHC] blakerypt sequential memory-hard function
+
+Krisztián,
+
+I think we're collapsing the parameter for creation of the hash versus parameters for verification of the hash.  For verification, the only thing that can be done is whatever is required.
+
+For creation, I see no problem with specifying a time-related work factor.  That would be Ttarget in the sense of my previous note.  How the implementation gets close to that is a different matter.  But the result has to include whatever parameters that allow the hash to be verified anywhere and in the face of changed platforms, speeds, etc.
+
+The technique I'm exploring allows for, but does not require, time-calibrated derivation of a work factor and for compressed expression of that work factor.  But a verifier doesn't have to know how, or even whether, that was done.  It does have to deal with the compressed work-factor value in order to verify such a hash (or report that it is not going to handle it on encounter of an unsupported/outrageous work-factor value).
+
+[Note: With regard to PHS, there is no such provision of course, since the work factor is an input parameter for either creation or verification.  So even the use of a compressed (non-linear) work-factor value would ideally be external to the use of the PHS API.]
+
+I have no objection to hashing methods that accept some sort of algorithm-related cost factor, such as a number of iterations.  It just means the determination of appropriateness in terms of workload on the generator of the hash is going to be determined by external means and with some knowledge of how the implementation runs on a given platform.  How that applies laterally to verifiers of the hash is also a consideration, of course.  In the context where I ran into the need for an iterative work factor, some constant too-low values were being used for some inexplicable reason.  Those number have been unchanged for the past 5-10 years.  Time-derived work factors provide automatic scaling to improvements in performance of the underlying cryptographic primitive and the platforms as new hashes are produced.
+
+I agree that there is additional complication with time-determined work factors.  And the time-based hash creation cannot (or at least should not) offer the same API as the call for verification.  
+
+ - Dennis
+
+PS: I favor Krisztián's suggestion about provision of a benchmarking tool for determining concrete impacts of work-factor parameters with a given implementation.  That's a great idea.  Having a sense for the variation over some range of platforms would also be valuable.
+
+
+-----Original Message-----
+From: Krisztián Pintér [mailto:pinterkr&#64;...il.com] 
+Sent: Friday, December 6, 2013 09:46
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] blakerypt sequential memory-hard function
+
+
+Dennis E. Hamilton (at Thursday, December 5, 2013, 5:16:02 PM):
+&gt; The advantage is that the Fibonacci recurrence provides a nice way
+&gt; of deriving k on the fly by seeing how much time is being taken in
+&gt; real time, and incrementing by the next step if a target threshold
+&gt; has not been reached.
+
+this is a recurring theme, and i never was a great fan of that. now i
+took some time to think through why.
+
+conclusion
+
+determining the proper cost parameters should not be a part of the
+actual algorithm, and should come from outside. the parameters must be
+provided in an explicit format, that is, number of cycles, number of
+memory blocks, etc. it allows equivalent forms, like 2^t time, but
+disallows time in milliseconds.
+
+rationale
+
+1. theoretical stand: separate things should be separate. it is
+conceptually different to determine the parameters and using them. use
+small code blocks, avoid swiss army knife antipattern.
+
+2. many times we want to calculate the hash on different platforms,
+including the case of switching platforms in the future. it is unwise
+to lock the parametrization to the current platform.
+
+3. if we always use fixed parameters, hashing the password the first
+time and checking a password does not differ at code/circuit level.
+this simplifies the code.
+
+4. we lose nothing with taking fixed parameters. we can at any time
+offer the user a separate "benchmark" option. together with a table of
+preset values for different platforms.
+
+
+the above is an opinion. don't get offended, discuss!
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

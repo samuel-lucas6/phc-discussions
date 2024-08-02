@@ -1,0 +1,40 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150326162708.GA23361@openwall.com>
+Date: Thu, 26 Mar 2015 19:27:08 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Thu, Mar 26, 2015 at 12:27:04PM -0300, Marcos Simplicio wrote:
+Lyra2 is less suitable for low sizes like this.
+
+Just for the sake of clarity: why exactly?
+
+Because at too low sizes it's likely weaker than bcrypt at least
+against GPU attacks.  What exactly is "too low" is to be determined, and
+will vary by likely attacker's hardware.
+
+For scrypt at r=1 and attacks with NVIDIA Kepler GPUs, the threshold
+appears to be somewhere around 16 MB or 32 MB.  (This is from YACoin
+mining.  16 MB to 32 MB is where GPU is on par with CPU.  At lower
+sizes, some GPUs win.  For bcrypt, another GPU type is on par with CPU
+even at bcrypt's 4 KB, and Kepler is much slower than CPU, at least with
+currently available code.)
+
+For Lyra2, I'd expect the threshold to be much lower, due to Lyra2's
+TMTO resistance and higher memory bandwidth usage.  1 MB feels plausible:
+it still lets an attacker pack thousands of instances per GPU card
+(maybe not quite enough to fully utilize a GPU's computing power, but
+likely enough to win over a contemporary CPU).
+
+Moderately higher block size (such as scrypt r=8) currently works
+against GPUs by having fewer instances fit in local memory.  However,
+I'd expect the impact on optimal implementations to be limited to the
+ratio of total block accesses (both current block such as scrypt's X and
+random block such as scrypt's V_j) to random block accesses, as they'd
+resort to keeping this data in global memory rather than decrease the
+concurrency too much by insisting on keeping this in local memory.
+
+Alexander
+

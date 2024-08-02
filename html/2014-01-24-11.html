@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="10">[&lt;prev]</a> <a href="12">[next&gt;]</a> <a href="9">[&lt;thread-prev]</a> <a href="12">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p56JNaYa1eP4Fo+8+qHE40Mq_7fSb6F_MOsKVoyytHS0A&#64;mail.gmail.com&gt;
+Date: Fri, 24 Jan 2014 09:03:51 -0500
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] cache timing attacks (Re: [PHC] Initial multiply-compute-hardened
+ Catena-3 benchmark)
+
+On Fri, Jan 24, 2014 at 4:46 AM,  &lt;Stefan.Lucks&#64;...-weimar.de&gt; wrote:
+&gt; On Fri, 24 Jan 2014, Solar Designer wrote:
+&gt;
+&gt;&gt; If this corresponds to a substantial portion of the full hash
+&gt;&gt; computation, then that attacker hasn't gained all that much - only a
+&gt;&gt; speedup of their offline attack by a certain factor, which we may try to
+&gt;&gt; make reasonably small.
+&gt;
+&gt;
+&gt; Agreed, the speed-up by knowing the memory-access pattern is low, if you
+&gt; just count the clock cycles. For scrypt, the speed-up would be about two.
+&gt; But you seem to overlook a crucial point.
+
+The scrypt author did an amazing job, IMO, but one thing he seemed not
+to understand very well is the complexity of Salsa20/8.  I think in
+custom hardware, this should be about a 1ns per iteration inner loop,
+producing 64 bytes, or 64GB/second on a single tiny core.  This is
+much more than 2X of what we can do on a single CPU.  This one reason
+scrypt has fallen to GPU attacks to some extent.  Just counting clock
+cycles is a lot harder than it used to be!  I'm guessing you cut your
+teeth on assembly code in the 80's or 90's, when counting clocks still
+worked.  I miss those days.  Personally, I'm counting on the latency
+of sequential multiply operations to thwart an attacker from speeding
+up hashing by more than 2X.  These shift, XOR, and ADD operations
+don't do the job.
+
+&gt; Once you know the memory access pattern, one can sort out wrong password
+&gt; candidates almost *memoryless*. Thus, the attacker can run the attack on a
+&gt; memory-constrained massively parallel hardware (e.g., run on a GPU with
+&gt; thousands of cores, using only the L1 caches) -- completely defeating the
+&gt; entire purpose of using a memory-intense password-hash function!
+
+Yep.  This is the entire reason for my interest in hard-to-pebble
+hashing algorithms.  It remains a conundrum.  We certainly can do a
+better job making an attacker use more memory with random password
+dependent reads/writes.  How much speed/memory are we willing to give
+up to be more cache timing resistant?
+
+&gt; The only difficulty is to gather the required information about the memory
+&gt; access pattern ("which cache lines may have been read in the first few
+&gt; iterations of scrypt").
+&gt;
+&gt; Stefan
+
+Scrypt does no password dependent memory access while filling memory.
+With a more compute intensive (in an ASIC) hashing function, it would
+be compute-time-hardened.  But, the attacker still gets to run in L1
+cache on his GPU cores, increasing his attack speed 1000X-ish -- I
+hate trying being specific when Alexander is here to give me the real
+numbers :-)  How many script instances can a GPU run in parallel if it
+does not try to save any of the computed data?  How fast do they run?
+
+Bill
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

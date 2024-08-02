@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Argon2</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="21">[&lt;prev]</a> <a href="../../../2015/03/31/1">[next&gt;]</a> <a href="21">[&lt;thread-prev]</a> <a href="../../../2015/03/31/7">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20150330231801.GA31544&#64;openwall.com&gt;
+Date: Tue, 31 Mar 2015 02:18:02 +0300
+From: Solar Designer &lt;solar&#64;...nwall.com&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Argon2
+
+Dmitry, Bill -
+
+On Mon, Mar 30, 2015 at 01:16:04PM -0700, Bill Cox wrote:
+&gt; Yescrypt (with 2 out of 3 PWXFORM rounds commented out): 0m0.668s
+
+You probably mean "with 4 out of 6 PWXFORM rounds commented out" (that's
+2 out of 3 double-round lines in the current yescrypt-simd.c file), so
+leaving it with 2 rounds.
+
+&gt; Argon2: 0m0.746s
+&gt; Lyra2: 0m1.126s
+
+Overall, Argon2 appears to be very well balanced, unlike the original
+Argon, which appeared to be TMTO-obsessed.
+
+The major exception here is Argon2's excessive instruction-level
+parallelism, which possibly makes it ~16x weaker.  I've commented on
+this below.
+
+&gt; Is Argon2d in the running, or only the revised
+&gt; version of the original Argon?
+
+Only the tweaked original Argon is in PHC.
+
+&gt; For comparison, here's Yescrypt running it's PHS function on 1GiB, but with
+&gt; 1/3 of the number of rounds as usual.  This is, if I am not mistaken,
+&gt; roughly equivalent in complexity to 2 Blake2b rounds:
+
+2 rounds of pwxform vs. 2 rounds of Blake2b?
+
+Depends on what you mean by complexity.  I think one round of pwxform is
+actually simpler than one round of Blake2b in terms of specification
+complexity.  (This does not include specification of how the pwxform
+S-boxes are initialized, though.)  They're similar in terms of the
+number of instructions needed per byte processed.  However, one round of
+pwxform is likely much higher latency than one round of Blake2b (and
+larger as well, but this is usually unimportant) in hardware.
+
+Note that your yescrypt benchmark also invokes 8 rounds of Salsa20 per
+1024-byte block.  That's equivalent to 1/2 a round of Salsa20 per 64-byte
+sub-block, so you're actually comparing 2 rounds of pwxform + 0.5 rounds
+of Salsa20 vs. 2 rounds of Blake2b in Argon2.  I am lucky yescrypt is on
+par with Argon2 in this test, despite of doing maybe 1.25x more computation
+per byte (and containing a lot less parallelism, see below).  (And even
+more than that if we consider hardware rather than software.)
+
+&gt; On Mon, Mar 30, 2015 at 3:18 AM, Dmitry Khovratovich &lt;khovratovich&#64;...il.com
+&gt; &gt; Cryptographers can be interested in the new 8192-bit permutation we
+&gt; &gt; designed
+
+That's cool, but that's 8192-bit parallelism, right?  Unless a defender
+makes use of it, this makes Argon2 like 8192/512 = 16 times weaker than
+yescrypt at default settings against ASICs.  In yescrypt, the 512-bit
+sub-blocks would be processed sequentially, so e.g. in Bill's testing
+it's 2*16 = 32 sequential rounds of pwxform (with their latencies) per
+kilobyte.  For Argon2, it's just 2 sequential rounds of Blake2.  Right?
+
+(This is on top of the ASIC latency difference of individual rounds of
+these primitives.)
+
+&gt; &gt; Argon2 has two variants: Argon2d and Argon2i. Argon2d is faster and
+&gt; &gt; uses data-depending memory access, which makes it suitable for
+&gt; &gt; cryptocurrencies and applications with no threats from side-channel
+&gt; &gt; timing attacks. Argon2i uses data-independent memory access, which is
+&gt; &gt; preferred for password hashing and password-based key derivation.
+&gt; &gt; Argon2i is slower as it makes more passes over the memory to protect
+&gt; &gt; from tradeoff attacks (3 passes by default comparing to 1 default pass
+&gt; &gt; in Argon2d).
+
+This i vs. d separation and the numbers of passes sound right to me.
+
+Like Bill, I think Argon2d may be more appropriate for many KDF uses as
+well, though.
+
+&gt; &gt; Webpage: <a href="https://www.cryptolux.org/index.php/Argon2" rel="nofollow">https://www.cryptolux.org/index.php/Argon2</a>
+&gt; &gt; Specification: <a href="https://www.cryptolux.org/images/0/0d/Argon2.pdf" rel="nofollow">https://www.cryptolux.org/images/0/0d/Argon2.pdf</a>
+&gt; &gt; Implementation: <a href="https://github.com/khovratovich/Argon2" rel="nofollow">https://github.com/khovratovich/Argon2</a>
+&gt; &gt;
+&gt; &gt; Comments are welcome.
+
+Overall, Argon2 looks very nice, but the 8192-bit parallelism looks
+crazy. ;-)
+
+Thanks,
+
+Alexander
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

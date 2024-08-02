@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Re: Proposed changes to author's code
+
+Message-ID: <CAOLP8p4uRLu3vFz5wmLkFH7sgD46UkudXMKZg5XbNeRvA3RjzA@mail.gmail.com>
+Date: Tue, 8 Apr 2014 08:08:44 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Proposed changes to author's code
+
+On Tue, Apr 8, 2014 at 7:07 AM, Dmitry Khovratovich
+<khovratovich@...il.comwrote:
+Hi Bill,
+>
+thank you for the efforts!
+>
+The legal input ranges for Argon are
+1 <= t_cost <= 2^24
+1 <= m_cost <=2^24
+>
+We prefer t_cost = 3 for all m_cost starting from 128, and t_cost  = 256 -
+2*m_cost for those smaller.
+>
+The total memory size in bytes is m_cost*1024.
+>
+I do not quite understand what you mean by average memory*time profile.
+Argon always does ((6t_cost + 5)*m_cost*64) memory accesses and performs
+f(t_cost,m_cost) operations, where f is a bilinear function (see Section 6.4
+of the specification for details).
+>
+We do not recommend using the reference implementation for benchmarking
+though. An optimized implementation will appear soon.
+>
+Best regards,
+Dmitry
+
+Thanks!  I set the minimum t_cost to 3 for now, since I see in the PHS
+function it will do this for me if I specify lower.  The test vectors
+wrapper tries to increase m_cost for any given t_cost until the
+runtime is 0.1 seconds.  I was only going to use the longer runtime
+values for benchmarking.
+
+I agree that the reference implementations are not very useful for
+benchmarking.  It's worse for those algorithms that are optimized for
+SSE/AVX2 (like mine) or use AESENC (even worse!).  I'll go ahead and
+build the auto-testing wrappers, but if authors prefer, I'll only post
+numbers for optimized versions.  Alternatively, I have have separate
+tables for optimized vs unoptimized.
+
+Bill
+

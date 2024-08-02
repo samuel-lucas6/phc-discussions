@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Low Argon2 performance in L3 cache</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="3">[&lt;prev]</a> <a href="5">[next&gt;]</a> <a href="../../../2015/09/04/1">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CAOLP8p4G_VbYovrYTjffv_fFv9NRQBLWHLFNWXgsrX6tuy241w&#64;mail.gmail.com&gt;
+Date: Thu, 3 Sep 2015 14:53:59 -0700
+From: Bill Cox &lt;waywardgeek&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Low Argon2 performance in L3 cache
+
+Imagine you work at a large company like Facebook and want to convince your
+data center guys to use Argon2.  They might have a 1 ms time budget for
+password hashing, and be unwilling to budge on that.  In this case, you
+really want the algorithm to fill memory rapidly.  Worse, you're sharing
+the CPU with other services, so multiple threads are costly, again
+upsetting the data center guys.
+
+Here's a speed comparison of single-thread hashing of 4MiB between Argon2,
+Yescrypt-2p, and TwoCats on my Xeon E5-1650 CPU running at 3.50GHz:
+
+Argon2d: 2.6 ms
+Yescrypt-2p: 1.8 ms
+TwoCats: 0.72 ms
+
+Assuming the attacker is L3 memory bandwidth bound, he will have a 13X
+higher area*time cost if attacking TwoCats instead of Argon2.  I played
+with various parameters to try and understand what's slowing down Argon2.
+I also am having trouble getting excellent single-thread performance out of
+Yescrpyt-2p for L3 bound hashing.  They break down roughly like this:
+
+- The new Argon2d implementation is not yet well optimized for speed.
+Argon2d from v.1.1 runs in 1.92ms.
+    - Note that v.1.1 has no multiplications, while Yescrypt does.  When I
+run TwoCats without multiplications, it takes 0.55 ms
+- Argon2 is computation bound, even in v.1.1.  When I comment out the
+second half of the BLAKE2_ROUND calls, it runs in 1.5ms.
+- When I also comment out one call to G1 and one call to G2 in
+BLAKE2_ROUND, it takes only 1.26ms.
+
+I don't seem to be able to speed it up further than this, and I've already
+done some scary things to the BLAKE2_ROUND function and Argon2's
+compression function.  I think the speed difference may be due to how
+Argon2's "state" variables do not fit into CPU registers, while TwoCats'
+do.  I found in tuning TwoCats that this is absolutely critical for good
+speed.  Having the state variables in L1 cache is fine for external DRAM
+hashing, but not fast enough for L3 hashing.
+
+A natural solution is to use more threads.  However, those other cores are
+likely running threads of their own:
+
+Argon2 v1.1.1 4 threads:  0.68 ms
+TwoCats 4 threads, no multiplies: .35 ms
+
+Wasn't Alexander getting something like 4,000 Yescrypt 4 MiB hashes per
+second?  If true, this is very impressive.
+
+What can be done to Argon2 to improve L3 hashing performance?
+
+Bill
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

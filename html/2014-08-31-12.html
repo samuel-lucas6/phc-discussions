@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] An additional PHS API to include a string?</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="11">[&lt;prev]</a> <a href="13">[next&gt;]</a> <a href="11">[&lt;thread-prev]</a> <a href="13">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;20140831144042.GY12888&#64;brightrain.aerifal.cx&gt;
+Date: Sun, 31 Aug 2014 10:40:43 -0400
+From: Rich Felker &lt;dalias&#64;...c.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] An additional PHS API to include a string?
+
+On Sun, Aug 31, 2014 at 10:26:10AM -0400, Bill Cox wrote:
+&gt; &gt; - String encoding for the output is fine, but you must also mind 
+&gt; &gt; the input. Password hashing is about hashing passwords (duh), and 
+&gt; &gt; passwords tend to be sequences of characters. Invariably, any 
+&gt; &gt; password hashing function begins by converting a sequence of 
+&gt; &gt; characters into bytes. C-based implementations often assume that 
+&gt; &gt; the conversion has already been done, but this is a known source
+&gt; &gt; of bugs; famously, one widespread implementation of bcrypt had
+&gt; &gt; trouble processing non-ASCII characters, and I saw the same bug in
+&gt; &gt; PGP 5.5 code (because of assumptions on the signedness of the
+&gt; &gt; 'char' C type).
+&gt; 
+&gt; I've written Unicode-32 to UTF-8 before.  It is a bit
+&gt; tricky.
+
+The other direction is slightly tricky if it's your first time, but if
+you follow the BNF and implement based on a DFA rather than naive bit
+hacks, it's hard to get wrong. The direction you described (UTF-32 to
+UTF-8) is quite trivial: for each valid range of UTF-32, there's a
+fixed sequence of steps with no loops or other complex logic to
+produce the output bytes.
+
+&gt; I did a ton of automated testing vs the reference version
+&gt; before I believed it worked.  This is not something that belongs
+&gt; directly in the core of a password hashing function, as it's more
+&gt; complicated than some of them, and highly error-prone.
+
+I agree with you here, but for different reasons, mainly that the
+source encoding will vary a lot by application. For C applications on
+Unix-like systems (e.g. system logins) it's almost surely to be in
+bytes already, but you can't impose a particular encoding at this
+level; it's up to the system/configuration and there are still people
+insisting on using their backwards Latin-1 and whatnot. For web apps,
+the source is likely in whatever encoding is preferred by the language
+used to write the app, and hopefully the language has a working method
+for converting to UTF-8.
+
+&gt; I think the implementations should assume the conversion has already
+&gt; been done, and that the password is now simply key material in an
+&gt; unsigned array of bytes which can include any value, even 0's.
+
+I disagree about including '\0' bytes. Supporting them in some places
+is a vulnerability waiting to happen, since they're likely to be
+interpreted as end-of-string in other contexts. If the bindings for
+the calling language use a byte-array that's capable of representing
+embedded '\0' bytes, they should check for '\0' bytes and return an
+error (or throw an exception, as appropriate for the language) before
+passing the string on to the underlying hashing implementation.
+
+&gt; Support for Microsoft's legacy Unicode-16 is something I would not
+&gt; want to take on, but I'd vote in favor of supporting UTF-8 and
+&gt; Unicode-32 formats.
+
+Do you meant UTF-16 or UCS-2? The latter is trivial to support, but I
+think the former is what's needed for a number of language bindings,
+and not significantly more difficult.
+
+&gt; &gt; We cannot ignore the non-Western world; thus, ISO-8859-1 
+&gt; &gt; ("latin-1") encoding is not appropriate. We have to embrace 
+&gt; &gt; Unicode, which means UTF-8, UTF-16 or some other encoding. 
+&gt; &gt; Unfortunately, humans have been extremely creative with regards to 
+&gt; &gt; writing systems, which means ambiguity (e.g. even a simple "é" 
+&gt; &gt; character has several possible decompositions in code points). 
+&gt; &gt; Therefore, it seems best if any implementation of a password 
+&gt; &gt; hashing function, in a language where strings are strings (i.e. 
+&gt; &gt; almost all of them except C and C++), takes care to apply strictly 
+&gt; &gt; defined and unambiguous encoding rules.
+&gt; 
+&gt; +1
+
++1, but I don't think this is easy. For example depending on the
+application, this may involve Unicode normalization forms, and I don't
+think processing them belongs at this level; it's complex and
+error-prone. Do you have ideas on the matter?
+
+Rich
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

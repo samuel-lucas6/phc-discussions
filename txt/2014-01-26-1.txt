@@ -1,0 +1,57 @@
+phc-discussions - Re: [PHC] Initial (non-proof-read) NeolKDF paper
+
+Message-ID: <CAOLP8p6e+HuWLyORgKLFnOkfqhr6JVbEinK=Lz15m4+Pa-3P3Q@mail.gmail.com>
+Date: Sat, 25 Jan 2014 19:30:35 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Initial (non-proof-read) NeolKDF paper
+
+On Sat, Jan 25, 2014 at 5:22 PM, Gary W. Hvizdak
+<gary.hvizdak@....rr.comwrote:
+
+Bill,
+>
+    In 2.1 Simplified NoelKDF, the statement ...
+>
+    value = value*(mem[prevAddr++] | 3) + mem[randAddr++];
+>
+... is equivalent to ...
+>
+  switch ( mem[prevAddr++] | 3 )
+  {
+    case 0 : value = mem[randAddr++];                         break;
+    case 1 : value = mem[randAddr++] + value;                 break;
+    case 2 : value = mem[randAddr++] +         (value << 1);  break;
+    case 3 : value = mem[randAddr++] + value + (value << 1);  break;
+    default :
+  }
+>
+... which is surely the route an attacker would take.
+>
+Cheers,
+Gary
+
+Thanks for reading it so carefully.  I meant the | operator to mean
+bit-wise OR, as it is used in C and C++.  I've seen some papers use it
+for concatenation instead.  What it does is set the low two bits to 1,
+but the upper 30 bits are unchanged.  To be reversable, a 32x32 -32
+unsigned multiply needs to have one operand be odd.  I found that with
+out an | operator to make one operand odd, I could not pass the
+dieharder tests.  I also found that I get more rapid mixing when some
+of the input has a lot of 0's with 3 rather than 1, so I changed it to
+3.  Perhaps I should have left it as 1, since I've gone back to using
+SHA-256 to fill the entire first block of memory with high quaility
+pseudo-random data.
+
+I'm sure I have other errors.  I wrote the code, and then used it as a
+reference for the pseudo code.  I rarely type that much code and have
+it compile the first time, especially with fairly poor vision.
+
+I've been sick for days, and I can't think of anything to do other
+than sit at my computer being miserable and editing hashing code.  I
+wasn't going to bother writing the paper, since I hate writing so
+much, but since I've gotten this far, I'll probably submit it.  I'm
+checking in an update now.
+
+Bill
+

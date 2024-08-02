@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] Lyra,
+      Password Key Derivation Based On The Sponge Construction</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="28">[&lt;prev]</a> <a href="30">[next&gt;]</a> <a href="27">[&lt;thread-prev]</a> <a href="../../../2014/01/11/4">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;3039f15b6d11c0775c24f26d5ef52383.squirrel&#64;webmail.larc.usp.br&gt;
+Date: Thu, 9 Jan 2014 16:21:52 -0200 (BRDT)
+From: "Marcos Simplicio" &lt;mjunior&#64;...c.usp.br&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] Lyra,
+      Password Key Derivation Based On The Sponge Construction
+
+Hi, everyone.
+
+Some thoughts below. I'm a bit late answering (or maybe you were too fast
+doing so :-) ), so I'm answering to the original post hoping to add some
+ideas.
+
+
+Both points are indeed relevant if the attacker has access to the KDF's
+partial memory and access patterns, and I do believe Catena does a
+wonderful job protecting against such attacks. Seriously, I do not think I
+could do better. The only protection I see in Lyra is the fact that the
+memory changes along the way, so the attacker needs to get the initial
+values for getting any useful advantage (but, since there are potentially
+many unchanged values if the memory usage is high, this is not a very
+strong argument).
+
+However, from a "risk analysis" point of view, I still think that the main
+threat to KDFs is the usage of many processing cores and personalized
+hardware performing brute force attacks. The reasoning is:
+
+A) As far as I can tell, the attacker needs to be inside your system
+*while you input the password* to access the internal memory used by the
+KDF. Otherwise, how will he/she be able to see the reading patterns or the
+memory initialized with the real password? So (1) this will not be a
+majority of attackers and (2) what exactly is preventing him/her from
+getting the plain password from the very start, since it will inevitably
+be placed in memory at some point or be readable from an I/O device?
+Protecting against this threat is definitely useful, but I believe that
+treating this has lower priority than treating (B).
+
+B) GPUs and FPGAs are a very serious threat already, especially because
+brute-forcing a password does not require access to the system while the
+password is being entered. All that is needed is the final KDF result,
+obtained from a local storage (invaded at any time) or from an unprotected
+communication channel. This is and will probably continue to be the most
+likely attack venue against passwords. The only way I see to avoid such
+attacks from being performed fast enough is to raise the associated costs
+(number/power of GPUs and chip area of FPGAs)
+
+There is an important difference with plain RC4 here, because RC4 normal
+usage does provide the attacker with its internal state from the start as
+its key stream, while KDFs never do so (the only thing the attacker gets
+is the final result). Hence, KDFs are more similar to the (AFAIK, still
+considered secure) RC4_Drop[n], in which the internal state is "worked on"
+before it is provided to the outside world. Unless, of course, you are
+considering threat (A) in your attacker model, in which case the "dropped"
+data is available to the attacker.
+
+Another thought is: if you build a KDF that always have the same (possibly
+salt-dependent) visitation pattern, what prevents the attacker from
+building a custom hardware that saves part of the memory states on a
+cheaper memory devices (e.g., hard disks) and pre-fetches them when (and
+only when) they are needed? I mean, the attacker knows what he will need
+and when, so it should not be too hard to overcome the bandwidth
+limitations of cheaper devices (something discussed both in Lyra and
+scrypt's paper). I may be wrong, but it seems to me that protecting
+against threat (A) by using password-independent visitation patterns
+actually reduces the KDF's strength against threat (B)...
+
+Well, those are my two cents :-)
+
+BR,
+
+Marcos.
+
+&gt;
+&gt; In message
+&gt; &lt;CAOLP8p5wwnaOpPGW0rA+Q9nz-jYtKhEL0aujMALuRuG=8zQtRg&#64;...l.gmail.com&gt;
+&gt; , Bill Cox writes:
+&gt;
+&gt;&gt;Thanks for this very interesting link.  Lyra first fills a matrix with
+&gt;&gt; hash
+&gt;&gt;data which is derived from the password, and then randomly picks a "row"
+&gt;&gt;and for each location it updates the hash state from the location's
+&gt;&gt; value,
+&gt;&gt;and then XORs into the location the next output of the hashing engine.
+&gt;
+&gt; Two things worry me about the general approach Lyra takes.
+&gt;
+&gt; My first thought was that this sounds vulnerable to the same issue
+&gt; RC4 suffers from:   It takes more entropy to "randomize" it properly
+&gt; than is typically available for the purpose.
+&gt;
+&gt; Lack of entropy is a major issue in any password context, and therefore
+&gt; I think it is wise to pay attention to the:
+&gt;
+&gt; 	bits of entropy
+&gt; 	---------------
+&gt; 	bits of state
+&gt;
+&gt; ratio not getting too low.
+&gt;
+&gt; The second thought is that a large memory footprint, desirable for
+&gt; all the reasons the Lyra presentation mentions, vastly increases
+&gt; the ways and means to discover what is going on through covert
+&gt; channels.
+&gt;
+&gt; So as a general principle, I'm personally not going to be very
+&gt; impressed by claims on the general form:
+&gt;
+&gt; 	"The ${datestructure} can be sized however large you like"
+&gt;
+&gt; even if it comes with a mathematically proof of ${something}, unless
+&gt; it also comes with plan for how it gets initialized with only limited
+&gt; entropy being available, and analysis of to what extent the access
+&gt; patterns may reveal its state.
+&gt;
+&gt; Poul-Henning
+&gt;
+&gt; --
+&gt; Poul-Henning Kamp       | UNIX since Zilog Zeus 3.20
+&gt; phk&#64;...eBSD.ORG         | TCP/IP since RFC 956
+&gt; FreeBSD committer       | BSD since 4.3-tahoe
+&gt; Never attribute to malice what can adequately be explained by
+&gt; incompetence.
+&gt;
+
+
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

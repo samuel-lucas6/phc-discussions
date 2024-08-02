@@ -1,0 +1,56 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <20140213185457.GA6905@openwall.com>
+Date: Thu, 13 Feb 2014 22:54:57 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 01:02:49PM -0500, Bill Cox wrote:
+Running the scalar unit in parallel with the SIMD unit, and having
+both doing what they are best at (multiply in scalar unit, memory r/w
+and parallel ADD/XOR/SHIFT/AND/OR in SIMD unit) seems like the best
+solution for processors that support it.
+
+That's not exactly what I meant.  It sounds like you're suggesting
+moving data between scalar and vector registers, which is overhead.
+
+What I meant is that you could do all sorts of operations, including
+multiply, on both scalar and vector registers, in separate chains.
+The scalar chain would be optimized for optimal latency - doing the
+multiplies as frequently as you can.  It will provide the latency
+hardening, not letting ASICs compute a block quicker even if it has a
+higher memory bandwidth.  The vector chain would be optimized for high
+throughput - doing as many multiplies per real time as you can - and for
+high memory bandwidth.  You don't even have to access memory from the
+scalar chain, nor mix its computation with the vector chain's more
+frequently than before and after each block.
+
+How can we add parallel SIMD computation to the scalar processing
+without having trouble on processors with weak SIMD?
+
+I think we need to have tunable SIMD and instruction-level parallelism
+settings.  For ancient CPUs, we can set both to 1.  Yes, this means that
+hashes initially computed on newer CPUs and with these settings tuned
+for newer CPUs will be slower to compute on older CPUs - more so than
+e.g. bcrypt, which leaves most execution units idle on modern CPUs.
+
+Are they an
+important case, and if so, are they already so slow that
+multiplication hardening is not useful?
+
+Yes, I was also thinking that requiring multiplies at all may hurt
+ancient machines too much, making it difficult/unreasonable to come up
+with OS distro default cost settings for password hashing that would be
+usable on machines ranging from VAX to modern x86-64 and beyond.  With
+bcrypt's use of only 32-bit ADDs and XORs, older machines are not that
+much slower than modern ones; with multiplies, the gap will be wider.
+
+This is why you see non-multiply "round function" examples for SN=4 and
+SN=2 in sim-mix.c.  Maybe we should support something like that as a
+tunable setting, to make the hash function potentially usable as default
+on a *BSD distro (even if with significantly weakened settings), but we
+need to make sure it'd be strictly more attack resistant than bcrypt.
+
+Alexander
+

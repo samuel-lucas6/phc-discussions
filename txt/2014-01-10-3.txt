@@ -1,0 +1,63 @@
+phc-discussions - Re: [PHC] A final cheat killer pass with smoke
+
+Message-ID: <1763079130.572826.1389343780258.open-xchange@email.1and1.com>
+Date: Fri, 10 Jan 2014 02:49:40 -0600 (CST)
+From: Steve Thomas <steve@...tu.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A final cheat killer pass with smoke
+
+On January 9, 2014 at 2:32 AM Poul-Henning Kamp <phk@....freebsd.dkwrote:
+, Bill Cox writes:
+>That's what the "smoke" is for. If all an attacker has access to is cache
+>miss timing, then simply randomizing the order of of memory access would
+>make it virtually impossible to gain information from the timing.
+>
+Can I mention another thing which bugs me, now that I've got started ?
+>
+The word "random" is not in our dictionary.
+>
+We have three parts to work with:
+>
+The password, which contains entropy, but which is not random, certainly
+not from invocation to invocation.
+>
+Salt(s), that can be random, or more likely least pseudo-random,
+but we should assume that the attacker knows it.
+>
+The algorithm, which is deterministic[1], and which the attacker also
+know -- and can optimize.
+>
+Please use the word "random" sparesly, most of the time it is unwarranted.
+
+He's using it correctly when he says "randomizing" he means from /dev/urandom.
+There are several ways to make the order of access not matter one is xor them
+together. I believe what he is proposing is:
+
+mem = allocate(size)
+out = memoryHardAlgo(pw, salt, size, mem, ...)
+for (i = 0; i < x; i++)
+    A[i] = i
+smoke = 0
+for (i = x; i 0; i--)
+    j = random() % x
+    smoke ^= mem[hash(out || A[j]) % size]
+    A[j] = A[i-1]
+smoke ^= mem[hash(out || A[0]) % size]
+clear(mem)
+return hash(out || smoke)
+
+The only thing this can leak is what the hash was suppose to output without
+smoke.
+Yes I understand that this could leak the order of A[]. I'm just too lazy to
+come up with
+anything better. Also observing several log ins, one might be able to average
+out the
+random.
+
+
+Hmm this actually might be very good at preventing GPUs. GPUs don't like random
+access. So this will kill performance. You could do this part on CPU but you'd
+have to
+copy all the data over (ie kill performance).
+
+

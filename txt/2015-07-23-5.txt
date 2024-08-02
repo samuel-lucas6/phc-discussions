@@ -1,0 +1,43 @@
+phc-discussions - Re: [PHC] Argon2 improvement thread
+
+Message-ID: <20150723014305.GA2093@openwall.com>
+Date: Thu, 23 Jul 2015 03:43:05 +0200
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Cc: Taylor Hornby <havoc@...use.ca>
+Subject: Re: [PHC] Argon2 improvement thread
+
+On Thu, Jul 23, 2015 at 02:09:58AM +0100, Samuel Neves wrote:
+On 22-07-2015 22:12, Jean-Philippe Aumasson wrote:
+@Bill, Solar (and others): blamka and maxform, respectively in Argon2i and
+2d, is that what you have in mind, of maxform in both?
+
+I would like to see a concrete specification of MAXFORM before this is settled. I understand that this is some variant
+of yescrypt's pwxform using MUL-ADD-XOR plus S-box lookups, but I haven't found an actual description of it.
+
+It's a subset of pwxform, with:
+
+PWXsimple = 1
+PWXgather = 1
+
+PWXrounds and Swidth are to be agreed upon / tuned specifically for
+Argon2d integration.  I had submitted a patch for Argon2d in here, along
+with benchmarks showing that there's very little performance impact, and
+it used specific sane values.  Optimized implementations will have the
+PWXrounds loop fully unrolled with cpp macros, to make the compiler
+intermix it with instructions coming from Blake2b rounds.  (The patch I
+posted in here did that.)
+
+Do you think we should produce a specification of MAXFORM on its own,
+not merely referring to yescrypt's specification of pwxform with the
+above two parameters fixed at 1, before we decide on accepting it for
+Argon2 tweak?  I'd think the above would be sufficient for the
+decision-making, with the concrete specification of MAXFORM on its own
+only needed as part of a revision of the tweaked Argon2 specification.
+
+I won't have time to produce a specification of MAXFORM on its own very
+soon, but maybe Taylor (CC'ed) would be willing to help?  (Taylor is
+working on a hopefully better specification of yescrypt.)
+
+Alexander
+

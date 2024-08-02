@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] hash encryption</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="7">[&lt;prev]</a> <a href="9">[next&gt;]</a> <a href="7">[&lt;thread-prev]</a> <a href="9">[thread-next&gt;]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;CALW8-7+6BcSXgorakpd4oLqKnvxr-xnRbea+tS0wk+w20SUmvw&#64;mail.gmail.com&gt;
+Date: Wed, 23 Mar 2016 10:47:36 +0100
+From: Dmitry Khovratovich &lt;khovratovich&#64;...il.com&gt;
+To: "discussions&#64;...sword-hashing.net" &lt;discussions&#64;...sword-hashing.net&gt;
+Subject: Re: [PHC] hash encryption
+
+Simplest scheme would be SHA-256 in the counter mode.
+
+Just XOR SHA-256(Key||Nonce||0..0)||SHA-256(Key||Nonce||0..01) to the
+block[4], that's it.
+
+Dmitry
+
+On Wed, Mar 23, 2016 at 8:54 AM, Jean-Philippe Aumasson &lt;
+jeanphilippe.aumasson&#64;...il.com&gt; wrote:
+
+&gt; What are your requirements wrt key size, block size, mode, speed?
+&gt;
+&gt; With all the crypto in yescrypt, we'll probably find a decent scheme based
+&gt; on existing code :-)
+&gt;
+&gt; On Wed, Mar 23, 2016 at 5:39 AM Solar Designer &lt;solar&#64;...nwall.com&gt; wrote:
+&gt;
+&gt;&gt; On Tue, Mar 22, 2016 at 09:08:41PM -0700, Andy Lutomirski wrote:
+&gt;&gt; &gt; My recollection of the different security properties of different
+&gt;&gt; numbers
+&gt;&gt; &gt; of Luby-Rackoff rounds is a bit vague, but they have nothing to do with
+&gt;&gt; &gt; bits of security or work factor.  Can you justify them?
+&gt;&gt;
+&gt;&gt; I found Thomas Pornin's answer here helpful:
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; <a href="http://crypto.stackexchange.com/questions/1352/are-there-any-specific-requirements-for-the-function-f-in-a-feistel-cipher" rel="nofollow">http://crypto.stackexchange.com/questions/1352/are-there-any-specific-requirements-for-the-function-f-in-a-feistel-cipher</a>
+&gt;&gt;
+&gt;&gt; Regarding 7 rounds for 256-bit security:
+&gt;&gt;
+&gt;&gt; <a href="https://www.iacr.org/archive/crypto2003/27290510/27290510.pdf" rel="nofollow">https://www.iacr.org/archive/crypto2003/27290510/27290510.pdf</a>
+&gt;&gt;
+&gt;&gt; In other words, 128-bit security for a 256-bit block is what
+&gt;&gt; Luby-Rackoff's usual 3 or 4 rounds provide (it's 4 for chosen ciphertext
+&gt;&gt; attacks, which might or might not be relevant here).
+&gt;&gt;
+&gt;&gt; Almost 256-bit security for a 256-bit block is achieved at 7 rounds, as
+&gt;&gt; shown in that other paper above.  I did not verify their results.
+&gt;&gt;
+&gt;&gt; &gt; IMO the error case should not result in the identity function.  Abort or
+&gt;&gt; &gt; memset-to-zero would be better.
+&gt;&gt;
+&gt;&gt; For an error case, sure.  But this isn't meant to be an error case: it
+&gt;&gt; is how we typically use password hashes now, without encryption.
+&gt;&gt;
+&gt;&gt; I could encrypt with the empty key, but there's no security difference
+&gt;&gt; here from not encrypting at all.  Zero key length is not the same as a
+&gt;&gt; key that just happens to be all-zero.
+&gt;&gt;
+&gt;&gt; I could treat zero key length as an error, but then why not treat low
+&gt;&gt; key length as an error as well?  And what's "low"?
+&gt;&gt;
+&gt;&gt; &gt; Hashing the key length in before the key would avoid needing to think
+&gt;&gt; about
+&gt;&gt; &gt; related-key attacks that might lose you one round or so of security
+&gt;&gt; under
+&gt;&gt; &gt; some circumstances.  Using a short-key variant as an oracle against a
+&gt;&gt; &gt; long-key variant would be nasty
+&gt;&gt;
+&gt;&gt; That's an interesting thought.  SHA-256 already hashes in the full
+&gt;&gt; message length in bits, and with only the key being of variable length
+&gt;&gt; here this feels sufficient.  Do you think it might not be, and why?
+&gt;&gt;
+&gt;&gt; Hashing in the full key length may be tricky to implement because it'd
+&gt;&gt; require converting it to an endianness-independent layout first.  I am
+&gt;&gt; trying to avoid cluttering the code with unneeded(?) stuff like this.
+&gt;&gt;
+&gt;&gt; Round number was much easier since those numbers are definitely small
+&gt;&gt; enough to fit in 1 byte, and this is a requirement for the Luby-Rackoff
+&gt;&gt; proof (independent functions for each round).
+&gt;&gt;
+&gt;&gt; BTW, I am considering changing:
+&gt;&gt;
+&gt;&gt;                 SHA256_Update(&amp;ctx, &amp;round, 1);
+&gt;&gt;
+&gt;&gt; to:
+&gt;&gt;
+&gt;&gt;                 {
+&gt;&gt;                         uint8_t round_bytes[4] = {round};
+&gt;&gt;                         SHA256_Update(&amp;ctx, round_bytes,
+&gt;&gt; sizeof(round_bytes));
+&gt;&gt;                 }
+&gt;&gt;
+&gt;&gt; to ease optimized implementations (so that the key would start at an
+&gt;&gt; aligned boundary, fitting SHA-256's 32-bit words directly).  But this
+&gt;&gt; clutters the SHA256_Update()-using code as above.  Any thought on that?
+&gt;&gt; Optimize for cleaner code here or for cleaner and shorter optimized code?
+&gt;&gt;
+&gt;&gt; This cipher isn't exactly performance-critical here, since it'll
+&gt;&gt; normally correspond to a negligible fraction of the password hashing
+&gt;&gt; time.  But it's also 100% overhead, because an offline attacker who has
+&gt;&gt; the key will be able to decrypt the hashes prior to cracking them.
+&gt;&gt;
+&gt;&gt; And maybe someone will reuse it elsewhere.
+&gt;&gt;
+&gt;&gt; Thank you for the review!
+&gt;&gt;
+&gt;&gt; Alexander
+&gt;&gt;
+&gt;
+
+
+-- 
+Best regards,
+Dmitry Khovratovich
+
+<span style="font-family: times;"><strong>Content of type "</strong>text/html<strong>" skipped</strong></span>
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

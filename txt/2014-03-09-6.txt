@@ -1,0 +1,95 @@
+phc-discussions - ROM-on-SSD (Re: [PHC] escrypt 0.3.1)
+
+Message-ID: <20140309055256.GA2644@openwall.com>
+Date: Sun, 9 Mar 2014 09:52:56 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: ROM-on-SSD (Re: [PHC] escrypt 0.3.1)
+
+On Wed, Mar 05, 2014 at 04:44:04AM +0400, Solar Designer wrote:
+- ROM-on-SSD support.  See PERFORMANCE-SSD for a usage example and some
+performance figures.
+[...]
+For ROM-on-SSD, support for read-ahead may need to be added, although
+
+Read-ahead was a wrong term to use here.  I meant computing the index in
+advance, to allow for prefetch.
+
+we've achieved reasonable results even without it (with many hardware
+threads sharing one SSD).
+
+One thing I didn't test before posting the above was running more
+threads than are supported in hardware.  With ROM-on-SSD, we incur
+context switches anyway, so there's no reason to expect exactly matching
+the hardware thread count to be optimal.
+
+I tested this now, and there's good speedup with higher thread counts.
+Specifically, this result from PERFORMANCE-SSD:
+
+$ ./userom 64 16 rom64.dat
+r=512 N=2^8 NROM=2^20
+Will use 67108864.00 KiB ROM
+         16384.00 KiB RAM
+ROM access frequency mask: 0xe
+'$7X3$6.6.../....WZaPV7LSUEKMo34.$0E1thDNQBLQG/1hFJWeezbEpOoGYQ7J1mNDgTbG0uJ3'
+Benchmarking 1 thread ...
+43 c/s real, 65 c/s virtual (63 hashes in 1.45 seconds)
+Benchmarking 8 threads ...
+180 c/s real, 37 c/s virtual (189 hashes in 1.05 seconds)
+
+improves to:
+
+$ OMP_NUM_THREADS=24 ./userom 64 16 ../rom64.dat
+r=512 N=2^8 NROM=2^20
+Will use 67108864.00 KiB ROM
+         16384.00 KiB RAM
+ROM access frequency mask: 0xe
+'$7X3$6.6.../....WZaPV7LSUEKMo34.$0E1thDNQBLQG/1hFJWeezbEpOoGYQ7J1mNDgTbG0uJ3'
+Benchmarking 1 thread ...
+42 c/s real, 64 c/s virtual (63 hashes in 1.49 seconds)
+Benchmarking 24 threads ...
+215 c/s real, 29 c/s virtual (441 hashes in 2.05 seconds)
+
+(same code revision, same ROM).
+
+This is 19% higher performance with 24 threads than with 8 threads (on a
+CPU supporting only 8 hardware threads).  In terms of bandwidth, this
+corresponds to 14.0 GB/s from RAM and 225 MB/s from SSD.  Relative to an
+SSD-less, RAM-only run (also 16 MiB RAM/hash) on the same machine, this
+is 89% of the c/s rate and 86% of RAM bandwidth usage.
+
+I think these results are good enough as-is that advance availability of
+the lookup index (and implementation of prefetch) is not worth adding.
+The intended use case for ROM-on-SSD is authentication servers, where
+the cost settings are limited by what happens at high concurrency -
+which is precisely what's optimal for this approach to ROM-on-SSD.
+Using e.g. 3 times more RAM for optimal performance is not a problem,
+and may actually be an advantage (an attacker with lots of SSDs in a
+machine would also need to provide as much RAM per SSD to achieve
+similar efficiency).  So we have a good match here.
+
+The SSD read speed may be improved by about a factor of 2 (so to 450 MB/s
+for this SSD) by using a much larger block size (than the 64 KiB used in
+the tests above), but then there would be less of a dependency on this
+being an SSD rather than a HDD (or an array of HDDs).  I ran such tests
+as well, and did reach ~450 MB/s from SSD in escrypt, but I dislike
+relaxing that dependency on a local SSD (vs. HDD or storage in a distant
+network location).  Also, with larger block size the number of random
+lookups per hash computed becomes too low.  Anyway, this sort of tuning
+is possible, and a decision may be made for each deployment separately.
+
+Support for simultaneous use of multiple ROMs (with different access
+frequencies) may need to be added, so that when using ROM-on-SSD it is
+possible to also use a ROM-in-RAM.  (Alternatively, the APIs may be
+simplified assuming that such support would never be added.)
+
+Any comments on this?
+
+Alternatively, ROM-on-SSD may be considered too exotic, and
+simplifications may be made by excluding support for adjusting ROM
+access frequency.
+
+And this?
+
+Alexander
+

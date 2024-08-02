@@ -1,0 +1,90 @@
+phc-discussions - Re: [PHC] Low Argon2 performance in L3 cache
+
+Message-ID: <CAOLP8p5-uNUjLV8sAP2_dYjt-h-Ayw+UVcX0avnVDQM-9-AZng@mail.gmail.com>
+Date: Sat, 5 Sep 2015 05:07:39 -0700
+From: Bill Cox <waywardgeek@...il.com>
+To: "discussions@...sword-hashing.net" <discussions@...sword-hashing.net>
+Subject: Re: [PHC] Low Argon2 performance in L3 cache
+
+On Fri, Sep 4, 2015 at 5:11 PM, Solar Designer <solar@...nwall.comwrote:
+
+Hi Bill,
+>
+On Fri, Sep 04, 2015 at 04:51:31PM -0700, Bill Cox wrote:
+Argon2d memory for 1.2ms hash: 2200 KiB
+Serial multiplies: 2200*96 = 211,200
+ASIC attacker speed using 1ns multipliers: 0.211ms
+area-time product: 0.465 s-KiB
+>
+TwoCats memory for 1.2ms hash: 8192 KiB
+Serial multiplies: 526336
+ASIC attacker speed using 1ns multipliers: 0.526ms
+area-time product: 4.31 s-KiB
+>
+It looks like TwoCats will have about 9X improved time-area defense, when
+we take into account the multiplication chains.
+>
+What is it that makes Argon2d so much slower?  Is it needing to perform
+two BLAKE2b rounds per sub-block, and the intermediate writes to state?
+>
+
+Mostly 2 things: Too many Blake2 rounds, and having state that does not fit
+into the mmx registers.  Cutting the Blake2 rounds in half looks fairly
+simple, but I don't know what to do about the state variables.  Argon2d
+uses 1KiB of state variables, and this is equal to it's block size.  If I
+decreased the state size, RAM latency issues would begin to dominate.
+
+
+Is memory (de)allocation overhead excluded from the 1.2ms for both of
+these?  And no zeroization done either?  At least we need to ensure the
+benchmarks are consistent in this respect.
+>
+
+No, and I think there's a C++ extra zeroing going on in Argon2d.  All three
+are allocating and deallocating memory.
+
+
+Can you tune Argon2d and TwoCats for same defensive throughput per CPU
+chip (with multiple independent concurrent instances), rather than for
+same defensive latency, for a comparison like this?
+>
+
+This would be ideal, in that having only password hashing running on a CPU
+solves problems related to how these algorithms do not work and play well
+with other services on the same CPU.  This also improves defense against
+side-channel attacks.  I think you well optimized Yescrypt for this use
+case.  However, there are complications in treating one service different
+from another.  Data center guys don't like it.  It would improve defense,
+though.
+
+My machine has 12 MiB of cache.  This would allow 3 instances to run
+without harming each other.  I verified this at one point.  The interaction
+is in the noise, maybe slowing each other down by 1-3%.  I have 6 CPU cores
+,so a 2MiB hash size would let me do 6 in parallel.  Eliminating the memory
+initialization would help further.  I would need to see if at that speed
+they still do not fight over a common resource like total L3 bandwidth.  I
+would not like dropping to 2MiB, though, as defense does seem to go as the
+square of memory.
+
+So, 3 4MiB threads run at almost the same rate as 1.  Just multiply by 3...
+this is about 4,000 4MiB hashes per second for TwoCats, I think.  I'd have
+to verify that...  If Argon2's speed issues look difficult to overcome for
+a 4MiB hash, I should probably look into Yescrypt for this particular space.
+
+I think it's primarily throughput per chip that matters at memory sizes
+and low latencies like this.  It doesn't really matter if it takes 1ms
+or 2ms of latency to reach a few MB, but it does matter what memory per
+hash you can reach within a given hashes per second budget (e.g. for
+5000 per second per chip).
+>
+Alexander
+>
+
+I agree.  Ideally, data centers would allocate entire CPUs to this task, so
+hashes per second per CPU, hash size, and the various defenses are what
+count.
+
+Bill
+
+
+

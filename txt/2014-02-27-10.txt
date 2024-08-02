@@ -1,0 +1,71 @@
+phc-discussions - die area estimates (Re: [PHC] GPU multiplication speed?)
+
+Message-ID: <20140227161551.GA12425@openwall.com>
+Date: Thu, 27 Feb 2014 20:15:51 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: die area estimates (Re: [PHC] GPU multiplication speed?)
+
+On Thu, Feb 27, 2014 at 10:03:37AM -0500, Bill Cox wrote:
+8 or 16 32x32->64 multipliers will never take up much area on a 28nm
+ASIC compared to the cache or external memories feeding them  A 4KiB
+cache should be a few times bigger, I think.  You're going to have to
+go massively parallel before they add up to much area, and the
+memories involved will have to be tiny.  If you're able to do a GPU
+optimized hashing algorithm, the multipliers will probably add up to
+some real defense.
+
+http://forums.parallella.org/viewtopic.php?f=8&t=310
+
+"out of 10mm^2 for a 64 core chip at 28nm, approximately:
+2mm^2 for IO
+4mm^2 for memory
+The remaining 40% is split between the following components: register
+file(big), FPU(big), NOC, memory cross-bar, "stuff"."
+
+The "memory" mentioned above is 64*32 KiB = 2 MiB of SRAM, and the 64
+FPUs contain a 32x32->32 multiplier each (may be used for integer or for
+single-precision floating-point).  If "FPU(big)" is half of "the
+remaining 40%" and the 32x32->32 multiplier is half the FPU size, this
+means that a 32x32->32 multiplier corresponds to roughly 8 KiB SRAM,
+and a 32x32->64 might correspond to 16 KiB SRAM, in terms of die area.
+
+This is somewhat inconsistent with your estimate above.  Do you think
+the multiplier takes a smaller portion of "the remaining 40%" above?
+(We can just ask Andreas.)
+
+If we estimate 1 bit of SRAM to be roughly the same as a 1-bit full
+adder, then a trivial 32x32->64 multiplier could be equivalent to around
+1 KiB of SRAM in terms of die area.  I doubt it's possible to do much
+smaller without significantly increasing the latency.  On the other
+hand, carry-save adders would probably increase die area.  BTW, the
+other day I was looking at ("2.6.4 Multipliers"):
+
+http://www10.edacafe.com/book/ASIC/Book/Book/Book/CH02/CH02.6.php?interstitial_displayed=Yes
+
+On Haswell, we have 4x 32x32->64 multipliers per 256-bit SIMD vector,
+which translates to 4 KiB to 64 KiB SRAM in terms of die area, given the
+range of estimates above.  We also have 32 KiB of L1 data cache per
+core.  So these might be on par, and by keeping the multipliers fully
+busy we might be doubling the required die area in ASIC, if we don't
+count the DRAM (such as because we're only using so little that its die
+area is relatively small, due to it being a few times smaller per-bit).
+
+And yes, in absolute terms this is very little.  For example, the
+portion of one Haswell core that we'd use could correspond to 0.1 mm^2
+in 28nm ASIC.  So 4000 of these would fit on a 20x20 mm die.  This would
+then resemble a speedup that we're currently seeing when cracking older
+hashes on GPU vs. computing them on one CPU core.  However, considering
+that it'd be on ASIC rather than on GPU, and that bigger speedup is
+possibly for currently popular hashes on ASIC, this is an improvement.
+
+Can we do better?  We could add AES-NI to the mix, but it'd probably be
+comparable to a multiplier in terms of die area.  SSSE3 shuffle is nice,
+but mostly against pre-existing architectures lacking a circuit with
+such specifics.  What else?
+
+Indeed, using more memory is the solution when it's available, but I am
+trying to do whatever practical for extremely low memory settings as well.
+
+Alexander
+

@@ -1,0 +1,80 @@
+phc-discussions - A review per day - TwoCats
+
+Message-ID: <53FFBD82.3070404@ciphershed.org>
+Date: Thu, 28 Aug 2014 19:38:42 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A review per day - TwoCats
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+How can I objectively analyze TwoCats?  It's one of the coolest things
+I've ever written.  If it weren't for Alexander being in the
+competition, I honestly feel TwoCats would be the most deserving
+successor to Scrypt.  I'm biased in that view, but of course I should
+believe this!  If I had thought of way to improve TwoCats, I would
+have!  It is very close to being the best algorithm I can come up with
+for this problem.  Not only that, but I had a bunch of guys on this
+list helping me discover TwoCat's limitations way before the
+submission deadline.  It's a result of my single-minded focus on my
+hobbies, and great minds here.
+
+All that said, Solar Designer still out-coded me.
+
+The biggest thing I do not like about TwoCats is that I claim to be
+it's author, when most of it's ideas are from Alexander (Yescrypt) and
+Christian (Catena).  This feels like a lie.  There is waaay too much
+in common with both Yescrypt and Catena, and the small portion of
+TwoCats which is in neither Yescrypt or Catena is not interesting
+enough to win anything.  There's still enough for me to be proud of,
+though.
+
+As for other limitations, I think they mostly come from my focus on
+password hashing for two applications: ssh private keys and TrueCrypt.
+ Both should run for about 1 second, using as much memory as possible.
+ At least in the ssh case, it is unlikely that I can convince the code
+maintainers to allow me to use all the CPUs on the machine.
+Therefore, I decided to hash memory as fast as possible.  In
+single-thread mode, TwoCats I believe is the world's fastest hashing
+algorithm.  I also feel it is secure, because it just doesn't matter
+what you fill memory with, so long as an attacker has to do the same.
+
+One thing I screwed up was how to use t_cost.  For TrueCrypt and ssh
+key derivation, the obvious limit is time, not memory.  Therefore,
+t_cost should always be set to minimum.  I intend to use TwoCats
+always with t_cost set to 1.  What I used t_cost for was an L1 cache
+bandwidth hardening parameter.  Ideally, you should set t_cost as high
+as you can without having hashing slowing down significantly.  At that
+point, you're maxing out L1 cache bandwidth in addition to whatever
+else is limiting speed.  That's the best use I could come up with for
+a t_cost parameter.
+
+Both Yescrypt and Lyra2 use t_cost for improving TMTO defense.  Duh...
+that didn't occur to me!  Why would I use t_cost to *slow down*
+hashing?!?  That makes my poor ssh key *less* secure!  Of course,
+there are good reasons for slowing down hashing and using *less*
+memory, but going slow ins't an area where I tend to innovate...
+
+That's all I have for now!  Please feel free to dump on TwoCats!  It's
+my turn :-)
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/71+AAoJEAcQZQdOpZUZdxYP/36HYMZbWXgEwMZwDaGoIMpG
+q8bAIVmxndF424g3qGNOuZ/7l6wo3g364Xx7/78xXZehyV7MxsRGmqAyRo54xxjV
+UJ5BpHkukzNyuZ+iv3uCGdEQ+MTYMFbuJ83qp0HdROxamzrMbg9tXHB1UKuvS447
+b0f2mLYlaU0a5mF90MJ8h5w7rI1ysvV+XHCRpmEKPTZyk5eKGEJb8t37JuwVG1Lb
+WqLuEummNwemQIVdwFHWp188ISzUz0Cke/m+5BJi+D4559iNBfVFAhLh5jkJqI7+
+AlfnjsxZ5FWERAQ4dQHjnRRXIFSMs4Ejl39RtBoH9eZs0Hun3svCfb9Enc0Twg4p
+h7wd697ZjhrAoSeFT5rLeSI5bauLQ6pnUykFORcWk8li6pkfaJNdtKrUiADm3VyN
+qiBRPjaZjpl6XWGNdPrg6YLpznUPVhGnAovn6fpRJ4CBj3YdCoqm0A/RulnFtEM3
+XSkrWo1mEbGlyxkj5X4Z3uMUxisU78WMQADt7lW7vfOb8m6/97J39RBJm1KGEQKq
+KWo7NMFYybfmPNEuwgyTTjnoo0Rx0EPOWh5jndcv9CAGkQM9UhpVf8OZZg+5/6Sg
+ofFosSZLHYo2WSDmsIYo8zSt4E1QGG4Cf68KbFe6gHgtxvvkv9Dyq8J/L3dSVDN/
++OfNknRkQzZWM1YbIs/y
+=7Ki9
+-----END PGP SIGNATURE-----
+

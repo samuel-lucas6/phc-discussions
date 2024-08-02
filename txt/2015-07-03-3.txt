@@ -1,0 +1,48 @@
+phc-discussions - RE: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+Message-ID: <1897343486-1900@skroderider.denisbider.com>
+Date: Fri, 3 Jul 2015 07:10:23 +0100
+From: denis bider <pwhashing@...isbider.com>
+To: discussions@...sword-hashing.net
+Subject: RE: [PHC] Password hashing as a self-overwriting Turing machine: new
+ version (July 3)
+
+I have addressed reported shortcomings in BusyBeaver. Most of them (if not all?) have been pointed out by Bill Cox.
+
+The new latest version is here:
+
+http://www.denisbider.com/BusyBeaver-20150703.zip
+
+Changes:
+
+(1) A parallel implementation, ParaBeaver, is now implemented separately in ParaBeaver.h/.cpp. It uses C++11 threading in order to run a number of concurrent threads processing BusyBeaver instances. ParaBeaver is useful on clients that can expect to have most cores idle, and can benefit from parallelization to gain security at no cost to the user. ParaBeaver works by allocating room for N number of digests, which are computed in parallel based on N number of variations on original salt and password inputs. When all N digests have been computed, a hash of the concatenated digests forms the final result. In the special case when N=1, the final result equals the result of the one BusyBeaver instance. This is a very general parallelization construct that would work well with practically any similar serial algorithm.
+
+(2) An additional parameter is now supported, swapBlockThreshold, which provides a hybrid mode tradeoff between side channel resistance and preventing an attacker from rearranging the order in which instructions are executed so as to better fit into the attacker's cache. BusyBeaver will now operate in side-channel-free mode the first 1/4 of the time, and then switch to block swapping. During block swapping, the roles of SaltBlock and PwBlock are exchanged at every jump, so that both blocks begin to control jumps and offsets, and both blocks are read from and written to. ParaBeaver supports swapBlockThreshold, and computes it sensibly for use in multithreaded execution.
+
+(3) The BusyBeaver class is now templated to allow use of an arbitrary hash and HMAC. SHA-512 continues to be the default and suggested hash.
+
+(4) The implementation of MulModOp64 now uses a right shift by 4 bits between multiplication and modulo in order to use a portion of multiplication result that preserves more entropy. The result of MulModOp64 is now used via rotBits in all instructions, to prevent the CPU from detecting it's not used and optimizing it away.
+
+I believe this addresses all raised concerns, while preserving the simplicity of the algorithm. Please let me know if I have missed an important concern!
+
+
+In response to Marsh Ray:
+
+I don’t think you get to invoke the hardness of the halting problem when your computation is known to complete in a fixed number of steps.
+
+I'm not formally invoking the hardness of the halting problem. Instead, I'm hypothesizing that there are reasons why this construction is not reducible, and that these reasons are similar to that problem.
+
+In intuitive terms, I believe this is because one cannot know what the algorithm is going to do until the algorithm does it. Any attempt to forecast what the algorithm will do is simulation, and simulation is as expensive as execution.
+
+Non-reducibility matters for an attacker who does not know the password. Therefore, the attacker does not know the contents of the password block.
+
+As of today, the algorithm has two phases:
+
+- During the first phase, memory addresses are controlled by the salt block, and the attacker knows where memory access is going to happen. Their ability to reorder operations is limited in this phase by random (salt-determined) memory access conflicts. For each address, about every 500th operation is expected to read from it, and about every 1,000th operation is expected to write to it. Each read/write also involves neighboring addresses, and is performed at unaligned boundaries. What the attacker can do in this phase is reorder operations to optimize how the memory access fits into their cache. They still have to determine what operations to execute, and actually execute them, separately based on each guess of the password.
+
+- During the second phase, memory addresses are controlled by both blocks, and both the salt block and the password block are read from and written to. At this point, the attacker quickly loses all idea of where memory access is going to happen, and can no longer even try to optimize for cache locality.
+
+
+
+

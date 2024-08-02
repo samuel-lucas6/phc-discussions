@@ -1,0 +1,44 @@
+phc-discussions - Re: [PHC] A must read...
+
+Message-ID: <20140115073806.GC22864@openwall.com>
+Date: Wed, 15 Jan 2014 11:38:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] A must read...
+
+On Tue, Jan 14, 2014 at 10:01:24PM +0000, Marsh Ray wrote:
+From: Bill Cox [mailto:waywardgeek@...il.com] 
+Serial multiplications force the attacker to compute for a similar amount of time as me.
+[...]
+I only dabble in such things, but let's imagine we had a 40-stage multiplier which could produce a result every single clock at or near the maximum toggle rate for that chip process. How will the proposed designs prevent the attacker from keeping such a pipeline well fed?
+
+Assuming unpredictable lookups:
+
+The primary goal of the serial multiplies is not in preventing efficient
+use of a multiplier pipeline per se.  (The multiplier is tiny compared
+to memory anyway, so a ~10x difference in efficiency of its use doesn't
+matter much, except when our KDF is used at high-throughput and thus
+low-memory settings.)  The primary goal is in tying up memory for each
+instance of the KDF being computed in parallel, and in doing so not only
+through memory latency and bandwidth, but through max(multiply latency,
+memory latency, time needed to fetch a block at given bandwidth).
+That's three constraints on the speed of attacks (the time factor in
+area*time), instead of two.
+
+Yes, an attacker with many parallel cores may have the cores use fewer
+shared multipliers, and efficiently fill the multiplier pipelines in
+this way.  However, this will buy the attacker very little (and probably
+cost way more in overhead): there won't be any speed improvement (since
+latency for each core stays the same or even becomes higher) and there
+won't be any reduction in memory needs.  Only some die area needed by
+multipliers would be saved (by having fewer of them than the number of
+cores), but it's tiny (and more die area would likely be lost on routing).
+
+Predictable lookups defeat this approach.  With predictable lookups,
+we're relying almost exclusively on memory bandwidth for the time
+factor.  Not even on memory latency anymore.  That's only one constraint
+for the attacker, out of possible 3 constraints mentioned above.  This
+is a major drawback of Catena, etc.
+
+Alexander
+

@@ -1,0 +1,98 @@
+phc-discussions - escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Message-ID: <20140111170120.GA6519@openwall.com>
+Date: Sat, 11 Jan 2014 21:01:20 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: escrypt memory access speed (Re: [PHC] Reworked KDF available on github for feedback: NOELKDF)
+
+Bill,
+
+On Sat, Jan 04, 2014 at 10:07:58AM +0400, Solar Designer wrote:
+On Sat, Jan 04, 2014 at 09:27:24AM +0400, Solar Designer wrote:
+Salsa20 rounds reduced to 2:
+[...]
+Let's try to compute the hash 10 times per program invocation, to move
+the memory allocation overhead out of the loop (is only done once here):
+
+real    0m6.159s
+user    0m45.363s
+sys     0m2.584s
+
+Now it's down to ~0.6s per hash, which is better than 0.35s claimed for
+NOELKDF, given escrypt's 2x iteration count (and thus cost to attacker).
+
+In escrypt running in this mode, SMix first loop has sequential writes
+and random reads, and second loop has random reads only.  So it's 3*N
+memory accesses (not counting accesses to data that is presumed to be in
+L1 cache).  This gives ~10 GB/s, suggesting that there's also room for
+improvement.
+
+I ran some further benchmarks, with minor changes relative to the above.
+
+With r increased from 8 (1 KB) to 16 (2 KB):
+
+real    0m5.630s
+user    0m41.339s
+sys     0m2.448s
+
+r=32:
+
+real    0m5.516s
+user    0m40.203s
+sys     0m2.480s
+
+r=64:
+
+real    0m5.769s
+user    0m42.335s
+sys     0m2.504s
+
+r=128:
+
+real    0m5.829s
+user    0m42.595s
+sys     0m2.492s
+
+So r=32 (4 KB) appears optimal in this test.
+
+r=32 and Salsa20 rounds count reduced to 1:
+
+real    0m5.362s
+user    0m39.046s
+sys     0m2.588s
+
+2*3*10*2^30/10^9/5.362 = ~12 GB/s
+
+I suspect that some of the memory bandwidth might be wasted on reading
+from to-be-written-to memory locations into cache, before the
+corresponding cache lines are finally complete with the newly written
+data and are written out back to memory.  In fact, in the tests above I
+have prefetch instructions on to-be-written locations.  With those
+instructions removed (leaving prefetches only for reads, not for
+writes), the speed is slightly lower, which sort of suggests that such
+unneeded-by-the-algorithm fetches are happening anyway.  I could
+probably avoid this problem by explicitly using non-temporal stores, but
+then I'd need extra instructions to store a second copy of the data into
+a small buffer in L1 cache, so that it can be read from on the next loop
+iteration.  (And there would be some risk of that second copy getting
+written out to memory as well.)  Right now, I am reusing the last
+written-to V element as next iteration's input X (in SMix's first loop).
+Ideally, what I need is "please do cache my newly written data, but
+please do not fetch any old data because I am filling the entire cache
+line with new data here", but there's no such hint (the best we can do
+is do the 4*16-byte writes rapidly, and we do that already - somehow not
+always good enough?)  Colin's original crypto_scrypt-sse.c did have the
+extra data copying (separate X in L1 cache and V in memory).  My
+changing it to avoid the copying has sped it up.  However, that's when
+neither implementation is using explicit non-temporal stores.  Adding
+non-temporal stores on top of Colin's original approach (but with the
+rest of my optimizations, just without this one) might result in better
+speed, or it might not.  This may be worth trying.
+
+BTW, these recent benchmarks I ran were using 4 KB pages, I think.
+Moving to 2 MB pages may provide some speedup (for both KDFs), as I had
+observed on my other benchmarks.
+
+Alexander
+

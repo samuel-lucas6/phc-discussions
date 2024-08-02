@@ -1,0 +1,40 @@
+phc-discussions - Re: Initial multiply-compute-hardened Catena-3 benchmark
+
+Message-ID: <CAOLP8p7D8-B1uK+TpWbTEj_fsokQaXySuLPQn837LwhPP35J=Q@mail.gmail.com>
+Date: Fri, 24 Jan 2014 17:03:40 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: Initial multiply-compute-hardened Catena-3 benchmark
+
+On Thu, Jan 23, 2014 at 2:10 PM, Bill Cox <waywardgeek@...il.comwrote:
+I've signed in a branch of Catena that replaces the hashing function
+with a simple multiply, OR, and ADD.  I also made it hash blocks of
+4096 bytes of memory at once rather than 64.  The result runs 13X
+faster, filling 1GB of memory in 1.37 seconds on a single thread.
+>
+In comparison, NoelKDF hashes 1GB in 0.42 seconds on 1 thread, or 3.2X
+faster.  However, there's a TMTO attack against NoelKDF that requires
+almost the same runtime, but only uses 0.5GB.  There is no such attack
+against Catena-3, IMO.
+>
+Taking that into account, Catena-3 takes only about 40% longer to hash
+the same memory as an attacker optimized version of NoelKDF.  I'm
+leaning towards Catena-3 now, for timing attack resistance, at least
+if we have an option for a fast hash in the inner loop.
+
+I shouldn't do math when I'm tired.  Also, I tuned NoelKDF just a bit,
+and it's running 1GB single-thread in .39 seconds, or 75% faster than
+my sped-up version of Catena3, taking into account a free-ish 2X
+speed-up.  However, NoelKDF was not designed for cache-timing
+resistance.  I'm going to put it back the way it was before, when it
+was simpler, and read from password dependent addresses from the
+beginning.  In that case, I don't need the cheat killer round, and an
+attacker cannot easily obtain any free 2X memory reduction, since he
+wont know what memory will never be accessed again.  NoelKDF is better
+off as a KDF optimized without cache timing attacks in mind.  In that
+case, it gets a full 3.5X speed advantage.  It also is resistant to
+TMTO.  However, cache timing attacks can defeat not only it's memory
+requirement, but also it's runtime.
+
+Bill
+

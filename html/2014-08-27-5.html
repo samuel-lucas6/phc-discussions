@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body { font-size: 16px; }
+.cal_brief { text-align: center; }
+.cal_brief td:first-child { background: inherit; }
+.cal_brief td { background: #ccc; width: 5ex; padding: 2px; }
+.cal_big { text-align: center; padding: 0; margin: 0; }
+.cal_big td { padding: 0 2px; }
+.cal_mon { text-align: center; }
+.cal_mon th { font-size: small; padding: 0; margin: 0; }
+.cal_mon td { background: #ccc; width: 5ex; height: 1.5em;
+	padding: 2px; text-align: right; }
+.cal_mon td[colspan] { background: inherit; }
+.cal_mon sup { color: #F0F0F0; text-align: left; float: left;
+	margin-top: -2pt; font-weight: bold; }
+.cal_mon a { text-align: right; margin-left: -4em; float: right; }
+</style>
+
+<title>phc-discussions - Re: [PHC] A review per day, starting with Yarn</title>
+
+
+</head>
+
+<BODY bgcolor="#E0E0E0" text="black" link="blue" alink="red" vlink="navy">
+
+
+
+<TABLE bgcolor="white" width="100%" border="0" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="39%">
+<A HREF="http://lists.openwall.net">lists.openwall.net</A>
+<TD width="1%" rowspan="3">&nbsp;
+<TD width="60%" align="right" rowspan="3">
+<A HREF="/">lists</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/announce/">announce</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-users/">owl-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/owl-dev/">owl-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-users/">john-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/john-dev/">john-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwdqc-users/">passwdqc-users</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/yescrypt/">yescrypt</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/popa3d-users/">popa3d-users</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/oss-security/">oss-security</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/kernel-hardening/">kernel-hardening</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/musl/">musl</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/sabotage/">sabotage</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/tlsify/">tlsify</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/passwords/">passwords</A>&nbsp;
+/&nbsp;
+<A HREF="http://www.openwall.com/lists/crypt-dev/">crypt-dev</A>&nbsp;
+<A HREF="http://www.openwall.com/lists/xvendor/">xvendor</A>&nbsp;
+/&nbsp;
+<A HREF="/bugtraq/">Bugtraq</A>&nbsp;
+<A HREF="/full-disclosure/">Full-Disclosure</A>&nbsp;
+<A HREF="/linux-kernel/">linux-kernel</A>&nbsp;
+linux-<A HREF="/netdev/">netdev</A>&nbsp;
+<A HREF="/linux-ext4/">linux-ext4</A>&nbsp;
+<a href="/linux-hardening/">linux-hardening</a>&nbsp;
+<a href="/linux-cve-announce/">linux-cve-announce</a>&nbsp;
+<a href="/phc-discussions/">PHC</a>&nbsp;
+<TR><TD>
+<DIV><FONT SIZE="-2"><I>Open Source and information security mailing list archives</I></FONT></DIV>
+<TR><TD>&nbsp;
+</TABLE>
+
+<TABLE bgcolor="#B4D0DC" width="100%" border="0" cellspacing="0" cellpadding="1">
+<TR><TD>
+<TABLE width="100%" border="0" cellspacing="0" cellpadding="2">
+<TR><TD bgcolor="#ECF8FF">
+
+<a href="https://hashsuite.openwall.net/android">
+Hash Suite for Android: free password hash cracker in your pocket</a>
+
+
+</TABLE>
+</TABLE>
+
+
+<a href="4">[&lt;prev]</a> <a href="6">[next&gt;]</a> <a href="4">[&lt;thread-prev]</a> <a href=".">[day]</a> <a href="..">[month]</a> <a href="../..">[year]</a> <a href="../../..">[list]</a>
+<pre style="white-space: pre-wrap">
+Message-ID: &lt;53FE5108.8070000&#64;ciphershed.org&gt;
+Date: Wed, 27 Aug 2014 17:43:36 -0400
+From: Bill Cox &lt;waywardgeek&#64;...hershed.org&gt;
+To: discussions&#64;...sword-hashing.net
+Subject: Re: [PHC] A review per day, starting with Yarn
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Way back in April, we had a Yarn discussion:
+
+    <a href="http://comments.gmane.org/gmane.comp.security.phc/1308" rel="nofollow">http://comments.gmane.org/gmane.comp.security.phc/1308</a>
+
+Here's a quick dump of my updated "issues" list for Yarn.  Some
+benchmark data is at the end, though we only have the reference
+version.  I make my best guess how fast the optimized version will
+run.  I also make a guess about the speedup I could get with an ASIC
+in a similar process as the CPU.
+
+Yarn issues:
+
+- - Only runs fast compared to ASIC if AES instructions are available,
+making it suitable only for authentication servers
+- - Is unsuitable for large-memory hashes such as 1GiB, because it
+read/writes 16 bytes at a time to pseudo-random locations throughout
+memory, reducing his potential memory bandwidth to external DRAM more
+than 10X.
+- - Has constant time cache-timing attack requiring only enough blake2b
+computations to fill up the state array (272 bytes by default).
+- - There is no optimized version offered, making it far hard to analyze
+Yarn.
+- - The reference version is unacceptably slow.
+- - Has input collisions on password, and salt - adding a few zeros to
+the end does nothing.
+- - 10 rounds of sequentially dependent AES for filling memory is slow.
+ On Ivy Bridge, there is a 6 clock latency between each AESENC
+instruction.  That's only a about 1GiB/s.  Other entries max out my
+DDR3 memory bandwidth at 12GiB/s.  That would require 12-way
+parallelism, but the default parallelism is 6.  Setting par to 12
+would allow two threads to do the job, but there is no option for
+multiple threads.
+- - He does not want to support multiple threads.  Running threads
+externally and combining results gives an attacker a free TMTO.  Also,
+few applications are going to provide multi-threading externally.
+- - His default choice of 72 for m_step is way too high for a 1GiB hash
+that busts out of cache, and way too low for a 16KiB hash that fits in
+L1 cache.
+- - Contents of memory while filling are easily determined to be Yarn
+data, rather than truely random, since the AES keys are known.  Simply
+encrypt a 16 byte block of memory using the Yarn key schedule with 10
+AES rounds, and see if your result matches the data in memory par*16
+bytes later.  If 10 AES rounds are going to be used, it should be
+indistinguishable from true-random.
+- - Unless t_cost is around m_step*2^m_cost or larger, a lot of memory
+will not be overwritten, leading to a TMTO option like Script.
+- - For parallelism setting of 1, he calls aesenc using state[0] as both
+the data and key.  Is this is reversible?  We may want to require
+parallelism &gt; 1.  I probably would use a minimum of 4 for my Intel
+processors that support AES instructions.
+- - The reference code difficult to use as a starting point for creating
+an optimized version.  The parallelism is not explicit enough.
+
+
+Here are benchmarks for 16MiB and 1GiB hashes using the inefficient
+reference implementation.  This might give us a feel for what happens
+on machines without SIMD and AES units, but it in no way reflects how
+fast an optimized version of Yarn will run.
+
+16GiB hash benchmark:
+
+We need t_cost of about m_cost*m_step = 2^20*72 = 75.5M
+
+PHC&gt; time ./phs-yarn 75500000 20
+
+9a 5a ec 93 6a 91 d0 d5
+f0 d3 da af cb ee de 1f
+95 b7 42 67 2b 6d dd fe
+1e b8 3b e0 b6 04 e4 1d      32 (octets)
+
+
+real	0m4.565s
+user	0m4.563s
+sys	0m0.004s
+
+1GiB hash benchmark:
+
+We need t_cost of about m_cost*m_step = 2^26*72 = 4.8B.  However, it's
+a 32-bit unsigned int in the PHS API, so 4.2B is the max.
+
+PHC&gt; time ./phs-yarn 4200000000 26
+
+61 44 c9 1f be a9 8a 90
+43 47 99 f3 eb b2 8f 6d
+0e 8f dd 59 a6 08 61 7b
+58 8d 0f a4 56 a5 de 83      32 (octets)
+
+
+real	4m18.725s
+user	4m18.644s
+sys	0m0.161s
+
+
+Optimized estimate:
+
+I wrote a simple cache test program that determines how fast I can
+read then write 128 bit values to random locations.  The 32K L1 cache
+was 1.5ns, the 256K L2 cache was 2.0ns, and the 8MiB L3 cache was
+12ns.  External memory for 1GiB random read/writes was 18.2ns.
+
+Optimized runtime estimate for 16MiB, with m_cost = 20, and t_cost =
+75.5M:
+
+Filling memory, one thread, max of 6GiB/s: 2.6ms
+Performing m_cost pseudo-random 16 byte read/writes to L3 cache: 12.6ms
+Performing 71*m_cost AES operations, 1 per cycle: 21.9ms
+Total: 21.9ms + 2.6ms = 24.5ns
+
+Note: This is probably optimistic.  It represents the highest possible
+speed assuming everything works out perfectly.
+
+Optimized runtime estimate for 1GiB, with m_cost = 26, and t_cost = 4.2B:
+
+Filling memory, one thread, max of 6GiB/s: 0.17s
+Performing m_cost pseudo-random 16 byte read/writes to DRAM: 1.22s
+Performing 71*m_cost AES operations, 1 per cycle: 1.4s
+Total: 1.4s + 0.17s = 1.57s
+
+For comparison, TwoCat's does a 1GiB hash in 0.171s using two threads,
+and 16MiB in 7ms with one thread.
+
+ASIC resistance:
+
+For cache-bound 16MiB hashing, an ASIC with 16 banks of 1GiB GDDR5
+each should provide 16 channels at about the same L3 cache speed as
+the CPU.  When doing 16MiB hashing, it is simply 16X faster.  For 1GiB
+hashing, it benefits a bit from the reduced latency vs my DDR3 DRAM,
+which is about 50% faster, so I expect to run up to 24X faster in that
+case.
+
+This is actually excellent ASIC resistance.  The ASIC as 16 times more
+memory than the hash uses, naturally resulting in a 16X speedup with a
+16-guess at a time attack.  No password hashing scheme can defeat an
+attacker's ability to make guesses in parallel, and this very high-end
+ASIC can only do 16.  The 1.57s runtime is about 8X slower than
+TwoCats, but it's pretty close to Scrypt, with better ASIC defense.
+
+Overall, I do not consider Yarn to be a worthy replacement for Scrypt.
+ The optimistic speed estimated above is too similar to
+single-threaded Scrypt, but it requires specialize AES hardware to
+achieve this.  Scrypt has multi-threading built in, while Yarn does
+not, Scrypt has better cache-timing defense, and we do not have any
+optimized version to test.  Script is already a standard.  To replace
+it, I would expect to see more significant improvements.  However the
+improved ASIC resistance relative to Scrypt is cool.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT/lEEAAoJEAcQZQdOpZUZyQcQAIGbAKDaHArHtBLtB+TtpKyo
+daAHHG+yVlOAMvU3GuYVWTuQsfrh05rr2kTrRTdkODN0Olr40C2MqNc2PAvAzxRB
+XP+CdkDnuycRbPH7KwjZs5qf2o41m6AB+GcsCU7dio5inHILrT2Nppy/63kEm44E
+ygxGjYYBmI7gizRgB7DE4XNVxzjxxC6IsQcIeDpEWmQQKZWDlpuyei9FCnhKWv1c
+mWXyJo6m7V5joBG+KBKSQsjjW//D1P7VDT5jAPa8GNdUXB2PQCLJFQfAGW90CvKO
+6ZlkYVUOFK2aCXDYUDMtG1gu9leckz0yx3k+Xkl0PaIPcac1wgtoNk/btVuh4WTG
++zTdlD6nD8jymbde9mFKTWLHHKjqYQgd2ngJKWJjogWkL8Ancc/HpSOewD6ChS+Q
+bdsW8/BXS8X51k+lNLHFAypzcYfhGaNxbYwh7ABk/69UOo6g9iWY7e/YZlRvp8cO
+luYv6IbdmiUT+b3XLEfC3BUZRjg3vcQesTIJtyUs6JBcPYIbzZH1sx+m9Dzl3WKL
+G4TWShJUsnRHn76Q/IU+kL3cUCLhwzrsiP+KTx554RF6jZbgLWobCAHQDwla60yq
+bympsDeHZ2AY4XCXT4EJjSztbIn63ZKxO95+9AJre3/kavkFcmHsE3hTI/JKuk+C
+v+O80qN6+60O7hZCS8xI
+=4BdP
+-----END PGP SIGNATURE-----
+</pre>
+<p><a href="https://www.openwall.com/blists/">Powered by blists</a> - <a href="https://lists.openwall.net">more mailing lists</a>
+
+
+<p>
+
+
+
+
+</body>
+</html>

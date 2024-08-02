@@ -1,0 +1,57 @@
+phc-discussions - FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+Message-ID: <20140204001406.GA4574@openwall.com>
+Date: Tue, 4 Feb 2014 04:14:06 +0400
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: FMA (Re: [PHC] Initial (non-proof-read) NeolKDF paper)
+
+Bill,
+
+On Sun, Jan 26, 2014 at 12:43:33AM -0500, Bill Cox wrote:
+    value = value*(mem[prevAddr++] | 3) + mem[randAddr++]
+
+Note that while this could be a fused multiply-add (FMA) operation on
+architectures that have one, your choice for which of the three inputs
+to replace makes it incompatible with some architectures that do have
+FMA - e.g., with Epiphany, and probably with more.  AMD addresses this
+by supporting a 4-operand FMA (making the output separate from the 3
+inputs), Intel addresses this by providing multiple forms of 3-operand
+FMA (they're currently floating-point only, though), but some archs
+don't address this issue (at least Epiphany does not, and I expect many
+more examples may be found if we look for them).  If we want to make
+this FMA-friendly, then it'd best to replace the same output that is
+replaced when doing matrix multiplication, since this is what all FMA
+implementations will support.  e.g. this would work:
+
+	value += mem[prevAddr++] | 3) * mem[randAddr++];
+
+but perhaps it does not meet your other requirements, or does it?
+
+On the other hand, one of the operands to FMA is being read from memory
+(the other has to pass through OR first, so is in a register by the time
+we reach FMA).  If the arch lacks load-op instructions (or at least
+lacks such FMA), there will be load instructions into registers, which
+may in turn mean that your original hash function is just as optimal: a
+temporarily used register holding mem[randAddr] may be getting updated.
+It could be something like:
+
+	value2 = mem[randAddr++];
+	value2 += value1*(mem[prevAddr++] | 3);
+	mem[toAddr++] = value2;
+	value1 = mem[randAddr++];
+	value1 += value2*(mem[prevAddr++] | 3);
+	mem[toAddr++] = value1;
+
+in 2x unrolled loop.  Then it fits canonical FMA as-is.
+
+So the "problem" applies only to archs that have only 3-operand FMA (not
+4-operand), don't have an instruction form that would update one of the
+factors (would be a non-canonical FMA since it is not one needed for
+matrix multiplication), yet do support reading one of the factors from
+memory in this FMA instruction.  I'd guess such archs do exist, but I
+admit the "problem" is even more limited than I had thought when I
+started writing this message. ;-)
+
+Alexander
+

@@ -1,0 +1,71 @@
+phc-discussions - Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+Message-ID: <20150326090001.GA18991@openwall.com>
+Date: Thu, 26 Mar 2015 12:00:01 +0300
+From: Solar Designer <solar@...nwall.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Another PHC candidates "mechanical" tests (ROUND2)
+
+On Wed, Mar 25, 2015 at 03:40:02PM -0700, Bill Cox wrote:
+I know that many people think, "but I need those other cores available for
+other processes".  I'm afraid that in reality, these SSE optimized memory
+hashing algorithms are so fast, other tasks get their cache data completely
+flushed.  This is one reason I feel it will be hard in practice to mount a
+cache-timing attack against Lyra2 or Yescrypt.  By the time the attackers
+thread is allowed to run, there's nothing left in L3 cache at all.  Giving
+those other cores to other tasks will just cause them to run 10X slower
+than usual due to constant cache misses, slowing down hashing, and causing
+everything to take much longer.  This is a real effect I've measured with
+sse-optimized Scrypt.
+
+The 10x is a huge exaggeration.  I won't believe you when you say you
+measured this on a currently typical machine unless and until you show
+specific numbers confirming it.  There must have been an error or
+something special about your measurements.
+
+Maybe we can create a synthetic benchmark showing that (deliberately hit
+the same cache tags in tight loops?), but for most real-world software
+the slowdown caused by another program thrashing the caches (especially
+if it's just L3+ on a given CPU, with per-core L2's) is much lower.  I'd
+expect it's less than 2x.  Possibly way less, e.g. a mere 10% would be
+realistic for some real-world software if you try to isolate this effect.
+
+Here's a test you can run.  On a machine with 4 cores, 8 threads, do
+e.g. a Linux kernel or a gcc build first with "time make -j8".  Then do
+two such builds with two concurrent "time make -j4".  Repeat this once
+more if you like, treating the previous run as warm-up of the two trees.
+Finally, replace one of those -j4 builds with a SIMD-optimized
+memory-hard hashing scheme using 4 threads (or better yet, with a
+benchmark running 4 unrelated threads, such as yescrypt's "userom", to
+ensure there won't be synchronization delays).  See how much the
+remaining -j4 benchmark slows down, if at all, compared to the two
+concurrent -j4's run.  I'd expect the difference to be in the 0.7x
+(speedup) to 2x (slowdown) range, and most likely 1.1x or so.  (I can
+explain why speedup is also possible.)  That's just my gut feeling.
+
+Here's a thought experiment: on the above machine, if you run two
+concurrent 4-thread instances of a hashing scheme, how much slower would
+each one of them run than if it were run on an otherwise idle machine
+(assume no CPU clock rate scaling)?
+
+To put it differently, won't e.g. TwoCats at 8 threads run at least as
+fast as it does at 4 threads?  If it remains same speed (as in: same
+total running time for same memory usage), then the slowdown of each of
+its "4-thread halves" (any groups of 4 threads that we can choose for
+this experiment) is exactly 2x.  If it becomes slightly faster, then the
+slowdown is less than 2x.  And just why would the impact on typical
+real-world software be greater?
+
+... Oh, I recall you actually reporting some slight slowdown with more
+threads for TwoCats.  Maybe TwoCats is that extreme.  Maybe it actually
+causes a slightly higher than 2x slowdown for the other 4-thread TwoCats
+in this experiment.  Why would it, though?  For 4 vs. 2 threads, this
+could be via (non-)turbo.  It could also be via L1 cache thrashing when
+going 2 threads/core (IIRC, you use 16 KB/thread?)  I doubt L3 cache
+thrashing is why.
+
+This is not the case for yescrypt, in my testing.  yescrypt at 8 threads
+is generally slightly faster than at 4, on currently typical machines.
+
+Alexander
+

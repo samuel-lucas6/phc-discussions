@@ -1,0 +1,28 @@
+phc-discussions - Re: [PHC] Security concern for Catena
+
+Message-ID: <CAOLP8p7wA6Kouja8aAcFXFnyJWcz=DR_=nHwmi9qtYXg5jkQ-w@mail.gmail.com>
+Date: Tue, 7 Jan 2014 20:34:10 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Security concern for Catena
+
+On Mon, Jan 6, 2014 at 6:54 AM, Bill Cox <waywardgeek@...il.comwrote:
+
+I don't understand why, and I am concerned I wont like the answer when I
+do, but NoelKDF now runs even faster, when it really should be slower.
+>
+
+I figured out why the in-page randomization made it faster.  It's because
+some sub-sequences of values are accessed more than once and others not at
+all.  When parallelism is set to the cache line size or more, whole cache
+lines are never accessed within a page hash, speeding it up a lot.  The
+edges are supposed to be random, and this is a result of that.  If I wanted
+a random-ish permutation instead, Catena's bit-reversal works.  I need to
+figure out how to keep the speed up from the missing cache lines, without
+making the user set parallelism to 64 or more to get it, since that opens
+him up to GPU attacks.  It should be a minor tweak...
+
+Bill
+
+
+

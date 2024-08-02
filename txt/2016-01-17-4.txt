@@ -1,0 +1,76 @@
+phc-discussions - Re: [PHC] Re: Attack on Argon2i?
+
+Message-ID: <569BD0F4.8030306@stanford.edu>
+Date: Sun, 17 Jan 2016 09:35:48 -0800
+From: Henry Corrigan-Gibbs <henrycg@...nford.edu>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Re: Attack on Argon2i?
+
+Hi Bill,
+
+Thanks for your comments on the paper!
+
+On 1/16/16 10:18 PM, Bill Cox wrote:
+
+While your algorithm is cool, and showed a weakness in Argon2i, I still
+think your algorithm is too slow.  How fast can you fill memory?
+Memory*time defense goes as the square of this number.  Some good
+algorithms fill 4MiB in 1ms.
+
+I completely agree that filling as much memory as possible per unit time 
+is an important design goal.
+
+The Balloon functions (like Argon2 and Catena) make use of a 
+cryptographic compression function that maps two k-bit blocks of memory 
+into a single k-bit block of memory.
+
+Which compression function you choose, along with a few other security 
+parameters, determines how fast the construction runs and how space-hard 
+it actually is. A faster compression function is clearly better. 
+However, if the cryptographic compression function is weak, then the 
+overall construction will not be space-hard, no matter how quickly it runs.
+
+
+The following are benchmarks from my Intel Xeon E5620 with
+   space cost = 4 MiB  and
+   time cost = 5 passes (rounds).
+Below, "ArgonHash" refers to the compression function G() defined in the 
+Argon2 spec and "SHA3" is Keccak with rate=1344. Here are some 
+performance numbers, measured in hashes per second, for a few different 
+configurations:
+
+Argon2 : 67.0199
+Balloon: 51.6794  (ArgonHash + aggressive parameters)
+Balloon: 8.97988  (ArgonHash + conservative parameters)
+Balloon: 4.53571  (SHA3      + aggressive parameters)
+Balloon: 2.84941  (SHA3      + conservative parameters)
+Balloon: 0.408044 (SHA3      + very conservative parameters)
+
+
+As the numbers above indicate, the performance of ArgonHash is amazing. 
+We chose not use ArgonHash as our default compression function because 
+it does not seem to have the cryptographic properties we wanted. For 
+example, if you run ArgonHash in counter mode like this:
+   G("00000 ... 00000", "00000 ... 00000")
+   G("00000 ... 00000", "00000 ... 00001")
+   G("00000 ... 00000", "00000 ... 00002")
+   G("00000 ... 00000", "00000 ... 00003")
+the bytes that come out seem to have very very strong biases. SHA3 does 
+not apparently have these artifacts, though it of course runs much much 
+more slowly.
+
+It's not clear whether it would be possible to leverage the strong 
+biases in the output of ArgonHash into weaknesses in Argon2 itself (or 
+into weaknesses in the Balloon functions when instantiated with 
+ArgonHash) -- I have not tried.
+
+To avoid that possibility entirely we just decided to use a standard 
+hash function as the default, though again, it would be possible to 
+instantiate the Balloon constructions with ArgonHash if you're looking 
+for more speed.
+
+Henry
+
+
+
+

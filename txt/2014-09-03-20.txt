@@ -1,0 +1,254 @@
+phc-discussions - A review per day - OmegaCrypt
+
+Message-ID: <540759BB.8010002@ciphershed.org>
+Date: Wed, 03 Sep 2014 14:11:07 -0400
+From: Bill Cox <waywardgeek@...hershed.org>
+To: discussions@...sword-hashing.net
+Subject: A review per day - OmegaCrypt
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+It's OmegaCypt's turn, assuming people don't mind me doing 2 per day :-)
+
+OmegaCrypt uses CubeHash for it's cryptographic strength security, and
+ChaCha for filling memory initially, and for generating pseudo-random
+numbers.  I will not attempt to analyze these choices, or check their
+implementation, since we could substitute CubeHash with Blake2b or
+whatever if we wanted.  I think that the OmegaCrypt architecture can
+easily be seen to produce secure hashes, as can easily be seen from
+various choices, including the decision to only use the output from
+respected cryptographic hash primitives for filling memory and for
+producing pseudo-random data and addresses.  I have no security
+concerns about OmegaCrypt, other than the concerns I have about all
+the Catena-like algoritms.
+
+OmegaCrypt does small unpredictable reads, based on the password, like
+bcrypt.  However, in OmegaCrypt's case, I believe it should not.  What
+"Practical" algorithns like bcrypt and Scrypt do rapid small
+unpredictable addressing to foil both GPU and ASIC attacks.
+OmegaCrypt dribbles them out so slowly as to not provide enough
+defense to be worthwhile.  I recommend that his ChaCha state be
+initialized with a constant, rather than the input data.  I also
+recommend that case 2 and 3 be modified to not do memory dependent
+addressing.  With both of these changes, OmegaCrypt would become a
+competitor in the Catena-like category of entries concerned more about
+what I call "mathematical" defense rather than "practical" defense.
+In terms of competing against more practical algorithms like
+PufferFish, OmegaCrypt gets crushed in speed.  It fairs better against
+Catena and Gambit.
+
+Like the other bcrypt-like and Catena-like entries, OmegaCrypt is
+essentially a cache-bound algorithm, suffering from excessive delay
+when accessing external DRAM.  However, because of it's calls to
+ChaCha for the pseudo-random addresses and data, it runs closer to the
+speed of the Catena-like algorithms, though easily 10X slower than the
+bcrypt-like algorithms.  The choice to use only output from strong
+cryptographic hashes is shared among the Catena-like entries, which is
+why they run so slowly.  I think this is the group of people who feel
+that mathematical security is paramount, rather than what I consider
+to be "practical" security.  This is also why they all decided to
+focus on purely cache-timing resistant algorithms, except for OmegaCrypt.
+
+Because of OmegaCrypt's choice to focus on mathematical security at
+the expense of bcrypt-like speed, while not being cache-timing
+resistant, I feel it does not have an area where it is competitive. I
+believe the choice of unpredictable reads is reasonable for practical
+security, since this is what frustrates GPU and ASIC attacks, leaving
+all of the cache-timing resistant algorithms subject to the full power
+of ASIC acceleration of their ASIC-friendly hashes.
+
+Here's just some quick observations when reading the code:
+
+- - Input parameters are carefully checked.  I appreciate it.
+- - Solid comments - again, I appreciate it.
+- - Nice error codes and more. I like the author's coding ability and style.
+- - All inputs are properly hashed, making it "strongly secure"
+- - Comment on line 240 in ocrypt.c is out of date
+- - OmegaCrypt is simple.  ocrypt.c is only 240 lines, though it does
+depend on external ChaCha and CubeHash
+- - I respect good coders.  I have to respect this author.
+
+After initializing ChaCha with input data, memory is initialized by
+copying the input data to the start, and then XORing ChaCha data over
+all of it.  This should make memory cryptographically pseudo-random.
+
+For the t_cost loop, he iterates this main loop many times:
+
+loop 2^17*(1 << t_cost) times:
+  switch(rand32() & 3)":
+    0) state_array[rand32() & m_array_mask] += carry
+       carry ^= rand64()
+    1) state_array[((rand32() ^ 0x0a1b2c3d) & m_array_mask] ^= carry
+       carry += rand64()
+    2) state_array[(rand32() ^ 0xfedc0123) & m_array_mask] ^= rand64()
+       state_array[(rand32() ^ 0xfedc0123) & m_array_mask] += rand64()
+^ carry
+       carry ^= state_array[carry & m_array_mask]
+    3) state_array[state_array[(rand32() ^ 0x76543210) & m_array_mask]
+& m_array_mask] += carry ^ rand64()
+       carry += state_array[(rand32() ^ 0x7654321) & m_array_mask] ^
+rand64()
+
+Rand32() and rand64() return ChaCha data.
+
+One thing to note is that there is no need for XORing ChaCha data with
+constants to generate pseudo-random addresses.  This does not make it
+any more random, but does slow down the defender.
+
+Like several entries, OmegaCrypt XORs and ADDs over memory, but
+probably should use the read memory first, since it's read anyway.
+This would make it more TMTO resistant with little computation
+penalty.  Lyra2 does this, for example.
+
+ASIC Hardness
+- -------------
+
+A significant problem that the author may not realize is that
+OmegaCrypt does not benefit from it's unpredictable addressing nearly
+as much as bcrypt-like entries.
+
+The data from the ChaCha stream *is* predictable in the sense that I
+can pre-compute as much of it as I want at about 32 bytes per ns in my
+high-end ASIC.  This allows me to pre-compute which cases will execute
+in each loop, as well as most addresses that will accessed, so that
+they can be put in the pipeline before their data is needed.  The only
+effectively unpredictable memory accesses are in case 2 and 3, one
+each.  The read from memory indexed by carry in case 2 depends on the
+value of carry computed in the previous loop iteration.  The
+unpredictable memory access in case 3 is the read from an address
+loaded from a predictable memory location.  Unfortunately, there is no
+sequential dependence, and the case 3 addresses can call be
+pre-computed in advance as well.
+
+Only case 2 offers a strong benefit from unpredictable addressing.
+However, it only executes every 4 loops on average, so 3/4ths of these
+loops will execute in 1 cycle at the full ASIC clock speed of 3.4GHz
+(same as my CPU).  Case 2 should take 3 clocks, like the typical
+average unpredictable write on my CPU.  The average is 1.5 clocks per
+iteration, consuming an average of 14 bytes of ChaCha data every 1.5
+clocks, or about 28 bytes every three clocks, which is just below my
+ChaCha stream generator's speed, meaning ChaCha data generation is not
+the bottleneck.  Initializing it with a constant rather than password
+and salt should not harm the ASIC hardness.
+
+Filling memory with ChaCha data will be very fast.  My cache does
+writes in 0.065ns per byte for sequential writes.  The final read for
+CubeHash is even faster at 0.05ns per byte.  The first and last passes
+combined will only require 1us.  With t_cost == 0, with the carry
+dependency, I have to slow down to one clock per loop, accept for case
+2, which requires 3, for an average of 1.5 clocks/iteration.  The
+benchmarks below were for t_cost == 0, or 2^17 iterations.  My ASIC
+should do that in 1.5*2^17 clocks, or 58us.
+
+The entire hash can be done in about 60us, compared to 124ms in the
+benchmark below.  That's a factor of over 2,000X with no required
+external memory.  This is weak ASIC hardness for a memory-hard
+algorithm, but typical of the more "mathematical" defense algorithms
+in the Catena-like category.
+
+TMTO Resistance
+- ---------------
+
+I see no major holes in OmegaCrypt's TMTO resistance.  With higher
+t_cost than m_cost, it's defense increases.  With t_cost == m_cost, it
+should do better than Scrypt because of it's unpredictable writes.
+However, if OmegaCrypt becomes a cache-timing resistant algorithm like
+Catena, then it will suffer the usual time*memory cost reduction due
+to the usual TMTOs that can be made when we know the addressing
+pattern.  Cache-timing resistant algorithms, when all else is equal,
+are typically 3X-ish worse on TMTO defense, because an attacker can
+carefully place his pebbles where he knows they will be needed rather
+than distributing them were they might be needed.  This typically
+results in a 2X to 3X reduction in pebble moves on  the data
+dependency graph.  Note that the graph continues to grow even as data
+is over-written, meaning memory is not increasing, which is why TMTO
+resistance grows as over-write passes increase.
+
+OmegaCrypt should also be modified to make use of the data read when
+doing the += and ^= operations to memory.  This creates more edges in
+the data dependency graph, making it harder to pebble.  Lyra2 benefits
+from this.
+
+Benchmarks
+- ----------
+
+8MiB hash:
+
+PHCtime ./phs-omegacrypt 0 3
+
+85 dc 3d fc bf de 9a 60
+09 dc 24 dd 1e b1 f2 bb
+38 9a d5 07 79 60 d8 20
+0f 2f 9f e5 dd 17 cb 59      32 (octets)
+
+
+real	0m0.124s
+user	0m0.122s
+sys	0m0.001s
+
+1GiB hash:
+
+PHCtime ./phs-omegacrypt 0 10
+
+dc 99 9a e6 b6 0b 65 82
+bf 3b 83 8a 68 f9 39 80
+3b 25 ed d6 20 06 a3 40
+1d bb c5 b3 b2 2b 41 8d      32 (octets)
+
+
+real	0m13.910s
+user	0m13.846s
+sys	0m0.068s
+
+The runtimes, like the Catena-like algorithms, are too high for
+authentication servers, even with small cache-bound hashing.  They are
+also too high for external 1GiB hashing, and so do not compete well
+with Scrypt.  Also, I ran this with t_cost == 0, which did only 2^17
+loop iterations, potentially creating a TMTO vulnerability, since most
+data in memory remains simply the ChaCha output to the end.
+
+OmegaCrypt is simply too slow and has too weak ASIC resistance to be a
+competitive algorithm in the field of "practical" bcrypt-like and
+Scrypt-like entries.  It would do better if it were tweaked to compete
+in the Catena-like category instead.
+
+I think that there are enough of these more mathematical security
+minded people people in the competition to have a Catena-like
+category, and maybe even announce a winner for them, so long as that
+does not preclude having a bcrypt successor and Scrypt successor which
+provide more practical defense.
+
+Every factor of 10 counts.  However, we have closer to 100X difference
+between the Catena-like entries and the bcrypt and Scrypt-like entries
+in terms of time*memory defense (how much memory an attacker will have
+to use times how long he will have to use it).  TwoCats hashes 1GiB in
+external DRAM in 0.155s, compared to 0.124s for 8MiB for OmegaCrypt.
+A 0.155 1GiB hash costs an attacker 128X the memory in 25% more
+memory.  The defense goes as the square of the runtime, so the ratio
+of the defense of these two hashes is
+(0.124/0.155)^2*(0.155*2^30)/(0.124*2^23) = 101X.
+
+100X difference in time*memory cost seems to be about average when
+comparing the mathematical defense entries (Catena-like) to the
+practical defense entries (becrypt and Scrypt-like).
+
+Bill
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUB1m3AAoJEAcQZQdOpZUZ540P/jG/VGn+TRPJt8fvw5dWhpcV
+UYLB1WhHaMAOLoXzKqsZcdRNwwUcQJarGMr4FDfGawfj4yFNYfddlYHXfRPD/Osb
+rGIO0jetoI6qFAsI4M2RG1YYFsTgXwY5lD/tsMUDdwADhpuXBqiYKqrYeEc9V9IT
+xcvDS/zm7YCgL+QFef5p6o7Mfrht8OX4Xfk5pspMUokGxLbp6S/NVI9cFVH1ybJy
+dDUOhmZYPnnjKcJXG75cKb0Q/Ur78O8oe4q5SXuwAEe8OcbJNGyhRzx3TWVZw7ln
+6rekWPYi80jswxH6rFc95qhrjrA+WdH3LfOEziIAOGfqML4K2KEGFsXm7o2XMbmt
+L+ecNqO2PVEDJDVDY1ZDNUOyo/HVarGj1dh99U66TxOmE5O7KSo6Bxz8CsMIzoqr
+9BrTEH3IQ7tpbMnkE9HOW0FgCEuHKG7c3+iYVwkQV3SOCNXhVlHlBUYD/PWqGKv1
+SbF+5dehhbv7Dy9ToyQDV83hYbwvJznf7tD5tpm4J80YOZuzU1ten95XIMCt0/uq
+8FCXAfSidDaJnkz/MqOgaVdG8Z7LCmxJlRCNJnP89qrpHnq9unvf6JBFujNSDFrH
+hNjREUd5kUCKNjgwbYJVYwzR87ckek1jElAJPXg1wqu8u3PriPXYLoFSC3aRt2YY
+HD683hOJihJKLhWngnUF
+=eqqK
+-----END PGP SIGNATURE-----
+

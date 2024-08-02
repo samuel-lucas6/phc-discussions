@@ -1,0 +1,82 @@
+phc-discussions - Re: [PHC] Improving Makwa and arguing points for or against
+
+Message-ID: <20140914145333.GB18821@bolet.org>
+Date: Sun, 14 Sep 2014 16:53:33 +0200
+From: Thomas Pornin <pornin@...et.org>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Improving Makwa and arguing points for or against
+
+On Sun, Sep 14, 2014 at 05:13:11AM -0500, Steve Thomas wrote:
+Replacing e=2**n with e=65537**n also require gcd(65537,
+(p-1)*(q-1))=1. This way you can say it's as safe as RSA.
+
+It would not make it "as safe as RSA" but "as unsafe as RSA".
+
+This is an old debate, between RSA and Rabin encryption systems. Rabin
+uses squarings modulo a Blum integer N. RSA uses an exponent e which is
+relatively prime to phi(N). For both systems, factoring N totally breaks
+the system; however, in the case of Rabin, it can be demonstrated that
+generic square root extraction modulo N _is_ equivalent to factoring N.
+No such demonstration exists for RSA. It is thus possible that there
+exists a method which breaks RSA without requiring modulus factorization
+(no such method is currently known, but it is not proven that such a
+method cannot exist). Thereby, Rabin encryption can be said to be at
+least as safe as RSA, and potentially safer.
+
+By relying on squarings instead of RSA-like exponentiations, I am
+reusing the safety of Rabin encryption, which is thus better (or at
+least no worse) then that of RSA. This has already been put to work: in
+a previous email, Bill was worried about "short cycles" in the
+permutation (squaring modulo a Blum integer is a permutation of the set
+of quadratic residues); thanks to the use of squarings, I could
+demonstrate that if short cycles can be found with non-negligible
+probability, then they can be turned into an efficient factorization
+algorithm, which would imply that both Rabin and RSA encryption, as they
+are used today, are broken. This kind of demonstration is precisely why
+I want to use squarings instead of RSA-like exponentiations. Squarings
+are just better.
+
+Squarings also make for a simpler implementation. All other things being
+equal, simplicity is always better: it minimizes risks of bugs and of
+data leakage through timing attacks.
+
+Last but not least, using repeated squarings is an instance of the
+"time-lock puzzles" of Rivest, Shamir and Wagner (1996). This is a
+process which has sustained the collective scrutiny of cryptographers
+for quite some time now, and nobody yet found a way to speed up a
+sequence of squarings (i.e. to obtain the result faster than doing all
+the squarings one after the other), save by factoring the modulus (and
+2500+ years of research show that factoring is hard). This is a nice
+thing to have: apart from potential mathematical reduction proofs (like
+the equivalence between factorization and square root extraction),
+extensive review is the only way to know whether a given cryptographic
+function is secure or not. By comparison, "repeated RSA-like
+exponentiation" is an as-yet unstudied and not-reviewed problem.
+
+
+I guess that's not really necessary since post hashing is now required.
+
+As I explain in another mail, this is a misconception. If you fear
+that the attacker learns the private factors p and q, then post-hashing
+won't stop him; he still gets tremendous attack power from that
+knowledge. On the other hand, if he does _not_ know the factors p and q,
+then without post-hashing he still faces the Rivest-Shamir-Wagner
+time-lock puzzle, which has no known speedup.
+
+Therefore, you must not consider post-hashing as improving security with
+regards to the modulus factorization. The role of post-hashing is to
+provide unbiased bytes in arbitrary numbers for when Makwa is used as a
+password-based KDF (usually for password-based encryption);
+incidentally, post-hashing also allows for a reduced storage space in
+password verification scenario, but at a price (it prevents smooth
+offline work factor increase).
+
+
+whether we can prevent the author from saying "you could keep p and q
+for fast path".
+
+Ah, shutting me up... some have tried.
+
+
+	--Thomas Pornin
+

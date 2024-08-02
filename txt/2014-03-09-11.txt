@@ -1,0 +1,49 @@
+phc-discussions - Re: [PHC] Upgrade HKDF to HKDF2?
+
+Message-ID: <CAOLP8p69jew4Z-Q6z=cJSMAxKMarHMUWDQcnqLgAU=GzXGCWZw@mail.gmail.com>
+Date: Sun, 9 Mar 2014 10:56:20 -0400
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] Upgrade HKDF to HKDF2?
+
+On Sun, Mar 9, 2014 at 10:28 AM, Jeremi Gosney <epixoip@...dshell.nlwrote:
+On 3/8/2014 10:48 AM, Bill Cox wrote:
+>HMAC: Input collisions galore!  Really?!?  Why are we using this for
+>hashing passwords???
+>PBKDF2: Inherits HMAC collisions
+>
+HMAC itself isn't the problem. PBKDF2 doesn't inherit an issue from
+HMAC, it creates an issue with HMAC.
+>
+Collisions only occur when using the password as the key and the salt as
+the message. Using the salt as the key and the password as the message
+resolves this issue. Generate salts that are the exactly $blocksize in
+length, and you don't have to worry about null padding issues, either.
+>
+PBKDF2PEBKAC.
+
+Got it.  HKDF gets the order right, and avoids the input collisions.
+It also relies on the underlying hash function to do any padding.  In
+coarse detail, an attack only might gain knowledge of how many hash
+blocks long a password is, and assuming it's <= 32, SHA-256 would be
+find (I might have the password offset wrong).
+
+I still see code like memcpy(buf, password) in the hashing functions,
+though.  This runs in time proportional to passwordLength.  Why don't
+we instead do some larger constant runtime loop, like:
+
+for(i = 0; i < passwordLength; i += 256) {
+    for(j = 0; j < 256; j++) {
+        buf[i] = password[(i + j) % passwordLength];
+    }
+    Hash_Update(hashCtx, buf, 256);
+}
+
+That would run in constant time assuming passwords are <= 256 long....
+wouldn't i?  Maybe I'd need to write my own mod function, in case some
+platforms have time dependent IDIV instructions.  Still, wouldn't it
+be better to have a longer pad and to not use memcpy on the password?
+
+Thanks,
+Bill
+

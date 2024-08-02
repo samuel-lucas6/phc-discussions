@@ -1,0 +1,100 @@
+phc-discussions - Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+Message-ID: <CAOLP8p5W6gjFr-iKif5haOyEgPUktT=dVLP-V_nCLeMR97YV8w@mail.gmail.com>
+Date: Thu, 13 Feb 2014 23:00:11 -0500
+From: Bill Cox <waywardgeek@...il.com>
+To: discussions@...sword-hashing.net
+Subject: Re: [PHC] multiply-hardening (Re: NoelKDF ready for submission)
+
+On Thu, Feb 13, 2014 at 6:51 PM, Solar Designer <solar@...nwall.comwrote:
+On Thu, Feb 13, 2014 at 05:36:26PM -0500, Bill Cox wrote:
+>I was surprised that (value & mask) caused my Ivy
+>Bridge CPU so much grief.  I thought 3 cycles would be enough to do
+>the mask operation and load from L1 cache.  Apparently not...
+>
+I am also surprised.  Are you sure your "mask" is small enough that this
+fits in L1 cache?  Are you sure the data was already in L1 cache?
+
+This is a big deal, so I wrote a simple loop to test it:
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define memlen ((1u << 31)/sizeof(uint32_t))
+#define blocklen (4096/sizeof(uint32_t))
+#define numblocks (memlen/blocklen)
+
+int main() {
+    uint32_t *mem = malloc(memlen*sizeof(uint32_t));
+    uint32_t i;
+    for(i = 0; i < blocklen; i++) {
+        mem[i] = i;
+    }
+    uint32_t value = 1;
+    uint32_t mask = blocklen - 1;
+    uint32_t *prev = mem;
+    uint32_t *to = mem + blocklen;
+    for(i = 1; i < numblocks; i++) {
+        uint32_t j;
+        for(j = 0; j < blocklen; j++) {
+            uint32_t *from = mem + (value & mask);
+            //uint32_t *from = mem + j;
+            value = (value * (*prev++ | 3)) + *from;
+            *to++ = value;
+        }
+    }
+    printf("%u\n", mem[rand() % memlen]);
+    return 0;
+}
+
+I compile this on my Ivy Bridge processor with:
+
+gcc -O3 -std=c11 -mavx foo.c
+
+Here's the run with simple addressing within a block:
+
+noelkdftime a.out
+2310311821
+
+real    0m0.728s
+user    0m0.620s
+sys     0m0.100s
+
+Here's the timing with value used to compute the next from address:
+
+time a.out
+173234176
+
+real    0m1.292s
+user    0m1.210s
+sys     0m0.080s
+
+This was on my 3.4GHz quad-core Ivy Bridge processor.  I also ran it
+at work on our 128GB machine with 8 AMD processors.  I'm not sure
+which one.  Here's with simple addressing indexed by the loop
+variable:
+
+bill!time
+time ./a.out
+2310311821
+
+real    0m1.368s
+user    0m0.672s
+sys     0m0.696s
+
+Here's using value to compute the address:
+
+time ./a.out
+173234176
+
+real    0m1.951s
+user    0m1.152s
+sys     0m0.800s
+
+I can't explain why using value to compute the next address is taking
+longer.  It doesn't make sense to me.  Do you see any problems in my
+test code?
+
+Bill
+

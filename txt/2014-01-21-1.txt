@@ -1,0 +1,66 @@
+phc-discussions - Re: [PHC] my pre (if) submit proposal
+
+Message-ID: <1456592258.20140121013500@gmail.com>
+Date: Tue, 21 Jan 2014 01:35:00 +0100
+From: Krisztián Pintér <pinterkr@...il.com>
+To: Steve Thomas <steve@...tu.com>
+CC: discussions@...sword-hashing.net
+Subject: Re: [PHC] my pre (if) submit proposal
+
+
+Steve Thomas (at Monday, January 20, 2014, 11:14:16 AM):
+
+  How I got this     
+  
+Always store every t**(1/2) states except the last m/2 since those 
+    are never read.
+
+i might spend some more time on this later, but for now, i don't
+understand some things. one is with this quote above. it seems that
+the notion of state and "slot" in the mem array is mixed. the last m/2
+memory locations will not be read. this is the last m/r/2 states, as a
+state stores r words (which might be even 21 for keccak[c=256] and 64
+bit).
+
+also note that this is true only for f=-1 and m = t*r/2. which is not
+the case i intend to use in practice. for other cases, it is a little
+bit more complicated.
+
+
+    For 2nd m/2 regenerate blocks of t**(1/2) R's when needed. This adds m/2
+    extra work.     
+
+i don't get what do you mean by "m/2 extra work". m/2 states can't be
+recalculated in m/2 steps. you always need the previous state, and
+then the previous to that, etc, since you need the C part. that leads
+to, on average, (m/2)*t^0.5 / 2, if i'm not mistaken. anyway, so far
+it does not seem to be a break, we still have O(^2) combined, ^1.5 (if
+optimal parallelization is possible), which is expected in this early
+phase.
+
+
+     For 3rd m/2 regenerate blocks of t**(1/2) R's when needed then regenerate
+     blocks of t**(1/2) R's from the other R's. This adds m extra work.
+
+this i don't follow at all. this phase seems to be exactly the same as
+the previous. we read single written locations, are we not?
+
+
+You should note that you can do t**(1/3) and this increases the extra cost by 2x
+and memory by 2x for the constant in front of (r+c).
+
+and this is something i have no hope of understanding. how do you get
+these numbers? bonus question: what is the difference between catena
+and my access pattern that would cause this low exponent, while
+catena-n approaches 2?
+
+
+    You should figure out a good value for f. I know it is not -1. My guess is the next
+    smallest negative number that is GCD(m, f (mod m)) = 1.      
+
+in fact, for keccak, the value would be something like -m/100. it
+possible to limit to f < -r, thus every state depends on exactly r
+other states plus the previous (except when the other states coincide
+with the previous or self).
+
+
